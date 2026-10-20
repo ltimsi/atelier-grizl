@@ -17,6 +17,7 @@ import json
 import re
 import shutil
 import sys
+from html.parser import HTMLParser
 from pathlib import Path
 
 RACINE = Path(__file__).resolve().parent.parent
@@ -25,6 +26,11 @@ DIST = RACINE / "dist"
 PUBLIES = ("validé", "en relecture")
 THREE_VERSION = "0.160.0"
 THREE_CDN = f"https://cdn.jsdelivr.net/npm/three@{THREE_VERSION}/"
+# Ateliers : les section.atelier des chapitres, que js/scene/app.js ouvre dans la fiche de leur zone.
+TYPES_ATELIER = ("comprendre", "entretenir", "regler", "remplacer")
+GESTES = (".a-dem", ".kit", "ol.steps")  # obligatoires, sauf pour « comprendre » qui n'en a aucun
+BLOCS = {".a-dem": (None, "a-dem"), ".kit": (None, "kit"), "ol.steps": ("ol", "steps"),
+         "ul.media": ("ul", "media"), "p.a-video": ("p", "a-video")}
 
 
 def lire(nom):
@@ -93,9 +99,13 @@ def carte_imports(cible):
     return '<script type="importmap">\n' + json.dumps({"imports": imports}, indent=2) + "\n</script>"
 
 
+def lire_zones():
+    return json.loads((SRC / "scene" / "zones.json").read_text(encoding="utf-8"))
+
+
 def donnees_zones():
     """Bloc <script type="application/json" id="zones-data"> : le contenu de src/scene/zones.json, lu par app.js."""
-    zones = json.loads((SRC / "scene" / "zones.json").read_text(encoding="utf-8"))
+    zones = lire_zones()
     # « < » échappé : aucune chaîne du JSON ne peut fermer la balise <script>.
     texte = json.dumps(zones, ensure_ascii=False, indent=2).replace("<", "\\u003c")
     return f'<script type="application/json" id="zones-data">\n{texte}\n</script>'
@@ -112,6 +122,65 @@ def pied(config, modeles, cible):
     return lire("99-foot").replace("<!--SCRIPTS-->", "\n".join(scripts)).replace("<!--VERSION-->", html.escape(version))
 
 
+class _Ateliers(HTMLParser):
+    """Relève les section.atelier d'une page : leurs attributs et les blocs d'atelier qu'elles contiennent."""
+
+    def __init__(self):
+        super().__init__()
+        self.ateliers, self._pile = [], []
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        classes = (a.get("class") or "").split()
+        if tag == "section":
+            atelier = None
+            if "atelier" in classes:
+                atelier = {**a, "blocs": set()}
+                self.ateliers.append(atelier)
+            self._pile.append(atelier)
+            return
+        ouverts = [s for s in self._pile if s is not None]
+        if ouverts:
+            ouverts[-1]["blocs"].update(nom for nom, (balise, classe) in BLOCS.items()
+                                        if classe in classes and balise in (None, tag))
+
+    def handle_endtag(self, tag):
+        if tag == "section" and self._pile:
+            self._pile.pop()
+
+
+def relever_ateliers(texte):
+    lecteur = _Ateliers()
+    lecteur.feed(texte)
+    lecteur.close()
+    return lecteur.ateliers
+
+
+def controle_ateliers(texte, zones):
+    """Chaque atelier a les blocs de son type et une zone de zones.json ; chaque zone a au moins un atelier publié."""
+    erreurs = []
+    ateliers = relever_ateliers(texte)
+    for s in ateliers:
+        nom = f'atelier {s.get("id") or "sans id"}'
+        zone, type_, blocs = s.get("data-zone"), s.get("data-type"), s["blocs"]
+        if not s.get("id"):
+            erreurs.append(f"{nom} : app.js ne peut pas l'ouvrir")
+        if zone not in zones:
+            erreurs.append(f"{nom} : data-zone « {zone or ''} » absente de src/scene/zones.json")
+        if type_ not in TYPES_ATELIER:
+            erreurs.append(f"{nom} : data-type « {type_ or ''} » inconnu (comprendre, entretenir, regler ou remplacer)")
+        elif type_ == "comprendre":
+            erreurs += [f"{nom} : {b} en trop (type comprendre)" for b in GESTES if b in blocs]
+        else:
+            erreurs += [f"{nom} : {b} manquant (type {type_})" for b in GESTES if b not in blocs]
+        if not blocs & {"ul.media", "p.a-video"}:
+            erreurs.append(f"{nom} : ni ul.media ni p.a-video")
+        if type_ == "remplacer" and not (s.get("data-de") and s.get("data-vers")):
+            erreurs.append(f"{nom} : data-de et data-vers obligatoires (type remplacer)")
+    erreurs += [f"zone « {z} » sans atelier publié" for z in zones if not any(s.get("data-zone") == z for s in ateliers)]
+    return erreurs
+
+
 def controles(texte):
     erreurs = []
     tirets = len(re.findall("[—–]", texte))
@@ -121,6 +190,7 @@ def controles(texte):
     doublons = [i for i, n in collections.Counter(ids).items() if n > 1]
     if doublons:
         erreurs.append("id en double : " + ", ".join(doublons[:10]))
+    erreurs += controle_ateliers(texte, [z["id"] for z in lire_zones()])
     return erreurs
 
 
