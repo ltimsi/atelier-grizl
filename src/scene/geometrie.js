@@ -75,7 +75,7 @@ export const GEO = Object.freeze({
     'Le pas de la chaîne n’est pas relevé sur un document du fabricant. La valeur retenue est celle du pas courant des chaînes de vélo.'),
   dentsPignonDessine: apr(21,
     'La chaîne est dessinée sur un seul pignon, choisi pour la lisibilité. Ce n’est pas un rapport réel.'),
-  ligneChaine: apr(44.5, 'La position latérale de la chaîne n’est pas publiée. Elle est approchée.'),
+  ligneChaine: pub(49.7, 'shimano-fc-rx610-1'), // « Chain line (mm) 49.7 » de la FC-RX610-1 : plan du plateau
   zPetitPignon: apr(64, 'La position latérale de la cassette n’est pas publiée. Elle est approchée.'),
   ecartPignons: apr(3.9, 'L’écart entre deux pignons de la cassette n’est pas publié. Il est approché.'),
   decalagePoulieHaute: apr(6, 'La position de la poulie haute du dérailleur n’est pas publiée. Elle est approchée.'),
@@ -83,16 +83,28 @@ export const GEO = Object.freeze({
     'La distance entre le pignon et la poulie haute du dérailleur n’est pas publiée. Elle est approchée.'),
   ecartPoulies: apr(60, 'La fiche indique une cage courte, sans cote. L’écart entre les poulies est approché.'),
   angleCage: apr(15, 'L’inclinaison de la cage du dérailleur n’est pas publiée. Elle est approchée.'),
-  rayonPoulie: apr(22, 'Le rayon des poulies du dérailleur n’est pas publié. Il est approché.'),
+  dentsPoulie: pub(13, 'shimano-rd-rx822-gs'), // « Pulley / Teeth 13T » : le rayon des galets en découle avec le pas
 
   // ---- Poste de pilotage ----
   longueurPotence: pub(60), // « 60 mm en S à L »
   largeurCintre: pub(440), // « 440 mm en M à 2XL », d'axe en axe au niveau des cocottes
   hauteurPotence: apr(42,
     'Le nombre d’entretoises montées à la livraison n’est pas publié. La hauteur de la potence est approchée.'),
-  anglePotence: apr(13, 'L’angle de la potence n’est pas publié. Il est approché.'), // au-dessus de l'horizontale
-  deportCintre: apr(84, 'Le déport du cintre n’est pas publié. Il est approché.'),
-  descenteCintre: apr(128, 'La descente du cintre n’est pas publiée. Elle est approchée.'),
+  // Potence de 60 : marquage « ANGLE 6° » sur la photo officielle. Montée vers le bas, elle monte de 90 - 71 - 6 degrés.
+  anglePotence: pub(6, 'canyon-photo-st0046', {
+    aVerifier:
+      'Canyon ne dit pas dans quel sens la potence est montée à la livraison. Elle est dessinée vers le bas, ' +
+      'comme sur la photo officielle du vélo. À regarder sur le vélo.',
+  }),
+  // Cintre HB0067 : marquage « REACH 70 mm » et « DROP 128 mm » sur la photo officielle (cintre de 420).
+  deportCintre: pub(70, 'canyon-photo-hb0067-marquage', {
+    aVerifier:
+      'La page du cintre annonce un déport plus long que le marquage de sa photo officielle. ' +
+      'Le cintre photographié est le plus étroit des deux. À lire sur le cintre.',
+  }),
+  descenteCintre: pub(128, 'canyon-photo-hb0067-marquage', {
+    aVerifier: 'Lue sur le marquage du cintre photographié, le plus étroit des deux. À lire sur le cintre.',
+  }),
 });
 
 // Les ancres se posent juste à gauche de la pièce, du côté des disques, pour rester visibles (placement de vue, pas une cote).
@@ -131,9 +143,11 @@ export function points(geo = GEO) {
   const STt = add(BB, mul(dST, g('longueurTubeSelle')));
   const SPt = add(BB, mul(dST, g('hauteurSelle') - g('retraitSelle')));
 
-  // Poste de pilotage : S0 est l'axe de la potence sur le tube de direction, S1 le centre du cintre
+  // Poste de pilotage : S0 est l'axe de la potence sur le tube de direction, S1 le centre du cintre.
+  // La potence part à angle droit du pivot, moins son angle : elle est montée vers le bas (GEO.anglePotence.aVerifier).
   const S0 = add(HTt, mul(dHT, g('hauteurPotence')));
-  const S1 = add(S0, mul([Math.cos(g('anglePotence') * D2R), Math.sin(g('anglePotence') * D2R)], g('longueurPotence')));
+  const montee = (90 - g('angleDirection') - g('anglePotence')) * D2R;
+  const S1 = add(S0, mul([Math.cos(montee), Math.sin(montee)], g('longueurPotence')));
 
   // Pédalier et étriers
   const PR = pol(BB, g('longueurManivelle'), g('angleManivelle'));
@@ -145,7 +159,7 @@ export function points(geo = GEO) {
   const rayons = {
     pignon: rayonPrimitif(g('dentsPignonDessine'), g('pasChaine')),
     plateau: rayonPrimitif(g('dentsPlateau'), g('pasChaine')),
-    poulie: g('rayonPoulie'),
+    poulie: rayonPrimitif(g('dentsPoulie'), g('pasChaine')),
   };
   const poulieHaute = [RA[0] + g('decalagePoulieHaute'), RA[1] - rayons.pignon - g('descentePoulieHaute')];
   const poulieBasse = add(poulieHaute, [

@@ -51,6 +51,22 @@ export const SOURCES = Object.freeze({
     url: 'https://www.canyon.com/fr-ch/blog-content/actualite-velo-route/explication-geometrie-velo-route/b19102022.html',
     type: 'fiche',
   }),
+  'canyon-hb0067': Object.freeze({
+    titre: 'Canyon, page du cintre HB0067 AL Gravel Dropbar (évasement, déport, inclinaison, largeurs, collier)',
+    url: 'https://www.canyon.com/fr-ch/accessoires-velo/composants/cintres-cockpits-potences/canyon-hb0067-al-gravel-dropbar/9102480.html',
+    type: 'fiche',
+  }),
+  'canyon-photo-hb0067-marquage': Object.freeze({
+    titre: 'Canyon, photo officielle du cintre HB0067 de 420, en pleine taille : marquage « REACH 70 mm », ' +
+      '« DROP 128 mm », « FLARE 16° »',
+    url: 'https://dma.canyon.com/image/upload/v1772197873/2026_full_S-PARTS_HB-CAYN-HB0067-01-AL-31-8-420-bk-gy_10016269_BK_GY_full_bf3ph4',
+    type: 'photo',
+  }),
+  'canyon-photo-st0046': Object.freeze({
+    titre: 'Canyon, photo officielle de la potence ST0046 de 60, en pleine taille : marquage « LENGTH 60 mm », « ANGLE 6° »',
+    url: 'https://dma.canyon.com/image/upload/v1778490570/2026_full_S-PARTS_ST-ST0046-01-60-31-8-1-1-8_9102474_BK_full_xjukzl',
+    type: 'photo',
+  }),
 
   // Continental
   'continental-terra-adventure': Object.freeze({
@@ -117,6 +133,47 @@ export const SOURCES = Object.freeze({
   'shimano-rx610-2x12': Object.freeze({
     titre: 'Shimano, page de la gamme GRX RX610 2x12',
     url: `${SHIMANO_INFO}/lineup/rx610-2x12`,
+    type: 'fiche',
+  }),
+  'shimano-rx610-1x12': Object.freeze({
+    titre: 'Shimano, page de la gamme GRX RX610 1x12 : ST-RX610-R, BL-RX610-L, RD-RX822-GS, CS-M7100-12, FC-RX610-1, ' +
+      'BB-RS500-PB, CN-M7100',
+    url: `${SHIMANO_INFO}/lineup/rx610-1x12`,
+    type: 'fiche',
+  }),
+  'shimano-fc-rx610-1': Object.freeze({
+    titre: 'Shimano, fiche technique du pédalier FC-RX610-1 (ligne de chaîne, entraxe, quatre bras, facteur Q, matières)',
+    url: `${SHIMANO_INFO}/product/FC-RX610-1`,
+    type: 'fiche',
+  }),
+  'shimano-bb-rs500-pb': Object.freeze({
+    titre: 'Shimano, fiche technique du boîtier BB-RS500-PB (largeur de boîte, adaptateur en résine)',
+    url: `${SHIMANO_INFO}/product/BB-RS500-PB`,
+    type: 'fiche',
+  }),
+  'shimano-cs-m7100-12': Object.freeze({
+    titre: 'Shimano, fiche technique de la cassette CS-M7100-12 (dentures, matières des pignons et de l’araignée)',
+    url: `${SHIMANO_INFO}/product/CS-M7100-12`,
+    type: 'fiche',
+  }),
+  'shimano-cn-m7100': Object.freeze({
+    titre: 'Shimano, fiche technique de la chaîne CN-M7100 (plaques grises et SIL-TEC, attache QUICK-LINK)',
+    url: `${SHIMANO_INFO}/product/CN-M7100`,
+    type: 'fiche',
+  }),
+  'shimano-rd-rx822-gs': Object.freeze({
+    titre: 'Shimano, fiche technique du dérailleur RD-RX822-GS (grand pignon de 45, galets de 13 dents, matières)',
+    url: `${SHIMANO_INFO}/product/RD-RX822-GS`,
+    type: 'fiche',
+  }),
+  'shimano-st-rx610-r': Object.freeze({
+    titre: 'Shimano, fiche technique de la manette ST-RX610-R (collier, durite SM-BH90-JK-SSR noire, gaines)',
+    url: `${SHIMANO_INFO}/product/ST-RX610-R`,
+    type: 'fiche',
+  }),
+  'shimano-bl-rx610-l': Object.freeze({
+    titre: 'Shimano, fiche technique du levier de frein BL-RX610-L (levier simple, collier)',
+    url: `${SHIMANO_INFO}/product/BL-RX610-L`,
     type: 'fiche',
   }),
   'shimano-rx820-2x12-di2': Object.freeze({

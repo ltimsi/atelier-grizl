@@ -107,9 +107,30 @@ test('sources connues : chaque cote a une source enregistrée ou est approchée'
   assert.equal(GEO.rayonPneu.approche, true, 'rayon extérieur du pneu non publié');
   assert.equal(GEO.diametreSiegeJante.v, 622);
   assert.ok(GEO.rayonPneu.v > GEO.diametreSiegeJante.v / 2, 'le pneu entoure le siège de jante');
-  for (const cle of ['hauteurSelle', 'anglePotence', 'deportCintre', 'descenteCintre']) {
-    assert.equal(GEO[cle].approche, true, cle);
+  // Angle de la potence, déport et descente du cintre sont publiés : voir le test des cotes officielles qui suit.
+  assert.equal(GEO.hauteurSelle.approche, true, 'hauteurSelle');
+});
+
+test('transmission et poste : cotes officielles Shimano et Canyon', () => {
+  const attendu = {
+    ligneChaine: [49.7, 'shimano-fc-rx610-1'], // « Chain line (mm) 49.7 »
+    dentsPoulie: [13, 'shimano-rd-rx822-gs'], // « Pulley / Teeth 13T »
+    anglePotence: [6, 'canyon-photo-st0046'], // marquage « ANGLE 6° » de la potence de 60
+    deportCintre: [70, 'canyon-photo-hb0067-marquage'], // marquage « REACH 70 mm »
+    descenteCintre: [128, 'canyon-photo-hb0067-marquage'], // marquage « DROP 128 mm »
+  };
+  for (const [cle, [v, src]] of Object.entries(attendu)) {
+    assert.equal(GEO[cle]?.v, v, `${cle} : valeur`);
+    assert.equal(GEO[cle].src, src, `${cle} : source`);
+    assert.ok(!GEO[cle].approche, `${cle} : publiée`);
   }
+  for (const cle of ['anglePotence', 'deportCintre', 'descenteCintre']) assert.ok(GEO[cle].aVerifier, `${cle} : à vérifier`);
+  assert.equal(GEO.rayonPoulie, undefined, 'le rayon des galets découle de leurs dents');
+  const p = points();
+  proche(p.rayons.poulie, 13 * GEO.pasChaine.v / (2 * Math.PI), 1e-9, 'rayon primitif des galets');
+  // Potence de six degrés montée vers le bas : la perpendiculaire à la direction, moins l'angle de la potence.
+  proche(inclinaison(p.S0, p.S1), 90 - GEO.angleDirection.v - GEO.anglePotence.v, 1e-9, 'inclinaison de la potence');
+  assert.ok(p.S1[0] > p.S0[0] && p.S1[1] > p.S0[1], 'la potence monte vers l’avant');
 });
 
 test('rayons : la fiche ne les compte pas, la photo officielle en montre vingt-quatre par roue', () => {
