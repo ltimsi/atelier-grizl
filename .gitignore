@@ -6,3 +6,7 @@ tools/shots*/
 *.png
 !docs/**/*.png
 .DS_Store
+task_plan.md
+findings.md
+progress.md
+.planning/
