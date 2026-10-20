@@ -78,7 +78,7 @@
 **Interfaces:**
 - Produces:
   - `GEO` : objet `{ cle: { v: number, src: string|null, approche?: true, aVerifier?: string } }` ;
-  - `points(geo = GEO)` : renvoie des points 2D en millimètres (x vers l'avant, y vers le haut) `RA, FA, BB, HTt, HTb, STt, SPt, S0, S1, PR, PL, CF, CR, CROWN` et des ancres 3D `ancres: { disqueArriere, disqueAvant, etrierAvant, cocotteGauche }` ;
+  - `points(geo = GEO)` : renvoie des points 2D en millimètres (x vers l'avant, y vers le haut) `RA, FA, BB, HTt, HTb, STt, SPt, S0, S1, PR, PL, CF, CR, CROWN` et des ancres 3D `ancres: { disqueArriere, disqueAvant, etrierAvant, cocotteGauche, mains }` ;
   - `cheminChaine(p)` : renvoie un tableau de points 2D ;
   - `approximations(geo = GEO)` : renvoie `[{ cle, note }]` ;
   - `SOURCES` : objet `{ id: { titre, url, type: 'fiche'|'manuel'|'photo'|'tableau' } }`.
@@ -88,14 +88,18 @@
     - `FA[0]-RA[0] = 1076`, `hypot(BB-RA) = 440`, `RA[1]-BB[1] = 75` ;
     - `HTt[1]-BB[1] = 596`, `HTt[0]-BB[0] = 404`, `hypot(HTt-HTb) = 158` ;
     - angle de `HTb→HTt` avec l'horizontale `= 71`, angle du tube de selle `= 73.5` ;
-    - `hypot(PR-BB) = 165`, `hypot(S1-S0) = 60`.
+    - `hypot(PR-BB) = 165`, `hypot(S1-S0) = 60` ;
+    - longueur du tube de selle `hypot(STt-BB) = 522` ;
+    - tube supérieur horizontal : distance horizontale entre l'axe du tube de selle, à la hauteur de `HTt`, et `HTt` `= 581` ;
+    - position des mains : `ancres.mains` (point de prise sur la cocotte droite) moins `BB` vaut `[544, 683]` en x et y, à 2 mm près. La fiche définit ce point par un lien « En savoir plus » : le lire et noter la définition dans `GEO.reachEfficace.aVerifier` si elle reste floue.
   - `sources connues` : chaque `GEO[c]` a soit `src` présent dans `SOURCES`, soit `approche: true`.
   - `approximations sans chiffre` : aucune `note` de `approximations()` ne contient de chiffre (`/\d/`).
   - `angle de direction à vérifier` : `GEO.angleDirection.aVerifier` contient « inclinaison du cintre ».
 - [ ] **Step 2: Run** `node --test tests/js/`. Expected: FAIL, modules absents.
 - [ ] **Step 3: Implement** `geometrie.js` and `sources.js` from the maquette constants, with these corrections:
   - le cintre de 440 se mesure d'axe en axe au niveau des cocottes, donc `z = ±220` à cet endroit ;
-  - la longueur du tube de selle, la hauteur de selle, l'angle de potence, le déport de cintre et le nombre de rayons portent `approche: true`, avec une note sans chiffre.
+  - la hauteur de selle (la fiche ne donne qu'une plage), l'angle de potence, le déport et la descente du cintre et le nombre de rayons portent `approche: true`, avec une note sans chiffre ;
+  - toutes les cotes et références viennent de `docs/recherche/composants-origine.md`, relevé mot pour mot sur la fiche Canyon le 20 octobre 2026.
 - [ ] **Step 4: Register the sources** in `SOURCES`:
   - `canyon-4553` : fiche suisse ;
   - `canyon-photo-4553-fv` : photo officielle Floating Violet, URL `https://dma.canyon.com/image/upload/w_1600,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1785934004/2027_FULL_grizl_cf-7_4553_R126_P06_talwxt` ;
