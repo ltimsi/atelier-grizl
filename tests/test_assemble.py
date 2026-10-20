@@ -27,7 +27,7 @@ CORRESPONDANCE = [
     ("freins-plaquettes", "etrier", "remplacer", "Plaquettes d’origine", "Shimano L04C-MF"),
     ("freins-rodage", "disques", "entretenir", None, None),
     ("freins-centrage", "etrier", "regler", None, None),
-    ("freins-controles", "etrier", "entretenir", None, None),
+    ("freins-controles", "etrier", "comprendre", None, None),
     ("freins-purge", "manettes", "entretenir", None, None),
     ("freins-securite", "manettes", "comprendre", None, None),
 ]
@@ -37,7 +37,7 @@ VIDEO = {"ul.media", "p.a-video"}
 
 
 class Ateliers(HTMLParser):
-    """Les section.atelier d'une page, avec leurs attributs et les blocs qu'elles contiennent.
+    """Les section.atelier d'une page, avec leurs attributs, les id des sections qui les contiennent et leurs blocs.
 
     Relevé indépendant de celui d'assemble.py : les tests ne contrôlent pas le script avec son propre code."""
 
@@ -57,11 +57,12 @@ class Ateliers(HTMLParser):
             s = None
             if "atelier" in classes:
                 s = {"id": a.get("id"), "classes": classes, "zone": a.get("data-zone"), "type": a.get("data-type"),
-                     "de": a.get("data-de"), "vers": a.get("data-vers"), "blocs": set()}
+                     "de": a.get("data-de"), "vers": a.get("data-vers"), "blocs": set(),
+                     "ancetres": [i for i, _ in self.pile if i]}
                 self.liste.append(s)
-            self.pile.append(s)
+            self.pile.append((a.get("id"), s))
             return
-        ouverts = [s for s in self.pile if s]
+        ouverts = [s for _, s in self.pile if s]
         if ouverts:
             ouverts[-1]["blocs"].update(nom for nom, (balise, classe) in self.BLOCS.items()
                                         if classe in classes and balise in (None, tag))
@@ -167,7 +168,8 @@ class TestBuild(unittest.TestCase):
         return Ateliers(self.page()).liste
 
     def test_correspondance(self):
-        ateliers = self.ateliers()
+        # Les ateliers du chapitre Freins seulement : ceux des autres chapitres n'entrent pas dans ce tableau.
+        ateliers = [s for s in self.ateliers() if "freins" in s["ancetres"]]
         self.assertEqual([(s["id"], s["zone"], s["type"], s["de"], s["vers"]) for s in ateliers], CORRESPONDANCE)
         for s in ateliers:
             self.assertIn("sub", s["classes"], s["id"])
