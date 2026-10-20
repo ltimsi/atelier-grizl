@@ -472,6 +472,13 @@ test('poste : la main tombe sur le dessus de chaque cocotte, au point publié pa
   for (const [nom, main] of [['cocotte droite', p.ancres.mains], ['cocotte gauche', p.ancres.cocotteGauche]]) {
     const ms = parNom(maillages, nom);
     assert.ok(ms.length > 0, `${nom} absente`);
+    // Le point de saisie est un sommet de la cocotte, posé exactement sur la main : en x, en y et en z.
+    // Le dessus est presque plat et porte un sommet tous les cinq ou six millimètres : une tolérance de l'ordre du
+    // millimètre laisserait passer une cocotte décalée d'une section. On exige donc le sommet lui-même.
+    const M = new THREE.Vector3(...main);
+    const pres = Math.min(...ms.flatMap(sommets).map(q => q.distanceTo(M)));
+    assert.ok(pres <= 0.05, `${nom} : sommet le plus proche de la main à ${pres.toFixed(3)} mm`);
+    // Et ce point est bien sur le dessus de la cocotte.
     let dessus = -Infinity;
     for (const m of ms) surFaces(m, 1, q => {
       if (Math.abs(q.x - main[0]) <= 1.5 && Math.abs(q.z - main[2]) <= 1.5) dessus = Math.max(dessus, q.y);

@@ -46,8 +46,7 @@ export const META = Object.freeze({
   approche: Object.freeze([
     'Point de saisie de la cocotte : Canyon ne le précise pas. Il est pris sur le dessus de la cocotte, au plat où ' +
       'se pose la main, avant la corne.',
-    'Cocottes : forme approchée d’après la photo officielle du vélo. Les photos produit de Shimano ne sont pas ' +
-      'consultables. La cocotte gauche est dessinée comme la droite.',
+    'Cocottes : forme approchée d’après la photo officielle du vélo. La cocotte gauche est dessinée comme la droite.',
     'Leviers : forme approchée d’après la photo officielle du vélo. Le petit levier de la manette droite est approché.',
     'Place des cocottes sur la courbe du cintre et rotation du cintre dans la potence : non publiées. Elles sont ' +
       'calculées pour que la main tombe au point publié par Canyon.',
