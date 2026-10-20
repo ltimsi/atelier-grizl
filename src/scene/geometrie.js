@@ -1,0 +1,184 @@
+// Géométrie du Canyon Grizl CF 7, taille M : cotes publiées, cotes approchées, points dérivés.
+//
+// Repère des points, en millimètres :
+//   x vers l'avant, avec l'axe de la roue arrière à x = 0 ;
+//   y vers le haut, avec le sol à y = 0 ;
+//   z vers la droite du cycliste, donc côté transmission positif et côté disques négatif.
+// Les points 2D sont [x, y] (vue côté transmission). Les ancres 3D sont [x, y, z].
+//
+// Règle des sources (docs/regle-des-sources.md) : chaque entrée de GEO vient d'un document enregistré dans
+// SOURCES (src), ou porte approche: true avec une note sans chiffre. Une valeur approchée est dessinée au mieux,
+// jamais présentée comme exacte. Module pur : ni three.js ni DOM, utilisable tel quel dans Node.
+
+const D2R = Math.PI / 180;
+
+const FICHE = 'canyon-4553';
+
+// Cote publiée par un document enregistré dans SOURCES.
+const pub = (v, src = FICHE, plus = {}) => Object.freeze({ v, src, ...plus });
+// Cote non publiée : dessinée au mieux. La note ne contient aucun chiffre.
+const apr = (v, note) => Object.freeze({ v, src: null, approche: true, note });
+
+const DEFINITION_MAIN =
+  'Canyon définit la position de la main par un lien « En savoir plus » de la fiche. Sa page d’explication de la ' +
+  'géométrie dit que ces valeurs sont calculées avec la main posée sur les cocottes, au point où tu saisis la cocotte, ' +
+  'en tenant compte de la potence, de la forme du cockpit et des entretoises montées à la livraison. ' +
+  'Elle ne précise pas ce point sur la cocotte : à vérifier.';
+
+export const GEO = Object.freeze({
+  // ---- Cadre : colonne M de la fiche Canyon 4553 (repères entre parenthèses) ----
+  empattement: pub(1076), // (h)
+  bases: pub(440), // (g) de l'axe du boîtier à l'axe de la roue arrière
+  differenceBoitierMoyeu: pub(75), // (l) axe du boîtier sous l'axe du moyeu
+  stack: pub(596), // (i)
+  reach: pub(404), // (j)
+  longueurDouille: pub(158), // (d)
+  angleDirection: pub(71, FICHE, {
+    aVerifier:
+      'La fiche nomme cette cote « inclinaison du cintre ». C’est très probablement l’angle de direction. ' +
+      'À confirmer avec le schéma de la fiche.',
+  }), // (e) en degrés
+  angleTubeSelle: pub(73.5), // (f) en degrés
+  longueurTubeSelle: pub(522), // (b) du boîtier au haut du tube, sur son axe
+  longueurTubeSuperieur: pub(581), // (c) horizontale, de l'axe du tube de selle à la douille
+  stackEfficace: pub(683, FICHE, { aVerifier: DEFINITION_MAIN }), // (o)
+  reachEfficace: pub(544, FICHE, { aVerifier: DEFINITION_MAIN }), // (p)
+
+  // ---- Cadre : cotes non publiées ----
+  rayonPneu: apr(356, 'Le rayon extérieur du pneu monté n’est pas publié. Il est approché.'),
+  hauteurSelle: apr(760,
+    'La fiche donne une plage de hauteurs de selle, pas une valeur. La selle est posée vers le milieu de cette plage.'),
+  retraitSelle: apr(30,
+    'La forme de la tête de tige et des rails de selle n’est pas publiée. ' +
+    'L’écart entre le haut de la tige et le dessus de la selle est approché.'),
+  ecartCouronne: apr(16,
+    'La forme de la fourche n’est pas publiée. La position de la couronne sous la douille est approchée.'),
+
+  // ---- Roues et freins ----
+  diametreSiegeJante: pub(622, 'continental-terra-adventure'), // norme ETRTO des roues de 28 pouces, cotée par Continental
+  nombreRayons: apr(24, 'La fiche ne donne pas le nombre de rayons. Il est approché.'),
+  diametreDisque: pub(160), // avant et arrière
+  decalageDisqueAvant: apr(40, 'La position latérale du disque avant n’est pas publiée. Elle est approchée.'),
+  decalageDisqueArriere: apr(57, 'La position latérale du disque arrière n’est pas publiée. Elle est approchée.'),
+  rayonEtrier: apr(72, 'La distance des étriers à leur moyeu n’est pas publiée. Elle est approchée.'),
+  angleEtrierAvant: apr(200, 'La position de l’étrier avant autour du moyeu n’est pas publiée. Elle est approchée.'),
+  angleEtrierArriere: apr(12, 'La position de l’étrier arrière autour du moyeu n’est pas publiée. Elle est approchée.'),
+
+  // ---- Transmission ----
+  longueurManivelle: pub(165), // 2XS à M
+  dentsPlateau: pub(40),
+  angleManivelle: apr(-25,
+    'Le pédalier est dessiné dans une position choisie pour la lisibilité. Ce n’est pas une position réelle.'),
+  pasChaine: apr(12.7,
+    'Le pas de la chaîne n’est pas relevé sur un document du fabricant. La valeur retenue est celle du pas courant des chaînes de vélo.'),
+  dentsPignonDessine: apr(21,
+    'La chaîne est dessinée sur un seul pignon, choisi pour la lisibilité. Ce n’est pas un rapport réel.'),
+  ligneChaine: apr(44.5, 'La position latérale de la chaîne n’est pas publiée. Elle est approchée.'),
+  zPetitPignon: apr(64, 'La position latérale de la cassette n’est pas publiée. Elle est approchée.'),
+  ecartPignons: apr(3.9, 'L’écart entre deux pignons de la cassette n’est pas publié. Il est approché.'),
+  decalagePoulieHaute: apr(6, 'La position de la poulie haute du dérailleur n’est pas publiée. Elle est approchée.'),
+  descentePoulieHaute: apr(32,
+    'La distance entre le pignon et la poulie haute du dérailleur n’est pas publiée. Elle est approchée.'),
+  ecartPoulies: apr(60, 'La fiche indique une cage courte, sans cote. L’écart entre les poulies est approché.'),
+  angleCage: apr(15, 'L’inclinaison de la cage du dérailleur n’est pas publiée. Elle est approchée.'),
+  rayonPoulie: apr(22, 'Le rayon des poulies du dérailleur n’est pas publié. Il est approché.'),
+
+  // ---- Poste de pilotage ----
+  longueurPotence: pub(60), // « 60 mm en S à L »
+  largeurCintre: pub(440), // « 440 mm en M à 2XL », d'axe en axe au niveau des cocottes
+  hauteurPotence: apr(42,
+    'Le nombre d’entretoises montées à la livraison n’est pas publié. La hauteur de la potence est approchée.'),
+  anglePotence: apr(13, 'L’angle de la potence n’est pas publié. Il est approché.'), // au-dessus de l'horizontale
+  deportCintre: apr(84, 'Le déport du cintre n’est pas publié. Il est approché.'),
+  descenteCintre: apr(128, 'La descente du cintre n’est pas publiée. Elle est approchée.'),
+});
+
+// Les ancres se posent juste à gauche de la pièce, du côté des disques, pour rester visibles (placement de vue, pas une cote).
+const DEVANT_DISQUE = 5;
+const DEVANT_ETRIER = 24;
+
+const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
+const mul = (a, k) => [a[0] * k, a[1] * k];
+const pol = (c, r, deg) => [c[0] + r * Math.cos(deg * D2R), c[1] + r * Math.sin(deg * D2R)];
+const rayonPrimitif = (dents, pas) => dents * pas / (2 * Math.PI);
+
+function arc(c, r, a0, a1, pas = 12) {
+  const n = Math.max(1, Math.ceil(Math.abs(a1 - a0) / pas)), o = [];
+  for (let i = 0; i <= n; i++) o.push(pol(c, r, a0 + (a1 - a0) * i / n));
+  return o;
+}
+
+// Points 2D du vélo, rayons de la transmission et ancres 3D, calculés depuis GEO.
+export function points(geo = GEO) {
+  const g = cle => {
+    if (!geo[cle]) throw new Error(`GEO.${cle} est absent`);
+    return geo[cle].v;
+  };
+
+  // Roues et cadre
+  const RA = [0, g('rayonPneu')];
+  const FA = [g('empattement'), RA[1]];
+  const BB = [Math.sqrt(g('bases') ** 2 - g('differenceBoitierMoyeu') ** 2), RA[1] - g('differenceBoitierMoyeu')];
+
+  // Direction (dHT) et tube de selle (dST) : vecteurs unitaires qui montent en penchant vers l'arrière
+  const dHT = [-Math.cos(g('angleDirection') * D2R), Math.sin(g('angleDirection') * D2R)];
+  const dST = [-Math.cos(g('angleTubeSelle') * D2R), Math.sin(g('angleTubeSelle') * D2R)];
+  const HTt = add(BB, [g('reach'), g('stack')]);
+  const HTb = add(HTt, mul(dHT, -g('longueurDouille')));
+  const CROWN = add(HTb, mul(dHT, -g('ecartCouronne')));
+  const STt = add(BB, mul(dST, g('longueurTubeSelle')));
+  const SPt = add(BB, mul(dST, g('hauteurSelle') - g('retraitSelle')));
+
+  // Poste de pilotage : S0 est l'axe de la potence sur le tube de direction, S1 le centre du cintre
+  const S0 = add(HTt, mul(dHT, g('hauteurPotence')));
+  const S1 = add(S0, mul([Math.cos(g('anglePotence') * D2R), Math.sin(g('anglePotence') * D2R)], g('longueurPotence')));
+
+  // Pédalier et étriers
+  const PR = pol(BB, g('longueurManivelle'), g('angleManivelle'));
+  const PL = pol(BB, g('longueurManivelle'), g('angleManivelle') + 180);
+  const CF = pol(FA, g('rayonEtrier'), g('angleEtrierAvant'));
+  const CR = pol(RA, g('rayonEtrier'), g('angleEtrierArriere'));
+
+  // Transmission : rayons primitifs et poulies du dérailleur
+  const rayons = {
+    pignon: rayonPrimitif(g('dentsPignonDessine'), g('pasChaine')),
+    plateau: rayonPrimitif(g('dentsPlateau'), g('pasChaine')),
+    poulie: g('rayonPoulie'),
+  };
+  const poulieHaute = [RA[0] + g('decalagePoulieHaute'), RA[1] - rayons.pignon - g('descentePoulieHaute')];
+  const poulieBasse = add(poulieHaute, [
+    g('ecartPoulies') * Math.sin(g('angleCage') * D2R),
+    -g('ecartPoulies') * Math.cos(g('angleCage') * D2R),
+  ]);
+
+  // Ancres 3D. Les mains sont exactement au stack et au reach efficaces de la fiche, mesurés depuis le boîtier.
+  const rayonDisque = g('diametreDisque') / 2;
+  const zCocotte = g('largeurCintre') / 2;
+  const main = add(BB, [g('reachEfficace'), g('stackEfficace')]);
+  const ancres = {
+    disqueArriere: [RA[0], RA[1] + rayonDisque, -(g('decalageDisqueArriere') + DEVANT_DISQUE)],
+    disqueAvant: [FA[0], FA[1] + rayonDisque, -(g('decalageDisqueAvant') + DEVANT_DISQUE)],
+    etrierAvant: [CF[0], CF[1], -(g('decalageDisqueAvant') + DEVANT_ETRIER)],
+    cocotteGauche: [main[0], main[1], -zCocotte],
+    mains: [main[0], main[1], zCocotte],
+  };
+
+  return { RA, FA, BB, HTt, HTb, STt, SPt, S0, S1, PR, PL, CF, CR, CROWN, dHT, dST, poulieHaute, poulieBasse, rayons, ancres };
+}
+
+// Chemin 2D de la chaîne : arrière du pignon, poulie haute, poulie basse, avant du plateau. À lisser par l'appelant.
+export function cheminChaine(p) {
+  return [
+    ...arc(p.RA, p.rayons.pignon, 90, 270),
+    ...arc(p.poulieHaute, p.rayons.poulie, 90, -90),
+    ...arc(p.poulieBasse, p.rayons.poulie, 180, 270),
+    ...arc(p.BB, p.rayons.plateau, -90, 90),
+  ];
+}
+
+// Ce qui est approché dans GEO, pour la liste des approximations du guide. Les notes ne contiennent aucun chiffre.
+export function approximations(geo = GEO) {
+  return Object.entries(geo)
+    .filter(([, e]) => e.approche)
+    .map(([cle, e]) => ({ cle, note: e.note || 'Forme approchée.' }));
+}
