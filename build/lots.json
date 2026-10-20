@@ -2,6 +2,14 @@
   "version": "0.1.0",
   "lots": [
     {
+      "lot": 0,
+      "titre": "Le vélo en 3D",
+      "statut": "en relecture",
+      "parts": [],
+      "nav": [],
+      "modeles": []
+    },
+    {
       "lot": 1,
       "titre": "Freins",
       "statut": "en relecture",

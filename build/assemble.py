@@ -93,12 +93,20 @@ def carte_imports(cible):
     return '<script type="importmap">\n' + json.dumps({"imports": imports}, indent=2) + "\n</script>"
 
 
+def donnees_zones():
+    """Bloc <script type="application/json" id="zones-data"> : le contenu de src/scene/zones.json, lu par app.js."""
+    zones = json.loads((SRC / "scene" / "zones.json").read_text(encoding="utf-8"))
+    # « < » échappé : aucune chaîne du JSON ne peut fermer la balise <script>.
+    texte = json.dumps(zones, ensure_ascii=False, indent=2).replace("<", "\\u003c")
+    return f'<script type="application/json" id="zones-data">\n{texte}\n</script>'
+
+
 def pied(config, modeles, cible):
     date = datetime.date.today().isoformat()
     version = f'{config["version"]} du {date}'
     # La visionneuse et les modèles sont des scripts classiques ; la scène est un module ES (chemin identique dans les deux cibles).
     dossier = "js/" if cible == "site" else ""
-    scripts = [carte_imports(cible), f'<script src="{dossier}viewer.js"></script>']
+    scripts = [donnees_zones(), carte_imports(cible), f'<script src="{dossier}viewer.js"></script>']
     scripts += [f'<script src="{dossier}m-{m}.js"></script>' for m in modeles]
     scripts.append('<script type="module" src="js/scene/app.js"></script>')
     return lire("99-foot").replace("<!--SCRIPTS-->", "\n".join(scripts)).replace("<!--VERSION-->", html.escape(version))

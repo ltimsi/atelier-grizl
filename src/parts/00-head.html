@@ -14,6 +14,7 @@
   --hot:#9E4C06; --hot-2:#FAE8D6;
   --ok:#2B724A; --ok-2:#DFF0E5;
   --stop:#AE2A20; --stop-2:#F7E0DC;
+  --studio-hi:#FDFDFD; --studio-lo:#D5DADD; --shadow:rgba(22,32,42,.18);
   --f-disp:"Archivo","Arial Narrow",Arial,sans-serif;
   --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
@@ -28,6 +29,7 @@
     --hot:#F2A766; --hot-2:#3A2816;
     --ok:#78CB9E; --ok-2:#16321F;
     --stop:#F48B81; --stop-2:#3E1D1A;
+    --studio-hi:#3A424A; --studio-lo:#14191E; --shadow:rgba(0,0,0,.45);
     color-scheme:dark;
   }
 }
@@ -39,6 +41,7 @@
   --hot:#F2A766; --hot-2:#3A2816;
   --ok:#78CB9E; --ok-2:#16321F;
   --stop:#F48B81; --stop-2:#3E1D1A;
+  --studio-hi:#3A424A; --studio-lo:#14191E; --shadow:rgba(0,0,0,.45);
   color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:border-box}
@@ -240,6 +243,101 @@ ul.check input:checked + span{color:var(--ink-3);text-decoration:line-through;te
 details{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);margin:.6rem 0}
 details > summary{cursor:pointer;padding:10px 14px;font-weight:600;list-style-position:inside}
 details > div{padding:0 14px 12px}
+
+/* Accueil : le vélo en 3D, ses zones d'atelier et la fiche ouverte. Repris de la maquette du 20 octobre. */
+.intro{padding-bottom:8px}
+.accueil{display:flex;flex-direction:column;gap:14px;margin:1.2rem 0 1.6rem;min-width:0}
+.scene{margin:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+.scene figcaption{margin:0;font-size:.84rem;color:var(--ink-3)}
+.scene .modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:var(--plate);border:1px solid var(--line);border-radius:12px;padding:4px}
+.scene .modes button{font:inherit;color:var(--ink);border:0;background:none;border-radius:9px;padding:9px 6px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+.scene .modes b{font-family:var(--f-disp);font-weight:750;font-stretch:85%;font-size:1rem;line-height:1.1;text-align:center}
+.scene .modes small{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+.scene .modes button[aria-selected="true"]{background:var(--panel);box-shadow:0 1px 3px var(--shadow)}
+.scene .modes button[aria-selected="true"] small{color:var(--acc)}
+.scene .modes button:disabled{opacity:.45;cursor:not-allowed}
+.scene-alerte{margin:0;font-family:var(--f-mono);font-size:.78rem;color:var(--hot);background:var(--hot-2);border-radius:8px;padding:8px 10px}
+.scene .stage{position:relative;width:100%;aspect-ratio:4/3.3;max-height:74vh;background:var(--plate);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.scene .stage.studio{background:radial-gradient(120% 95% at 50% 36%,var(--studio-hi) 0%,var(--studio-lo) 100%)}
+.scene .stage svg,.scene .stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.scene .stage canvas{touch-action:none}
+.scene .hint{position:absolute;left:12px;top:10px;right:12px;margin:0;font-family:var(--f-mono);font-size:.7rem;line-height:1.4;color:var(--ink-3);pointer-events:none}
+.scene .status{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;font-family:var(--f-mono);font-size:.8rem;color:var(--ink-2);pointer-events:none}
+.scene .stage-btn{position:absolute;bottom:10px;font-family:var(--f-mono);font-size:.72rem;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 11px;cursor:pointer}
+#approche{left:10px}
+#vue-ensemble{right:10px}
+.scene .key{position:absolute;left:12px;bottom:48px;display:flex;flex-wrap:wrap;gap:4px 12px;font-family:var(--f-mono);font-size:.68rem;color:var(--ink-2);pointer-events:none;max-width:62%}
+.scene .key span{display:inline-flex;align-items:center;gap:5px}
+.scene .key i{width:10px;height:10px;border-radius:3px;display:inline-block}
+/* Couleurs de famille du mode simple, celles de creerMateriaux (src/scene/materiaux.js) */
+.scene .key .k-trans{background:#6b5bc2}
+.scene .key .k-freins{background:#d9822b}
+.scene .key .k-cadre{background:#a3aeb8}
+/* Pastilles des zones, posées en pixels sur l'image */
+#pins{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.zpin{position:absolute;left:0;top:0;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:2px solid var(--acc);background:var(--panel);color:var(--acc);font-family:var(--f-mono);font-size:.8rem;font-weight:600;display:grid;place-items:center;cursor:pointer;pointer-events:auto;box-shadow:0 1px 5px var(--shadow);padding:0}
+.zpin::before{content:"";position:absolute;inset:-7px;border-radius:50%}
+.zpin.on{background:var(--acc);color:var(--on-acc)}
+.zpin.on::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--acc);opacity:.5;animation:ping 1.8s ease-out infinite}
+@keyframes ping{from{transform:scale(.8);opacity:.6}to{transform:scale(1.5);opacity:0}}
+@media (prefers-reduced-motion: reduce){.zpin.on::after{animation:none}}
+/* Puces des zones, sous la scène */
+.zones{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:none;min-width:0}
+.zones::-webkit-scrollbar{display:none}
+.zones button{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px 6px 6px;cursor:pointer;font:inherit;font-size:.88rem;color:var(--ink);white-space:nowrap}
+.zones button span{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:.72rem;font-weight:600;color:var(--acc);border:1.5px solid var(--acc)}
+.zones button[aria-pressed="true"]{border-color:var(--acc);background:var(--acc-2)}
+.zones button[aria-pressed="true"] span{background:var(--acc);color:var(--on-acc)}
+/* Fiche de la zone ouverte : l'atelier y est déplacé depuis son chapitre */
+.fiche{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.fiche > *{margin:0}
+.fiche-tete{display:flex;gap:12px;align-items:flex-start}
+.fiche-tete .num{flex:0 0 auto;font-family:var(--f-disp);font-weight:800;font-stretch:70%;font-size:2.4rem;line-height:.9;color:var(--acc)}
+.fiche-tete .eyebrow{margin-bottom:.25rem}
+.fiche-tete h2{font-size:1.45rem;font-stretch:85%}
+.swap{display:inline-grid;grid-template-columns:repeat(2,minmax(0,auto));gap:3px;background:var(--plate);border:1px solid var(--line);border-radius:999px;padding:3px;align-self:flex-start;max-width:100%}
+.swap button{font:inherit;font-size:.84rem;color:var(--ink);border:0;background:none;border-radius:999px;padding:6px 12px;cursor:pointer;min-width:0}
+.swap button[aria-pressed="true"]{background:var(--acc);color:var(--on-acc)}
+.fiche-ateliers{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.fiche-ateliers button{font:inherit;font-size:.84rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:5px 11px;cursor:pointer;text-align:left}
+.fiche-ateliers button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.fiche-atelier{min-width:0}
+.fiche-atelier > .atelier{margin:0}
+.fiche-atelier > .atelier > h3:first-child{margin-top:0}
+.fiche .fiche-approche{background:var(--bg)}
+.fiche-approche > summary{font-weight:500;font-size:.9rem}
+.fiche-approche p{margin:.6rem 0 .2rem;font-size:.88rem;font-weight:600}
+.fiche-approche ul{margin:0;font-size:.88rem;color:var(--ink-2)}
+@media (max-width:420px){.fiche{padding:14px}}
+/* Liste « Ce qui est approché » */
+.approche-liste{width:min(40rem,calc(100vw - 32px));max-height:min(85vh,52rem);padding:0;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);color:var(--ink);overflow:auto}
+.approche-liste::backdrop{background:rgba(0,0,0,.45)}
+.dlg-tete{position:sticky;top:0;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+.dlg-tete h2{font-size:1.45rem;font-stretch:85%}
+.dlg-tete form{margin:0}
+.approche-liste > p{margin:12px 16px}
+#approche-contenu{padding:0 16px 8px}
+.appr{padding:12px 0;border-top:1px solid var(--line-2)}
+.appr h3{margin:0 0 .4rem;font-size:1.1rem}
+.appr h4{margin:.7rem 0 .25rem}
+.appr ul{margin:0;font-size:.9rem}
+.appr li{margin:.15rem 0;overflow-wrap:anywhere}
+/* Schéma 2D : classes posées par src/scene/schema2d.js, reprises de la maquette */
+#plan .o{fill:var(--panel);stroke:var(--ink);stroke-width:1.4px;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+#plan .n{fill:none;stroke:var(--ink);stroke-width:1.1px;vector-effect:non-scaling-stroke}
+#plan .t{fill:none;stroke:var(--ink-3);stroke-width:.7px;vector-effect:non-scaling-stroke}
+#plan .k{fill:var(--ink-2);stroke:var(--ink);stroke-width:1px;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+#plan .kb{fill:none;stroke:var(--ink-2);stroke-width:24;stroke-linecap:round;stroke-linejoin:round}
+#plan .kb2{fill:none;stroke:var(--ink-2);stroke-width:12;stroke-linecap:round;stroke-linejoin:round}
+#plan .h{fill:none;stroke:var(--ink-3);stroke-width:4;stroke-dasharray:16 11}
+#plan .ch{fill:none;stroke:var(--ink-2);stroke-width:3.4px;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+#plan .ch2{fill:none;stroke:var(--plate);stroke-width:1px;vector-effect:non-scaling-stroke}
+#plan .ground{stroke:var(--line);stroke-width:1.2px;vector-effect:non-scaling-stroke}
+#plan g.on .o{fill:var(--acc-2);stroke:var(--acc)}
+#plan g.on .n,#plan g.on .t,#plan g.on .h,#plan g.on .ch{stroke:var(--acc)}
+#plan g.on .k{fill:var(--acc);stroke:var(--acc)}
+#plan g.on .kb,#plan g.on .kb2{stroke:var(--acc)}
+#plan g.on .h{stroke-width:6}
 
 /* Statut des lots */
 .lot-badge{display:inline-block;font-family:var(--f-mono);font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;color:var(--hot);border:1px solid var(--hot);border-radius:999px;padding:2px 9px;margin:0 0 .6rem}

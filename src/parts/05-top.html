@@ -3,6 +3,46 @@
   <p class="eyebrow">Canyon Grizl CF 7 · taille M · Floating Violet</p>
   <h1>Atelier Grizl</h1>
   <p class="lead">Ton manuel pour monter, régler et réparer ton vélo toi-même : l'ordre des opérations, les couples de serrage, des planches techniques, des pièces en 3D à faire tourner du doigt et les vidéos qui montrent le geste.</p>
+</header>
+
+<section class="accueil" aria-label="Ton vélo et ses ateliers">
+  <figure class="scene" id="scene">
+    <div class="modes" role="tablist" aria-label="Rendu du vélo">
+      <button type="button" role="tab" id="mode-2d" data-mode="2d" aria-selected="false" aria-controls="scene-stage" tabindex="-1"><b>Schéma 2D</b><small>à plat</small></button>
+      <button type="button" role="tab" id="mode-simple" data-mode="simple" aria-selected="false" aria-controls="scene-stage" tabindex="-1"><b>3D simple</b><small>maquette</small></button>
+      <button type="button" role="tab" id="mode-reel" data-mode="reel" aria-selected="true" aria-controls="scene-stage" tabindex="0"><b>3D réaliste</b><small>studio</small></button>
+    </div>
+    <p class="scene-alerte" id="scene-alerte" role="status" hidden></p>
+    <div class="stage studio" id="scene-stage" role="tabpanel" aria-labelledby="mode-reel">
+      <svg id="plan" role="img" aria-label="Schéma du vélo vu côté transmission" hidden></svg>
+      <canvas id="gl" aria-label="Vélo en 3D, à faire tourner"></canvas>
+      <div id="pins"></div>
+      <p class="hint" id="scene-aide">Un doigt pour tourner, deux pour zoomer.</p>
+      <div class="key" id="key" hidden><span><i class="k-trans"></i>transmission</span><span><i class="k-freins"></i>freins</span><span><i class="k-cadre"></i>cadre</span></div>
+      <div class="status" id="scene-statut">Montage du vélo en 3D…</div>
+      <button type="button" class="stage-btn" id="approche" aria-haspopup="dialog">Ce qui est approché</button>
+      <button type="button" class="stage-btn" id="vue-ensemble">Vue d'ensemble</button>
+    </div>
+    <figcaption>Ton vélo tel qu'il sort du carton, avec ses pièces d'origine.</figcaption>
+  </figure>
+
+  <div class="zones" id="chips" role="group" aria-label="Zones d'atelier"></div>
+
+  <article class="fiche" id="fiche">
+    <p class="muted">Touche une pastille du vélo ou une zone ci-dessus : ses ateliers s'ouvrent ici.</p>
+  </article>
+
+  <dialog id="approche-liste" class="approche-liste" aria-labelledby="approche-titre">
+    <div class="dlg-tete">
+      <h2 id="approche-titre">Ce qui est approché</h2>
+      <form method="dialog"><button type="submit" class="btn">Fermer</button></form>
+    </div>
+    <p class="muted small">Pour chaque pièce : les documents suivis, les formes approchées et ce qui reste à vérifier à la livraison.</p>
+    <div id="approche-contenu"></div>
+  </dialog>
+</section>
+
+<div class="intro">
   <dl class="specs">
     <div><dt>Transmission</dt><dd>Shimano GRX 1x12 mécanique, dérailleur RD-RX822 GS, cassette 10-45, plateau 40 dents</dd></div>
     <div><dt>Freins</dt><dd>Shimano GRX hydrauliques flat mount, disques 160 mm Center Lock</dd></div>
@@ -31,5 +71,5 @@
     <p>Chaque chiffre vient d'un document officiel du fabricant de la pièce : Canyon, Shimano, DT Swiss, Continental, Ortlieb, Topeak. Park Tool sert seulement à décrire les gestes. Pas de revendeur, pas de magazine, pas de copie non officielle. Quand le fabricant ne publie pas une valeur, le guide écrit « non publié » ou « à lire sur la pièce », sans chiffre de remplacement.</p>
     <p>Les couples du guide de démarrage Canyon seront ajoutés à partir des pages du guide imprimé livré dans le carton.</p>
   </aside>
-</header>
+</div>
 </div>
