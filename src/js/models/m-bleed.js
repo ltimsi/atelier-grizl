@@ -17,9 +17,8 @@
 
       /* ---------- Outils ---------- */
       function V3(a, b, c) { return new THREE.Vector3(a, b, c || 0); }
-      function lin(m) { if (m.color) m.color.convertSRGBToLinear(); if (m.emissive) m.emissive.convertSRGBToLinear(); return m; }
-      function S(c, met, rough, extra) { return lin(new THREE.MeshStandardMaterial(Object.assign({ color: c, metalness: met, roughness: rough }, extra || {}))); }
-      function P(o) { return lin(new THREE.MeshPhysicalMaterial(o)); }
+      function S(c, met, rough, extra) { return new THREE.MeshStandardMaterial(Object.assign({ color: c, metalness: met, roughness: rough }, extra || {})); }
+      function P(o) { return new THREE.MeshPhysicalMaterial(o); }
       var seed = 11;
       function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
       function canvasTex(w, h, draw, rep) {

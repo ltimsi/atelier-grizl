@@ -1,4 +1,4 @@
-/* Atelier Grizl : visionneuse 3D partagée (three.js r128).
+/* Atelier Grizl : visionneuse 3D partagée (three.js r160). Elle ne démarre pas seule : js/scene/app.js expose window.THREE puis appelle AtelierViewer.start().
    Chaque modèle s'enregistre avec AtelierModels.register(nom, définition).
    Le HTML contient : <figure class="v3d" data-model="nom"> <div class="v3d-stage"></div> ... </figure> */
 (function () {
@@ -72,10 +72,9 @@
 
   /* ---------- Matériaux partagés (M), créés pour chaque visionneuse ---------- */
   function makeMats(THREE) {
-    /* Les couleurs sont écrites en sRGB : on les passe en linéaire, sinon r128 les affiche trop claires. */
-    function lin(m) { if (m.color) m.color.convertSRGBToLinear(); if (m.emissive) m.emissive.convertSRGBToLinear(); return m; }
-    function S(c, met, rough, extra) { return lin(new THREE.MeshStandardMaterial(Object.assign({ color: c, metalness: met, roughness: rough }, extra || {}))); }
-    function P(o) { return lin(new THREE.MeshPhysicalMaterial(o)); }
+    /* Les couleurs hexadécimales sont lues en sRGB : three.js les convertit lui-même en linéaire. */
+    function S(c, met, rough, extra) { return new THREE.MeshStandardMaterial(Object.assign({ color: c, metalness: met, roughness: rough }, extra || {})); }
+    function P(o) { return new THREE.MeshPhysicalMaterial(o); }
     return {
       steel: S(0xd6d9dd, 1, 0.24), steelDark: S(0x8e949b, 1, 0.36), alu: S(0xc3c7cc, 0.95, 0.32), aluDark: S(0x6d737a, 0.9, 0.4),
       anodBlack: S(0x2b2d32, 0.75, 0.4), black: S(0x17181a, 0.25, 0.55), lockring: S(0x3b3e44, 0.85, 0.33),
@@ -141,13 +140,14 @@
     try { r = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true, powerPreference: 'low-power' }); }
     catch (e) { canvas.remove(); this.fallback('La 3D ne peut pas s’afficher sur cet appareil.'); return; }
     r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    r.outputEncoding = THREE.sRGBEncoding; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.05;
+    r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.05;
     this.renderer = r;
     var scene = new THREE.Scene(); this.scene = scene;
     scene.environment = makeEnv(THREE, r);
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x3c4450, 0.45));
-    var d1 = new THREE.DirectionalLight(0xffffff, 1.35); d1.position.set(1, 2, 1.6); scene.add(d1);
-    var d2 = new THREE.DirectionalLight(0xc8d0ff, 0.45); d2.position.set(-2, 0.4, -1); scene.add(d2);
+    /* Unités physiques depuis r155 : on multiplie par π pour garder l'éclairage de r128. */
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x3c4450, 0.45 * Math.PI));
+    var d1 = new THREE.DirectionalLight(0xffffff, 1.35 * Math.PI); d1.position.set(1, 2, 1.6); scene.add(d1);
+    var d2 = new THREE.DirectionalLight(0xc8d0ff, 0.45 * Math.PI); d2.position.set(-2, 0.4, -1); scene.add(d2);
     this.camera = new THREE.PerspectiveCamera(32, 4 / 3, 0.5, 8000);
     scene.add(this.model.group);
     this.pinsEl = document.createElement('div'); this.pinsEl.className = 'v3d-pins'; stage.appendChild(this.pinsEl);
@@ -327,5 +327,4 @@
     requestAnimationFrame(loop);
   }
   window.AtelierViewer = { start: start, viewers: viewers };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else setTimeout(start, 0);
 })();

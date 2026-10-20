@@ -40,7 +40,7 @@
       function label(txt) {
         var c = document.createElement('canvas'); c.width = c.height = 64; var g = c.getContext('2d');
         g.fillStyle = '#f2f2ee'; g.font = 'bold 52px Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, 32, 35);
-        return new THREE.MeshStandardMaterial({ map: (function (t) { t.encoding = THREE.sRGBEncoding; return t; })(new THREE.CanvasTexture(c)), transparent: true, roughness: 0.6, metalness: 0, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+        return new THREE.MeshStandardMaterial({ map: (function (t) { t.colorSpace = THREE.SRGBColorSpace; return t; })(new THREE.CanvasTexture(c)), transparent: true, roughness: 0.6, metalness: 0, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
       }
 
       /* ---------- Matériaux ---------- */
@@ -56,7 +56,7 @@
         var on = ((xx + yy) >> 1) % 2 === 0; gw.fillStyle = on ? '#3a3e46' : '#1b1d22'; gw.fillRect(xx * 8, yy * 8, 8, 8);
         gw.fillStyle = 'rgba(255,255,255,0.06)'; gw.fillRect(xx * 8, yy * 8, on ? 8 : 1, on ? 1 : 8);
       }
-      var weave = new THREE.CanvasTexture(cw); weave.wrapS = weave.wrapT = THREE.RepeatWrapping; weave.repeat.set(1 / 7, 1 / 7); weave.encoding = THREE.sRGBEncoding;
+      var weave = new THREE.CanvasTexture(cw); weave.wrapS = weave.wrapT = THREE.RepeatWrapping; weave.repeat.set(1 / 7, 1 / 7); weave.colorSpace = THREE.SRGBColorSpace;
       var carbonMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, map: weave, metalness: 0.15, roughness: 0.45, clearcoat: 1, clearcoatRoughness: 0.08 });
 
       var DC = -71.5; /* centre du disque (y) : piste de r 63 à 80, plaquettes centrées vers r 71,5 */

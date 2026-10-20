@@ -5,7 +5,7 @@ Seuls les lots « validé » ou « en relecture » de build/lots.json sont publi
 
 Sorties :
   dist/site/      site autonome (document HTML complet, three.js local) pour le serveur
-  dist/artifact/  page sans squelette HTML pour l'aperçu Claude (three.js depuis cdnjs)
+  dist/artifact/  page sans squelette HTML pour l'aperçu Claude (three.js depuis jsDelivr)
 
 Usage : python3 build/assemble.py [--target site|artifact|all]
 """
@@ -23,7 +23,8 @@ RACINE = Path(__file__).resolve().parent.parent
 SRC = RACINE / "src"
 DIST = RACINE / "dist"
 PUBLIES = ("validé", "en relecture")
-THREE_CDN = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
+THREE_VERSION = "0.160.0"
+THREE_CDN = f"https://cdn.jsdelivr.net/npm/three@{THREE_VERSION}/"
 
 
 def lire(nom):
@@ -82,15 +83,24 @@ def construire_corps(config):
     return corps, modeles, publies
 
 
+def carte_imports(cible):
+    """Bloc <script type="importmap"> qui associe « three » et « three/addons/ » aux fichiers de three.js."""
+    if cible == "site":
+        # « ./ » est obligatoire : sans lui, le navigateur prend l'adresse pour un nom nu et ignore la ligne.
+        imports = {"three": "./vendor/three/three.module.min.js", "three/addons/": "./vendor/three/addons/"}
+    else:
+        imports = {"three": THREE_CDN + "build/three.module.min.js", "three/addons/": THREE_CDN + "examples/jsm/"}
+    return '<script type="importmap">\n' + json.dumps({"imports": imports}, indent=2) + "\n</script>"
+
+
 def pied(config, modeles, cible):
     date = datetime.date.today().isoformat()
     version = f'{config["version"]} du {date}'
-    if cible == "site":
-        scripts = ['<script src="vendor/three.min.js"></script>', '<script src="js/viewer.js"></script>']
-        scripts += [f'<script src="js/m-{m}.js"></script>' for m in modeles]
-    else:
-        scripts = [f'<script src="{THREE_CDN}"></script>', '<script src="viewer.js"></script>']
-        scripts += [f'<script src="m-{m}.js"></script>' for m in modeles]
+    # La visionneuse et les modèles sont des scripts classiques ; la scène est un module ES (chemin identique dans les deux cibles).
+    dossier = "js/" if cible == "site" else ""
+    scripts = [carte_imports(cible), f'<script src="{dossier}viewer.js"></script>']
+    scripts += [f'<script src="{dossier}m-{m}.js"></script>' for m in modeles]
+    scripts.append('<script type="module" src="js/scene/app.js"></script>')
     return lire("99-foot").replace("<!--SCRIPTS-->", "\n".join(scripts)).replace("<!--VERSION-->", html.escape(version))
 
 
@@ -111,7 +121,6 @@ def ecrire_site(config, corps, modeles):
     if sortie.exists():
         shutil.rmtree(sortie)
     (sortie / "js").mkdir(parents=True)
-    (sortie / "vendor").mkdir()
     page = (
         '<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
@@ -121,8 +130,10 @@ def ecrire_site(config, corps, modeles):
     shutil.copy(SRC / "js" / "viewer.js", sortie / "js" / "viewer.js")
     for m in modeles:
         shutil.copy(SRC / "js" / "models" / f"m-{m}.js", sortie / "js" / f"m-{m}.js")
-    shutil.copy(RACINE / "vendor" / "three" / "three.min.js", sortie / "vendor" / "three.min.js")
-    shutil.copy(RACINE / "vendor" / "three" / "LICENSE", sortie / "vendor" / "three-LICENSE.txt")
+    shutil.copytree(SRC / "scene", sortie / "js" / "scene")
+    vendor = sortie / "vendor" / "three"
+    shutil.copytree(RACINE / "vendor" / "three", vendor, ignore=shutil.ignore_patterns("LICENSE"))
+    shutil.copy(RACINE / "vendor" / "three" / "LICENSE", vendor / "LICENSE.txt")
     return page
 
 
@@ -136,6 +147,7 @@ def ecrire_artifact(config, corps, modeles):
     shutil.copy(SRC / "js" / "viewer.js", sortie / "viewer.js")
     for m in modeles:
         shutil.copy(SRC / "js" / "models" / f"m-{m}.js", sortie / f"m-{m}.js")
+    shutil.copytree(SRC / "scene", sortie / "js" / "scene")
     return page
 
 
