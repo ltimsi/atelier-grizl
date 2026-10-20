@@ -31,7 +31,9 @@ function pointsEngrenage(n, rPointe, rPied) {
  *   extr(forme, profondeur, role, biseau) : forme extrudée, centrée sur z ;
  *   engrenage(n, rPointe, rPied, trou, fenetres) : THREE.Shape d'un pignon, fenetres = { n, gap, r0, r1 } ;
  *   tubeCourbe(points, r, role, seg) : tube qui suit une courbe de Catmull-Rom ;
- *   lathe(profil, seg, role) : solide de révolution autour de z, profil = [[rayon, z], ...].
+ *   lathe(profil, seg, role) : solide de révolution autour de z, profil = [[rayon, z], ...] ;
+ *   sousGroupe() : un THREE.Group rangé dans `groupe`. Un maillage qu'on y déplace garde son étiquette ;
+ *   THREE : le module reçu, pour les formes, les vecteurs et les matrices que les outils ne couvrent pas.
  */
 export function creerOutils(THREE, RoundedBoxGeometry, groupe, materiaux) {
   let zoneCourante = null, varianteCourante = null;
@@ -116,5 +118,12 @@ export function creerOutils(THREE, RoundedBoxGeometry, groupe, materiaux) {
     return mesh(g, role);
   }
 
-  return { zone, variante, mesh, inst, tube, tubeZ, ell, rbox, boulon, extr, engrenage, tubeCourbe, lathe };
+  // Un groupe dans le groupe : on y range des maillages déjà étiquetés pour les déplacer ensemble.
+  const sousGroupe = () => {
+    const g = new THREE.Group();
+    groupe.add(g);
+    return g;
+  };
+
+  return { zone, variante, mesh, inst, tube, tubeZ, ell, rbox, boulon, extr, engrenage, tubeCourbe, lathe, sousGroupe, THREE };
 }

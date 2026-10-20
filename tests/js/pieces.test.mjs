@@ -11,8 +11,10 @@ import { creerMateriaux, ROLES } from '../../src/scene/materiaux.js';
 import { GEO, points } from '../../src/scene/geometrie.js';
 import { SOURCES } from '../../src/scene/sources.js';
 import * as cadre from '../../src/scene/pieces/cadre.js';
+import * as roues from '../../src/scene/pieces/roues.js';
+import * as freins from '../../src/scene/pieces/freins.js';
 
-const PIECES = [cadre];
+const PIECES = [cadre, roues, freins];
 
 const BUDGET_TRIANGLES = 500000;
 
@@ -42,10 +44,18 @@ function triangles(m) {
   return parInstance * (m.isInstancedMesh ? m.count : 1);
 }
 
-// Sommets d'un maillage, en coordonnées du monde.
+// Sommets d'un maillage, en coordonnées du monde. Une InstancedMesh donne les sommets de chacune de ses instances.
 function sommets(m) {
   const pos = m.geometry.attributes.position, o = [];
-  for (let i = 0; i < pos.count; i++) o.push(new THREE.Vector3().fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld));
+  const matrices = [];
+  if (m.isInstancedMesh) {
+    for (let k = 0; k < m.count; k++) {
+      const mi = new THREE.Matrix4();
+      m.getMatrixAt(k, mi);
+      matrices.push(mi.premultiply(m.matrixWorld));
+    }
+  } else matrices.push(m.matrixWorld);
+  for (const mat of matrices) for (let i = 0; i < pos.count; i++) o.push(new THREE.Vector3().fromBufferAttribute(pos, i).applyMatrix4(mat));
   return o;
 }
 
@@ -183,4 +193,144 @@ test('cadre : la selle SRX fait 148 mm de large', () => {
   assert.equal(selle.length, 1);
   const z = sommets(selle[0]).map(v => v.z);
   assert.ok(Math.abs(Math.max(...z) - Math.min(...z) - 148) < 0.5, `largeur de ${Math.max(...z) - Math.min(...z)} mm`);
+});
+
+// ---- Roues : pneus, jantes, moyeux, rayons, valves et axes ----
+
+// Distance d'un point à l'axe d'une roue, dans le plan du vélo.
+const auMoyeu = (q, axe) => Math.hypot(q.x - axe[0], q.y - axe[1]);
+// La roue d'un maillage : celle dont l'axe est le plus proche du centre de sa boîte.
+function roueDe(m, p) {
+  const c = new THREE.Box3().setFromPoints(sommets(m)).getCenter(new THREE.Vector3());
+  return Math.hypot(c.x - p.FA[0], c.y - p.FA[1]) < Math.hypot(c.x - p.RA[0], c.y - p.RA[1]) ? 'avant' : 'arrière';
+}
+const etendueZ = ms => {
+  const z = ms.flatMap(sommets).map(v => v.z);
+  return [Math.min(...z), Math.max(...z)];
+};
+
+test('roues : aucune zone, aucune variante', () => {
+  for (const m of construire(roues).maillages) {
+    assert.equal(m.userData.zone, null, `${m.name || m.userData.role} : zone ${m.userData.zone}`);
+    assert.equal(m.userData.variante, null);
+  }
+});
+
+test('budget : les rayons instanciés comptent pour toutes leurs instances', () => {
+  const rayons = construire(roues).maillages.filter(m => m.isInstancedMesh && m.userData.role === 'spoke');
+  assert.equal(rayons.length, 2, 'un jeu de rayons par roue');
+  for (const m of rayons) {
+    const parInstance = (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3;
+    assert.ok(m.count > 1, `${m.count} instance`);
+    assert.equal(triangles(m), parInstance * m.count);
+  }
+});
+
+test('roues : pneus de 45 mm de large, au rayon de la roue, assis sur le siège de 622', () => {
+  const p = points(GEO), { maillages } = construire(roues);
+  for (const cote of ['avant', 'arrière']) {
+    const axe = cote === 'avant' ? p.FA : p.RA;
+    const pneu = parNom(maillages, 'pneu').filter(m => roueDe(m, p) === cote);
+    assert.ok(pneu.length > 0, `pneu ${cote} absent`);
+    const [z0, z1] = etendueZ(pneu);
+    assert.ok(Math.abs(z1 - z0 - 45) < 0.5, `pneu ${cote} : ${z1 - z0} mm de large`);
+    const r = pneu.flatMap(sommets).map(v => auMoyeu(v, axe));
+    assert.ok(Math.abs(Math.max(...r) - GEO.rayonPneu.v) < 0.5, `pneu ${cote} : rayon extérieur ${Math.max(...r)}`);
+    assert.ok(Math.abs(Math.min(...r) - GEO.diametreSiegeJante.v / 2) < 0.5, `pneu ${cote} : talon à ${Math.min(...r)}`);
+  }
+});
+
+test('roues : jantes de 26 mm de haut et 24 mm de large à l’intérieur, siège à 622', () => {
+  const p = points(GEO), { maillages } = construire(roues), siege = GEO.diametreSiegeJante.v / 2;
+  const jantes = parNom(maillages, 'jante');
+  assert.equal(jantes.length, 2);
+  for (const m of jantes) {
+    const axe = roueDe(m, p) === 'avant' ? p.FA : p.RA;
+    const v = sommets(m), r = v.map(q => auMoyeu(q, axe));
+    assert.ok(Math.abs(Math.max(...r) - Math.min(...r) - 26) < 0.05, `hauteur de ${Math.max(...r) - Math.min(...r)} mm`);
+    // Au siège du talon, la face intérieure des flancs est à 12 mm de chaque côté du plan de la roue.
+    const auSiege = v.filter((q, i) => Math.abs(r[i] - siege) < 0.05).map(q => q.z);
+    for (const s of [-1, 1]) assert.ok(auSiege.some(z => Math.abs(z - s * 12) < 0.05), `pas de face intérieure en z ${s * 12}`);
+  }
+});
+
+test('roues : les moyeux tiennent entre les pattes du cadre, les axes les traversent', () => {
+  const { maillages } = construire(roues), duCadre = construire(cadre).maillages;
+  for (const [cote, ecartement, patte] of [['arrière', 142, 'patte arrière'], ['avant', 100, 'patte avant']]) {
+    const [z0, z1] = etendueZ(parNom(maillages, `moyeu ${cote}`));
+    assert.ok(Math.abs(z0 + ecartement / 2) < 0.05 && Math.abs(z1 - ecartement / 2) < 0.05,
+      `moyeu ${cote} de ${z0} à ${z1}`);
+    const [a0, a1] = etendueZ(parNom(maillages, `axe ${cote}`));
+    const [p0, p1] = etendueZ(parNom(duCadre, patte));
+    assert.ok(a0 < p0 && a1 > p1, `axe ${cote} de ${a0} à ${a1}, pattes de ${p0} à ${p1}`);
+  }
+});
+
+// ---- Freins : disques, étriers, plaquettes et durites du cadre ----
+
+test('freins : disques d’origine et XT, deux variantes de la zone disques', () => {
+  const { maillages } = construire(freins);
+  for (const k of [0, 1]) {
+    const disques = maillages.filter(m => m.userData.variante?.zone === 'disques' && m.userData.variante.k === k);
+    assert.ok(disques.length > 0, `aucun maillage pour k = ${k}`);
+    for (const m of disques) assert.equal(m.userData.zone, 'disques');
+  }
+  for (const m of maillages) if (m.userData.variante) assert.equal(m.userData.variante.zone, 'disques');
+});
+
+test('freins : pistes de 160 mm, dans le plan de chaque disque, pour les deux variantes', () => {
+  const p = points(GEO), { maillages } = construire(freins);
+  const pistes = parNom(maillages, 'piste');
+  for (const k of [0, 1]) for (const cote of ['avant', 'arrière']) {
+    const m = pistes.filter(x => x.userData.variante.k === k && roueDe(x, p) === cote);
+    assert.equal(m.length, 1, `piste ${cote} k = ${k}`);
+    const axe = cote === 'avant' ? p.FA : p.RA;
+    const r = sommets(m[0]).map(v => auMoyeu(v, axe));
+    assert.ok(Math.abs(Math.max(...r) - GEO.diametreDisque.v / 2) < 0.5, `piste ${cote} k = ${k} : rayon ${Math.max(...r)}`);
+    const [z0, z1] = etendueZ(m);
+    const plan = -(cote === 'avant' ? GEO.decalageDisqueAvant.v : GEO.decalageDisqueArriere.v);
+    assert.ok(Math.abs((z0 + z1) / 2 - plan) < 0.05, `piste ${cote} k = ${k} centrée en ${(z0 + z1) / 2}`);
+  }
+});
+
+test('freins : zones de l’étrier avant, de l’étrier arrière et des durites', () => {
+  const { maillages } = construire(freins);
+  const zones = new Set(maillages.map(m => m.userData.zone));
+  for (const z of zones) assert.ok([null, 'disques', 'etrier', 'manettes'].includes(z), `zone inattendue : ${z}`);
+  for (const [nom, zone] of [['étrier avant', 'etrier'], ['étrier arrière', null], ['durite', 'manettes']]) {
+    const ms = parNom(maillages, nom);
+    assert.ok(ms.length > 0, `${nom} absent`);
+    for (const m of ms) assert.equal(m.userData.zone, zone, `${nom} : zone ${m.userData.zone}`);
+  }
+});
+
+test('freins : PLAQUETTES décrit les deux plaquettes de l’étrier avant', () => {
+  const p = points(GEO);
+  construire(freins);
+  construire(freins); // chaque construction repart d'un tableau vide
+  assert.equal(freins.PLAQUETTES.length, 2);
+  for (const { groupe, base, dir } of freins.PLAQUETTES) {
+    assert.ok(groupe.isGroup, 'groupe : un THREE.Group');
+    const ms = [];
+    groupe.traverse(o => { if (o.isMesh) ms.push(o); });
+    assert.ok(ms.length > 0, 'plaquette vide');
+    for (const m of ms) {
+      assert.equal(m.userData.zone, 'etrier');
+      assert.ok(['pad', 'padFace'].includes(m.userData.role), `rôle ${m.userData.role}`);
+    }
+    assert.ok(base.isVector3 && dir.isVector3);
+    assert.ok(base.equals(groupe.position), 'base : la position de repos du groupe');
+    assert.ok(Math.abs(dir.length() - 1) < 1e-9, 'dir unitaire');
+    assert.ok(Math.abs(dir.z) < 1e-9, 'dir dans le plan du disque');
+    // dir sort du disque en passant par l'étrier : même sens que de l'axe avant vers l'étrier avant.
+    const versEtrier = new THREE.Vector3(p.CF[0] - p.FA[0], p.CF[1] - p.FA[1], 0).normalize();
+    assert.ok(dir.dot(versEtrier) > 0.99, `dir ${dir.toArray()}`);
+  }
+  const [a, b] = freins.PLAQUETTES.map(x => x.base.z);
+  const plan = -GEO.decalageDisqueAvant.v;
+  assert.ok((a - plan) * (b - plan) < 0, 'une plaquette de chaque côté du disque avant');
+});
+
+test('freins : le modèle de l’étrier reste à lire sur la pièce', () => {
+  assert.ok(freins.META.aVerifier.includes('modèle exact de l\'étrier, à lire sur la pièce'));
 });

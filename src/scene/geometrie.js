@@ -56,13 +56,15 @@ export const GEO = Object.freeze({
 
   // ---- Roues et freins ----
   diametreSiegeJante: pub(622, 'continental-terra-adventure'), // norme ETRTO des roues de 28 pouces, cotée par Continental
-  nombreRayons: apr(24, 'La fiche ne donne pas le nombre de rayons. Il est approché.'),
+  nombreRayons: pub(24, 'canyon-photo-4553-fv'), // la fiche ne le donne pas : compté sur la photo officielle, à chaque roue
   diametreDisque: pub(160), // avant et arrière
   decalageDisqueAvant: apr(40, 'La position latérale du disque avant n’est pas publiée. Elle est approchée.'),
   decalageDisqueArriere: apr(57, 'La position latérale du disque arrière n’est pas publiée. Elle est approchée.'),
   rayonEtrier: apr(72, 'La distance des étriers à leur moyeu n’est pas publiée. Elle est approchée.'),
-  angleEtrierAvant: apr(200, 'La position de l’étrier avant autour du moyeu n’est pas publiée. Elle est approchée.'),
-  angleEtrierArriere: apr(12, 'La position de l’étrier arrière autour du moyeu n’est pas publiée. Elle est approchée.'),
+  angleEtrierAvant: apr(146,
+    'La position de l’étrier avant autour du moyeu n’est pas publiée. Elle est lue au mieux sur la photo officielle.'),
+  angleEtrierArriere: apr(26,
+    'La position de l’étrier arrière autour du moyeu n’est pas publiée. Elle est lue au mieux sur la photo officielle.'),
 
   // ---- Transmission ----
   longueurManivelle: pub(165), // 2XS à M

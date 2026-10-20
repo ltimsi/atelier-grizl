@@ -5,6 +5,8 @@
 
 const SHIMANO_DM = 'https://si.shimano.com';
 const SHIMANO_INFO = 'https://productinfo.shimano.com/en';
+const CONTINENTAL_ONGLETS =
+  'https://www.continental-tires.com/products/bicycle/tires/terra-adventure/_jcr_content/root/container/tabs';
 
 export const SOURCES = Object.freeze({
   // Canyon
@@ -56,6 +58,23 @@ export const SOURCES = Object.freeze({
     url: 'https://www.continental-tires.com/products/bicycle/tires/terra-adventure/',
     type: 'fiche',
   }),
+  'continental-photo-terra-adventure-centre': Object.freeze({
+    titre: 'Continental, photo officielle des crampons centraux du Terra Adventure (rangées de trois, trois et quatre)',
+    url: `${CONTINENTAL_ONGLETS}/item_1742229074804/image.coreimg.png/1758019398356/continental--terra-adventure--feature--center.png`,
+    type: 'photo',
+  }),
+  'continental-photo-terra-adventure-epaules': Object.freeze({
+    titre: 'Continental, photo officielle des crampons d’épaule du Terra Adventure',
+    url: `${CONTINENTAL_ONGLETS}/item_1742229074804/image_copy.coreimg.png/1758019398454/continental--terra-adventure--feature--shoulder.png`,
+    type: 'photo',
+  }),
+
+  // DT Swiss
+  'dtswiss-manuel-roues': Object.freeze({
+    titre: 'DT Swiss, manuel d’utilisation des roues (WHEELS User Manual V2026.07), cité dans le chapitre Freins',
+    url: 'https://d2a13k6araex7u.cloudfront.net/pmt/00/00/00/00/00/00/00/10/00/00/00/85/8/MAN_WXWXXXXXX1610S_WEB_ZZ_001.pdf?v=57647',
+    type: 'manuel',
+  }),
 
   // Shimano : manuels revendeur (DM), cités dans src/parts/20-freins.html
   'shimano-dm-gadbr01': Object.freeze({
@@ -103,6 +122,16 @@ export const SOURCES = Object.freeze({
   'shimano-rx820-2x12-di2': Object.freeze({
     titre: 'Shimano, page de la gamme GRX RX820 2x12 Di2',
     url: `${SHIMANO_INFO}/lineup/rx820-2x12-di2`,
+    type: 'fiche',
+  }),
+  'shimano-sm-rt64': Object.freeze({
+    titre: 'Shimano, fiche technique du disque SM-RT64 (matières, épaisseur, bagues)',
+    url: `${SHIMANO_INFO}/product/SM-RT64`,
+    type: 'fiche',
+  }),
+  'shimano-deore-xt-m8000': Object.freeze({
+    titre: 'Shimano, page de la gamme Deore XT M8000 2x11 Di2 : disque RT-MT800, Center Lock, FREEZA',
+    url: `${SHIMANO_INFO}/lineup/deore-xt-m8000-2x11-di2`,
     type: 'fiche',
   }),
   'shimano-l04c-mf': Object.freeze({

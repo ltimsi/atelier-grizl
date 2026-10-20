@@ -247,3 +247,21 @@ test('lathe : le profil [rayon, z] tourne autour de l’axe z', () => {
   proche(b.max.y, 10, 1e-6, 'rayon max en y');
   assert.equal(m.userData.role, 'cassette');
 });
+
+test('THREE : les outils transmettent le module reçu, pour les formes et les matrices', () => {
+  const { o } = nouveau();
+  assert.equal(o.THREE, THREE);
+});
+
+test('sousGroupe : un groupe rangé dans le groupe des outils, où l’on peut déplacer des maillages', () => {
+  const { groupe, o } = nouveau();
+  o.zone('etrier');
+  const g = o.sousGroupe();
+  assert.ok(g.isGroup);
+  assert.equal(g.parent, groupe);
+  const m = o.rbox([0, 0, 0], [2, 2, 2], 0, 'pad', 0.5);
+  g.add(m);
+  assert.equal(m.parent, g);
+  assert.equal(m.userData.zone, 'etrier', 'le maillage garde son étiquette');
+  assert.ok(!groupe.children.includes(m));
+});

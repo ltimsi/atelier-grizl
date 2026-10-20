@@ -107,9 +107,22 @@ test('sources connues : chaque cote a une source enregistrée ou est approchée'
   assert.equal(GEO.rayonPneu.approche, true, 'rayon extérieur du pneu non publié');
   assert.equal(GEO.diametreSiegeJante.v, 622);
   assert.ok(GEO.rayonPneu.v > GEO.diametreSiegeJante.v / 2, 'le pneu entoure le siège de jante');
-  for (const cle of ['hauteurSelle', 'anglePotence', 'deportCintre', 'descenteCintre', 'nombreRayons']) {
+  for (const cle of ['hauteurSelle', 'anglePotence', 'deportCintre', 'descenteCintre']) {
     assert.equal(GEO[cle].approche, true, cle);
   }
+});
+
+test('rayons : la fiche ne les compte pas, la photo officielle en montre vingt-quatre par roue', () => {
+  assert.equal(GEO.nombreRayons.v, 24);
+  assert.equal(GEO.nombreRayons.src, 'canyon-photo-4553-fv');
+  assert.ok(!GEO.nombreRayons.approche);
+});
+
+test('étriers : position approchée d’après la photo officielle, l’avant au-dessus de l’axe et derrière lui', () => {
+  const p = points();
+  for (const cle of ['angleEtrierAvant', 'angleEtrierArriere', 'rayonEtrier']) assert.equal(GEO[cle].approche, true, cle);
+  assert.ok(p.CF[0] < p.FA[0] && p.CF[1] > p.FA[1], 'étrier avant en haut, vers l’arrière');
+  assert.ok(p.CR[0] > p.RA[0] && p.CR[1] > p.RA[1], 'étrier arrière en haut, vers l’avant, sur la base');
 });
 
 test('approximations sans chiffre : une note par cote approchée', () => {
