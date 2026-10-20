@@ -75,9 +75,10 @@ const CINTRE = { collier: 47, ruban: 70, finHaut: 140, demiAxeAvant: 50, zCourbe
 const RAYON_RUBAN = (COTES.collierCocotteMin.v + COTES.collierCocotteMax.v) / 4 + CINTRE.epRuban;
 // Cocotte : sections le long de la cocotte depuis le collier, sur l'axe du cintre. [x, dessus, dessous, demi-largeur].
 // La main se pose au plat, PRISE. CALAGE : angle entre la cocotte et le cintre à son collier, en degrés.
+// COCOTTE, LEVIER et poseCintre sont exportés pour le schéma 2D (schema2d.js), qui dessine le même poste de profil.
 const PRISE = [42, 48];
 const CALAGE = 40;
-const COCOTTE = [
+export const COCOTTE = [
   [-24, 13, -9, 10],
   [-15, 35, -15, 14.5],
   [-4, 42, -17.5, 16],
@@ -93,7 +94,7 @@ const COCOTTE = [
   [101, 54, 33, 5.5],
 ];
 // Leviers, dans le repère de la cocotte : le grand levier de frein, puis le petit levier de la manette droite.
-const LEVIER = [[82, 12], [88, -10], [92, -40], [90, -70], [83, -96], [75, -110]];
+export const LEVIER = [[82, 12], [88, -10], [92, -40], [90, -70], [83, -96], [75, -110]];
 const PETIT_LEVIER = [[78, 8], [84, -16], [86, -40]];
 // Potence et jeu de direction, le long du pivot depuis le haut de la douille.
 const POTENCE = { serrage: 21, rayonSerrage: 21, rayonCollier: 21.5, demiCollier: 22, capot: 10, bouchon: 4 };
@@ -176,7 +177,7 @@ function directionEtPotence(o, p) {
  * cocotte tombe sur ancres.mains. Renvoie les points de l'axe du cintre droit (dans le repère du vélo), l'indice du
  * point du collier de la cocotte, la position et l'angle de la cocotte.
  */
-function poseCintre(p, geo) {
+export function poseCintre(p, geo) {
   const D = geo.deportCintre.v, H = geo.descenteCintre.v, zCocotte = geo.largeurCintre.v / 2;
   const pente = Math.tan(COTES.inclinaison.v * D2R), flare = Math.tan(COTES.evasement.v * D2R);
   const yHaut = z => -Math.max(0, z - CINTRE.collier) * pente;

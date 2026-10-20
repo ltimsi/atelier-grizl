@@ -1,0 +1,25 @@
+[
+  {
+    "id": "disques",
+    "nom": "Disques de frein",
+    "ancre": "disqueArriere",
+    "vue": { "cible": "disqueArriere", "dir": [-0.25, 0.18, -1], "dist": 760 },
+    "schema": { "centre": "disqueArriere", "largeur": 560 },
+    "variante": { "libelles": ["D’origine · SM-RT64", "XT · RT-MT800"] }
+  },
+  {
+    "id": "etrier",
+    "nom": "Étrier et plaquettes",
+    "ancre": "etrierAvant",
+    "vue": { "cible": "etrierAvant", "dir": [0.3, 0.12, -1], "dist": 620 },
+    "schema": { "centre": "etrierAvant", "largeur": 420 },
+    "variante": { "libelles": ["Plaquettes en place", "Plaquettes sorties"] }
+  },
+  {
+    "id": "manettes",
+    "nom": "Manettes et durites",
+    "ancre": "cocotteGauche",
+    "vue": { "cible": "cocotteGauche", "dir": [0.75, 0.45, -1], "dist": 900 },
+    "schema": { "centre": "cocotteGauche", "largeur": 480 }
+  }
+]
