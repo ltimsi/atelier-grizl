@@ -361,8 +361,17 @@ function tour(now) {
       ui.vbPose = vb;
       placerPastilles();
     }
-  } else if (etat.scene?.image(now)) placerPastilles();
+  } else if (etat.scene?.image(now)) {
+    placerPastilles();
+    noterTriangles();
+  }
   demander();
+}
+
+// Les triangles de la dernière image, posés sur <html data-triangles> pour tools/scene-check.js. Rien ne s'affiche.
+function noterTriangles() {
+  const n = String(etat.scene.triangles());
+  if (document.documentElement.dataset.triangles !== n) document.documentElement.dataset.triangles = n;
 }
 
 function mesurer() {

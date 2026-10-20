@@ -95,7 +95,7 @@
   - `sources connues` : chaque `GEO[c]` a soit `src` présent dans `SOURCES`, soit `approche: true`.
   - `approximations sans chiffre` : aucune `note` de `approximations()` ne contient de chiffre (`/\d/`).
   - `angle de direction à vérifier` : `GEO.angleDirection.aVerifier` contient « inclinaison du cintre ».
-- [ ] **Step 2: Run** `node --test tests/js/`. Expected: FAIL, modules absents.
+- [ ] **Step 2: Run** `node --test 'tests/js/**/*.test.mjs'`. Expected: FAIL, modules absents.
 - [ ] **Step 3: Implement** `geometrie.js` and `sources.js` from the maquette constants, with these corrections:
   - le cintre de 440 se mesure d'axe en axe au niveau des cocottes, donc `z = ±220` à cet endroit ;
   - la hauteur de selle (la fiche ne donne qu'une plage), l'angle de potence, le déport et la descente du cintre et le nombre de rayons portent `approche: true`, avec une note sans chiffre ;
@@ -127,7 +127,7 @@
   - `rôles complets` : `reel` et `simple` ont exactement la liste de rôles ci-dessus.
   - `étiquetage` : après `zone('disques')` et `variante({ zone: 'disques', k: 1 })`, un `tube()` porte ces valeurs dans `userData`.
   - `orientation` : `tube([0,0,0], [0,100,0], …)` a sa position en `[0,50,0]`.
-- [ ] **Step 2: Run** `node --test tests/js/`. Expected: FAIL.
+- [ ] **Step 2: Run** `node --test 'tests/js/**/*.test.mjs'`. Expected: FAIL.
 - [ ] **Step 3: Implement** by moving the maquette code into these modules.
   - Teintes du Floating Violet : `deep [58,8,32]`, `base [106,18,56]`, `light [182,74,122]`.
   - Lampes du studio : celles de la maquette.
@@ -231,7 +231,7 @@
   - `ancres connues` : chaque `ancre`, `vue.cible` et `schema.centre` de `zones.json` existe dans `points().ancres`.
   - `zones attendues` : les identifiants sont exactement `['disques', 'etrier', 'manettes']`.
   - `variantes` : `disques.variante.libelles` vaut `['D’origine · SM-RT64', 'XT · RT-MT800']` et `etrier.variante.libelles` vaut `['Plaquettes en place', 'Plaquettes sorties']`.
-- [ ] **Step 2: Run** `node --test tests/js/`. Expected: FAIL.
+- [ ] **Step 2: Run** `node --test 'tests/js/**/*.test.mjs'`. Expected: FAIL.
 - [ ] **Step 3: Implement** `scene.js` from the maquette's `init3d`.
   - Rendu à la demande : `image()` ne dessine que si quelque chose a bougé.
   - Surlignage émissif `0x6d5bd0` à 0,22 en rendu réaliste.

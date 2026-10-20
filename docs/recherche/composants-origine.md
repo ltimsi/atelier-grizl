@@ -90,3 +90,15 @@ Remarques :
 
 - Le repère e, nommé « Inclinaison du cintre », est très probablement l'angle de direction. À confirmer avec le schéma de la fiche.
 - Les repères o et p situent la position des mains par rapport au boîtier. Ils permettent de vérifier le placement des cocottes dans le modèle 3D, si la fiche précise où se trouve « la position de la main ».
+
+## Contradictions et compléments relevés
+
+Relevés le 20 octobre 2026, pendant la construction du vélo en 3D. Chaque document cité est enregistré dans `src/scene/sources.js`, sous l'identifiant donné entre parenthèses.
+
+- **Tige de selle.** Le texte « Points forts » de la fiche parle d'une « tige de selle S15 VCLS 2.0 ». La liste des composants de la même fiche dit « Canyon SP100 ». Vu le 20 octobre 2026 sur la [fiche suisse du Grizl CF 7](https://www.canyon.com/fr-ch/velos-de-gravel/adventure/grizl/cf/grizl-cf-7/4553.html?dwvar_4553_pv_rahmenfarbe=R126_P06) (`canyon-4553`). Le modèle exact reste à lire sur la tige.
+- **Déport du cintre HB0067.** La [page du cintre](https://www.canyon.com/fr-ch/accessoires-velo/composants/cintres-cockpits-potences/canyon-hb0067-al-gravel-dropbar/9102480.html) annonce « Reach: 75mm » (`canyon-hb0067`). Le marquage du cintre de 420 sur sa [photo officielle](https://dma.canyon.com/image/upload/v1772197873/2026_full_S-PARTS_HB-CAYN-HB0067-01-AL-31-8-420-bk-gy_10016269_BK_GY_full_bf3ph4) indique « REACH 70 mm » (`canyon-photo-hb0067-marquage`). La 3D retient 70 : à lire sur le cintre.
+- **Rayons.** La fiche ne donne pas leur nombre. On en compte 24 à chaque roue sur la [photo officielle du coloris](https://dma.canyon.com/image/upload/w_1600,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1785934004/2027_FULL_grizl_cf-7_4553_R126_P06_talwxt) (`canyon-photo-4553-fv`).
+- **Ligne de chaîne et galets.** La [fiche technique du pédalier FC-RX610-1](https://productinfo.shimano.com/en/product/FC-RX610-1) donne une ligne de chaîne de 49,7 mm, « Chain line (mm) 49.7 » (`shimano-fc-rx610-1`). La [fiche technique du dérailleur RD-RX822-GS](https://productinfo.shimano.com/en/product/RD-RX822-GS) donne des galets de 13 dents, « Pulley / Teeth 13T » (`shimano-rd-rx822-gs`).
+- **Potence et cintre.** La [photo officielle de la potence ST0046 de 60](https://dma.canyon.com/image/upload/v1778490570/2026_full_S-PARTS_ST-ST0046-01-60-31-8-1-1-8_9102474_BK_full_xjukzl) porte le marquage « ANGLE 6° » (`canyon-photo-st0046`). Celle du cintre HB0067 de 420 porte « DROP 128 mm » (`canyon-photo-hb0067-marquage`). Ton cintre fait 440 : la descente est à lire sur le cintre.
+- **Disque RT-MT800.** Le [tableau de compatibilité Shimano C-461](https://productinfo.shimano.com/en/compatibility/C-461) marque le RT-MT800 comme abandonné, avec la marque « discon » de Shimano (`shimano-c-461`, relevé le 20 octobre 2026). Le chapitre Freins le propose pour remplacer les disques d'origine : sa disponibilité est à vérifier avant l'achat.
+- **Pédales.** La photo officielle du coloris montre une pédale au bout de la manivelle droite (`canyon-photo-4553-fv`). La fiche dit « Pédales : Non inclus ». La 3D suit la fiche : pas de pédale.

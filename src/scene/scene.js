@@ -155,7 +155,8 @@ function texture(THREE, pixels, largeur, hauteur, { repete, srgb = false, anisot
  *   redimensionner(w, h) : taille de l'image, en pixels CSS ;
  *   image(now) : à appeler à chaque image ; dessine si besoin et renvoie true quand il a dessiné ;
  *   pastilles() : la place de l'ancre de chaque zone dans l'image, [{ id, x, y, visible }] ;
- *   approximations() : la liste de listerApproximations pour les pièces de la scène.
+ *   approximations() : la liste de listerApproximations pour les pièces de la scène ;
+ *   triangles() : le nombre de triangles de la dernière image dessinée par image(), 0 avant la première.
  */
 export function creerScene(libs, canvas, zones) {
   const { THREE, OrbitControls, RoundedBoxGeometry, HorizontalBlurShader, VerticalBlurShader } = libs;
@@ -226,7 +227,7 @@ export function creerScene(libs, canvas, zones) {
 
   // ---- État ----
   let mode = 'reel', zoneSurlignee = null, sale = true, premier = true, vol = null;
-  let tPlaquettes = 0, sortie = null;
+  let tPlaquettes = 0, sortie = null, trianglesImage = 0;
   const variantes = Object.fromEntries(zones.filter(z => z.variante).map(z => [z.id, 0]));
 
   // ---- Matières du mode et surlignage ----
@@ -338,6 +339,7 @@ export function creerScene(libs, canvas, zones) {
     const bouge = controls.update();
     if (!bouge && !sale) return false;
     renderer.render(scene, camera);
+    trianglesImage = renderer.info.render.triangles; // relevé tout de suite : la cuisson de l'ombre rend aussi
     sale = false;
     return true;
   }
@@ -361,6 +363,7 @@ export function creerScene(libs, canvas, zones) {
   }
 
   const approximations = () => listerApproximations(pieces);
+  const triangles = () => trianglesImage;
 
   // ---- Départ ----
   montrerVariantes();
@@ -368,5 +371,5 @@ export function creerScene(libs, canvas, zones) {
   ensemble();
   ombre.cuire();
 
-  return { rendu, surligner, viser, ensemble, variante, redimensionner, image, pastilles, approximations };
+  return { rendu, surligner, viser, ensemble, variante, redimensionner, image, pastilles, approximations, triangles };
 }
