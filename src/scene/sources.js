@@ -18,6 +18,32 @@ export const SOURCES = Object.freeze({
     url: 'https://dma.canyon.com/image/upload/w_1600,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1785934004/2027_FULL_grizl_cf-7_4553_R126_P06_talwxt',
     type: 'photo',
   }),
+  'canyon-photo-4553-confort': Object.freeze({
+    titre: 'Canyon, photo officielle de la fiche du Grizl CF 7, Floating Violet : collier, tige et selle',
+    url: 'https://dma.canyon.com/image/upload/w_1439,h_1439,c_fill/f_auto/q_auto/v1785325520/2027_TOP-5_grizl_cf-7_4553_R126_P06_comfort_uzbklm',
+    type: 'photo',
+  }),
+  'canyon-photo-4553-degagement': Object.freeze({
+    titre: 'Canyon, photo officielle du dégagement des pneus sur la fiche du Grizl CF 7 ' +
+      '(vélo photographié : Grizl CF 6, Floating Violet)',
+    url: 'https://dma.canyon.com/image/upload/w_1439,h_1439,c_fill/f_auto/q_auto/v1785415216/2027_TOP-3_grizl_cf-6_4552_R126_P06_tyre-clearance_oopxdn',
+    type: 'photo',
+  }),
+  'canyon-sp100': Object.freeze({
+    titre: 'Canyon, page de la tige de selle SP100 VCLS 2.1 CF 27.2',
+    url: 'https://www.canyon.com/fr-ch/accessoires-velo/composants/tige-de-selle-et-colliers/canyon-sp100-vcls-2.1-cf-27.2-seatpost/10016374.html',
+    type: 'fiche',
+  }),
+  'canyon-photo-sp100': Object.freeze({
+    titre: 'Canyon, photo officielle de la tige de selle SP100, de profil',
+    url: 'https://dma.canyon.com/image/upload/w_1439,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1778239226/2026_full_S-PARTS_SP-C000002655-P0100-01-P01-350_10016374_BK_full_w05odu',
+    type: 'photo',
+  }),
+  'canyon-photo-sp100-marquage': Object.freeze({
+    titre: 'Canyon, photo officielle de la tête de la tige SP100, avec les cotes imprimées sur la tige',
+    url: 'https://dma.canyon.com/image/upload/w_1439,h_1439,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1778505931/2026_ALT-1_ACC_SP-C000002655-P0100-01-P01-350_10016374_BK_Full_qgacz3',
+    type: 'photo',
+  }),
   'canyon-geometrie-velo-route': Object.freeze({
     titre: 'Canyon, page d’explication de la géométrie (stack et reach efficaces)',
     url: 'https://www.canyon.com/fr-ch/blog-content/actualite-velo-route/explication-geometrie-velo-route/b19102022.html',
