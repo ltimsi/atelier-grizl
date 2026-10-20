@@ -1,0 +1,17 @@
+# Atelier Grizl : site statique servi par nginx.
+# Par défaut, le port n'écoute que sur 127.0.0.1 : c'est ton reverse proxy qui publie le site en HTTPS.
+services:
+  atelier-grizl:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+    image: atelier-grizl:local
+    container_name: atelier-grizl
+    restart: unless-stopped
+    ports:
+      - "${BIND_IP:-127.0.0.1}:${PORT:-8088}:80"
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp

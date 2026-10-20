@@ -1,0 +1,253 @@
+<title>Atelier Grizl</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Guide d'atelier pour monter, régler et réparer soi-même le Canyon Grizl CF 7.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Mise en page : manuel d'atelier de poche. Une colonne de lecture, planches techniques sur fond « calque », barre de chapitres collante. */
+:root{
+  --bg:#EDF0EF; --panel:#F9FAFA; --plate:#E3E8E9;
+  --ink:#16202A; --ink-2:#465462; --ink-3:#6F7D89;
+  --line:#C6CFD4; --line-2:#DAE1E4;
+  --acc:#56479A; --acc-2:#E9E5F6; --on-acc:#FFFFFF;
+  --hot:#9E4C06; --hot-2:#FAE8D6;
+  --ok:#2B724A; --ok-2:#DFF0E5;
+  --stop:#AE2A20; --stop-2:#F7E0DC;
+  --f-disp:"Archivo","Arial Narrow",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --col:46rem; --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10151A; --panel:#161D23; --plate:#19222A;
+    --ink:#E3E9ED; --ink-2:#A6B3BD; --ink-3:#7A8893;
+    --line:#2D3842; --line-2:#222B33;
+    --acc:#B1A5F0; --acc-2:#272242; --on-acc:#16112B;
+    --hot:#F2A766; --hot-2:#3A2816;
+    --ok:#78CB9E; --ok-2:#16321F;
+    --stop:#F48B81; --stop-2:#3E1D1A;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10151A; --panel:#161D23; --plate:#19222A;
+  --ink:#E3E9ED; --ink-2:#A6B3BD; --ink-3:#7A8893;
+  --line:#2D3842; --line-2:#222B33;
+  --acc:#B1A5F0; --acc-2:#272242; --on-acc:#16112B;
+  --hot:#F2A766; --hot-2:#3A2816;
+  --ok:#78CB9E; --ok-2:#16321F;
+  --stop:#F48B81; --stop-2:#3E1D1A;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+input,select,textarea{font:inherit;font-size:16px}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 64px);-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:var(--col);margin-inline:auto}
+a{color:var(--acc);text-underline-offset:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:4px}
+p{margin:0 0 .75em}
+ul,ol{margin:0 0 1em;padding-left:1.25em}
+strong{font-weight:600}
+h1,h2,h3,h4{font-family:var(--f-disp);text-wrap:balance;margin:0;line-height:1.08}
+h1{font-size:clamp(2.6rem,9vw,4.4rem);font-weight:800;font-stretch:72%;letter-spacing:-.01em}
+h2{font-size:clamp(1.9rem,6vw,2.7rem);font-weight:800;font-stretch:76%;letter-spacing:-.005em}
+h3{font-size:1.32rem;font-weight:700;font-stretch:88%;margin:2.2rem 0 .6rem}
+h4{font-family:var(--f-mono);font-size:.74rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 .5rem}
+.eyebrow,.ch-num{font-family:var(--f-mono);font-size:.75rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--acc);margin:0 0 .55rem}
+.lead,.ch-lead{font-size:1.08rem;color:var(--ink-2);max-width:40rem}
+.muted{color:var(--ink-2)}
+.small{font-size:.875rem}
+
+/* En-tête */
+.masthead{padding-block:calc(28px + env(safe-area-inset-top,0px)) 8px}
+.masthead h1{margin:.1rem 0 .7rem}
+.specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:0;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);margin:1.4rem 0 0;overflow:hidden}
+.specs div{padding:10px 14px;border-bottom:1px solid var(--line-2);min-width:0}
+.specs dt{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.specs dd{margin:0;font-size:.93rem}
+.specs + .eyebrow{margin-top:1.8rem}
+.plan{list-style:none;padding:0;margin:1.2rem 0 0;display:grid;gap:8px;counter-reset:plan}
+.plan li{counter-increment:plan;display:grid;grid-template-columns:2.6rem 1fr auto;gap:10px;align-items:center;padding:10px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+.plan li::before{content:counter(plan);font-family:var(--f-disp);font-weight:800;font-stretch:75%;font-size:1.7rem;color:var(--acc);line-height:1}
+.plan b{display:block;font-weight:600}
+.plan span{font-size:.86rem;color:var(--ink-2)}
+.plan a{font-family:var(--f-mono);font-size:.75rem;white-space:nowrap}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin:1rem 0 0;font-size:.85rem;color:var(--ink-2)}
+
+/* Barre de chapitres */
+.chapnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);margin:1.6rem calc(-1 * max(16px,env(safe-area-inset-left,0px))) 0;padding-inline:max(16px,env(safe-area-inset-left,0px))}
+.chapnav ul{list-style:none;margin:0 auto;padding:8px 0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;max-width:var(--col)}
+.chapnav ul::-webkit-scrollbar{display:none}
+.chapnav a{display:block;white-space:nowrap;text-decoration:none;font-family:var(--f-mono);font-size:.78rem;color:var(--ink-2);border:1px solid var(--line);border-radius:999px;padding:5px 11px;background:var(--panel)}
+.chapnav a[aria-current="true"]{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+
+/* Chapitres */
+.chapter{padding-block:3rem 1rem;border-bottom:1px solid var(--line)}
+.ch-head{margin-bottom:1.4rem}
+.ch-head h2{margin-bottom:.6rem}
+.sub{margin-top:1rem}
+.sub > h3:first-child{margin-top:2.4rem}
+
+/* Encadré « Il te faut » */
+.kit{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:12px 14px;margin:1rem 0}
+.chips{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:6px}
+.chips li{border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:.86rem;background:var(--bg)}
+
+/* Étapes numérotées */
+ol.steps{list-style:none;padding:0;margin:1rem 0 1.4rem;counter-reset:st}
+ol.steps > li{counter-increment:st;display:grid;grid-template-columns:2.3rem 1fr;gap:4px 10px;padding:12px 0;border-top:1px solid var(--line-2)}
+ol.steps > li::before{content:counter(st);font-family:var(--f-disp);font-weight:800;font-stretch:75%;font-size:1.45rem;line-height:1.1;color:var(--acc)}
+ol.steps > li > *{grid-column:2;min-width:0}
+ol.steps > li > :last-child{margin-bottom:0}
+.st-t{font-weight:600;margin-bottom:.2rem}
+
+/* Valeurs et marqueurs */
+.nm{font-family:var(--f-mono);font-weight:600;font-size:.86em;color:var(--hot);background:var(--hot-2);padding:1px 6px;border-radius:4px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.verif{font-family:var(--f-mono);font-size:.78em;color:var(--acc);border:1px dashed var(--acc);border-radius:4px;padding:0 5px;white-space:nowrap}
+a.src{font-family:var(--f-mono);font-size:.72rem;color:var(--ink-3);text-decoration-style:dotted}
+a.src::before{content:"↗ "}
+.ref{font-family:var(--f-mono);font-size:.88em}
+
+/* Encadrés */
+.note{border-left:3px solid var(--acc);background:var(--acc-2);padding:10px 14px;border-radius:0 8px 8px 0;margin:1rem 0}
+.note > :last-child{margin-bottom:0}
+.note-t{font-family:var(--f-mono);font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.25rem}
+.note.warn{border-color:var(--stop);background:var(--stop-2)}
+.note.warn .note-t{color:var(--stop)}
+.note.info .note-t{color:var(--acc)}
+.note.tip{border-color:var(--ok);background:var(--ok-2)}
+.note.tip .note-t{color:var(--ok)}
+.note.prop{border:1px dashed var(--ink-3);border-left:3px dashed var(--ink-3);background:var(--panel)}
+.note.prop .note-t{color:var(--ink-2)}
+
+/* Planches 2D */
+figure{margin:1.4rem 0}
+.plate-art{background:var(--plate);border:1px solid var(--line);border-radius:var(--r);padding:10px;overflow-x:auto}
+.plate-art svg{display:block;width:100%;height:auto;min-width:300px}
+figcaption{font-size:.85rem;color:var(--ink-2);margin-top:.5rem}
+.pl-n{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--acc);margin-right:.4em}
+/* Classes de dessin SVG (aucune couleur en dur) */
+svg .ln{fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+svg .ln2{fill:none;stroke:var(--ink);stroke-width:1;stroke-linecap:round;stroke-linejoin:round}
+svg .ln3{fill:none;stroke:var(--ink-2);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+svg .dim{fill:none;stroke:var(--ink-3);stroke-width:1;stroke-dasharray:4 3}
+svg .fl{fill:var(--panel);stroke:var(--ink);stroke-width:1.4;stroke-linejoin:round}
+svg .fl2{fill:var(--line-2);stroke:var(--ink);stroke-width:1.2;stroke-linejoin:round}
+svg .fl3{fill:var(--line);stroke:var(--ink);stroke-width:1.2;stroke-linejoin:round}
+svg .ink{fill:var(--ink)}
+svg .ac{fill:none;stroke:var(--acc);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+svg .acf{fill:var(--acc)}
+svg .ac2f{fill:var(--acc-2);stroke:var(--acc);stroke-width:1.4}
+svg .ht{fill:none;stroke:var(--hot);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+svg .htf{fill:var(--hot)}
+svg .ht2f{fill:var(--hot-2);stroke:var(--hot);stroke-width:1.4}
+svg .okl{fill:none;stroke:var(--ok);stroke-width:2;stroke-linecap:round}
+svg .okf{fill:var(--ok)}
+svg .stl{fill:none;stroke:var(--stop);stroke-width:2;stroke-linecap:round}
+svg .stf{fill:var(--stop)}
+svg .t{fill:var(--ink);font-family:var(--f-mono);font-size:11px}
+svg .t2{fill:var(--ink-2);font-family:var(--f-mono);font-size:10px}
+svg .tb{font-weight:600}
+svg .ta{fill:var(--acc)}
+svg .th{fill:var(--hot)}
+svg .to{fill:var(--ok)}
+svg .ts{fill:var(--stop)}
+svg .tc{text-anchor:middle}
+svg .te{text-anchor:end}
+svg .td{font-family:var(--f-disp);font-weight:700}
+svg .badge{fill:var(--acc)}
+svg .badge-t{fill:var(--on-acc);font-family:var(--f-mono);font-size:10px;font-weight:600;text-anchor:middle}
+svg .mk{fill:var(--ink)}
+svg .mka{fill:var(--acc)}
+svg .mkh{fill:var(--hot)}
+
+/* Tableaux */
+.tbl{overflow-x:auto;margin:1rem 0 1.4rem;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+.tbl table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:30rem}
+.tbl th,.tbl td{text-align:left;vertical-align:top;padding:8px 12px;border-bottom:1px solid var(--line-2)}
+.tbl th{font-family:var(--f-mono);font-size:.7rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);background:var(--bg)}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td{font-variant-numeric:tabular-nums}
+.tbl td.n{white-space:nowrap}
+/* Tableau qui se replie en fiches sur téléphone : <div class="tbl stack"> et data-label="Titre de colonne" sur chaque <td> */
+@media (max-width:560px){
+  .tbl.stack table{min-width:0}
+  .tbl.stack thead{display:none}
+  .tbl.stack tr{display:block;padding:8px 0;border-bottom:1px solid var(--line-2)}
+  .tbl.stack tr:last-child{border-bottom:0}
+  .tbl.stack td{display:block;position:relative;border:0;padding:3px 12px 3px calc(12px + 7.2rem);min-height:1.6em}
+  .tbl.stack td::before{content:attr(data-label);position:absolute;left:12px;top:5px;width:6.8rem;font-family:var(--f-mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+  .tbl.stack td.n{white-space:normal}
+  .tbl.stack th[colspan]{display:block}
+}
+
+/* Vidéos et manuels */
+ul.media{list-style:none;padding:0;margin:1rem 0 1.4rem;display:grid;gap:8px}
+ul.media a{display:grid;gap:2px;padding:10px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);text-decoration:none;color:var(--ink)}
+ul.media a:hover{border-color:var(--acc)}
+.m-kind{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;color:var(--acc)}
+.m-title{font-weight:500}
+.m-note{font-size:.84rem;color:var(--ink-2)}
+
+/* Listes à cocher */
+ul.check{list-style:none;padding:0;margin:1rem 0 1.4rem;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+ul.check li{border-bottom:1px solid var(--line-2)}
+ul.check li:last-child{border-bottom:0}
+ul.check label{display:flex;gap:12px;align-items:flex-start;padding:10px 14px;cursor:pointer}
+ul.check input{accent-color:var(--acc);width:1.15rem;height:1.15rem;margin:.2rem 0 0;flex:none}
+ul.check input:checked + span{color:var(--ink-3);text-decoration:line-through;text-decoration-color:var(--ink-3)}
+.check-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:1.2rem}
+.check-head h4{margin:0}
+.btn-reset{font-family:var(--f-mono);font-size:.72rem;color:var(--ink-2);background:none;border:0;text-decoration:underline;cursor:pointer;padding:4px}
+
+/* Pièces en 3D */
+.v3d{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
+.v3d-stage{position:relative;width:100%;aspect-ratio:4/3;max-height:72vh;background:radial-gradient(120% 90% at 50% 35%,var(--panel),var(--plate))}
+.v3d-stage canvas{display:block;width:100%;height:100%;touch-action:pan-y}
+.v3d-stage.free canvas{touch-action:none}
+.v3d-pins{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.pin{position:absolute;left:0;top:0;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;border:2px solid var(--panel);background:var(--acc);color:var(--on-acc);font:600 11px/20px var(--f-mono);text-align:center;padding:0;pointer-events:auto;cursor:pointer;transition:opacity .2s}
+.pin.on{background:var(--hot);color:var(--panel);transform-origin:center}
+.pin.hide{opacity:0;pointer-events:none}
+.v3d-hint{position:absolute;left:10px;top:8px;right:10px;font-family:var(--f-mono);font-size:.7rem;color:var(--ink-3);pointer-events:none}
+.v3d-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;border-top:1px solid var(--line);background:var(--panel)}
+.btn{font-family:var(--f-mono);font-size:.76rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
+.btn[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.v3d-range{display:flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:.76rem;flex:1 1 16rem;min-width:0}
+.v3d-range input{flex:1;min-width:0;accent-color:var(--acc)}
+.v3d-range output{white-space:nowrap;color:var(--acc)}
+.v3d-legend{margin:0;padding:6px 12px 12px;list-style:none;display:grid;gap:2px;border-top:1px solid var(--line-2)}
+.v3d-legend li button{display:grid;grid-template-columns:1.6rem 1fr;gap:8px;width:100%;text-align:left;background:none;border:0;padding:6px 4px;border-radius:6px;font:inherit;font-size:.88rem;color:var(--ink);cursor:pointer}
+.v3d-legend li button span:first-child{font-family:var(--f-mono);font-weight:600;color:var(--acc)}
+.v3d-legend li button.on{background:var(--hot-2)}
+.v3d-legend li button.on span:first-child{color:var(--hot)}
+.v3d-fallback{position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center;color:var(--ink-2);font-size:.9rem}
+.v3d > figcaption{padding:0 12px 12px;margin:0}
+
+/* Pas de dépannage */
+.flow{display:grid;gap:8px;margin:1rem 0 1.4rem}
+.flow .q{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:10px 14px}
+.flow .q b{display:block;font-family:var(--f-mono);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--acc);margin-bottom:.15rem}
+.flow .arrow{font-family:var(--f-mono);font-size:.78rem;color:var(--ink-3);padding-left:14px}
+details{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);margin:.6rem 0}
+details > summary{cursor:pointer;padding:10px 14px;font-weight:600;list-style-position:inside}
+details > div{padding:0 14px 12px}
+
+/* Statut des lots */
+.lot-badge{display:inline-block;font-family:var(--f-mono);font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;color:var(--hot);border:1px solid var(--hot);border-radius:999px;padding:2px 9px;margin:0 0 .6rem}
+.lot-badge.ok{color:var(--ok);border-color:var(--ok)}
+.lots{list-style:none;padding:0;margin:.6rem 0 0;display:grid;gap:6px}
+.lots li{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;border:1px dashed var(--line);border-radius:var(--r);font-size:.9rem;color:var(--ink-2)}
+.lots li span:last-child{font-family:var(--f-mono);font-size:.72rem;white-space:nowrap}
+.footer{padding-block:2.4rem calc(3rem + env(safe-area-inset-bottom,0px));font-size:.86rem;color:var(--ink-2)}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+@media (min-width:900px){html{scroll-behavior:smooth}}
+</style>

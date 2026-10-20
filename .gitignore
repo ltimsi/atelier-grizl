@@ -1,0 +1,8 @@
+brouillons/
+dist/
+.env
+tools/node_modules/
+tools/shots*/
+*.png
+!docs/**/*.png
+.DS_Store

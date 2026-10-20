@@ -1,0 +1,44 @@
+
+<footer class="wrap footer">
+  <p>Atelier Grizl, guide d'atelier personnel rédigé à partir des documents officiels des fabricants et des fiches gestes de Park Tool. Version <!--VERSION-->. Les pièces en 3D sont des modèles simplifiés : elles montrent la disposition et l'ordre de montage, pas les cotes exactes.</p>
+  <p>Les cases cochées sont gardées dans ce navigateur seulement.</p>
+</footer>
+
+<!--SCRIPTS-->
+<script>
+(function () {
+  'use strict';
+  /* Chapitre courant dans la barre de navigation */
+  var links = Array.prototype.slice.call(document.querySelectorAll('.chapnav a'));
+  var byId = {}; links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+  var bar = document.querySelector('.chapnav ul');
+  function setCurrent(id) {
+    links.forEach(function (a) { a.removeAttribute('aria-current'); });
+    var a = byId[id]; if (!a) return;
+    a.setAttribute('aria-current', 'true');
+    if (bar) { var x = a.offsetLeft - 16; if (x < bar.scrollLeft || a.offsetLeft + a.offsetWidth > bar.scrollLeft + bar.clientWidth) bar.scrollTo({ left: Math.max(0, x), behavior: 'auto' }); }
+  }
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (ents) {
+      ents.forEach(function (e) { if (e.isIntersecting) setCurrent(e.target.id); });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    document.querySelectorAll('section.chapter[id]').forEach(function (s) { io.observe(s); });
+  }
+
+  /* Listes à cocher : mémorisées dans ce navigateur */
+  var KEY = 'atelier-grizl:checks';
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { state = {}; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  document.querySelectorAll('ul.check input[type="checkbox"]').forEach(function (cb) {
+    if (cb.id && state[cb.id]) cb.checked = true;
+    cb.addEventListener('change', function () { if (!cb.id) return; if (cb.checked) state[cb.id] = 1; else delete state[cb.id]; save(); });
+  });
+  document.querySelectorAll('[data-reset]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var ul = document.querySelector('ul.check[data-key="' + b.getAttribute('data-reset') + '"]'); if (!ul) return;
+      ul.querySelectorAll('input[type="checkbox"]').forEach(function (cb) { cb.checked = false; delete state[cb.id]; }); save();
+    });
+  });
+})();
+</script>

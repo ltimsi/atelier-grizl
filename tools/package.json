@@ -1,0 +1,8 @@
+{
+  "name": "atelier-grizl-outils",
+  "private": true,
+  "description": "Outils de contrôle visuel : captures des planches et des pièces 3D dans Chromium sans écran",
+  "devDependencies": {
+    "playwright": "1.56.0"
+  }
+}

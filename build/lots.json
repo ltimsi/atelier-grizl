@@ -1,0 +1,53 @@
+{
+  "version": "0.1.0",
+  "lots": [
+    {
+      "lot": 1,
+      "titre": "Freins",
+      "statut": "en relecture",
+      "parts": ["20-freins"],
+      "nav": [["freins", "2 · Freins"]],
+      "modeles": ["rotor", "caliper", "bleed"]
+    },
+    {
+      "lot": 2,
+      "titre": "Avant de commencer et montage à la livraison",
+      "statut": "à faire",
+      "parts": ["10-avant", "11-montage"],
+      "nav": [["avant", "0 · Avant de commencer"], ["montage", "1 · Montage"]],
+      "modeles": ["torque", "cockpit", "axle", "pedal"]
+    },
+    {
+      "lot": 3,
+      "titre": "Tubeless et crevaisons",
+      "statut": "à faire",
+      "parts": ["30-tubeless"],
+      "nav": [["tubeless", "3 · Tubeless"]],
+      "modeles": ["rim", "plug"]
+    },
+    {
+      "lot": 4,
+      "titre": "Transmission",
+      "statut": "à faire",
+      "parts": ["40-transmission"],
+      "nav": [["transmission", "4 · Transmission"]],
+      "modeles": ["chain", "cassette", "derailleur", "crank"]
+    },
+    {
+      "lot": 5,
+      "titre": "Entretien, accessoires et dépannage",
+      "statut": "à faire",
+      "parts": ["50-entretien", "60-accessoires", "70-depannage"],
+      "nav": [["entretien", "5 · Entretien"], ["accessoires", "6 · Accessoires"], ["depannage", "7 · Dépannage"]],
+      "modeles": ["rack"]
+    },
+    {
+      "lot": 6,
+      "titre": "Aide-mémoire des couples et sources",
+      "statut": "à faire",
+      "parts": ["80-couples", "90-sources"],
+      "nav": [["couples", "Couples de serrage"], ["sources", "Sources"]],
+      "modeles": []
+    }
+  ]
+}
