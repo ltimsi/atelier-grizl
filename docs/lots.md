@@ -22,11 +22,15 @@ Pour chaque lot : relecture du texte, des planches et des pièces 3D par Lamine,
 
 ### Ce qui est approché
 
-Liste tirée le 20/10/2026 des META des pièces (`src/scene/pieces/*.js`) et des cotes approchées de GEO (`src/scene/geometrie.js`), par `listerApproximations` de `src/scene/scene.js`. C'est la liste que la page ouvre par « Ce qui est approché », sans les documents. Ne la retouche pas à la main : régénère-la depuis le code.
+Liste générée depuis les META des pièces (`src/scene/pieces/*.js`) et les cotes approchées de GEO (`src/scene/geometrie.js`), par `listerApproximations` de `src/scene/scene.js`. C'est la liste que la page ouvre par « Ce qui est approché », sans les documents. Ne la retouche pas à la main : depuis la racine du dépôt, régénère-la avec
 
 ```sh
-node --input-type=module -e "import { PIECES, listerApproximations } from './src/scene/scene.js'; console.log(JSON.stringify(listerApproximations(PIECES.map(m => ({ meta: m.META, zones: [] }))), null, 2));"
+node tools/approximations-md.mjs --lots
 ```
+
+La commande réécrit le bloc entre les deux marqueurs ci-dessous. Sans `--lots`, elle écrit la liste sur la sortie standard. Le test `tests/js/lots.test.mjs` échoue si le bloc n'est plus à jour.
+
+<!-- début de la liste générée par tools/approximations-md.mjs -->
 
 #### Cadre, fourche, tige de selle et selle
 
@@ -68,17 +72,19 @@ Formes approchées :
 
 - jante à crochets ou sans crochets : à lire sur le marquage de la jante
 - modèle des moyeux : à lire sur les moyeux
+- nombre de rayons, à compter sur la roue
 
 #### Disques SM-RT64 et XT RT-MT800, étriers GRX, plaquettes et durites
 
 Formes approchées :
 
 - Disque d’origine : piste en acier sur un support en aluminium peint, comme le dit la fiche Shimano. Bras, trous et rivets sont approchés d’après la photo officielle de Canyon.
-- Disque XT : piste, araignée, rivets et ailettes de refroidissement en forme approchée. Les photos produit de Shimano n’étaient pas accessibles le jour du relevé.
+- Disque XT : piste, araignée, rivets et ailettes de refroidissement en forme approchée. Aucune photo produit Shimano du disque XT n’a servi.
 - Épaisseur du disque XT : Shimano le range parmi les disques d’épaisseur standard. Il est dessiné à l’épaisseur standard donnée par la fiche du disque d’origine.
 - Bagues Center Lock : forme approchée. Celle du XT est dessinée à denture extérieure, celle d’origine reste à identifier.
 - Étriers GRX à fixation flat mount : Canyon ne donne pas le modèle. Forme approchée d’après la photo officielle, qui montre aussi leur place autour du moyeu.
 - Plaquettes : forme approchée.
+- Sortie des plaquettes : sens et course de l’animation approchés. Le chapitre dit seulement de retirer le clip, puis l’axe, puis les plaquettes avec leur ressort. La roue reste en place pour qu’on voie l’étrier.
 - Durites : grosseur et trajet le long de la fourche et de la base approchés. Aucune photo officielle ne montre le côté gauche du vélo.
 
 À vérifier à la livraison :
@@ -153,9 +159,12 @@ Formes approchées :
 
 - La fiche nomme cette cote « inclinaison du cintre ». C’est très probablement l’angle de direction. À confirmer avec le schéma de la fiche.
 - Canyon définit la position de la main par un lien « En savoir plus » de la fiche. Sa page d’explication de la géométrie dit que ces valeurs sont calculées avec la main posée sur les cocottes, au point où tu saisis la cocotte, en tenant compte de la potence, de la forme du cockpit et des entretoises montées à la livraison. Elle ne précise pas ce point sur la cocotte : à vérifier.
+- nombre de rayons, à compter sur la roue
 - Canyon ne dit pas dans quel sens la potence est montée à la livraison. Elle est dessinée vers le bas, comme sur la photo officielle du vélo. À regarder sur le vélo.
 - La page du cintre annonce un déport plus long que le marquage de sa photo officielle. Le cintre photographié est le plus étroit des deux. À lire sur le cintre.
 - Lue sur le marquage du cintre photographié, le plus étroit des deux. À lire sur le cintre.
+
+<!-- fin de la liste générée -->
 
 ## Lot 1 · Freins · en relecture
 

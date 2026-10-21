@@ -57,6 +57,7 @@ deploy/                  Dockerfile, nginx.conf, DEPLOIEMENT.md
 docker-compose.yml       écoute sur 127.0.0.1:8088 (BIND_IP et PORT dans .env)
 tools/shoot.js           captures Playwright des planches et des pièces 3D des chapitres
 tools/scene-check.js     contrôle de la page d'accueil : captures, erreurs, débordement, triangles, ancre
+tools/approximations-md.mjs  liste « Ce qui est approché » de docs/lots.md, générée depuis les META et GEO
 docs/                    règle des sources, suivi des lots, notes de recherche brutes
 ```
 

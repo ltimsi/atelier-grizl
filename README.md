@@ -38,7 +38,8 @@ vendor/three/          three.js 0.160.0 en modules ES (licence MIT)
 tests/                 tests de l'assemblage (Python) et des modules de src/scene (Node)
 deploy/                Dockerfile, configuration nginx, procédure de déploiement
 docker-compose.yml     service atelier-grizl, sur 127.0.0.1 derrière le reverse proxy
-tools/                 contrôle visuel (Playwright) : shoot.js pour les chapitres, scene-check.js pour l'accueil
+tools/                 contrôle visuel (Playwright) : shoot.js pour les chapitres, scene-check.js pour l'accueil ;
+                       approximations-md.mjs régénère la liste « Ce qui est approché » de docs/lots.md
 docs/                  règle des sources, suivi des lots, notes de recherche brutes
 ```
 
