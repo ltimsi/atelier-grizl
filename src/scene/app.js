@@ -42,6 +42,7 @@ const TEXTES = Object.freeze({
   aVenir: 'Atelier à venir.',
   renvoi: 'Atelier ouvert en haut de page',
   listeSans3d: 'La liste vient de la scène 3D, qui n’a pas pu se charger.',
+  listeAbsente: 'La liste n’a pas pu se charger. Elle est aussi sur la page « Ce qui est approché ».',
 });
 
 /**
@@ -317,28 +318,19 @@ function rendreNoteApproche() {
 
 // ---- Liste « Ce qui est approché » ----
 
-function remplirListe(entrees) {
+// La liste elle-même vient de liste-approche.js, que la page « Ce qui est approché » partage.
+async function remplirListe(entrees) {
   if (!entrees) {
     ui.contenu.replaceChildren(el('p', 'muted', TEXTES.listeSans3d));
     return;
   }
-  ui.contenu.replaceChildren(...entrees.map(e => {
-    const s = el('section', 'appr');
-    s.append(el('h3', null, e.piece));
-    const bloc = (titre, items) => { if (items.length) s.append(el('h4', null, titre), ulDe(items)); };
-    bloc('Documents', e.sources.map(src => {
-      const a = el('a', null, src.titre);
-      a.href = src.url;
-      a.target = '_blank';
-      a.rel = 'noopener';
-      const li = el('li');
-      li.append(a);
-      return li;
-    }));
-    bloc('Formes approchées', e.approche.map(t => el('li', null, t)));
-    bloc('À vérifier à la livraison', e.aVerifier.map(t => el('li', null, t)));
-    return s;
-  }));
+  try {
+    const { listeApproche } = await import('./liste-approche.js');
+    ui.contenu.replaceChildren(listeApproche(document, entrees));
+  } catch (e) {
+    console.warn('liste-approche.js indisponible :', e.message);
+    ui.contenu.replaceChildren(el('p', 'muted', TEXTES.listeAbsente));
+  }
 }
 
 async function ouvrirListe() {
@@ -348,7 +340,7 @@ async function ouvrirListe() {
     const m = etat.module ?? await ui.moduleScene;
     if (m) entrees = approximationsSansScene(m);
   }
-  remplirListe(entrees);
+  await remplirListe(entrees);
   const d = ui.dialogue;
   if (d.open) return;
   if (typeof d.showModal === 'function') d.showModal();
