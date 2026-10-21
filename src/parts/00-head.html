@@ -261,7 +261,8 @@ details > div{padding:0 14px 12px}
 .scene .stage.studio{background:radial-gradient(120% 95% at 50% 36%,var(--studio-hi) 0%,var(--studio-lo) 100%)}
 .scene .stage svg,.scene .stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .scene .stage canvas{touch-action:none}
-.scene .hint{position:absolute;left:12px;top:10px;right:12px;margin:0;font-family:var(--f-mono);font-size:.7rem;line-height:1.4;color:var(--ink-3);pointer-events:none}
+/* L'aide sur un panneau, pour se lire sans recouvrir le dessin ni la 3D. Sans color-mix, le panneau est plein. */
+.scene .hint{position:absolute;left:10px;top:8px;width:fit-content;max-width:calc(100% - 20px);margin:0;padding:4px 9px;border:1px solid var(--line-2);border-radius:8px;background:var(--panel);background:color-mix(in srgb,var(--panel) 88%,transparent);font-family:var(--f-mono);font-size:.7rem;line-height:1.4;color:var(--ink-2);pointer-events:none}
 .scene .status{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;font-family:var(--f-mono);font-size:.8rem;color:var(--ink-2);pointer-events:none}
 .scene .stage-btn{position:absolute;bottom:10px;font-family:var(--f-mono);font-size:.72rem;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 11px;cursor:pointer}
 #approche{left:10px}
