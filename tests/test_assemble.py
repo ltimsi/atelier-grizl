@@ -1,5 +1,5 @@
-"""Tests de build/assemble.py : carte d'imports, sorties de dist/site et dist/artifact, scène de la page d'accueil,
-ateliers du chapitre Freins et contrôles qui les gardent."""
+"""Tests de build/assemble.py : sorties de dist/site et dist/artifact, scène de la page d'accueil, pages des ateliers du
+chapitre Freins, contrôles qui gardent les ateliers sources et les pages, configuration nginx."""
 import json
 import re
 import subprocess
@@ -12,6 +12,7 @@ RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE / "build"))
 
 import assemble  # noqa: E402
+import gabarit  # noqa: E402
 
 PIED = (
     "Le vélo et ses pièces sont dessinés d'après les documents officiels. Ce qui n'est pas publié est marqué "
@@ -20,6 +21,7 @@ PIED = (
 
 ZONES = [z["id"] for z in json.loads((RACINE / "src" / "scene" / "zones.json").read_text(encoding="utf-8"))]
 
+SLUGS = ["systeme", "disques", "plaquettes", "rodage", "centrage", "controles", "purge", "securite"]
 # Les ateliers du chapitre Freins, dans l'ordre du document : id, data-zone, data-type, data-de, data-vers.
 CORRESPONDANCE = [
     ("freins-systeme", "manettes", "comprendre", None, None),
@@ -37,7 +39,8 @@ VIDEO = {"ul.media", "p.a-video"}
 
 
 class Ateliers(HTMLParser):
-    """Les section.atelier d'une page, avec leurs attributs, les id des sections qui les contiennent et leurs blocs.
+    """Les ateliers d'une page (section.atelier d'un chapitre source, article.atelier d'une page générée), avec leurs
+    attributs, les id des sections qui les contiennent et leurs blocs.
 
     Relevé indépendant de celui d'assemble.py : les tests ne contrôlent pas le script avec son propre code."""
 
@@ -53,7 +56,7 @@ class Ateliers(HTMLParser):
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
         classes = (a.get("class") or "").split()
-        if tag == "section":
+        if tag in ("section", "article"):
             s = None
             if "atelier" in classes:
                 s = {"id": a.get("id"), "classes": classes, "zone": a.get("data-zone"), "type": a.get("data-type"),
@@ -68,7 +71,7 @@ class Ateliers(HTMLParser):
                                         if classe in classes and balise in (None, tag))
 
     def handle_endtag(self, tag):
-        if tag == "section" and self.pile:
+        if tag in ("section", "article") and self.pile:
             self.pile.pop()
 
 
@@ -82,13 +85,13 @@ COMPLET = '<div class="a-dem"></div><div class="kit"></div><ol class="steps"></o
 
 class TestCarteImports(unittest.TestCase):
     def test_carte_imports_site(self):
-        carte = assemble.carte_imports("site")
+        carte = gabarit.carte_imports("site")
         self.assertIn('type="importmap"', carte)
         self.assertIn('"three": "./vendor/three/three.module.min.js"', carte)
         self.assertIn('"three/addons/": "./vendor/three/addons/"', carte)
 
     def test_carte_imports_artifact(self):
-        carte = assemble.carte_imports("artifact")
+        carte = gabarit.carte_imports("artifact")
         self.assertIn('type="importmap"', carte)
         self.assertIn("https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js", carte)
         self.assertIn("https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/", carte)
@@ -106,9 +109,9 @@ class TestBuild(unittest.TestCase):
         cls.site = RACINE / "dist" / "site"
         cls.artifact = RACINE / "dist" / "artifact"
 
-    def page(self, cible="site"):
+    def page(self, cible="site", chemin=""):
         dossier = self.site if cible == "site" else self.artifact
-        return (dossier / "index.html").read_text(encoding="utf-8")
+        return (dossier / chemin / "index.html").read_text(encoding="utf-8")
 
     def contient(self, page, morceau, oui=True):
         # Sans recopier la page entière dans le message d'échec.
@@ -178,15 +181,26 @@ class TestBuild(unittest.TestCase):
         ligne = next((l for l in self.res.stdout.splitlines() if l.startswith("Lots publiés : ")), "")
         self.assertIn("0 (en relecture)", ligne.removeprefix("Lots publiés : ").split(", "))
 
+    def test_sortie(self):
+        # Pour chaque cible : le nombre de pages et la taille totale, sans erreur.
+        for cible in ("site", "artifact"):
+            ligne = next((l for l in self.res.stdout.splitlines() if l.startswith(f"{cible} : ")), "")
+            self.assertRegex(ligne, rf"^{cible} : 20 pages, \d+ octets en tout$", self.res.stdout)
+
     def ateliers(self):
-        return Ateliers(self.page()).liste
+        # Une page par atelier, dans l'ordre du chapitre : chacune porte l'article.atelier de son atelier.
+        return [s for slug in SLUGS for s in Ateliers(self.page(chemin=f"freins/{slug}/")).liste]
 
     def test_correspondance(self):
-        # Les ateliers du chapitre Freins seulement : ceux des autres chapitres n'entrent pas dans ce tableau.
-        ateliers = [s for s in self.ateliers() if "freins" in s["ancetres"]]
+        ateliers = self.ateliers()
         self.assertEqual([(s["id"], s["zone"], s["type"], s["de"], s["vers"]) for s in ateliers], CORRESPONDANCE)
         for s in ateliers:
-            self.assertIn("sub", s["classes"], s["id"])
+            self.assertIn("atelier", s["classes"], s["id"])
+        # Le chapitre source a les mêmes ateliers, dans le même ordre.
+        source = Ateliers((RACINE / "src" / "parts" / "20-freins.html").read_text(encoding="utf-8")).liste
+        self.assertEqual([(s["id"], s["zone"], s["type"], s["de"], s["vers"]) for s in source], CORRESPONDANCE)
+        # L'accueil n'a plus d'atelier : chacun est sur sa page.
+        self.assertEqual(Ateliers(self.page()).liste, [])
 
     def test_ateliers_complets(self):
         ateliers = self.ateliers()
@@ -208,50 +222,76 @@ class TestBuild(unittest.TestCase):
 
 
 class TestControleAteliers(unittest.TestCase):
-    """controles() refuse un atelier incomplet ou hors zone, avec un message en français : le build sort alors en 1."""
+    """controle_ateliers() refuse un atelier source incomplet ou hors zone, avec un message en français : le build sort
+    alors en 1."""
 
     def page(self, *ateliers, zones=ZONES):
         # Un atelier « comprendre » par zone, pour que seule l'erreur cherchée apparaisse.
         base = [atelier(f"base-{z}", z, "comprendre", '<p class="a-video">Pas de vidéo.</p>') for z in zones]
         return "<main>" + "".join(base + list(ateliers)) + "</main>"
 
+    def controler(self, texte):
+        return assemble.controle_ateliers(texte, ZONES)
+
     def test_page_correcte(self):
         complet = atelier("a", ZONES[0], "remplacer", COMPLET, 'data-de="A" data-vers="B"')
-        self.assertEqual(assemble.controles(self.page(complet)), [])
+        self.assertEqual(self.controler(self.page(complet)), [])
+
+    def test_chapitres_sources(self):
+        # Le chapitre Freins tel qu'il est écrit passe le contrôle.
+        texte = (RACINE / "src" / "parts" / "20-freins.html").read_text(encoding="utf-8")
+        self.assertEqual(self.controler(texte), [])
 
     def test_bloc_manquant(self):
         sans_kit = COMPLET.replace('<div class="kit"></div>', "")
-        err = assemble.controles(self.page(atelier("a", ZONES[0], "entretenir", sans_kit)))
+        err = self.controler(self.page(atelier("a", ZONES[0], "entretenir", sans_kit)))
         self.assertIn("atelier a : .kit manquant (type entretenir)", err)
 
     def test_comprendre_sans_gestes(self):
-        err = assemble.controles(self.page(atelier("a", ZONES[0], "comprendre", COMPLET)))
+        err = self.controler(self.page(atelier("a", ZONES[0], "comprendre", COMPLET)))
         self.assertIn("atelier a : ol.steps en trop (type comprendre)", err)
 
     def test_sans_video(self):
         sans_video = COMPLET.replace('<ul class="media"></ul>', "")
-        err = assemble.controles(self.page(atelier("a", ZONES[0], "regler", sans_video)))
+        err = self.controler(self.page(atelier("a", ZONES[0], "regler", sans_video)))
         self.assertIn("atelier a : ni ul.media ni p.a-video", err)
 
     def test_remplacer_sans_pieces(self):
-        err = assemble.controles(self.page(atelier("a", ZONES[0], "remplacer", COMPLET, 'data-de="A"')))
+        err = self.controler(self.page(atelier("a", ZONES[0], "remplacer", COMPLET, 'data-de="A"')))
         self.assertIn("atelier a : data-de et data-vers obligatoires (type remplacer)", err)
 
     def test_type_inconnu(self):
-        err = assemble.controles(self.page(atelier("a", ZONES[0], "reparer", COMPLET)))
+        err = self.controler(self.page(atelier("a", ZONES[0], "reparer", COMPLET)))
         self.assertIn("atelier a : data-type « reparer » inconnu (comprendre, entretenir, regler ou remplacer)", err)
 
     def test_zone_inconnue(self):
-        err = assemble.controles(self.page(atelier("a", "selle", "regler", COMPLET)))
+        err = self.controler(self.page(atelier("a", "selle", "regler", COMPLET)))
         self.assertIn("atelier a : data-zone « selle » absente de src/scene/zones.json", err)
 
     def test_sans_id(self):
-        err = assemble.controles(self.page(atelier("", ZONES[0], "regler", COMPLET)))
+        err = self.controler(self.page(atelier("", ZONES[0], "regler", COMPLET)))
         self.assertIn("atelier sans id : app.js ne peut pas l'ouvrir", err)
 
     def test_zone_sans_atelier(self):
-        err = assemble.controles(self.page(zones=ZONES[:-1]))
+        err = self.controler(self.page(zones=ZONES[:-1]))
         self.assertIn(f"zone « {ZONES[-1]} » sans atelier publié", err)
+
+
+class TestControlesDePage(unittest.TestCase):
+    """controles() vaut pour chaque page générée : ni tiret cadratin ou demi-cadratin, ni id en double."""
+
+    def test_page_correcte(self):
+        self.assertEqual(assemble.controles('<p id="a">Un texte - simple</p><p id="b"></p>'), [])
+
+    def test_tirets(self):
+        self.assertEqual(assemble.controles("<p>a \u2014 b \u2013 c</p>"), ["2 tiret(s) cadratin ou demi-cadratin"])
+
+    def test_doublons(self):
+        self.assertEqual(assemble.controles('<p id="a"></p><div id="a"></div>'), ["id en double : a"])
+
+    def test_sans_controle_d_atelier(self):
+        # Les ateliers se contrôlent sur les chapitres sources, pas sur chaque page.
+        self.assertEqual(assemble.controles(atelier("a", "selle", "reparer", "")), [])
 
 
 class TestDeploiement(unittest.TestCase):
@@ -263,6 +303,19 @@ class TestDeploiement(unittest.TestCase):
         self.assertIsNotNone(m, "bloc location des .js introuvable")
         self.assertRegex(m.group(1), r"\bexpires (-1|epoch);")
         self.assertNotIn("add_header", m.group(1))
+
+    def test_nginx_html_sans_cache(self):
+        # Chaque page est un dossier et son index.html : toutes se revalident, pas seulement la racine. « expires -1 »
+        # envoie « Cache-Control: no-cache ». Pas d'add_header ici non plus, pour garder les en-têtes de sécurité.
+        conf = (RACINE / "deploy" / "nginx.conf").read_text(encoding="utf-8")
+        m = re.search(r"location ~\* \\\.html\$ \{(.*?)\}", conf, re.S)
+        self.assertIsNotNone(m, "bloc location des .html introuvable")
+        self.assertRegex(m.group(1), r"\bexpires (-1|epoch);")
+        self.assertNotIn("add_header", m.group(1))
+        self.assertNotIn("location = /index.html", conf)
+        self.assertRegex(conf, r"\n\s*index index\.html;")
+        for entete in ("X-Content-Type-Options", "X-Frame-Options", "Referrer-Policy", "Content-Security-Policy"):
+            self.assertEqual(len(re.findall(rf'add_header {entete} ".*" always;', conf)), 1, entete)
 
 
 if __name__ == "__main__":
