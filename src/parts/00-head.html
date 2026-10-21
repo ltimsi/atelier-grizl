@@ -451,8 +451,48 @@ html.pap-ouvert{overflow:hidden}
 .pap-nav{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 .pap-nav .btn{padding:12px 22px;font-size:.9rem}
 
-/* Accueil : le vélo en 3D, ses zones d'atelier et la fiche ouverte. Repris de la maquette du 20 octobre. */
-.specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:0;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);margin:1.4rem 0 0;overflow:hidden}
+/* Mon vélo, d'après la maquette du 21 octobre : l'en-tête, la scène à gauche et « Où intervenir » à droite (une seule
+   colonne sous 1100 px), puis les pièces à remplacer, l'introduction et toutes les catégories. La scène et le schéma
+   2D viennent de la maquette du 20 octobre. */
+.accueil-grille{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(300px,1fr);gap:22px;align-items:start;min-width:0}
+.accueil-bloc,.ou-intervenir{display:flex;flex-direction:column;gap:10px;min-width:0}
+.accueil-bloc > h2.label,.ou-intervenir > h2.label{color:var(--ink-nav)}
+/* « Où intervenir » : une carte par zone, son numéro comme la pastille du vélo, plein quand la zone est choisie */
+.ou-intervenir{gap:12px}
+.zone-carte{display:flex;flex-direction:column;gap:6px;padding:12px 14px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);min-width:0;transition:border-color .15s,box-shadow .15s}
+.zone-carte[aria-current="true"]{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.zone-h{display:flex;align-items:center;gap:10px;min-width:0}
+.zone-n{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--acc);background:var(--panel);color:var(--acc);font-family:var(--f-mono);font-size:.78rem;font-weight:600;line-height:1}
+.zone-carte[aria-current="true"] .zone-n{background:var(--acc);color:var(--on-acc)}
+.zone-btn{flex:1 1 auto;min-width:0;text-align:left;background:none;border:0;border-radius:6px;padding:2px 0;font-family:var(--f-disp);font-weight:700;font-stretch:88%;font-size:1.15rem;line-height:1.2;color:var(--ink)}
+.js .zone-btn{cursor:pointer}
+.js .zone-btn:hover{color:var(--acc)}
+.zone-carte ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
+.zone-carte li a{display:flex;align-items:baseline;gap:8px;margin:0 -6px;padding:5px 6px;border-radius:6px;text-decoration:none;color:var(--ink);line-height:1.35}
+.zone-carte li a:hover{background:var(--acc-2)}
+.zone-carte li .num{flex:none;min-width:2.2em;font-family:var(--f-mono);font-size:.76rem;color:var(--acc)}
+.zone-carte li .t{min-width:0}
+.zone-carte li .ty{flex:none;margin-left:auto;font-family:var(--f-mono);font-size:.66rem;color:var(--ink-2)}
+.zone-carte > p{margin:0;font-size:.88rem}
+/* « D’origine, puis à monter » : une carte par pièce à monter, avec son atelier */
+ul.a-remplacer{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:12px}
+ul.a-remplacer > li{display:flex;flex-direction:column;gap:2px;padding:12px 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);min-width:0}
+.a-remplacer .vers{font-weight:600;line-height:1.35}
+.a-remplacer .de{font-size:.86rem;color:var(--ink-2)}
+.a-remplacer .go{align-self:flex-start;margin-top:6px;font-size:.88rem;line-height:1.35;text-decoration:none}
+.a-remplacer .go:hover{text-decoration:underline}
+.a-remplacer .go .num{font-family:var(--f-mono);font-size:.76rem;margin-right:2px}
+/* « Toutes les catégories » : les catégories à venir en pointillés, comme dans le menu */
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:12px}
+a.cat{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);text-decoration:none;color:var(--ink);min-width:0}
+a.cat:hover{border-color:var(--acc)}
+a.cat.soon{background:transparent;border-style:dashed;color:var(--ink-2)}
+a.cat .label{color:var(--acc)}
+a.cat.soon .label{color:var(--ink-nav)}
+a.cat h3{font-size:1.25rem}
+a.cat p{margin:0;font-size:.86rem;color:var(--ink-2)}
+/* L'introduction : caractéristiques, jour de la livraison, légende et règle des sources */
+.specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:0;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);margin:0;overflow:hidden}
 .specs div{padding:10px 14px;border-bottom:1px solid var(--line-2);min-width:0}
 .specs dt{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
 .specs dd{margin:0;font-size:.93rem}
@@ -462,10 +502,9 @@ html.pap-ouvert{overflow:hidden}
 .plan li::before{content:counter(plan);font-family:var(--f-disp);font-weight:800;font-stretch:75%;font-size:1.7rem;color:var(--acc);line-height:1}
 .plan b{display:block;font-weight:600}
 .plan span{font-size:.86rem;color:var(--ink-2)}
-.plan a{font-family:var(--f-mono);font-size:.75rem;white-space:nowrap}
+.plan a,.plan li > span.muted{font-family:var(--f-mono);font-size:.75rem;white-space:nowrap}
 .legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin:1rem 0 0;font-size:.85rem;color:var(--ink-2)}
 .intro{padding-bottom:8px}
-.accueil{display:flex;flex-direction:column;gap:14px;margin:1.2rem 0 1.6rem;min-width:0}
 .scene{margin:0;display:flex;flex-direction:column;gap:8px;min-width:0}
 .scene figcaption{margin:0;font-size:.84rem;color:var(--ink-3)}
 .scene .modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:var(--plate);border:1px solid var(--line);border-radius:12px;padding:4px}
@@ -482,8 +521,15 @@ html.pap-ouvert{overflow:hidden}
 .scene .stage.studio{background:radial-gradient(120% 95% at 50% 36%,var(--studio-hi) 0%,var(--studio-lo) 100%)}
 .scene .stage svg,.scene .stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .scene .stage canvas{touch-action:none}
+/* En haut de l'image : l'aide à gauche et, en 3D, les boutons de la variante à droite, ou dessous s'il n'y a pas la
+   place. Les deux restent sous les pastilles : une pastille reste visible et touchable partout dans l'image. */
+.scene .stage-haut{position:absolute;left:10px;right:10px;top:8px;display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 10px;pointer-events:none}
+.scene .swap{margin-left:auto;display:inline-flex;flex-wrap:wrap;gap:3px;max-width:100%;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--panel);box-shadow:0 1px 3px var(--shadow);pointer-events:auto}
+.scene .swap button{font-family:var(--f-mono);font-size:.72rem;line-height:1.3;color:var(--ink);border:0;background:none;border-radius:999px;padding:5px 10px;cursor:pointer;min-width:0}
+.scene .swap button:hover{color:var(--acc)}
+.scene .swap button[aria-pressed="true"]{background:var(--acc);color:var(--on-acc)}
 /* L'aide sur un panneau, pour se lire sans recouvrir le dessin ni la 3D. Sans color-mix, le panneau est plein. */
-.scene .hint{position:absolute;left:10px;top:8px;width:fit-content;max-width:calc(100% - 20px);margin:0;padding:4px 9px;border:1px solid var(--line-2);border-radius:8px;background:var(--panel);background:color-mix(in srgb,var(--panel) 88%,transparent);font-family:var(--f-mono);font-size:.7rem;line-height:1.4;color:var(--ink-2);pointer-events:none}
+.scene .hint{flex:0 1 auto;min-width:0;margin:0;padding:4px 9px;border:1px solid var(--line-2);border-radius:8px;background:var(--panel);background:color-mix(in srgb,var(--panel) 88%,transparent);font-family:var(--f-mono);font-size:.7rem;line-height:1.4;color:var(--ink-2);pointer-events:none}
 .scene .status{position:absolute;z-index:2;inset:0;display:grid;place-items:center;text-align:center;padding:24px;font-family:var(--f-mono);font-size:.8rem;color:var(--ink-2);pointer-events:none}
 .scene .stage-btn{position:absolute;z-index:2;bottom:10px;font-family:var(--f-mono);font-size:.72rem;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 11px;cursor:pointer}
 #approche{left:10px}
@@ -495,7 +541,8 @@ html.pap-ouvert{overflow:hidden}
 .scene .key .k-trans{background:#6b5bc2}
 .scene .key .k-freins{background:#d9822b}
 .scene .key .k-cadre{background:#a3aeb8}
-/* Pastilles des zones, posées en pixels sur l'image : au-dessus du panneau de l'aide, sous la légende et les boutons */
+/* Pastilles des zones, posées en pixels sur l'image : au-dessus du panneau de l'aide et de la variante, sous la légende et
+   les boutons du bas */
 #pins{position:absolute;z-index:1;inset:0;pointer-events:none;overflow:hidden}
 .zpin{position:absolute;left:0;top:0;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:2px solid var(--acc);background:var(--panel);color:var(--acc);font-family:var(--f-mono);font-size:.8rem;font-weight:600;display:grid;place-items:center;cursor:pointer;pointer-events:auto;box-shadow:0 1px 5px var(--shadow);padding:0}
 .zpin::before{content:"";position:absolute;inset:-7px;border-radius:50%}
@@ -503,36 +550,6 @@ html.pap-ouvert{overflow:hidden}
 .zpin.on::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--acc);opacity:.5;animation:ping 1.8s ease-out infinite}
 @keyframes ping{from{transform:scale(.8);opacity:.6}to{transform:scale(1.5);opacity:0}}
 @media (prefers-reduced-motion: reduce){.zpin.on::after{animation:none}}
-/* Puces des zones, sous la scène */
-.zones{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:none;min-width:0}
-.zones::-webkit-scrollbar{display:none}
-.zones button{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px 6px 6px;cursor:pointer;font:inherit;font-size:.88rem;color:var(--ink);white-space:nowrap}
-.zones button span{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:.72rem;font-weight:600;color:var(--acc);border:1.5px solid var(--acc)}
-.zones button[aria-pressed="true"]{border-color:var(--acc);background:var(--acc-2)}
-.zones button[aria-pressed="true"] span{background:var(--acc);color:var(--on-acc)}
-/* Fiche de la zone ouverte : l'atelier y est déplacé depuis son chapitre */
-.fiche{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
-.fiche > *{margin:0}
-.fiche-tete{display:flex;gap:12px;align-items:flex-start}
-.fiche-tete .num{flex:0 0 auto;font-family:var(--f-disp);font-weight:800;font-stretch:70%;font-size:2.4rem;line-height:.9;color:var(--acc)}
-.fiche-tete .eyebrow{margin-bottom:.25rem}
-.fiche-tete h2{font-size:1.45rem;font-stretch:85%}
-.fiche-pieces{margin-top:.35rem;font-size:.86rem;line-height:1.4;color:var(--ink-2)}
-.fiche-pieces p{margin:0}
-.swap{display:inline-grid;grid-template-columns:repeat(2,minmax(0,auto));gap:3px;background:var(--plate);border:1px solid var(--line);border-radius:999px;padding:3px;align-self:flex-start;max-width:100%}
-.swap button{font:inherit;font-size:.84rem;color:var(--ink);border:0;background:none;border-radius:999px;padding:6px 12px;cursor:pointer;min-width:0}
-.swap button[aria-pressed="true"]{background:var(--acc);color:var(--on-acc)}
-.fiche-ateliers{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:6px}
-.fiche-ateliers button{font:inherit;font-size:.84rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:5px 11px;cursor:pointer;text-align:left}
-.fiche-ateliers button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
-.fiche-atelier{min-width:0}
-.fiche-atelier > .atelier{margin:0}
-.fiche-atelier > .atelier > h3:first-child{margin-top:0}
-.fiche .fiche-approche{background:var(--bg)}
-.fiche-approche > summary{font-weight:500;font-size:.9rem}
-.fiche-approche p{margin:.6rem 0 .2rem;font-size:.88rem;font-weight:600}
-.fiche-approche ul{margin:0;font-size:.88rem;color:var(--ink-2)}
-@media (max-width:420px){.fiche{padding:14px}}
 /* Liste « Ce qui est approché » */
 .approche-liste{width:min(40rem,calc(100vw - 32px));max-height:min(85vh,52rem);padding:0;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);color:var(--ink);overflow:auto}
 .approche-liste::backdrop{background:rgba(0,0,0,.45)}
@@ -570,7 +587,7 @@ html.pap-ouvert{overflow:hidden}
 
 /* Une seule colonne sous 1100 px */
 @media (max-width:1100px){
-  .atelier-cols,.categorie-cols{grid-template-columns:minmax(0,1fr)}
+  .atelier-cols,.categorie-cols,.accueil-grille{grid-template-columns:minmax(0,1fr)}
   .atelier-droite{position:static;max-height:none;overflow:visible}
 }
 /* Sous 900 px : le menu passe derrière son bouton. Sans JavaScript (pas de classe « js »), il reste en tête de page. */

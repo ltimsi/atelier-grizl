@@ -1,29 +1,21 @@
-// Page d'accueil : le vélo en 3D, ses zones d'atelier, la fiche de l'atelier ouvert et la liste
-// « Ce qui est approché ».
+// Page d'accueil « Mon vélo » : le vélo en 3D, ses pastilles, le schéma 2D de secours, la variante de la zone choisie
+// et la liste « Ce qui est approché ». Sur les pages d'atelier, seulement three.js et la visionneuse des pièces.
 // Porté de l'interface de la maquette (docs/superpowers/specs/2026-10-20-maquette-velo-3d.html) : onglets de rendu,
-// pastilles et puces, fiche, bouton de variante, boucle d'image, ResizeObserver et légende du mode simple.
+// pastilles, bouton de variante, boucle d'image, ResizeObserver et légende du mode simple.
 //
 // Chargement : app.js n'a aucun import statique, pour démarrer même si un module de la scène manque. Il pose
 // data-app sur <html> dès son démarrage : sans lui, le garde-fou de 99-foot.html dit que la page n'a pas pu se charger.
 // Le schéma 2D (geometrie.js, schema2d.js et les pièces qu'il lit) arrive par import() dynamique, comme three.js, ses
 // modules d'exemple et la scène. Si la 3D manque, ou si WebGL n'est pas là, la page passe au schéma 2D, grise les
-// onglets 3D et le dit. Si le schéma manque aussi, la page le dit et retire la scène vide : les puces ouvrent toujours
-// les ateliers. La visionneuse des chapitres (viewer.js) démarre dans tous les cas : sans window.THREE, elle affiche
-// son propre message.
+// onglets 3D et le dit. Si le schéma manque aussi, la page le dit et retire la scène vide. La visionneuse des
+// chapitres (viewer.js) démarre dans tous les cas : sans window.THREE, elle affiche son propre message.
 //
-// Ateliers : les section.atelier[data-zone] des chapitres, relevées au démarrage dans l'ordre du document.
-// ouvrirZone(id) les liste dans la fiche et ouvre le premier ; ouvrirAtelier(id) déplace la section dans la fiche et
-// laisse à sa place un renvoi. La tête de la fiche dit la pièce d'origine et la pièce à monter (data-de, data-vers).
+// Zones : « Où intervenir » (div.zone-carte[data-zone], écrit par build/pages.py) a une carte par zone de zones.json.
+// Une pastille ou le bouton d'une carte (button.zone-btn) appelle choisirZone : la pastille et la carte deviennent
+// actives, la 3D surligne la zone et la vise, le schéma 2D la cadre, et la variante de la zone s'affiche dans
+// l'image. Les liens des cartes mènent aux pages des ateliers, sans JavaScript : sans app.js, ils marchent encore.
 //
-// Adresse et historique : l'atelier ouvert est dans l'ancre de l'adresse. Une pastille, une puce ou un bouton de la
-// liste la remplace (history.replaceState) ; un lien du texte vers un atelier ouvre l'atelier dans la fiche et ajoute
-// une entrée (history.pushState), sans passer par le saut d'ancre du navigateur. Retour et Suivant (popstate) rouvrent
-// l'atelier de l'entrée, puis le navigateur rend la position de lecture de cette entrée. Au chargement, ou par
-// hashchange, une ancre d'atelier ouvre cet atelier. Toute autre ancre garde le comportement du navigateur.
-//
-// Sans la 3D, la liste « Ce qui est approché » vient des META des pièces : scene.js se charge sans three.js. La note
-// « Formes approchées » de la fiche n'apparaît pas : la zone d'une pièce se lit sur ses maillages, que seule la 3D
-// construit.
+// Sans la 3D, la liste « Ce qui est approché » vient des META des pièces : scene.js se charge sans three.js.
 //
 // Importé sous Node (tests), le module ne démarre pas : seuls ses calculs servent.
 // Les modules d'exemple de three.js que demande creerScene, avec le nom qu'ils exportent.
@@ -38,9 +30,8 @@ const TEXTES = Object.freeze({
   aide3d: 'Un doigt pour tourner, deux pour zoomer.',
   aide2d: 'Vue côté transmission. En pointillés : les pièces du côté gauche. Touche une pastille pour zoomer.',
   echec: 'La 3D n’a pas pu se charger sur cet appareil. Le schéma 2D reste disponible.',
-  echecTout: 'Ni la 3D ni le schéma 2D n’ont pu se charger. Les zones ci-dessous ouvrent quand même leurs ateliers.',
-  aVenir: 'Atelier à venir.',
-  renvoi: 'Atelier ouvert en haut de page',
+  echecTout: 'Ni la 3D ni le schéma 2D n’ont pu se charger. Les ateliers restent accessibles par le menu et par ' +
+    '« Où intervenir ».',
   listeSans3d: 'La liste vient de la scène 3D, qui n’a pas pu se charger.',
   listeAbsente: 'La liste n’a pas pu se charger. Elle est aussi sur la page « Ce qui est approché ».',
 });
@@ -62,64 +53,9 @@ export async function chargerLibs(importer = nom => import(nom)) {
   return libs;
 }
 
-/**
- * La note « Formes approchées » d'une zone : les notes `approche` des pièces dont les zones comprennent celle-ci.
- * @param {{piece: string, zones: string[], approche: string[]}[]} liste Le résultat de approximations().
- * @returns {{piece: string, notes: string[]}[]} Dans l'ordre de la liste, sans les pièces sans note.
- */
-export function notesDeZone(liste, id) {
-  return liste.filter(e => e.zones.includes(id) && e.approche.length)
-    .map(e => ({ piece: e.piece, notes: [...e.approche] }));
-}
-
 /** La liste des approximations sans la scène : les META des pièces, sans zone, puis la géométrie. */
 export function approximationsSansScene({ PIECES, listerApproximations }) {
   return listerApproximations(PIECES.map(m => ({ meta: m.META, zones: [] })));
-}
-
-/** L'identifiant d'une ancre (location.hash), décodé, ou null si elle est vide ou mal encodée. */
-export function idDuHash(hash) {
-  if (!hash || hash.length < 2) return null;
-  try {
-    return decodeURIComponent(hash.slice(1));
-  } catch {
-    return null;
-  }
-}
-
-/** L'ancre d'un atelier dans l'adresse, encodée comme idDuHash la décode. */
-export const ancreDe = id => '#' + encodeURIComponent(id);
-
-/**
- * L'atelier visé par un clic, ou null pour laisser faire le navigateur : un clic simple (bouton principal, sans
- * touche de modification, pas déjà traité) sur un lien interne #id, ouvert dans cette page, dont l'id est un atelier.
- * @param {MouseEvent} e Le clic. @param {(id: string) => boolean} estAtelier
- */
-export function atelierDuClic(e, estAtelier) {
-  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return null;
-  const a = e.target?.closest?.('a[href^="#"]');
-  if (!a || (a.target && a.target !== '_self')) return null;
-  const id = idDuHash(a.getAttribute('href'));
-  return id && estAtelier(id) ? id : null;
-}
-
-/**
- * L'atelier qu'une entrée d'historique demande quand Retour ou Suivant y revient : celui de son ancre ; sinon celui
- * que la page y a noté avant de suivre un lien (null : aucun atelier ouvert) ; sinon undefined, pour une entrée que la
- * page n'a pas écrite (une ancre de chapitre, par exemple) : rien ne change.
- * @param {string} hash location.hash. @param {*} etatEntree history.state. @param {(id: string) => boolean} estAtelier
- * @returns {string | null | undefined}
- */
-export function atelierDeLEntree(hash, etatEntree, estAtelier) {
-  const id = idDuHash(hash);
-  if (id && estAtelier(id)) return id;
-  if (etatEntree && typeof etatEntree === 'object' && 'atelier' in etatEntree) return etatEntree.atelier ?? null;
-  return undefined;
-}
-
-/** Les deux lignes de la tête de fiche pour un atelier qui remplace une pièce : rien s'il manque data-de ou data-vers. */
-export function lignesPieces(donnees) {
-  return donnees?.de && donnees?.vers ? [`D’origine : ${donnees.de}`, `À monter : ${donnees.vers}`] : [];
 }
 
 const reduit = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
@@ -128,8 +64,7 @@ const reduit = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')
 let ui = null;
 const etat = {
   mode: 'reel', // '2d' | 'simple' | 'reel'
-  zone: null, // la zone ouverte
-  atelier: null, // l'atelier déplacé dans la fiche
+  zone: null, // la zone choisie
   vue2d: null, // la zone cadrée par le schéma, ou null pour tout le vélo
   scene: null, // l'interface de creerScene, une fois montée
   module: null, // scene.js une fois chargé : la liste de secours en vient
@@ -144,153 +79,62 @@ const el = (tag, classe, texte) => {
   if (texte !== undefined) e.textContent = texte;
   return e;
 };
-const ulDe = items => {
-  const ul = el('ul');
-  ul.append(...items);
-  return ul;
-};
 const zoneDe = id => ui.zones.find(z => z.id === id) ?? null;
-const estAtelier = id => Boolean(ui?.parId.has(id) && zoneDe(ui.parId.get(id).dataset.zone));
 
 /**
- * Ouvre une zone : pastille et puce actives, zone surlignée et visée, ses ateliers listés dans la fiche.
- * Le premier atelier s'ouvre, sauf si l'atelier déjà ouvert est de cette zone. Sans atelier, la fiche le dit.
+ * Choisit une zone : sa pastille et sa carte de « Où intervenir » deviennent actives, la 3D la surligne et la vise,
+ * le schéma 2D la surligne et la cadre, et sa variante s'affiche dans l'image. La carte défile dans la vue si elle
+ * n'y est pas en entier.
+ * @param {string} id L'id d'une zone de zones.json.
  * @returns {boolean} false si la page n'a pas de scène ou si la zone est inconnue.
  */
-export function ouvrirZone(id) {
+export function choisirZone(id) {
   if (!ui || !zoneDe(id)) return false;
-  choisirZone(id);
-  const ateliers = ui.ateliers.get(id) ?? [];
-  if (!ateliers.some(s => s.id === etat.atelier)) {
-    if (ateliers.length) deplacer(ateliers[0]);
-    else ranger();
-  }
-  rendreFiche();
-  return true;
-}
-
-/**
- * Ouvre un atelier : sa section passe dans #fiche, un renvoi prend sa place dans le chapitre, sa zone s'ouvre.
- * @returns {boolean} false si `id` n'est pas un atelier d'une zone connue.
- */
-export function ouvrirAtelier(id) {
-  const s = ui?.parId.get(id);
-  if (!s || !zoneDe(s.dataset.zone)) return false;
-  if (etat.zone !== s.dataset.zone) choisirZone(s.dataset.zone);
-  deplacer(s);
-  rendreFiche();
-  return true;
-}
-
-// L'atelier ouvert retourne dans son chapitre, à la place de son renvoi.
-function ranger() {
-  if (etat.atelier === null) return;
-  ui.renvois.get(etat.atelier).replaceWith(ui.parId.get(etat.atelier));
-  etat.atelier = null;
-}
-
-function deplacer(s) {
-  if (etat.atelier === s.id) return;
-  ranger();
-  let renvoi = ui.renvois.get(s.id);
-  if (!renvoi) {
-    renvoi = el('p', 'muted');
-    const a = el('a', null, TEXTES.renvoi);
-    a.href = '#fiche';
-    renvoi.append(a);
-    ui.renvois.set(s.id, renvoi);
-  }
-  s.before(renvoi);
-  preparerFiche();
-  ui.f.atelier.append(s);
-  etat.atelier = s.id;
-}
-
-function choisirZone(id) {
   etat.zone = id;
   etat.vue2d = id;
   ui.zones.forEach((z, i) => {
     const on = z.id === id;
     ui.pins[i].classList.toggle('on', on);
     ui.pins[i].setAttribute('aria-pressed', String(on));
-    ui.puces[i].setAttribute('aria-pressed', String(on));
-    if (on) montrerPuce(ui.puces[i]);
   });
+  let active = null;
+  for (const carte of ui.cartes) {
+    if (carte.dataset.zone === id) {
+      carte.setAttribute('aria-current', 'true');
+      active = carte;
+    } else carte.removeAttribute('aria-current');
+  }
+  for (const b of ui.boutons) b.setAttribute('aria-pressed', String(b.dataset.zone === id));
   ui.schema?.surligner(id);
   if (etat.mode === '2d') ui.schema?.cadrer(id);
   if (etat.scene) {
     etat.scene.surligner(id);
     etat.scene.viser(id);
   }
-}
-
-// Fait défiler la rangée de puces, et elle seule, jusqu'à la puce.
-function montrerPuce(b) {
-  const rb = b.getBoundingClientRect(), rc = ui.rangee.getBoundingClientRect();
-  if (rb.left >= rc.left && rb.right <= rc.right) return;
-  ui.rangee.scrollBy({ left: rb.left - rc.left - 16, behavior: reduit() ? 'auto' : 'smooth' });
-}
-
-// ---- Fiche ----
-
-// Les emplacements de la fiche, créés à la première ouverture à la place de la phrase d'accueil.
-function preparerFiche() {
-  if (ui.f) return;
-  const tete = el('div', 'fiche-tete');
-  tete.setAttribute('aria-live', 'polite');
-  const num = el('span', 'num');
-  num.setAttribute('aria-hidden', 'true');
-  const titre = el('h2');
-  titre.id = 'fiche-titre';
-  const titres = el('div');
-  const pieces = el('div', 'fiche-pieces');
-  titres.append(el('p', 'eyebrow', 'Zone du vélo'), titre, pieces);
-  tete.append(num, titres);
-  const swap = el('div', 'swap');
-  swap.setAttribute('role', 'group');
-  swap.setAttribute('aria-label', 'Pièce affichée sur le vélo');
-  const liste = el('ul', 'fiche-ateliers');
-  liste.setAttribute('aria-label', 'Ateliers de la zone');
-  const atelier = el('div', 'fiche-atelier');
-  const vide = el('p', 'muted', TEXTES.aVenir);
-  const approche = el('details', 'fiche-approche');
-  approche.append(el('summary'), el('div'));
-  ui.fiche.replaceChildren(tete, swap, liste, atelier, vide, approche);
-  ui.fiche.setAttribute('aria-labelledby', 'fiche-titre');
-  ui.f = { num, titre, pieces, swap, liste, atelier, vide, approche };
-}
-
-function rendreFiche() {
-  if (etat.zone === null) return;
-  preparerFiche();
-  const z = zoneDe(etat.zone), f = ui.f, ateliers = ui.ateliers.get(z.id) ?? [];
-  f.num.textContent = String(ui.zones.indexOf(z) + 1);
-  f.titre.textContent = z.nom;
-  const lignes = lignesPieces(etat.atelier ? ui.parId.get(etat.atelier).dataset : null);
-  f.pieces.replaceChildren(...lignes.map(texte => el('p', null, texte)));
-  f.pieces.hidden = lignes.length === 0;
-  f.liste.replaceChildren(...(ateliers.length > 1 ? ateliers.map(s => {
-    const b = el('button', null, s.querySelector('h3')?.textContent.trim() || s.id);
-    b.type = 'button';
-    b.setAttribute('aria-pressed', String(s.id === etat.atelier));
-    b.addEventListener('click', () => { if (ouvrirAtelier(s.id)) noterAtelier(); });
-    const li = el('li');
-    li.append(b);
-    return li;
-  }) : []));
-  f.liste.hidden = ateliers.length < 2;
-  f.vide.hidden = ateliers.length > 0;
   rendreVariante();
-  rendreNoteApproche();
+  if (active) montrerCarte(active);
+  return true;
 }
 
-// Le bouton de variante : seulement en 3D, seulement si la zone en a une dans zones.json.
+// Fait défiler la page jusqu'à la carte, seulement si elle n'est pas en entier entre la barre du haut et le bas de
+// l'écran. scroll-padding-top (00-head.html) la garde sous la barre.
+function montrerCarte(carte) {
+  const r = carte.getBoundingClientRect();
+  const haut = document.querySelector('.top')?.getBoundingClientRect().bottom ?? 0;
+  if (r.top >= haut && r.bottom <= window.innerHeight) return;
+  carte.scrollIntoView({ block: 'nearest', behavior: reduit() ? 'auto' : 'smooth' });
+}
+
+// Les boutons de la variante, dans l'image : seulement en 3D, seulement si la zone en a une dans zones.json.
 function rendreVariante() {
-  if (!ui.f) return;
-  const z = zoneDe(etat.zone), swap = ui.f.swap;
+  const z = zoneDe(etat.zone), swap = ui.variante;
+  if (!swap) return;
   const montrer = Boolean(z?.variante && etat.scene && etat.mode !== '2d');
   swap.hidden = !montrer;
-  if (!montrer) return;
+  if (!montrer) {
+    swap.replaceChildren();
+    return;
+  }
   const k = etat.variantes[z.id] ?? 0;
   swap.replaceChildren(...z.variante.libelles.map((texte, j) => {
     const b = el('button', null, texte);
@@ -303,17 +147,6 @@ function rendreVariante() {
     });
     return b;
   }));
-}
-
-// « Formes approchées : … », d'après les pièces de la zone. Sans la scène, les zones des pièces ne sont pas connues.
-function rendreNoteApproche() {
-  const d = ui.f.approche;
-  const notes = etat.scene ? notesDeZone(etat.scene.approximations(), etat.zone) : [];
-  d.hidden = notes.length === 0;
-  if (!notes.length) return;
-  const [resume, corps] = d.children;
-  resume.textContent = 'Formes approchées : ' + notes.map(n => n.piece).join(' ; ');
-  corps.replaceChildren(...notes.flatMap(n => [el('p', null, n.piece), ulDe(n.notes.map(t => el('li', null, t)))]));
 }
 
 // ---- Liste « Ce qui est approché » ----
@@ -481,11 +314,11 @@ async function monter3D() {
   } catch (e) {
     return echec3D(e, await ui.moduleSchema);
   }
-  choisirMode(etat.mode);
-  rendreFiche();
+  choisirMode(etat.mode); // montre aussi la variante d'une zone choisie avant que la 3D soit là
 }
 
-// Sans 3D : le schéma 2D prend le relais. Sans schéma non plus, la page le dit et retire la scène vide.
+// Sans 3D : le schéma 2D prend le relais. Sans schéma non plus, la page le dit et retire la scène vide ; les liens de
+// « Où intervenir » mènent toujours aux ateliers.
 function echec3D(raison, schema) {
   if (raison) console.warn('Scène 3D indisponible :', raison instanceof Error ? raison.message : raison);
   etat.echec = true;
@@ -503,75 +336,7 @@ function echec3D(raison, schema) {
   document.getElementById('scene').classList.add('sans-rendu');
 }
 
-// ---- Adresse et historique ----
-
-// Les appels à history sont protégés : une page servie dans un cadre qui les refuse ouvre quand même ses ateliers.
-function historique(methode, ...args) {
-  try {
-    history[methode](...args);
-  } catch (e) {
-    console.warn('Historique indisponible :', e.message);
-  }
-}
-
-// L'atelier ouvert par une pastille, une puce ou la liste remplace l'ancre de l'entrée courante.
-function noterAtelier() {
-  if (etat.atelier && location.hash !== ancreDe(etat.atelier)) {
-    historique('replaceState', { atelier: etat.atelier }, '', ancreDe(etat.atelier));
-  }
-}
-
-// Un lien du texte vers un atelier : l'entrée courante garde l'atelier qu'elle montrait, une entrée neuve porte
-// l'atelier du lien, puis la page défile jusqu'à lui.
-function suivreLien(id) {
-  if (location.hash !== ancreDe(id)) {
-    const courant = history.state && typeof history.state === 'object' ? history.state : {};
-    historique('replaceState', { ...courant, atelier: etat.atelier }, '');
-    historique('pushState', { atelier: id }, '', ancreDe(id));
-  }
-  if (ouvrirAtelier(id)) defilerVers(id, 'smooth');
-}
-
-// Retour ou Suivant : l'atelier de l'entrée revient dans la fiche avant que le navigateur rende sa position de lecture.
-function revenir() {
-  const id = atelierDeLEntree(location.hash, history.state, estAtelier);
-  if (id === undefined || id === etat.atelier) return;
-  if (id === null) {
-    ranger();
-    rendreFiche();
-  } else ouvrirAtelier(id);
-}
-
-function defilerVers(id, comportement) {
-  ui.parId.get(id).scrollIntoView({ block: 'start', behavior: reduit() ? 'auto' : comportement });
-}
-
 // ---- Démarrage ----
-
-// Une ancre d'atelier au chargement ou par hashchange : l'atelier s'ouvre et la page défile jusqu'à lui. Déjà ouvert
-// (Retour l'a rouvert juste avant), il ne bouge pas : le navigateur rend la position de lecture.
-// @returns {string | null} l'atelier ouvert ici.
-function suivreAncre(comportement) {
-  const id = idDuHash(location.hash);
-  if (!id || id === etat.atelier || !ouvrirAtelier(id)) return null;
-  defilerVers(id, comportement);
-  return id;
-}
-
-// Au chargement sur l'ancre d'un atelier, la page défile tout de suite jusqu'à lui. Ce qui se monte ensuite au-dessus
-// (bouton de variante de la 3D, message d'échec) le pousserait vers le bas, sur un navigateur sans ancrage du
-// défilement : une fois la 3D montée ou en échec, la page revise l'atelier, sauf si on a touché, fait défiler à la
-// main ou tapé quelque chose entre-temps.
-function garderAncre(id, montage) {
-  let touche = false;
-  const noter = () => { touche = true; };
-  const types = ['pointerdown', 'wheel', 'touchstart', 'keydown'];
-  types.forEach(t => window.addEventListener(t, noter, { capture: true, passive: true }));
-  montage.finally(() => {
-    types.forEach(t => window.removeEventListener(t, noter, { capture: true }));
-    if (!touche && etat.atelier === id) defilerVers(id, 'auto');
-  });
-}
 
 function demarrer() {
   document.documentElement.dataset.app = 'demarre'; // lu par le garde-fou de 99-foot.html
@@ -583,19 +348,15 @@ function demarrer() {
     return;
   }
   const zones = JSON.parse(donnees.textContent);
-  const sections = [...document.querySelectorAll('section.atelier[data-zone]')].filter(s => s.id);
-  const ateliers = new Map();
-  for (const s of sections) {
-    if (!ateliers.has(s.dataset.zone)) ateliers.set(s.dataset.zone, []);
-    ateliers.get(s.dataset.zone).push(s);
-  }
   ui = {
-    zones, ateliers, parId: new Map(sections.map(s => [s.id, s])), renvois: new Map(), f: null,
-    stage: $('#scene-stage'), svg: $('#plan'), canvas: $('#gl'), fiche: $('#fiche'), rangee: $('#chips'),
+    zones,
+    stage: $('#scene-stage'), svg: $('#plan'), canvas: $('#gl'), variante: $('#variante'),
     aide: $('#scene-aide'), legende: $('#key'), statut: $('#scene-statut'), alerte: $('#scene-alerte'),
     dialogue: $('#approche-liste'), contenu: $('#approche-contenu'),
     onglets: [...document.querySelectorAll('#scene .modes [role="tab"]')],
-    pins: [], puces: [], W: 1, H: 1, visible: true, boucle: 0, vbPose: null, schema: null,
+    cartes: [...document.querySelectorAll('.zone-carte[data-zone]')],
+    boutons: [...document.querySelectorAll('button.zone-btn[data-zone]')],
+    pins: [], W: 1, H: 1, visible: true, boucle: 0, vbPose: null, schema: null,
     moduleScene: import('./scene.js').catch(e => {
       console.warn('scene.js indisponible :', e.message);
       return null;
@@ -609,17 +370,14 @@ function demarrer() {
     pin.hidden = true;
     pin.setAttribute('aria-label', z.nom);
     pin.setAttribute('aria-pressed', 'false');
-    pin.addEventListener('click', () => { if (ouvrirZone(z.id)) noterAtelier(); });
+    pin.addEventListener('click', () => choisirZone(z.id));
     $('#pins').append(pin);
-    const puce = el('button');
-    puce.type = 'button';
-    puce.setAttribute('aria-pressed', 'false');
-    puce.append(el('span', null, String(i + 1)), z.nom);
-    puce.addEventListener('click', () => { if (ouvrirZone(z.id)) noterAtelier(); });
-    ui.rangee.append(puce);
     ui.pins.push(pin);
-    ui.puces.push(puce);
   });
+  for (const b of ui.boutons) {
+    b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', () => choisirZone(b.dataset.zone));
+  }
 
   ui.onglets.forEach(b => b.addEventListener('click', () => choisirMode(b.dataset.mode)));
   $('#scene .modes').addEventListener('keydown', e => {
@@ -652,17 +410,7 @@ function demarrer() {
   mesurer();
   choisirMode(etat.mode);
   demander();
-  document.addEventListener('click', e => {
-    const id = atelierDuClic(e, estAtelier);
-    if (!id) return;
-    e.preventDefault();
-    suivreLien(id);
-  });
-  window.addEventListener('popstate', revenir);
-  window.addEventListener('hashchange', () => suivreAncre('smooth'));
-  const ancre = suivreAncre('auto');
-  const montage = monter3D();
-  if (ancre) garderAncre(ancre, montage);
+  monter3D();
 }
 
 if (typeof document !== 'undefined') demarrer();

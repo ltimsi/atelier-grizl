@@ -1,33 +1,14 @@
-// Tests des calculs purs de src/scene/app.js : note « Formes approchées » d'une zone, liste de secours sans la 3D,
-// ancre d'atelier lue dans l'adresse. Le reste de app.js demande un document et se contrôle dans un navigateur :
-// importé sous Node, le module ne démarre pas.
+// Tests de src/scene/app.js : liste de secours sans la 3D, chargement de three.js, choix d'une zone hors navigateur,
+// exports du module et absence d'import statique. Le reste de app.js demande un document et se contrôle dans un
+// navigateur : importé sous Node, le module ne démarre pas.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import {
-  notesDeZone, approximationsSansScene, idDuHash, chargerLibs, atelierDuClic, atelierDeLEntree, ancreDe, lignesPieces,
-} from '../../src/scene/app.js';
+import * as app from '../../src/scene/app.js';
 import * as scene from '../../src/scene/scene.js';
 
-const LISTE = [
-  { piece: 'A', zones: ['disques', 'etrier'], approche: ['a1', 'a2'], aVerifier: [], sources: [] },
-  { piece: 'B', zones: [], approche: ['b1'], aVerifier: [], sources: [] },
-  { piece: 'C', zones: ['etrier'], approche: [], aVerifier: ['c'], sources: [] },
-  { piece: 'D', zones: ['etrier', 'manettes'], approche: ['d1'], aVerifier: [], sources: [] },
-];
-
-test('notesDeZone : les notes des pièces de la zone, dans l’ordre de la liste', () => {
-  assert.deepEqual(notesDeZone(LISTE, 'disques'), [{ piece: 'A', notes: ['a1', 'a2'] }]);
-  assert.deepEqual(notesDeZone(LISTE, 'etrier'), [{ piece: 'A', notes: ['a1', 'a2'] }, { piece: 'D', notes: ['d1'] }]);
-  assert.deepEqual(notesDeZone(LISTE, 'manettes'), [{ piece: 'D', notes: ['d1'] }]);
-  assert.deepEqual(notesDeZone(LISTE, 'inconnue'), []);
-});
-
-test('notesDeZone : copie les notes, sans toucher la liste', () => {
-  const r = notesDeZone(LISTE, 'disques');
-  r[0].notes.push('x');
-  assert.deepEqual(LISTE[0].approche, ['a1', 'a2']);
-});
+const CODE = readFileSync(new URL('../../src/scene/app.js', import.meta.url), 'utf8');
+const { approximationsSansScene, chargerLibs, choisirZone } = app;
 
 test('approximationsSansScene : les META de chaque pièce, sans zone, puis la géométrie', () => {
   const liste = approximationsSansScene(scene);
@@ -41,14 +22,6 @@ test('approximationsSansScene : les META de chaque pièce, sans zone, puis la g�
   });
   assert.equal(liste.at(-1).piece, 'Géométrie');
   for (const e of liste) for (const s of e.sources) assert.match(s.url, /^https:\/\//, `${e.piece} : ${s.id}`);
-});
-
-test('idDuHash : l’identifiant après le dièse, décodé', () => {
-  assert.equal(idDuHash('#freins-disques'), 'freins-disques');
-  assert.equal(idDuHash('#atelier%20a'), 'atelier a');
-  assert.equal(idDuHash(''), null);
-  assert.equal(idDuHash('#'), null);
-  assert.equal(idDuHash('#%E0%A4%A'), null, 'un encodage cassé ne lève pas d’erreur');
 });
 
 test('chargerLibs : les cinq modules de three.js, ou un échec qui remonte', async () => {
@@ -75,56 +48,26 @@ test('chargerLibs : les cinq modules de three.js, ou un échec qui remonte', asy
   await assert.rejects(chargerLibs(async nom => (nom === 'three' ? { REVISION: '160' } : {})), /OrbitControls/);
 });
 
-test('atelierDuClic : un clic simple sur un lien interne vers un atelier, sinon null', () => {
-  const ateliers = new Set(['freins-plaquettes', 'atelier a']);
-  const estAtelier = id => ateliers.has(id);
-  const lien = (href, target = '') => ({ getAttribute: n => (n === 'href' ? href : null), target });
-  const clic = (a, plus = {}) => ({
-    defaultPrevented: false, button: 0, metaKey: false, ctrlKey: false, shiftKey: false, altKey: false,
-    target: { closest: () => a }, ...plus,
-  });
-  assert.equal(atelierDuClic(clic(lien('#freins-plaquettes')), estAtelier), 'freins-plaquettes');
-  assert.equal(atelierDuClic(clic(lien('#atelier%20a')), estAtelier), 'atelier a', 'ancre décodée');
-  assert.equal(atelierDuClic(clic(lien('#fiche')), estAtelier), null, 'ancre qui n’est pas un atelier');
-  assert.equal(atelierDuClic(clic(lien('#freins')), estAtelier), null, 'chapitre');
-  assert.equal(atelierDuClic(clic(lien('#')), estAtelier), null);
-  assert.equal(atelierDuClic(clic(null), estAtelier), null, 'pas de lien');
-  assert.equal(atelierDuClic(clic(lien('#freins-plaquettes', '_blank')), estAtelier), null, 'nouvel onglet');
-  for (const plus of [{ ctrlKey: true }, { metaKey: true }, { shiftKey: true }, { altKey: true }, { button: 1 },
-    { defaultPrevented: true }]) {
-    assert.equal(atelierDuClic(clic(lien('#freins-plaquettes'), plus), estAtelier), null, JSON.stringify(plus));
+test('choisirZone : false hors navigateur, la page n’a pas de scène', () => {
+  assert.equal(typeof choisirZone, 'function');
+  assert.equal(choisirZone('disques'), false);
+  assert.equal(choisirZone('inconnue'), false);
+});
+
+test('app.js : la fiche et l’historique sont partis, seuls trois calculs restent exportés', () => {
+  assert.deepEqual(Object.keys(app).sort(), ['approximationsSansScene', 'chargerLibs', 'choisirZone']);
+  for (const nom of ['atelierDuClic', 'ouvrirAtelier', 'ouvrirZone', 'atelierDeLEntree', 'ancreDe', 'lignesPieces',
+    'notesDeZone', 'idDuHash']) {
+    assert.equal(nom in app, false, `${nom} encore exporté`);
+  }
+  // Plus de fiche ni de puces dans la page, plus d'écriture dans l'historique.
+  for (const motif of [/#fiche\b/, /#chips\b/, /pushState|replaceState|popstate/]) {
+    assert.doesNotMatch(CODE, motif);
   }
 });
 
-test('atelierDeLEntree : l’atelier de l’ancre, sinon celui noté dans l’entrée, sinon rien à changer', () => {
-  const estAtelier = id => id === 'freins-purge' || id === 'freins-plaquettes';
-  assert.equal(atelierDeLEntree('#freins-purge', null, estAtelier), 'freins-purge');
-  assert.equal(atelierDeLEntree('#freins-purge', { atelier: 'freins-plaquettes' }, estAtelier), 'freins-purge',
-    'l’ancre d’abord');
-  assert.equal(atelierDeLEntree('', { atelier: null }, estAtelier), null, 'entrée sans atelier ouvert');
-  assert.equal(atelierDeLEntree('#fiche', { atelier: 'freins-purge' }, estAtelier), 'freins-purge');
-  assert.equal(atelierDeLEntree('#freins', null, estAtelier), undefined, 'entrée que la page n’a pas écrite');
-  assert.equal(atelierDeLEntree('', undefined, estAtelier), undefined);
-  assert.equal(atelierDeLEntree('', { autre: 1 }, estAtelier), undefined);
-});
-
-test('ancreDe : l’ancre d’un atelier, que idDuHash relit', () => {
-  assert.equal(ancreDe('freins-purge'), '#freins-purge');
-  assert.equal(idDuHash(ancreDe('atelier a')), 'atelier a');
-});
-
-test('lignesPieces : « D’origine » et « À monter » seulement si l’atelier a les deux', () => {
-  assert.deepEqual(lignesPieces({ de: 'Shimano SM-RT64', vers: 'Shimano Deore XT RT-MT800' }),
-    ['D’origine : Shimano SM-RT64', 'À monter : Shimano Deore XT RT-MT800']);
-  assert.deepEqual(lignesPieces({ de: 'Shimano SM-RT64' }), []);
-  assert.deepEqual(lignesPieces({ vers: 'x' }), []);
-  assert.deepEqual(lignesPieces({}), []);
-  assert.deepEqual(lignesPieces(undefined), []);
-});
-
 test('app.js : aucun import statique, pour démarrer même si un module de la scène manque', () => {
-  const code = readFileSync(new URL('../../src/scene/app.js', import.meta.url), 'utf8');
-  assert.ok(!/^\s*import\s[^(]/m.test(code), 'import statique dans app.js');
-  assert.match(code, /import\('\.\/schema2d\.js'\)/, 'le schéma 2D se charge par import()');
-  assert.match(code, /import\('\.\/scene\.js'\)/, 'la scène se charge par import()');
+  assert.ok(!/^\s*import\s[^(]/m.test(CODE), 'import statique dans app.js');
+  assert.match(CODE, /import\('\.\/schema2d\.js'\)/, 'le schéma 2D se charge par import()');
+  assert.match(CODE, /import\('\.\/scene\.js'\)/, 'la scène se charge par import()');
 });

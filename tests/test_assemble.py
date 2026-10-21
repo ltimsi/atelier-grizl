@@ -148,9 +148,13 @@ class TestBuild(unittest.TestCase):
         page = self.page()
         for morceau in ('canvas id="gl"', 'svg id="plan"', 'dialog id="approche-liste"'):
             self.contient(page, morceau)
-        for motif in (r'<figure[^>]*\bid="scene"', r'<div[^>]*\bid="pins"', r'<div[^>]*\bid="chips"',
-                      r'<article[^>]*\bid="fiche"', r'<button[^>]*\bid="approche"'):
+        for motif in (r'<figure[^>]*\bid="scene"', r'<div[^>]*\bid="pins"', r'<div[^>]*\bid="variante"',
+                      r'<button[^>]*\bid="approche"', r'<button[^>]*\bid="vue-ensemble"',
+                      r'<div class="zone-carte" data-zone="disques">'):
             self.assertIsNotNone(re.search(motif, page), "absent : " + motif)
+        # Ni rangée de puces ni fiche : « Où intervenir » mène aux pages des ateliers.
+        for motif in (r'\bid="chips"', r'\bid="fiche"'):
+            self.assertIsNone(re.search(motif, page), "présent : " + motif)
         # Les trois onglets de la maquette, dans son ordre, la 3D réaliste ouverte par défaut.
         onglets = re.findall(r'<button [^>]*role="tab"[^>]*data-mode="([^"]+)"[^>]*aria-selected="([^"]+)"', page)
         self.assertEqual(onglets, [("2d", "false"), ("simple", "false"), ("reel", "true")])

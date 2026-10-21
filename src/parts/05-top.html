@@ -1,11 +1,10 @@
-<div class="wrap">
-<header class="masthead">
+<header class="page-h">
   <p class="eyebrow">Canyon Grizl CF 7 · taille M · Floating Violet</p>
-  <h1>Atelier Grizl</h1>
-  <p class="lead">Ton manuel pour monter, régler et réparer ton vélo toi-même : l'ordre des opérations, les couples de serrage, des planches techniques, des pièces en 3D à faire tourner du doigt et les vidéos qui montrent le geste.</p>
+  <h1>Ton Grizl CF 7, tel qu’il sort du carton</h1>
+  <p class="lead">Fais tourner le vélo, touche une pastille, ou choisis une zone à droite pour ouvrir ses ateliers.</p>
 </header>
 
-<section class="accueil" aria-label="Ton vélo et ses ateliers">
+<section class="accueil-grille" aria-label="Ton vélo et ses ateliers">
   <figure class="scene" id="scene">
     <div class="modes" role="tablist" aria-label="Rendu du vélo">
       <button type="button" role="tab" id="mode-2d" data-mode="2d" aria-selected="false" aria-controls="scene-stage" tabindex="-1"><b>Schéma 2D</b><small>à plat</small></button>
@@ -17,7 +16,10 @@
       <svg id="plan" role="img" aria-label="Schéma du vélo vu côté transmission" hidden></svg>
       <canvas id="gl" aria-label="Vélo en 3D, à faire tourner"></canvas>
       <div id="pins"></div>
-      <p class="hint" id="scene-aide">Un doigt pour tourner, deux pour zoomer.</p>
+      <div class="stage-haut">
+        <p class="hint" id="scene-aide">Un doigt pour tourner, deux pour zoomer.</p>
+        <div class="swap" id="variante" role="group" aria-label="Pièce affichée sur le vélo" hidden></div>
+      </div>
       <div class="key" id="key" hidden><span><i class="k-trans"></i>transmission</span><span><i class="k-freins"></i>freins</span><span><i class="k-cadre"></i>cadre</span></div>
       <div class="status" id="scene-statut">Montage du vélo en 3D…</div>
       <button type="button" class="stage-btn" id="approche" aria-haspopup="dialog">Ce qui est approché</button>
@@ -26,11 +28,10 @@
     <figcaption>Ton vélo tel qu'il sort du carton, avec ses pièces d'origine.</figcaption>
   </figure>
 
-  <div class="zones" id="chips" role="group" aria-label="Zones d'atelier"></div>
-
-  <article class="fiche" id="fiche">
-    <p class="muted">Touche une pastille du vélo ou une zone ci-dessus : ses ateliers s'ouvrent ici.</p>
-  </article>
+  <section class="ou-intervenir" aria-labelledby="accueil-zones">
+    <h2 class="label" id="accueil-zones">Où intervenir</h2>
+<!--OU-INTERVENIR-->
+  </section>
 
   <dialog id="approche-liste" class="approche-liste" aria-labelledby="approche-titre">
     <div class="dlg-tete">
@@ -40,6 +41,11 @@
     <p class="muted small">Pour chaque pièce : les documents suivis, les formes approchées et ce qui reste à vérifier à la livraison.</p>
     <div id="approche-contenu"></div>
   </dialog>
+</section>
+
+<section class="accueil-bloc" aria-labelledby="accueil-remplacer">
+  <h2 class="label" id="accueil-remplacer">D’origine, puis à monter</h2>
+<!--A-REMPLACER-->
 </section>
 
 <div class="intro">
@@ -72,4 +78,8 @@
     <p>Les couples du guide de démarrage Canyon seront ajoutés à partir des pages du guide imprimé livré dans le carton.</p>
   </aside>
 </div>
-</div>
+
+<section class="accueil-bloc" aria-labelledby="accueil-categories">
+  <h2 class="label" id="accueil-categories">Toutes les catégories</h2>
+<!--CATEGORIES-->
+</section>

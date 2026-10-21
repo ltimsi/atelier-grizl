@@ -1,6 +1,6 @@
 """Tests de build/pages.py et de l'écriture du site par build/assemble.py : les 20 pages, leurs liens, le texte des
-ateliers conservé, l'index de la recherche, la page Composants d'origine recopiée de la fiche, et les blocs que la
-page d'accueil recevra (Où intervenir, D'origine puis à monter, Toutes les catégories).
+ateliers conservé, l'index de la recherche, la page Composants d'origine recopiée de la fiche, la page d'accueil et
+les blocs qu'elle reçoit (Où intervenir, D'origine puis à monter, Toutes les catégories).
 
 Le site est construit une seule fois, dans un dossier temporaire, pour les deux cibles."""
 import dataclasses
@@ -390,6 +390,37 @@ class TestPages(Site):
             for chemin in CHEMINS:
                 self.assertEqual(len(dom.selectionner(self.arbre(chemin, cible), "h1")), 1, f"{cible} {chemin}")
 
+    def test_page_d_accueil(self):
+        # Mon vélo : l'en-tête, la scène et « Où intervenir » côte à côte, puis les pièces à remplacer, l'introduction
+        # et toutes les catégories. Ni rangée de puces ni fiche : les zones mènent aux pages des ateliers.
+        page = un(self.arbre(""), "main.page")
+        blocs = elements(page)
+        self.assertEqual([(e.tag, e.classes()) for e in blocs],
+                         [("header", ["page-h"]), ("section", ["accueil-grille"]), ("section", ["accueil-bloc"]),
+                          ("div", ["intro"]), ("section", ["accueil-bloc"])])
+        self.assertEqual(un(blocs[0], "h1").texte(), "Ton Grizl CF 7, tel qu’il sort du carton")
+        self.assertEqual(un(blocs[0], "p.lead").texte(), "Fais tourner le vélo, touche une pastille, ou choisis une "
+                         "zone à droite pour ouvrir ses ateliers.")
+        grille = blocs[1]
+        self.assertEqual([(e.tag, e.get("id") or e.classes()) for e in elements(grille)],
+                         [("figure", "scene"), ("section", ["ou-intervenir"]), ("dialog", "approche-liste")])
+        self.assertEqual(len(dom.selectionner(grille, "section.ou-intervenir > div.zone-carte")), len(ZONES))
+        # Les boutons de la variante sont dans l'image de la scène.
+        variante = un(page, '[id="variante"]')
+        self.assertIn(variante, dom.selectionner(un(page, '[id="scene-stage"]'), "div.swap"))
+        self.assertEqual((variante.tag, variante.classes(), variante.get("role")), ("div", ["swap"], "group"))
+        for absent in ('[id="chips"]', '[id="fiche"]', "section.atelier", "article.atelier"):
+            self.assertEqual(dom.selectionner(page, absent), [], absent)
+        self.assertEqual([un(b, "h2").texte() for b in (elements(grille)[1], blocs[2], blocs[4])],
+                         ["Où intervenir", "D’origine, puis à monter", "Toutes les catégories"])
+        self.assertEqual(len(dom.selectionner(blocs[2], "ul.a-remplacer > li")), 2)
+        self.assertEqual(len(dom.selectionner(blocs[4], "div.cats > a.cat")), 1 + len(A_VENIR))
+        # L'introduction garde son texte : les caractéristiques, le jour de la livraison et la règle des sources.
+        intro = blocs[3]
+        self.assertEqual(len(dom.selectionner(intro, "dl.specs > div")), 6)
+        self.assertEqual(len(dom.selectionner(intro, "ol.plan > li")), 5)
+        self.assertEqual(un(intro, "aside.note.info > p.note-t").texte(), "Règle des sources")
+
     def test_page_composants(self):
         racine = self.arbre("composants/")
         self.assertEqual(un(racine, "nav.crumbs").texte(), "Références/Composants d'origine")
@@ -435,7 +466,7 @@ class TestRecherche(Site):
 
 
 class TestAccueil(unittest.TestCase):
-    """Les trois blocs que la page d'accueil reçoit à la place de ses marques (posées par la tâche 6)."""
+    """Les trois blocs que la page d'accueil reçoit à la place des marques de 05-top."""
 
     @classmethod
     def setUpClass(cls):
@@ -490,10 +521,17 @@ class TestAccueil(unittest.TestCase):
         self.assertIn(pages.cartes_des_categories(CONFIG, self.chapitres), page.contenu)
         self.assertTrue(page.contenu.startswith("<p>avant</p>") and page.contenu.endswith("<p>après</p>"))
 
-    def test_sans_marques(self):
-        # Tant que 05-top n'a pas les marques, son contenu passe tel quel.
+    def test_marques_de_05_top(self):
+        # 05-top porte chaque marque une fois ; la page d'accueil n'en garde aucune.
+        source = gabarit.lire("05-top")
+        for marque in pages.MARQUES:
+            self.assertEqual(source.count(marque), 1, marque)
         page = pages.page_accueil(CONFIG, self.chapitres, ZONES)
-        self.assertEqual(page.contenu, gabarit.lire("05-top"))
+        for marque in pages.MARQUES:
+            self.assertNotIn(marque, page.contenu)
+        for bloc in (pages.cartes_des_zones(self.chapitres, ZONES), pages.pieces_a_remplacer(self.chapitres),
+                     pages.cartes_des_categories(CONFIG, self.chapitres)):
+            self.assertIn(bloc, page.contenu)
         self.assertEqual((page.chemin, page.titre, page.fil), ("", "Atelier Grizl", [("Mon vélo", None)]))
         self.assertEqual(page.scripts, dict(zones=True, liens=True, three=True, app=True, garde_fou=True))
 
