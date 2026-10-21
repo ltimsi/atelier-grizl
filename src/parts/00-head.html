@@ -265,19 +265,19 @@ details > div{padding:0 14px 12px}
 .scene .stage canvas{touch-action:none}
 /* L'aide sur un panneau, pour se lire sans recouvrir le dessin ni la 3D. Sans color-mix, le panneau est plein. */
 .scene .hint{position:absolute;left:10px;top:8px;width:fit-content;max-width:calc(100% - 20px);margin:0;padding:4px 9px;border:1px solid var(--line-2);border-radius:8px;background:var(--panel);background:color-mix(in srgb,var(--panel) 88%,transparent);font-family:var(--f-mono);font-size:.7rem;line-height:1.4;color:var(--ink-2);pointer-events:none}
-.scene .status{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;font-family:var(--f-mono);font-size:.8rem;color:var(--ink-2);pointer-events:none}
-.scene .stage-btn{position:absolute;bottom:10px;font-family:var(--f-mono);font-size:.72rem;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 11px;cursor:pointer}
+.scene .status{position:absolute;z-index:2;inset:0;display:grid;place-items:center;text-align:center;padding:24px;font-family:var(--f-mono);font-size:.8rem;color:var(--ink-2);pointer-events:none}
+.scene .stage-btn{position:absolute;z-index:2;bottom:10px;font-family:var(--f-mono);font-size:.72rem;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 11px;cursor:pointer}
 #approche{left:10px}
 #vue-ensemble{right:10px}
-.scene .key{position:absolute;left:12px;bottom:48px;display:flex;flex-wrap:wrap;gap:4px 12px;font-family:var(--f-mono);font-size:.68rem;color:var(--ink-2);pointer-events:none;max-width:62%}
+.scene .key{position:absolute;z-index:2;left:12px;bottom:48px;display:flex;flex-wrap:wrap;gap:4px 12px;font-family:var(--f-mono);font-size:.68rem;color:var(--ink-2);pointer-events:none;max-width:62%}
 .scene .key span{display:inline-flex;align-items:center;gap:5px}
 .scene .key i{width:10px;height:10px;border-radius:3px;display:inline-block}
 /* Couleurs de famille du mode simple, celles de creerMateriaux (src/scene/materiaux.js) */
 .scene .key .k-trans{background:#6b5bc2}
 .scene .key .k-freins{background:#d9822b}
 .scene .key .k-cadre{background:#a3aeb8}
-/* Pastilles des zones, posées en pixels sur l'image */
-#pins{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+/* Pastilles des zones, posées en pixels sur l'image : au-dessus du panneau de l'aide, sous la légende et les boutons */
+#pins{position:absolute;z-index:1;inset:0;pointer-events:none;overflow:hidden}
 .zpin{position:absolute;left:0;top:0;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:2px solid var(--acc);background:var(--panel);color:var(--acc);font-family:var(--f-mono);font-size:.8rem;font-weight:600;display:grid;place-items:center;cursor:pointer;pointer-events:auto;box-shadow:0 1px 5px var(--shadow);padding:0}
 .zpin::before{content:"";position:absolute;inset:-7px;border-radius:50%}
 .zpin.on{background:var(--acc);color:var(--on-acc)}

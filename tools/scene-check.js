@@ -8,7 +8,7 @@
 //      fiche, avec une capture atelier-<id>.png par atelier ouvert ; enfin le disque XT en vue d'ensemble, pour
 //      compter les triangles de la variante la plus lourde, et la liste « Ce qui est approché ». À chaque atelier
 //      ouvert, la tête de la fiche dit « D’origine : … » et « À monter : … » si l'atelier a data-de et data-vers, et
-//      ne les dit pas sinon. L'aide de la scène a un fond ;
+//      ne les dit pas sinon. L'aide de la scène a un fond, et ce fond ne passe sur aucune pastille, en 3D comme en 2D ;
 //   2. la page chargée sur index.html#freins-plaquettes : l'atelier doit se trouver dans #fiche. Une fois la 3D et
 //      son bouton de variante montés, le haut du titre de l'atelier doit être sur la ligne où le navigateur pose une
 //      ancre (haut de l'écran plus scroll-padding-top), à 6 px près : le bouton de variante ne le pousse pas.
@@ -229,6 +229,24 @@ async function controler(opts) {
         controle(!/D’origine :|À monter :/.test(t.tete), `${quand}, ${t.id} : « D’origine » ou « À monter » en trop`);
       }
     }
+    // Aucune pastille visible sous le panneau de l'aide : le centre de chaque pastille doit montrer la pastille et
+    // pas l'aide. L'aide ignore le pointeur : le temps du relevé, elle le reprend pour que elementFromPoint la voie.
+    async function controlerPastilles(page, quand) {
+      const couvertes = await page.evaluate(() => {
+        const aide = document.getElementById('scene-aide');
+        const avant = aide.style.pointerEvents;
+        aide.style.pointerEvents = 'auto';
+        const sous = [...document.querySelectorAll('#pins .zpin')].filter(b => b.getClientRects().length).filter(b => {
+          const r = b.getBoundingClientRect();
+          const x = r.left + r.width / 2, y = r.top + r.height / 2;
+          if (x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) return false;
+          return aide.contains(document.elementFromPoint(x, y));
+        }).map(b => b.textContent);
+        aide.style.pointerEvents = avant;
+        return sous;
+      });
+      controle(couvertes.length === 0, `${quand} : l’aide passe sur la pastille ${couvertes.join(', ')}`);
+    }
     // Un élément, découpé dans la page entière : la capture d'élément de Playwright laisse un bas vide quand
     // l'élément est presque aussi haut que l'écran (paysage 844 x 390).
     async function capturer(page, nom, sel) {
@@ -279,11 +297,15 @@ async function controler(opts) {
       }
       const fondAide = await page.$eval('#scene-aide', a => getComputedStyle(a).backgroundColor);
       controle(!/^(transparent|rgba\(0, 0, 0, 0\))$/.test(fondAide), 'l’aide de la scène n’a pas de fond : ' + fondAide);
+      await page.locator('#scene').scrollIntoViewIfNeeded();
+      await controlerPastilles(page, 'vue d’ensemble');
       await capturer(page, 'scene-reel.png', '#scene');
 
       await agir(page, 'l’onglet 2D', () => page.click('#mode-2d'), false);
       e = await relever(page);
       controle(e.svg2d, 'onglet « Schéma 2D » : le schéma n’est pas visible');
+      await page.locator('#scene').scrollIntoViewIfNeeded();
+      await controlerPastilles(page, 'schéma 2D');
       await capturer(page, 'scene-2d.png', '#scene');
       if (!sansGl) await agir(page, 'l’onglet 3D réaliste', () => page.click('#mode-reel'));
 
