@@ -21,13 +21,14 @@ import html
 import unicodedata
 
 from ateliers import Atelier, Chapitre, colonnes, relever_chapitre
-from dom import analyser, selectionner
+from dom import Element, analyser, selectionner
 from gabarit import NOM, PUBLIES, REFERENCES, Page, lire, lire_zones, reecrire_liens, relatif
 
 TYPES = {"comprendre": "Comprendre", "remplacer": "Remplacer", "regler": "Régler", "entretenir": "Entretenir"}
 FILTRES = ("tout", "comprendre", "remplacer", "regler", "entretenir")  # boutons de la page d'une catégorie
 # Les marques de 05-top que le build remplace (la tâche 6 les pose) ; une marque absente est ignorée.
 MARQUES = ("<!--OU-INTERVENIR-->", "<!--A-REMPLACER-->", "<!--CATEGORIES-->")
+MANUELS = "freins-securite"  # l'atelier des manuels, vers lequel la page Sources renvoie
 LIBELLES = dict(REFERENCES)  # dossier de chaque page de référence vers son libellé du menu
 PIECE = "Pièce d’origine"  # genre des entrées de la recherche tirées de composants.html
 
@@ -224,6 +225,21 @@ def _faits(a):
     return '<dl class="faits">' + "".join(f"<dt>{titre}</dt><dd>{valeur}</dd>" for titre, valeur in faits) + "</dl>"
 
 
+def _tete_de_categorie(tete):
+    """Le ch-head d'un chapitre recopié pour la page de sa catégorie : son premier h2 y devient le h1 de la page,
+    avec les mêmes attributs et le même contenu. Le chapitre source garde son h2."""
+    copie = analyser(tete.html())
+    titres = selectionner(copie, "h2")
+    if titres:
+        h2 = titres[0]
+        h1 = Element("h1", h2.attrs)
+        for noeud in list(h2.enfants):
+            h1.ajouter(noeud)
+        h2.parent.inserer(h2.parent.enfants.index(h2), h1)
+        h2.retirer()
+    return copie.html()
+
+
 def _carte(chapitre, a):
     n, zone = _zone(a.zone)
     return "\n".join([
@@ -253,7 +269,7 @@ def page_categorie(lot: dict, chapitre: Chapitre) -> Page:
             "</aside>"] if couples else []
     contenu = "\n".join([
         f'<div class="categorie" id="{_attr(chapitre.id)}">',
-        '<div class="categorie-tete">', badge(lot), chapitre.tete.html(), "</div>",
+        '<div class="categorie-tete">', badge(lot), _tete_de_categorie(chapitre.tete), "</div>",
         '<div class="categorie-cols">', '<div class="categorie-gauche">', *gauche, "</div>", *cote, "</div>",
         "</div>",
     ])
@@ -412,14 +428,18 @@ def page_approche() -> Page:
                     "les formes approchées et ce qui reste à vérifier à la livraison.")
 
 
-def page_sources() -> Page:
+def page_sources(chapitres: dict[str, Chapitre] | None = None) -> Page:
     """Sources : le registre des documents officiels de la 3D (#sources-page, rempli par js/references.js) et un
-    renvoi vers les manuels des freins. Le lien « #freins-securite » mène à la page de l'atelier, ou devient un
-    simple texte si l'atelier n'est pas publié."""
-    return _page_js("sources", "sources-page",
-                    "Les documents officiels qui ont servi à dessiner le vélo et ses pièces en 3D, avec ce que chacun "
-                    "justifie. Les manuels des freins sont dans l’atelier "
-                    '<a href="#freins-securite">2.8 Sécurité et manuels</a>.')
+    renvoi vers les manuels des freins, l'atelier MANUELS. Le libellé du renvoi est le numéro et le titre de cet
+    atelier ; sans lui (pas publié), pas de renvoi."""
+    chapeau = ("Les documents officiels qui ont servi à dessiner le vélo et ses pièces en 3D, avec ce que chacun "
+               "justifie.")
+    for chapitre in (chapitres or {}).values():
+        for a in chapitre.ateliers:
+            if a.id == MANUELS:
+                chapeau += (f' Les manuels des freins sont dans l’atelier <a href="{relatif("sources/", _chemin(chapitre, a))}">'
+                            f"{_e(a.num)} {_e(a.titre)}</a>.")
+    return _page_js("sources", "sources-page", chapeau)
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -453,7 +473,7 @@ def toutes_les_pages(config: dict) -> list[Page]:
             pages.append(ateliers[-1])
     pages += [page_a_venir(lot) for lot in a_venir]
     references = {"composants": page_composants, "outils": lambda: page_outils(chapitres),
-                  "couples": lambda: page_couples(chapitres), "approche": page_approche, "sources": page_sources}
+                  "couples": lambda: page_couples(chapitres), "approche": page_approche, "sources": lambda: page_sources(chapitres)}
     pages += [references[dossier]() for dossier, _ in REFERENCES]
 
     chemins = [p.chemin for p in pages]

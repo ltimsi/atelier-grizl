@@ -3,6 +3,7 @@ ateliers conservé, l'index de la recherche, la page Composants d'origine recopi
 page d'accueil recevra (Où intervenir, D'origine puis à monter, Toutes les catégories).
 
 Le site est construit une seule fois, dans un dossier temporaire, pour les deux cibles."""
+import dataclasses
 import json
 import re
 import sys
@@ -28,8 +29,10 @@ CHEMINS = [""] + ["freins/"] + [f"freins/{s}/" for s in SLUGS] + [f"{c}/" for c 
 MD = (RACINE / "docs" / "recherche" / "composants-origine.md").read_text(encoding="utf-8")
 COMPOSANTS = (RACINE / "src" / "parts" / "composants.html").read_text(encoding="utf-8")
 # Les blocs du source dont le texte doit se retrouver dans la page de l'atelier. div.q compte à part : son texte nu
-# (hors de tout p ou li) ne serait vu par aucun autre sélecteur.
-BLOCS = ("p", "li", "td", "th", "div.q", "figcaption", "h4")
+# (hors de tout p ou li) ne serait vu par aucun autre sélecteur. tr colle les cases d'une ligne : une case courte
+# perdue (« 40 Nm ») ne passe plus inaperçue parce que son texte revient ailleurs dans l'atelier. svg donne le titre
+# et les libellés d'une planche ; summary et button, les résumés et boutons écrits dans le source.
+BLOCS = ("p", "li", "td", "th", "tr", "div.q", "figcaption", "h4", "summary", "svg", "button")
 
 
 def elements(parent):
@@ -245,9 +248,17 @@ class TestPages(Site):
         self.assertEqual([b.get("data-type") for b in boutons], ["tout", "comprendre", "remplacer", "regler", "entretenir"])
         self.assertEqual([b.texte() for b in boutons], ["Tout", "Comprendre", "Remplacer", "Régler", "Entretenir"])
         self.assertEqual([b.get("aria-pressed") for b in boutons], ["true", "false", "false", "false", "false"])
-        # En-tête : badge du lot, puis le ch-head du chapitre tel quel.
+        # En-tête : badge du lot, puis le ch-head du chapitre, dont le h2 devient le h1 de la page (même id, même
+        # texte). Le chapitre source garde son h2.
         chapitre = self.chapitres["freins"]
-        self.assertIn('<p class="lot-badge">Lot 1 · en relecture</p>\n' + chapitre.tete.html(), html)
+        tete = chapitre.tete.html()
+        self.assertIn('<h2 id="freins-h">Freins</h2>', tete)
+        copie = tete.replace('<h2 id="freins-h">Freins</h2>', '<h1 id="freins-h">Freins</h1>')
+        self.assertIn('<p class="lot-badge">Lot 1 · en relecture</p>\n' + copie, html)
+        h1 = un(racine, "h1")
+        self.assertEqual((h1.get("id"), h1.texte()), ("freins-h", "Freins"))
+        self.assertIs(un(un(racine, "header.ch-head"), "h1"), h1)
+        self.assertEqual(dom.selectionner(un(racine, "header.ch-head"), "h2"), [])
         # Le résumé des couples est sur le côté, l'ordre et les cartes à gauche.
         cote = un(racine, "aside.categorie-cote")
         self.assertEqual(len(dom.selectionner(cote, '[data-resume="couples"]')), 1)
@@ -330,7 +341,27 @@ class TestPages(Site):
             racine = self.arbre(chemin)
             self.assertEqual(len(dom.selectionner(racine, f'div[id="{ident}"]')), 1, chemin)
             self.assertEqual(len(dom.selectionner(racine, "h1")), 1, chemin)
-        self.assertIn('href="../freins/securite/"', self.html("sources/"))
+        lien = [a for a in dom.selectionner(self.arbre("sources/"), "a") if a.get("href") == "../freins/securite/"]
+        self.assertEqual([a.texte() for a in lien], ["2.8 Sécurité et manuels"])
+
+    def test_sources_suit_l_atelier(self):
+        # Le libellé du renvoi vient de l'atelier freins-securite : il suit son numéro et son titre, et disparaît
+        # quand l'atelier n'est pas publié.
+        chapitre = self.chapitres["freins"]
+        renomme = dataclasses.replace(chapitre, ateliers=[
+            dataclasses.replace(a, titre="Un autre titre") if a.id == "freins-securite" else a for a in chapitre.ateliers])
+        contenu = pages.page_sources({"freins": renomme}).contenu
+        self.assertIn('<a href="../freins/securite/">2.8 Un autre titre</a>', contenu)
+        self.assertNotIn("Sécurité et manuels", contenu)
+        sans = pages.page_sources({}).contenu
+        self.assertNotIn("<a ", sans)
+        self.assertNotIn("2.8", sans)
+        self.assertIn('id="sources-page"', sans)
+
+    def test_un_h1_par_page(self):
+        for cible in ("site", "artifact"):
+            for chemin in CHEMINS:
+                self.assertEqual(len(dom.selectionner(self.arbre(chemin, cible), "h1")), 1, f"{cible} {chemin}")
 
     def test_page_composants(self):
         racine = self.arbre("composants/")
