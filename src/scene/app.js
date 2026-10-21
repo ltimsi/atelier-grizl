@@ -13,7 +13,7 @@
 //
 // Ateliers : les section.atelier[data-zone] des chapitres, relevées au démarrage dans l'ordre du document.
 // ouvrirZone(id) les liste dans la fiche et ouvre le premier ; ouvrirAtelier(id) déplace la section dans la fiche et
-// laisse à sa place un renvoi.
+// laisse à sa place un renvoi. La tête de la fiche dit la pièce d'origine et la pièce à monter (data-de, data-vers).
 //
 // Adresse et historique : l'atelier ouvert est dans l'ancre de l'adresse. Une pastille, une puce ou un bouton de la
 // liste la remplace (history.replaceState) ; un lien du texte vers un atelier ouvre l'atelier dans la fiche et ajoute
@@ -114,6 +114,11 @@ export function atelierDeLEntree(hash, etatEntree, estAtelier) {
   if (id && estAtelier(id)) return id;
   if (etatEntree && typeof etatEntree === 'object' && 'atelier' in etatEntree) return etatEntree.atelier ?? null;
   return undefined;
+}
+
+/** Les deux lignes de la tête de fiche pour un atelier qui remplace une pièce : rien s'il manque data-de ou data-vers. */
+export function lignesPieces(donnees) {
+  return donnees?.de && donnees?.vers ? [`D’origine : ${donnees.de}`, `À monter : ${donnees.vers}`] : [];
 }
 
 const reduit = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
@@ -237,7 +242,8 @@ function preparerFiche() {
   const titre = el('h2');
   titre.id = 'fiche-titre';
   const titres = el('div');
-  titres.append(el('p', 'eyebrow', 'Zone du vélo'), titre);
+  const pieces = el('div', 'fiche-pieces');
+  titres.append(el('p', 'eyebrow', 'Zone du vélo'), titre, pieces);
   tete.append(num, titres);
   const swap = el('div', 'swap');
   swap.setAttribute('role', 'group');
@@ -250,7 +256,7 @@ function preparerFiche() {
   approche.append(el('summary'), el('div'));
   ui.fiche.replaceChildren(tete, swap, liste, atelier, vide, approche);
   ui.fiche.setAttribute('aria-labelledby', 'fiche-titre');
-  ui.f = { num, titre, swap, liste, atelier, vide, approche };
+  ui.f = { num, titre, pieces, swap, liste, atelier, vide, approche };
 }
 
 function rendreFiche() {
@@ -259,6 +265,9 @@ function rendreFiche() {
   const z = zoneDe(etat.zone), f = ui.f, ateliers = ui.ateliers.get(z.id) ?? [];
   f.num.textContent = String(ui.zones.indexOf(z) + 1);
   f.titre.textContent = z.nom;
+  const lignes = lignesPieces(etat.atelier ? ui.parId.get(etat.atelier).dataset : null);
+  f.pieces.replaceChildren(...lignes.map(texte => el('p', null, texte)));
+  f.pieces.hidden = lignes.length === 0;
   f.liste.replaceChildren(...(ateliers.length > 1 ? ateliers.map(s => {
     const b = el('button', null, s.querySelector('h3')?.textContent.trim() || s.id);
     b.type = 'button';

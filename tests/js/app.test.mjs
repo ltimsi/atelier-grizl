@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  notesDeZone, approximationsSansScene, idDuHash, chargerLibs, atelierDuClic, atelierDeLEntree, ancreDe,
+  notesDeZone, approximationsSansScene, idDuHash, chargerLibs, atelierDuClic, atelierDeLEntree, ancreDe, lignesPieces,
 } from '../../src/scene/app.js';
 import * as scene from '../../src/scene/scene.js';
 
@@ -111,6 +111,15 @@ test('atelierDeLEntree : l’atelier de l’ancre, sinon celui noté dans l’en
 test('ancreDe : l’ancre d’un atelier, que idDuHash relit', () => {
   assert.equal(ancreDe('freins-purge'), '#freins-purge');
   assert.equal(idDuHash(ancreDe('atelier a')), 'atelier a');
+});
+
+test('lignesPieces : « D’origine » et « À monter » seulement si l’atelier a les deux', () => {
+  assert.deepEqual(lignesPieces({ de: 'Shimano SM-RT64', vers: 'Shimano Deore XT RT-MT800' }),
+    ['D’origine : Shimano SM-RT64', 'À monter : Shimano Deore XT RT-MT800']);
+  assert.deepEqual(lignesPieces({ de: 'Shimano SM-RT64' }), []);
+  assert.deepEqual(lignesPieces({ vers: 'x' }), []);
+  assert.deepEqual(lignesPieces({}), []);
+  assert.deepEqual(lignesPieces(undefined), []);
 });
 
 test('app.js : aucun import statique, pour démarrer même si un module de la scène manque', () => {
