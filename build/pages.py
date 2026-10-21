@@ -21,7 +21,7 @@ import html
 import unicodedata
 
 from ateliers import Atelier, Chapitre, colonnes, relever_chapitre
-from dom import Element, analyser, selectionner
+from dom import Element, analyser, fragment, selectionner
 from gabarit import NOM, PUBLIES, REFERENCES, Page, lire, lire_zones, reecrire_liens, relatif
 
 TYPES = {"comprendre": "Comprendre", "remplacer": "Remplacer", "regler": "Régler", "entretenir": "Entretenir"}
@@ -29,6 +29,9 @@ FILTRES = ("tout", "comprendre", "remplacer", "regler", "entretenir")  # boutons
 # Les marques de 05-top que le build remplace (la tâche 6 les pose) ; une marque absente est ignorée.
 MARQUES = ("<!--OU-INTERVENIR-->", "<!--A-REMPLACER-->", "<!--CATEGORIES-->")
 MANUELS = "freins-securite"  # l'atelier des manuels, vers lequel la page Sources renvoie
+# La barre des étapes d'un atelier ; js/site.js fait marcher ses deux boutons.
+BARRE_ETAPES = ('<div class="etapes-barre"><button type="button" class="btn" id="tout-deplier">Tout déplier</button>'
+                '<button type="button" class="btn pri" id="pas-a-pas">Mode pas à pas</button></div>')
 LIBELLES = dict(REFERENCES)  # dossier de chaque page de référence vers son libellé du menu
 PIECE = "Pièce d’origine"  # genre des entrées de la recherche tirées de composants.html
 
@@ -277,14 +280,32 @@ def page_categorie(lot: dict, chapitre: Chapitre) -> Page:
                 contenu=contenu, categorie=chapitre.id)
 
 
+def avec_barre_des_etapes(gauche: str) -> str:
+    """La colonne de gauche avec la barre des étapes juste au-dessus de ses étapes : avant le premier ol.steps, ou
+    avant le bloc de premier niveau qui le contient (les étapes de la purge sont dans un <details>), pour que la barre
+    reste visible quand ce bloc est replié. Sans ol.steps, la colonne ne change pas."""
+    racine = analyser(gauche)
+    etapes = selectionner(racine, "ol.steps")
+    if not etapes:
+        return gauche
+    bloc = etapes[0]
+    while bloc.parent is not racine:
+        bloc = bloc.parent
+    i = racine.enfants.index(bloc)
+    for noeud in reversed(fragment(BARRE_ETAPES + "\n")):
+        racine.inserer(i, noeud)
+    return racine.html()
+
+
 def page_atelier(chapitre: Chapitre, i: int, nom: str | None = None) -> Page:
     """La page du i-ème atelier du chapitre. `nom` est le libellé de la catégorie dans le fil d'Ariane (par défaut,
     le titre du chapitre).
 
     Un article.atelier porte l'id et les data- de la section source. Dedans : l'en-tête (numéro et zone, h1,
-    pastilles du type, du nombre d'étapes et de ce qu'il faut démonter, pièce d'origine et pièce à monter), la barre
-    des étapes s'il y en a, puis les colonnes de `colonnes()`. Sans rien à droite, une seule colonne. Après
-    l'article : l'atelier précédent et le suivant. Une pièce 3D charge three.js, la visionneuse et son modèle."""
+    pastilles du type, du nombre d'étapes et de ce qu'il faut démonter, pièce d'origine et pièce à monter), puis les
+    colonnes de `colonnes()`, avec la barre des étapes juste au-dessus des étapes de la colonne de gauche s'il y en a.
+    Sans rien à droite, une seule colonne. Après l'article : l'atelier précédent et le suivant. Une pièce 3D charge
+    three.js, la visionneuse et son modèle."""
     a = chapitre.ateliers[i]
     chemin = _chemin(chapitre, a)
     gauche, droite = colonnes(a)
@@ -304,10 +325,8 @@ def page_atelier(chapitre: Chapitre, i: int, nom: str | None = None) -> Page:
                     f'<span class="k">À monter</span> <span class="v">{_e(a.vers)}</span></p>')
     tete.append("</header>")
 
-    barre = []
     if a.etapes:
-        barre = ['<div class="etapes-barre"><button type="button" class="btn" id="tout-deplier">Tout déplier</button>'
-                 '<button type="button" class="btn pri" id="pas-a-pas">Mode pas à pas</button></div>']
+        gauche = avec_barre_des_etapes(gauche)
     if droite:
         cols = ['<div class="atelier-cols">', '<div class="atelier-gauche">', gauche, "</div>",
                 '<aside class="atelier-droite">', droite, "</aside>", "</div>"]
@@ -324,7 +343,7 @@ def page_atelier(chapitre: Chapitre, i: int, nom: str | None = None) -> Page:
     attributs = [("class", "atelier"), ("id", a.id), ("data-zone", a.zone), ("data-type", a.type),
                  ("data-de", a.de), ("data-vers", a.vers)]
     ouvrante = "<article " + " ".join(f'{k}="{_attr(v)}"' for k, v in attributs if v) + ">"
-    contenu = "\n".join([ouvrante, *tete, *barre, *cols, "</article>",
+    contenu = "\n".join([ouvrante, *tete, *cols, "</article>",
                          '<nav class="precsuiv" aria-label="Atelier précédent et suivant">' + "".join(voisins) + "</nav>"])
 
     titre = f"{a.num} {a.titre}"
@@ -414,9 +433,10 @@ def page_couples(chapitres: dict[str, Chapitre]) -> Page:
 
 
 def _page_js(dossier, ident, chapeau):
-    """Une page remplie par js/references.js : un en-tête et son conteneur, qui le dit sans JavaScript."""
+    """Une page remplie par js/references.js : un en-tête et son conteneur. La phrase du conteneur reste si le script
+    ne tourne pas (JavaScript coupé, fichier absent) ; le script la remplace."""
     contenu = "\n".join([_en_tete(LIBELLES[dossier], chapeau), f'<div id="{ident}">',
-                         '<noscript><p class="muted">Active JavaScript pour voir cette liste.</p></noscript>', "</div>"])
+                         '<p class="muted">Cette liste a besoin de JavaScript pour s’afficher.</p>', "</div>"])
     return _reference(dossier, contenu, scripts=dict(references=True))
 
 

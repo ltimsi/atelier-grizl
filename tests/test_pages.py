@@ -143,9 +143,13 @@ class TestPages(Site):
         self.assertEqual([p.texte() for p in dom.selectionner(tete, "span.pill")],
                          ["Remplacer", "10 étapes", "À démonter : La roue."])
         self.assertEqual(un(tete, "p.de-vers").texte(), "D’origine Plaquettes d’origine À monter Shimano L04C-MF")
-        # La barre des étapes entre l'en-tête et les colonnes.
-        self.assertLess(html.index('class="atelier-tete"'), html.index('class="etapes-barre"'))
-        self.assertLess(html.index('class="etapes-barre"'), html.index('class="atelier-cols"'))
+        # La barre des étapes dans la colonne de gauche, juste avant les étapes.
+        barre = un(article, "div.etapes-barre")
+        gauche = un(article, "div.atelier-gauche")
+        self.assertIs(barre.parent, gauche)
+        suivant = elements(gauche)[elements(gauche).index(barre) + 1]
+        self.assertEqual((suivant.tag, suivant.classes()), ("ol", ["steps"]))
+        self.assertEqual([b.get("id") for b in dom.selectionner(barre, "button")], ["tout-deplier", "pas-a-pas"])
         # Fil d'Ariane, menu déplié sur Freins, titre de l'onglet.
         fil = un(racine, "nav.crumbs")
         self.assertEqual(fil.texte(), "Ateliers/Freins/2.3 Changer les plaquettes")
@@ -166,6 +170,29 @@ class TestPages(Site):
                           ([("suiv", f"../{SLUGS[i + 1]}/")] if i + 1 < len(SLUGS) else [])
                 self.assertEqual([(a.get("class"), a.get("href")) for a in dom.selectionner(precsuiv, "a")], attendu)
                 self.assertEqual(len(dom.selectionner(racine, "h1")), 1)
+
+    def test_barre_des_etapes(self):
+        # Chaque atelier à étapes a une barre, une seule, dans sa colonne de gauche, juste avant le bloc de premier
+        # niveau qui contient ses étapes : l'ol.steps lui-même, ou le <details> qui le range (la purge).
+        for slug in ("disques", "plaquettes", "rodage", "centrage", "purge"):
+            with self.subTest(slug):
+                gauche = un(self.arbre(f"freins/{slug}/"), "div.atelier-gauche")
+                barre = un(gauche, "div.etapes-barre")
+                enfants = elements(gauche)
+                self.assertIs(barre.parent, gauche)
+                suivant = enfants[enfants.index(barre) + 1]
+                premier = dom.selectionner(gauche, "ol.steps")[0]
+                self.assertTrue(suivant is premier or premier in dom.selectionner(suivant, "ol.steps"), slug)
+                if slug == "purge":
+                    self.assertEqual(suivant.tag, "details")
+
+    def test_pages_js(self):
+        # Ce qui est approché et Sources : sans leur script, une phrase le dit au lieu d'une boîte vide.
+        for chemin, ident in (("approche/", "approche-page"), ("sources/", "sources-page")):
+            with self.subTest(chemin):
+                boite = un(self.arbre(chemin), f'div[id="{ident}"]')
+                self.assertEqual(boite.texte(), "Cette liste a besoin de JavaScript pour s’afficher.")
+                self.assertEqual(dom.selectionner(boite, "noscript"), [])
 
     def test_une_colonne(self):
         # 2.1, 2.6 et 2.8 n'ont rien à droite : une seule colonne, jamais un aside vide, pas de barre d'étapes.

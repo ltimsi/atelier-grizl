@@ -4,6 +4,7 @@
 // modules ne se branchent sur rien.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { normaliser, chercher, cibleAncienne } from '../../src/js/site.js';
 import { sourcesParType } from '../../src/js/references.js';
 import { listeApproche } from '../../src/scene/liste-approche.js';
@@ -84,7 +85,9 @@ test('cibleAncienne : l’adresse d’un ancien #id de la racine, ou null', () =
   assert.equal(cibleAncienne('#freins', { freins: 42 }), null, 'seulement une adresse');
 });
 
-test('site.js et references.js importés sous Node : aucun document touché', () => {
+// La vraie preuve est l'import statique en tête de ce fichier : si site.js ou references.js touchait document au
+// chargement, l'import lèverait une ReferenceError et aucun test ne tournerait. Ce test le dit et vérifie les exports.
+test('site.js et references.js s’importent sous Node sans lever d’erreur et exportent leurs calculs', () => {
   assert.equal(typeof globalThis.document, 'undefined');
   assert.equal(typeof globalThis.window, 'undefined');
   assert.equal(typeof normaliser, 'function');
@@ -158,4 +161,11 @@ test('listeApproche : une section par pièce, titre, documents en liens, formes 
 test('listeApproche : le niveau des titres se choisit', () => {
   const f = listeApproche(fauxDocument(), [{ piece: 'P', approche: ['a'], aVerifier: [], sources: [] }], 2);
   assert.deepEqual(tags(f.enfants[0]), ['h2', 'h3', 'ul']);
+});
+
+test('modules du site : aucune API plus récente qu’ES2020 (Object.hasOwn, Array.prototype.at)', () => {
+  for (const f of ['../../src/js/site.js', '../../src/js/references.js', '../../src/scene/liste-approche.js']) {
+    const code = readFileSync(new URL(f, import.meta.url), 'utf8');
+    assert.ok(!/Object\.hasOwn\b|\.at\(/.test(code), f);
+  }
 });

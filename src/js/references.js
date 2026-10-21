@@ -70,7 +70,7 @@ async function pageSources(conteneur) {
   conteneur.replaceChildren(...sourcesParType(SOURCES, liste).map(g => {
     const section = el('section', 'sources-type');
     const titre = el('h2', null, g.titre);
-    titre.append(el('span', 'cnt', String(g.sources.length)));
+    titre.append(' ', el('span', 'cnt', String(g.sources.length))); // l'espace sépare le nombre du nom, à l'écoute aussi
     const ul = el('ul', 'sources-liste');
     ul.append(...g.sources.map(s => {
       const li = el('li'), a = el('a', null, s.titre);

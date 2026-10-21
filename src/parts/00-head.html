@@ -5,9 +5,17 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
 <script>
 /* JavaScript actif : la classe « js » est posée avant l'affichage. La feuille de style s'en sert pour replier le menu
-   derrière son bouton sur téléphone et pour montrer les filtres et la barre des étapes, que le module commun du site fait marcher.
-   Sans JavaScript, rien de cela : le menu reste en tête de page et rien n'est caché. */
+   derrière son bouton sur téléphone et pour montrer la recherche, les filtres et la barre des étapes, que le module
+   commun du site fait marcher. Sans JavaScript, rien de cela : le menu reste en tête de page et rien n'est caché.
+   Le module commun s'exécute avant DOMContentLoaded et pose alors window.siteBranche. S'il n'a pas tourné (fichier
+   absent ou bloqué, navigateur trop ancien pour le lire), la classe tombe et la page reprend la mise en page sans
+   JavaScript : le menu reste atteignable. */
 document.documentElement.classList.add('js');
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!window.siteBranche) document.documentElement.classList.remove('js');
+  });
+}
 </script>
 <style>
 /* Mise en page : application d'atelier pour l'ordinateur, d'après la maquette validée le 21 octobre
@@ -18,6 +26,7 @@ document.documentElement.classList.add('js');
 :root{
   --bg:#EDF0EF; --panel:#F9FAFA; --plate:#E3E8E9; --side:#E4E9E8;
   --ink:#16202A; --ink-2:#465462; --ink-3:#6F7D89;
+  --ink-nav:#5A6773; /* texte discret du menu et du fil d'Ariane : 4,5:1 au moins sur --side et --bg */
   --line:#C6CFD4; --line-2:#DAE1E4;
   --acc:#56479A; --acc-2:#E9E5F6; --on-acc:#FFFFFF;
   --hot:#9E4C06; --hot-2:#FAE8D6;
@@ -29,14 +38,16 @@ document.documentElement.classList.add('js');
   --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
   --r:10px;
   --side-w:288px; /* largeur du menu */
-  --top-h:57px; /* hauteur de la barre du haut, pour les ancres et la colonne de droite */
+  /* Hauteur de la barre du haut, pour les ancres et la colonne de droite : une estimation ici, puis la mesure exacte,
+     posée par le module commun sur l'élément racine. */
+  --top-h:42px;
   --gut:max(clamp(16px,2.6vw,40px),env(safe-area-inset-left,0px)); /* marges du contenu */
   --gut-r:max(clamp(16px,2.6vw,40px),env(safe-area-inset-right,0px));
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#10151A; --panel:#161D23; --plate:#19222A; --side:#0C1115;
-    --ink:#E3E9ED; --ink-2:#A6B3BD; --ink-3:#7A8893;
+    --ink:#E3E9ED; --ink-2:#A6B3BD; --ink-3:#7A8893; --ink-nav:#7A8893;
     --line:#2D3842; --line-2:#222B33;
     --acc:#B1A5F0; --acc-2:#272242; --on-acc:#16112B;
     --hot:#F2A766; --hot-2:#3A2816;
@@ -46,9 +57,10 @@ document.documentElement.classList.add('js');
     color-scheme:dark;
   }
 }
+.js{--top-h:57px}
 :root[data-theme="dark"]{
   --bg:#10151A; --panel:#161D23; --plate:#19222A; --side:#0C1115;
-  --ink:#E3E9ED; --ink-2:#A6B3BD; --ink-3:#7A8893;
+  --ink:#E3E9ED; --ink-2:#A6B3BD; --ink-3:#7A8893; --ink-nav:#7A8893;
   --line:#2D3842; --line-2:#222B33;
   --acc:#B1A5F0; --acc-2:#272242; --on-acc:#16112B;
   --hot:#F2A766; --hot-2:#3A2816;
@@ -91,25 +103,25 @@ h4{font-family:var(--f-mono);font-size:.74rem;font-weight:600;letter-spacing:.08
 .brand .name{font-family:var(--f-disp);font-weight:800;font-stretch:72%;font-size:1.9rem;line-height:1;margin-top:6px;color:var(--ink)}
 .nav{display:flex;flex-direction:column;gap:18px}
 .nav-g{display:flex;flex-direction:column;gap:2px}
-.nav-g > .label{padding:0 10px 6px}
+.nav-g > .label{padding:0 10px 6px;color:var(--ink-nav)}
 .nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--ink);font-size:.95rem;line-height:1.35}
 .nav a:hover{background:var(--panel)}
 .nav a[aria-current="page"]{background:var(--acc);color:var(--on-acc)}
 .nav a[aria-current="page"] .cnt{color:var(--on-acc);border-color:currentColor}
-.nav a.soon{color:var(--ink-3)}
+.nav a.soon{color:var(--ink-nav)}
 .nav a.soon[aria-current="page"]{color:var(--on-acc)}
 .nav .cnt{margin-left:auto;flex:none;font-family:var(--f-mono);font-size:.68rem;line-height:1.5;border:1px solid var(--line);border-radius:999px;padding:0 7px;color:var(--ink-2);white-space:nowrap}
 .nav .soon .cnt{border-style:dashed}
 .sub-nav{display:flex;flex-direction:column;margin:2px 0 6px 18px;padding-left:10px;border-left:1px solid var(--line)}
 .sub-nav a{align-items:baseline;padding:5px 10px;font-size:.86rem;color:var(--ink-2)}
-.sub-nav a .num{flex:none;font-family:var(--f-mono);font-size:.74rem;color:var(--ink-3);min-width:2.1em}
+.sub-nav a .num{flex:none;font-family:var(--f-mono);font-size:.74rem;color:var(--ink-nav);min-width:2.1em}
 .sub-nav a[aria-current="page"] .num{color:var(--on-acc)}
 .side-foot{margin-top:auto;padding:12px 10px 0;border-top:1px solid var(--line);font-size:.8rem;line-height:1.5;color:var(--ink-2)}
 
 .main{min-width:0;display:flex;flex-direction:column}
-.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;display:flex;gap:12px;align-items:center;min-height:var(--top-h);background:var(--bg);border-bottom:1px solid var(--line);padding-block:10px;padding-left:var(--gut);padding-right:var(--gut-r)}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;display:flex;gap:12px;align-items:center;background:var(--bg);border-bottom:1px solid var(--line);padding-block:10px;padding-left:var(--gut);padding-right:var(--gut-r)}
 .menu-btn{display:none;align-items:center;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 12px;font-family:var(--f-mono);font-size:.78rem;cursor:pointer}
-.crumbs{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;font-family:var(--f-mono);font-size:.78rem;color:var(--ink-3);min-width:0}
+.crumbs{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;font-family:var(--f-mono);font-size:.78rem;color:var(--ink-nav);min-width:0}
 .crumbs a{color:var(--ink-2);text-decoration:none}
 .crumbs a:hover{text-decoration:underline}
 .crumbs .sep{color:var(--line)}
@@ -283,6 +295,8 @@ ul.check input:checked + span{color:var(--ink-3);text-decoration:line-through;te
 .v3d-legend li button.on{background:var(--hot-2)}
 .v3d-legend li button.on span:first-child{color:var(--hot)}
 .v3d-fallback{position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center;color:var(--ink-2);font-size:.9rem}
+/* Sans JavaScript, la scène de la pièce reste vide : elle le dit, comme .v3d-fallback. */
+html:not(.js) .v3d-stage:empty::before{content:"La pièce en 3D a besoin de JavaScript.";position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center;color:var(--ink-2);font-size:.9rem}
 .v3d > figcaption{padding:0 12px 12px;margin:0}
 
 /* Blocs repliables : <details>, les pas de dépannage (details.q) et les blocs des fiches « comprendre » (details.bloc) */
@@ -314,7 +328,7 @@ article.atelier{display:flex;flex-direction:column;gap:20px;min-width:0}
 .de-vers .v + .k::before{content:"→";margin-right:8px;font-family:var(--f-mono);color:var(--ink-2)}
 .de-vers .v{padding:3px 10px;border-radius:6px;background:var(--panel);border:1px solid var(--line)}
 .de-vers .v:last-child{background:var(--hot-2);border-color:var(--hot);color:var(--hot);font-weight:600}
-.etapes-barre{display:none;flex-wrap:wrap;gap:8px}
+.etapes-barre{display:none;flex-wrap:wrap;gap:8px;margin:1.4rem 0 .6rem}
 .js .etapes-barre{display:flex}
 .etapes-barre .btn,.pap-nav .btn,.pap-haut .btn{padding:7px 14px;font-size:.78rem;background:var(--panel)}
 .etapes-barre .btn.pri,.pap-nav .btn.pri{background:var(--acc)}
@@ -413,7 +427,7 @@ ul.outils > li{display:flex;flex-direction:column;gap:8px;padding:12px 14px;bord
 #approche-page .appr h3{font-family:var(--f-mono);font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-stretch:normal;margin:.9rem 0 .3rem}
 /* Sources (rempli par le module des références) : un groupe par type de document */
 .sources-type{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
-.sources-type h2 .cnt{font-family:var(--f-mono);font-size:.7rem;font-weight:500;vertical-align:middle;border:1px solid var(--line);border-radius:999px;padding:0 7px;color:var(--ink-2);margin-left:6px}
+.sources-type h2 .cnt{font-family:var(--f-mono);font-size:.7rem;font-weight:500;vertical-align:middle;border:1px solid var(--line);border-radius:999px;padding:0 7px;color:var(--ink-2);margin-left:2px}
 .sources-liste{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr));gap:10px}
 .sources-liste li{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);min-width:0}
 .sources-liste a{line-height:1.4;overflow-wrap:anywhere}
@@ -561,13 +575,16 @@ html.pap-ouvert{overflow:hidden}
 }
 /* Sous 900 px : le menu passe derrière son bouton. Sans JavaScript (pas de classe « js »), il reste en tête de page. */
 @media (max-width:900px){
-  :root{--top-h:100px}
+  .js{--top-h:102px}
   .app{grid-template-columns:minmax(0,1fr)}
   .side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}
-  .js .side{position:fixed;left:0;top:0;bottom:0;z-index:50;width:min(86vw,320px);height:auto;border-right:1px solid var(--line);border-bottom:0;padding-top:max(22px,env(safe-area-inset-top,0px));padding-left:max(14px,env(safe-area-inset-left,0px));box-shadow:0 0 40px rgba(0,0,0,.25);transform:translateX(-100%);visibility:hidden;transition:transform .2s,visibility 0s .2s}
+  .js .side{position:fixed;left:0;top:0;bottom:0;z-index:50;width:min(86vw,320px);height:auto;border-right:1px solid var(--line);border-bottom:0;padding-top:max(22px,env(safe-area-inset-top,0px));padding-left:max(14px,env(safe-area-inset-left,0px));box-shadow:0 0 40px var(--shadow);transform:translateX(-100%);visibility:hidden;transition:transform .2s,visibility 0s .2s}
   .js .side.open{transform:none;visibility:visible;transition:transform .2s}
   .js .menu-btn{display:inline-flex}
   .top{flex-wrap:wrap}
+  /* Le fil d'Ariane tient sur une ligne : la page courante, que le titre répète, se coupe d'une ellipse. */
+  .crumbs{flex:1 1 0;flex-wrap:nowrap;white-space:nowrap;overflow:hidden}
+  .crumbs > :last-child{overflow:hidden;text-overflow:ellipsis;min-width:0}
   .search{flex-basis:100%;order:3}
   .precsuiv{grid-template-columns:minmax(0,1fr)}
   .precsuiv a.suiv{grid-column:auto}
@@ -578,7 +595,10 @@ html.pap-ouvert{overflow:hidden}
   .pap-haut .label{flex-basis:100%}
   .pap-nav .btn{flex:1 1 0;padding:12px 8px;font-size:.78rem}
   .de-vers .v{flex:0 1 auto}
+  .figures{padding:8px}
 }
+/* Très petit écran : la planche tient dans sa boîte sans défiler, ses libellés restent lisibles. */
+@media (max-width:400px){.plate-art svg{min-width:280px}}
 @media (prefers-reduced-motion: reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 @media (min-width:900px){html{scroll-behavior:smooth}}
 </style>

@@ -4,8 +4,11 @@
 // Sans JavaScript, tout reste lisible : le menu, le fil d'Ariane et les liens sont du HTML, les étapes et les blocs
 // sont des <details>. Ce module n'ajoute que des commandes : sans lui, les deux figures d'un atelier restent à la
 // suite, aucune carte n'est filtrée et il n'y a pas de mode pas à pas. La tête (00-head.html) pose la classe « js »
-// sur <html> avant l'affichage : la feuille de style s'en sert pour replier le menu sur téléphone et montrer les
-// filtres et la barre des étapes, sans que la page saute à l'arrivée du module.
+// sur <html> avant l'affichage : la feuille de style s'en sert pour replier le menu sur téléphone et montrer la
+// recherche, les filtres et la barre des étapes, sans que la page saute à l'arrivée du module. Ce module pose
+// window.siteBranche en démarrant ; s'il ne tourne pas, la tête retire la classe à DOMContentLoaded.
+//
+// Pas d'API plus récente qu'ES2020 (tests/js/site.test.mjs le vérifie) : un Safari un peu ancien doit suivre.
 //
 // Les adresses de l'index de la recherche (window.RECHERCHE, posé par js/recherche.js) partent de la racine du site :
 // data-base de div.app donne le chemin qui y remonte depuis la page (« ../../ » sur un atelier).
@@ -71,7 +74,7 @@ function idDuHash(hash) {
  */
 export function cibleAncienne(hash, liens) {
   const id = idDuHash(hash);
-  if (!id || !liens || !Object.hasOwn(liens, id)) return null;
+  if (!id || !liens || !Object.prototype.hasOwnProperty.call(liens, id)) return null;
   return typeof liens[id] === 'string' ? liens[id] : null;
 }
 
@@ -98,8 +101,7 @@ function anciennesAncres() {
   }
   const suivre = () => {
     const cible = cibleAncienne(location.hash, liens);
-    // Une ancre que la page porte elle-même reste sur la page.
-    if (cible && !document.getElementById(idDuHash(location.hash))) location.replace(cible);
+    if (cible) location.replace(cible);
   };
   suivre();
   window.addEventListener('hashchange', suivre);
@@ -384,7 +386,7 @@ function filtres() {
   const boutons = [...groupe.querySelectorAll('button[data-type]')];
   const vide = el('p', 'muted cartes-vide', 'Aucun atelier de ce type pour l’instant.');
   vide.hidden = true;
-  cartes.at(-1).parentElement.after(vide);
+  cartes[cartes.length - 1].parentElement.after(vide);
   groupe.addEventListener('click', e => {
     const b = e.target.closest('button[data-type]');
     if (!b) return;
@@ -414,10 +416,26 @@ function revelerAncre() {
   if (change) cible.scrollIntoView({ block: 'start' });
 }
 
+// La hauteur réelle de la barre du haut, dans --top-h : les ancres arrivent juste dessous (scroll-padding-top) et la
+// colonne de droite d'un atelier se colle dessous, quelle que soit la largeur ou la longueur du fil d'Ariane.
+function hauteurBarre() {
+  const barre = document.querySelector('.top');
+  if (!barre) return;
+  const poser = () => {
+    document.documentElement.style.setProperty('--top-h', `${Math.ceil(barre.getBoundingClientRect().height)}px`);
+  };
+  poser();
+  if ('ResizeObserver' in window) new ResizeObserver(poser).observe(barre);
+  else window.addEventListener('resize', poser);
+}
+
 function brancher() {
+  // Lu par la tête (00-head.html) à DOMContentLoaded : sans lui, la page reprend la mise en page sans JavaScript.
+  window.siteBranche = true;
   const base = document.querySelector('.app')?.dataset.base ?? '';
   // Une partie en panne ne doit pas emporter les autres.
-  for (const partie of [anciennesAncres, menu, () => recherche(base), cases, etapes, onglets, filtres, revelerAncre]) {
+  for (const partie of [anciennesAncres, hauteurBarre, menu, () => recherche(base), cases, etapes, onglets, filtres,
+    revelerAncre]) {
     try {
       partie();
     } catch (e) {
