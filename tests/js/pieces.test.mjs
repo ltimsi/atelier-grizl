@@ -131,6 +131,8 @@ function distanceMini(nuageA, nuageB, portee) {
 }
 
 const textesDeMeta = meta => [meta.id, meta.nom, ...meta.approche, ...meta.aVerifier];
+// Une note parle de la pièce et de ses sources, jamais de l'accès à un document ni du jour où on l'a lu.
+const ACCES_OU_DATE = /accessib|consultab|jour du relev|403|maintenance|pendant la rédaction/i;
 
 // ---- Tests communs à tous les modules de pièces ----
 
@@ -152,6 +154,12 @@ for (const module of PIECES) {
       assert.ok(!/\d/.test(t), `chiffre dans « ${t} »`);
     }
     for (const t of textesDeMeta(META)) assert.ok(!/[\u2014\u2013]/.test(t), `tiret long dans « ${t} »`);
+  });
+
+  test(`${nom} : notes sans accès ni date de lecture`, () => {
+    for (const t of [...META.approche, ...META.aVerifier]) {
+      assert.ok(!ACCES_OU_DATE.test(t), `accès ou date dans « ${t} »`);
+    }
   });
 
   test(`${nom} : les cotes publiées citent une source de META`, () => {

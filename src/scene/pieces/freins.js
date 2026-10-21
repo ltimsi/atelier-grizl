@@ -48,8 +48,8 @@ export const META = Object.freeze({
   approche: Object.freeze([
     'Disque d’origine : piste en acier sur un support en aluminium peint, comme le dit la fiche Shimano. Bras, ' +
       'trous et rivets sont approchés d’après la photo officielle de Canyon.',
-    'Disque XT : piste, araignée, rivets et ailettes de refroidissement en forme approchée. Les photos produit de ' +
-      'Shimano n’étaient pas accessibles le jour du relevé.',
+    'Disque XT : piste, araignée, rivets et ailettes de refroidissement en forme approchée. Aucune photo produit ' +
+      'Shimano du disque XT n’a servi.',
     'Épaisseur du disque XT : Shimano le range parmi les disques d’épaisseur standard. Il est dessiné à l’épaisseur ' +
       'standard donnée par la fiche du disque d’origine.',
     'Bagues Center Lock : forme approchée. Celle du XT est dessinée à denture extérieure, celle d’origine reste ' +

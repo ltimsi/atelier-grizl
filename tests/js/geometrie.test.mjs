@@ -170,6 +170,15 @@ test('textes du guide : français sans chiffre ni tiret long', () => {
   for (const [id, s] of Object.entries(SOURCES)) assert.ok(!/[—–]/.test(s.titre), `${id} : tiret long`);
 });
 
+test('textes du guide : ni accès à un document ni date de lecture', () => {
+  const ACCES_OU_DATE = /accessib|consultab|jour du relev|403|maintenance|pendant la rédaction/i;
+  for (const t of textesDeGEO()) assert.ok(!ACCES_OU_DATE.test(t), `accès ou date dans « ${t} »`);
+  // Le motif attrape bien les tournures visées.
+  for (const t of ['pas accessibles le jour du relevé', 'page non consultable', 'erreur 403', 'site en maintenance']) {
+    assert.ok(ACCES_OU_DATE.test(t), t);
+  }
+});
+
 test('registre des sources : forme, types et documents attendus', () => {
   const types = ['fiche', 'manuel', 'photo', 'tableau'];
   for (const [id, s] of Object.entries(SOURCES)) {
