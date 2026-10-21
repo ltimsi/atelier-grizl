@@ -172,7 +172,7 @@ Formes approchées :
 - Le chapitre Freins est découpé en huit ateliers, rangés dans les zones de la page d'accueil : disques (2.2, 2.4), étrier et plaquettes (2.3, 2.5, 2.6), manettes et durites (2.1, 2.7, 2.8).
 - Pièces 3D : disque RT-MT800 + bague + outil TL-FC36 (`rotor`), étrier flat mount + plaquettes L04C (`caliper`), kit de purge (`bleed`).
 - Points ouverts : référence exacte de l'étrier (à lire à la livraison), référence de la version à denture extérieure du RT-MT800 (fiche Shimano inaccessible pendant la rédaction), couple du purgeur d'étrier GRX (non publié), couple de l'axe avant (guide du carton).
-- Le tableau Shimano C-461 marque le RT-MT800 comme abandonné : sa disponibilité est à vérifier avant l'achat.
+- RT-MT800 probablement abandonné : dans le tableau Shimano C-461, son nom porte la classe `discon`, sans lien vers une fiche produit, et la page n'a pas de légende. Sa disponibilité est à vérifier avant l'achat. Le détail est dans [composants-origine.md](recherche/composants-origine.md).
 
 ## Données personnelles
 
