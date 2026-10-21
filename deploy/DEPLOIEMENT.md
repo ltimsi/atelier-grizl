@@ -33,7 +33,8 @@ La configuration est dans `deploy/nginx.conf`.
    ```sh
    tar -xzf atelier-grizl.tar.gz       # crée ~/atelier-grizl
    cd atelier-grizl
-   cp .env.example .env                # BIND_IP=127.0.0.1, et PORT= le port choisi (3013)
+   cp .env.example .env                # BIND_IP=127.0.0.1, PORT=8088
+   sed -i 's/^PORT=.*/PORT=3013/' .env # le port choisi au point 1 ; vérifie avec grep PORT .env
    docker compose up -d --build
    docker compose ps                   # le service doit être « healthy »
    curl -sI http://127.0.0.1:3013/ | head -1   # HTTP/1.1 200 OK
@@ -79,10 +80,11 @@ server {
 ## Vérifier
 
 ```sh
-ss -tlnp | grep 3013                                               # une seule ligne : 127.0.0.1:3013, jamais 0.0.0.0
-curl -sI http://127.0.0.1:3013/freins/plaquettes/ | head -1        # HTTP/1.1 200 OK
-curl -sI http://127.0.0.1:3013/freins | grep -i '^location'        # Location: /freins/
-curl -sI http://127.0.0.1:3013/js/site.js | grep -i cache-control  # Cache-Control: no-cache
+ss -tlnp | grep 3013                                                        # une seule ligne : 127.0.0.1:3013, jamais 0.0.0.0
+curl -sI http://127.0.0.1:3013/freins/plaquettes/ | head -1                 # HTTP/1.1 200 OK
+curl -sI http://127.0.0.1:3013/freins | grep -i '^location'                 # Location: /freins/
+curl -sI http://127.0.0.1:3013/js/site.js | grep -i cache-control           # Cache-Control: no-cache
+curl -sI http://127.0.0.1:3013/freins/plaquettes/ | grep -i cache-control   # Cache-Control: no-cache
 ```
 
 Puis ouvre `https://atelier.<ton-domaine>/` sur ton ordinateur et sur ton téléphone. Un ancien favori comme `https://atelier.<ton-domaine>/#freins-plaquettes` doit arriver sur la page de l'atelier 2.3.
@@ -91,27 +93,40 @@ Puis ouvre `https://atelier.<ton-domaine>/` sur ton ordinateur et sur ton télé
 
 Le serveur n'a pas de clone du dépôt : on y copie une archive du commit relu. On l'extrait dans un dossier neuf, pour qu'aucun fichier retiré du dépôt ne reste derrière, et on garde `.env`, qui n'est pas dans l'archive (Git l'ignore).
 
+Avant de reconstruire, deux sauvegardes permettent de revenir en arrière en une minute :
+
+- l'image qui tourne garde une étiquette à elle, `atelier-grizl:avant-<nom>`, où `<nom>` est un nom court pour cette mise à jour (la date, ou le lot). La reconstruction déplace l'étiquette `atelier-grizl:local` sur la nouvelle image ; l'ancienne reste là sous son autre nom ;
+- le dossier en service devient `atelier-grizl.precedent`, avec son `.env`.
+
 ```sh
 # sur ton ordinateur, dans le dépôt
 git archive --format=tar.gz --prefix=atelier-grizl.neuf/ -o atelier-grizl.tar.gz <commit>
 scp atelier-grizl.tar.gz <serveur>:
 
 # sur le serveur
+rm -rf atelier-grizl.neuf                  # reste d'un essai interrompu : l'archive doit s'extraire dans un dossier vide
 tar -xzf atelier-grizl.tar.gz
 cp atelier-grizl/.env atelier-grizl.neuf/
-rm -rf atelier-grizl.avant
-mv atelier-grizl atelier-grizl.avant && mv atelier-grizl.neuf atelier-grizl
+docker tag atelier-grizl:local atelier-grizl:avant-<nom>
+rm -rf atelier-grizl.precedent
+mv atelier-grizl atelier-grizl.precedent && mv atelier-grizl.neuf atelier-grizl
 cd atelier-grizl && docker compose up -d --build
 ```
 
-Le dossier garde son nom, `atelier-grizl` : Docker Compose reconnaît le même projet et remplace le conteneur. `atelier-grizl.avant` garde la version d'avant. Refais ensuite les vérifications du dessus.
+Le dossier garde son nom, `atelier-grizl` : Docker Compose reconnaît le même projet et remplace le conteneur. Refais ensuite les vérifications du dessus. Quand la nouvelle version est vérifiée, l'image d'avant peut partir : `docker image rm atelier-grizl:avant-<nom>`.
 
 ## Revenir à la version d'avant
 
+On remet le dossier d'avant à sa place et on relance l'image d'avant, sans rien reconstruire. `atelier-grizl.annulee` reçoit la version retirée : on le vide d'abord, sinon `mv` rangerait le dossier dedans au lieu de le renommer.
+
 ```sh
-mv atelier-grizl atelier-grizl.annulee && mv atelier-grizl.avant atelier-grizl
-cd atelier-grizl && docker compose up -d --build
+rm -rf atelier-grizl.annulee
+mv atelier-grizl atelier-grizl.annulee && mv atelier-grizl.precedent atelier-grizl
+docker tag atelier-grizl:avant-<nom> atelier-grizl:local
+cd atelier-grizl && docker compose up -d --force-recreate
 ```
+
+Si l'image d'avant n'est plus là, remplace les deux dernières lignes par `cd atelier-grizl && docker compose up -d --build` : l'image est reconstruite à partir du dossier d'avant.
 
 Pour une version plus ancienne, fais l'archive de son commit ou de l'étiquette de son lot (`lot-1`…) et suis « Mettre à jour ».
 
