@@ -56,7 +56,7 @@ tests/js/*.test.mjs      tests des modules de src/scene (node --test)
 deploy/                  Dockerfile, nginx.conf, DEPLOIEMENT.md
 docker-compose.yml       écoute sur 127.0.0.1:8088 (BIND_IP et PORT dans .env)
 tools/shoot.js           captures Playwright des planches et des pièces 3D des chapitres
-tools/scene-check.js     contrôle de la page d'accueil : captures, erreurs, débordement, triangles, ancre
+tools/scene-check.js     contrôle de la page d'accueil : captures, erreurs, débordement, triangles, ancre, Retour, modules absents
 tools/approximations-md.mjs  liste « Ce qui est approché » de docs/lots.md, générée depuis les META et GEO
 docs/                    règle des sources, suivi des lots, notes de recherche brutes
 ```
@@ -73,7 +73,8 @@ docs/                    règle des sources, suivi des lots, notes de recherche 
   Garde les guillemets du motif. Sous Node 24, `node --test tests/js/` échoue : le dossier seul n'est plus parcouru.
 - Contrôle visuel : `cd tools && npm ci` (Playwright 1.56.0, figé par `package-lock.json`), puis `npx playwright install chromium` la première fois. Chromium sans écran rend le WebGL avec `--use-gl=angle --use-angle=swiftshader` : les options sont déjà dans les scripts. Les captures vont dans `tools/shots*/`, ignoré par Git. Regarde chaque capture.
   - Pièces 3D des chapitres : `node shoot.js ../dist/site/index.html shots 420 light` (et `dark`).
-  - Page d'accueil : `node scene-check.js ../dist/site/index.html shots-accueil 420 900 light`. Le script sert la page lui-même sur 127.0.0.1, enregistre `scene-reel.png`, `scene-2d.png`, une capture par atelier ouvert et `rapport.json`. Il sort en erreur s'il voit une erreur, un défilement horizontal, plus de 500 000 triangles, ou si `#freins-plaquettes` ne s'ouvre pas dans la fiche. Passe-le à 420 en `light` et `dark`, à 360, en paysage 844 x 390, et à 420 avec `--disable-webgl` : le schéma 2D doit prendre le relais.
+  - Page d'accueil : `node scene-check.js ../dist/site/index.html shots-accueil 420 900 light`. Le script sert la page lui-même sur 127.0.0.1, enregistre `scene-reel.png`, `scene-2d.png`, une capture par atelier ouvert et `rapport.json`. Il sort en erreur s'il voit une erreur, un défilement horizontal, plus de 500 000 triangles, ou si `#freins-plaquettes` ne s'ouvre pas dans la fiche. Passe-le à 420 en `light` et `dark`, à 360, en paysage 844 x 390, et à 420 avec `--disable-webgl` : le schéma 2D doit prendre le relais. Passe-le aussi à 420 avec `--mouvement`, sans réduire les animations : vols de caméra, sortie des plaquettes, défilements doux.
+  - Le même script contrôle aussi, à chaque passage : la tête de fiche « D’origine » et « À monter » ; le chargement sur `#freins-plaquettes`, où le titre de l'atelier doit rester sur la ligne de l'ancre une fois la 3D montée (ancrage du défilement de Chromium coupé, three.js retardé comme sur un téléphone) ; le lien « 2.3 » de la purge, puis Retour et Suivant, adresse et entrée d'historique comprises ; et trois modules servis en 404 (`scene.js`, `pieces/roues.js`, `app.js`), où la page doit le dire, garder ses ateliers lisibles et ne jamais rester sur « Montage du vélo en 3D… ».
 
 ## Écrire une pièce 3D
 

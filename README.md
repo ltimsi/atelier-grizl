@@ -61,7 +61,7 @@ cd tools && npm ci && npx playwright install chromium   # une fois
 node scene-check.js ../dist/site/index.html shots-accueil 420 900 light
 ```
 
-`scene-check.js` sort en erreur s'il voit une erreur dans la page, un défilement horizontal, plus de 500 000 triangles, ou si l'atelier `#freins-plaquettes` ne s'ouvre pas dans la fiche. Le détail est dans [docs/PASSATION.md](docs/PASSATION.md).
+`scene-check.js` sort en erreur s'il voit une erreur dans la page, un défilement horizontal, plus de 500 000 triangles, un atelier qui ne s'ouvre pas dans la fiche, un lien entre ateliers ou un Retour qui ne rouvre pas le bon atelier, un atelier poussé vers le bas au chargement sur son ancre, ou une page bloquée quand un module de la scène manque. `--mouvement` le lance sans réduire les animations. Le détail est dans [docs/PASSATION.md](docs/PASSATION.md).
 
 ## Déployer
 
