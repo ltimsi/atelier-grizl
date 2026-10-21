@@ -20,21 +20,17 @@ import sys
 from html.parser import HTMLParser
 from pathlib import Path
 
+from gabarit import PUBLIES, carte_imports, donnees_zones, lire, lire_zones
+
 RACINE = Path(__file__).resolve().parent.parent
 SRC = RACINE / "src"
 DIST = RACINE / "dist"
-PUBLIES = ("validé", "en relecture")
-THREE_VERSION = "0.160.0"
-THREE_CDN = f"https://cdn.jsdelivr.net/npm/three@{THREE_VERSION}/"
+TITRE = "<title>Atelier Grizl</title>\n"  # 00-head n'a plus de <title> : le gabarit met celui de chaque page
 # Ateliers : les section.atelier des chapitres, que js/scene/app.js ouvre dans la fiche de leur zone.
 TYPES_ATELIER = ("comprendre", "entretenir", "regler", "remplacer")
 GESTES = (".a-dem", ".kit", "ol.steps")  # obligatoires, sauf pour « comprendre » qui n'en a aucun
 BLOCS = {".a-dem": (None, "a-dem"), ".kit": (None, "kit"), "ol.steps": ("ol", "steps"),
          "ul.media": ("ul", "media"), "p.a-video": ("p", "a-video")}
-
-
-def lire(nom):
-    return (SRC / "parts" / f"{nom}.html").read_text(encoding="utf-8")
 
 
 def badge(lot):
@@ -49,8 +45,9 @@ def construire_corps(config):
 
     nav = ['<nav class="chapnav" aria-label="Chapitres">', "  <ul>"]
     for lot in publies:
-        for ident, libelle in lot["nav"]:
-            nav.append(f'    <li><a href="#{ident}">{html.escape(libelle)}</a></li>')
+        if lot.get("categorie"):
+            categorie = lot["categorie"]
+            nav.append(f'    <li><a href="#{categorie["id"]}">{html.escape(categorie["menu"])}</a></li>')
     nav += ["  </ul>", "</nav>"]
 
     prochains = ""
@@ -87,28 +84,6 @@ def construire_corps(config):
             if f'data-model="{m}"' in corps and (SRC / "js" / "models" / f"m-{m}.js").exists():
                 modeles.append(m)
     return corps, modeles, publies
-
-
-def carte_imports(cible):
-    """Bloc <script type="importmap"> qui associe « three » et « three/addons/ » aux fichiers de three.js."""
-    if cible == "site":
-        # « ./ » est obligatoire : sans lui, le navigateur prend l'adresse pour un nom nu et ignore la ligne.
-        imports = {"three": "./vendor/three/three.module.min.js", "three/addons/": "./vendor/three/addons/"}
-    else:
-        imports = {"three": THREE_CDN + "build/three.module.min.js", "three/addons/": THREE_CDN + "examples/jsm/"}
-    return '<script type="importmap">\n' + json.dumps({"imports": imports}, indent=2) + "\n</script>"
-
-
-def lire_zones():
-    return json.loads((SRC / "scene" / "zones.json").read_text(encoding="utf-8"))
-
-
-def donnees_zones():
-    """Bloc <script type="application/json" id="zones-data"> : le contenu de src/scene/zones.json, lu par app.js."""
-    zones = lire_zones()
-    # « < » échappé : aucune chaîne du JSON ne peut fermer la balise <script>.
-    texte = json.dumps(zones, ensure_ascii=False, indent=2).replace("<", "\\u003c")
-    return f'<script type="application/json" id="zones-data">\n{texte}\n</script>'
 
 
 def pied(config, modeles, cible):
@@ -202,7 +177,7 @@ def ecrire_site(config, corps, modeles):
     page = (
         '<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
-        + lire("00-head") + "</head>\n<body>\n" + corps + pied(config, modeles, "site") + "</body>\n</html>\n"
+        + TITRE + lire("00-head") + "</head>\n<body>\n" + corps + pied(config, modeles, "site") + "</body>\n</html>\n"
     )
     (sortie / "index.html").write_text(page, encoding="utf-8")
     shutil.copy(SRC / "js" / "viewer.js", sortie / "js" / "viewer.js")
@@ -220,7 +195,7 @@ def ecrire_artifact(config, corps, modeles):
     if sortie.exists():
         shutil.rmtree(sortie)
     sortie.mkdir(parents=True)
-    page = lire("00-head") + corps + pied(config, modeles, "artifact")
+    page = TITRE + lire("00-head") + corps + pied(config, modeles, "artifact")
     (sortie / "index.html").write_text(page, encoding="utf-8")
     shutil.copy(SRC / "js" / "viewer.js", sortie / "viewer.js")
     for m in modeles:

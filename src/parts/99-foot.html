@@ -10,55 +10,19 @@
   'use strict';
   /* Garde-fou de la page d'accueil. js/scene/app.js pose data-app sur <html> dès qu'il démarre. Un module ES non
      asynchrone s'exécute avant DOMContentLoaded : s'il n'a pas démarré à ce moment (fichier absent, refusé ou en
-     erreur, navigateur sans modules), la page le dit, retire la scène et la fiche inertes, et lance la visionneuse des
-     chapitres, qui affiche son propre message sans three.js. Les ateliers restent lisibles dans leur chapitre. */
+     erreur, navigateur sans modules), la page le dit, retire la scène inerte et lance la visionneuse des chapitres,
+     qui affiche son propre message sans three.js. Les ateliers restent accessibles par le menu et par « Où intervenir ». */
   document.addEventListener('DOMContentLoaded', function () {
     var scene = document.getElementById('scene');
     if (!scene || document.documentElement.hasAttribute('data-app')) return;
     var alerte = document.getElementById('scene-alerte'), statut = document.getElementById('scene-statut');
-    var fiche = document.getElementById('fiche'), puces = document.getElementById('chips');
     scene.classList.add('sans-rendu');
     if (statut) statut.hidden = true;
-    if (fiche) fiche.hidden = true;
-    if (puces) puces.hidden = true;
     if (alerte) {
-      alerte.textContent = 'La page n’a pas pu se charger en entier. Les ateliers restent lisibles plus bas, dans leur chapitre.';
+      alerte.textContent = 'La page n’a pas pu se charger en entier. Les ateliers restent accessibles par le menu et par « Où intervenir ».';
       alerte.hidden = false;
     }
     try { if (window.AtelierViewer) window.AtelierViewer.start(); } catch (e) { if (window.console) console.warn(e); }
-  });
-
-  /* Chapitre courant dans la barre de navigation */
-  var links = Array.prototype.slice.call(document.querySelectorAll('.chapnav a'));
-  var byId = {}; links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
-  var bar = document.querySelector('.chapnav ul');
-  function setCurrent(id) {
-    links.forEach(function (a) { a.removeAttribute('aria-current'); });
-    var a = byId[id]; if (!a) return;
-    a.setAttribute('aria-current', 'true');
-    if (bar) { var x = a.offsetLeft - 16; if (x < bar.scrollLeft || a.offsetLeft + a.offsetWidth > bar.scrollLeft + bar.clientWidth) bar.scrollTo({ left: Math.max(0, x), behavior: 'auto' }); }
-  }
-  if ('IntersectionObserver' in window) {
-    var io = new IntersectionObserver(function (ents) {
-      ents.forEach(function (e) { if (e.isIntersecting) setCurrent(e.target.id); });
-    }, { rootMargin: '-30% 0px -60% 0px' });
-    document.querySelectorAll('section.chapter[id]').forEach(function (s) { io.observe(s); });
-  }
-
-  /* Listes à cocher : mémorisées dans ce navigateur */
-  var KEY = 'atelier-grizl:checks';
-  var state = {};
-  try { state = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { state = {}; }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
-  document.querySelectorAll('ul.check input[type="checkbox"]').forEach(function (cb) {
-    if (cb.id && state[cb.id]) cb.checked = true;
-    cb.addEventListener('change', function () { if (!cb.id) return; if (cb.checked) state[cb.id] = 1; else delete state[cb.id]; save(); });
-  });
-  document.querySelectorAll('[data-reset]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var ul = document.querySelector('ul.check[data-key="' + b.getAttribute('data-reset') + '"]'); if (!ul) return;
-      ul.querySelectorAll('input[type="checkbox"]').forEach(function (cb) { cb.checked = false; delete state[cb.id]; }); save();
-    });
   });
 })();
 </script>

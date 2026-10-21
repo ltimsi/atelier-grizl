@@ -6,55 +6,78 @@
       "titre": "Le vélo en 3D",
       "statut": "en relecture",
       "parts": [],
-      "nav": [],
       "modeles": []
     },
     {
       "lot": 1,
       "titre": "Freins",
       "statut": "en relecture",
+      "categorie": {"id": "freins", "menu": "Freins"},
       "parts": ["20-freins"],
-      "nav": [["freins", "2 · Freins"]],
       "modeles": ["rotor", "caliper", "bleed"]
     },
     {
       "lot": 2,
       "titre": "Avant de commencer et montage à la livraison",
       "statut": "à faire",
+      "categorie": {"id": "montage", "menu": "Montage à la livraison"},
+      "prevu": [
+        "Monter le vélo sorti du carton : cintre, roue avant, selle, contrôles avant la première sortie.",
+        "Monter les pédales PD-ME700 et les cales SPD.",
+        "Reporter ta position sur le Grizl : la forme de cet atelier sera décidée au lot 2."
+      ],
       "parts": ["10-avant", "11-montage"],
-      "nav": [["avant", "0 · Avant de commencer"], ["montage", "1 · Montage"]],
       "modeles": ["torque", "cockpit", "axle", "pedal"]
     },
     {
       "lot": 3,
       "titre": "Tubeless et crevaisons",
       "statut": "à faire",
+      "categorie": {"id": "tubeless", "menu": "Pneus et tubeless"},
+      "prevu": [
+        "Passer les pneus en tubeless : valves, liquide, pompe à réservoir.",
+        "Crevaisons."
+      ],
       "parts": ["30-tubeless"],
-      "nav": [["tubeless", "3 · Tubeless"]],
       "modeles": ["rim", "plug"]
     },
     {
       "lot": 4,
       "titre": "Transmission",
       "statut": "à faire",
+      "categorie": {"id": "transmission", "menu": "Transmission"},
+      "prevu": [
+        "Chaîne : usure, nettoyage, lubrification.",
+        "Réglage du dérailleur.",
+        "Kit montée : plateau GRX de 38 dents, cassette SLX 10-51, dérailleur RD-RX822-SGS, chaîne CN-M7100."
+      ],
       "parts": ["40-transmission"],
-      "nav": [["transmission", "4 · Transmission"]],
       "modeles": ["chain", "cassette", "derailleur", "crank"]
     },
     {
       "lot": 5,
       "titre": "Entretien, accessoires et dépannage",
       "statut": "à faire",
+      "categorie": {"id": "accessoires", "menu": "Accessoires des trajets"},
+      "prevu": [
+        "Porte-bagages Ortlieb Quick-Rack L.",
+        "Garde-boue Canyon DEFEND.",
+        "Éclairage Knog Blinder et sonnette Knog Oi Luxe.",
+        "Porte-bidons et support d'antivol."
+      ],
       "parts": ["50-entretien", "60-accessoires", "70-depannage"],
-      "nav": [["entretien", "5 · Entretien"], ["accessoires", "6 · Accessoires"], ["depannage", "7 · Dépannage"]],
       "modeles": ["rack"]
     },
     {
       "lot": 6,
       "titre": "Aide-mémoire des couples et sources",
       "statut": "à faire",
+      "categorie": {"id": "revision", "menu": "Révision et couples"},
+      "prevu": [
+        "Ma révision : ce qu'il faut contrôler et quand, avec uniquement des intervalles publiés.",
+        "Aide-mémoire des couples des lots validés."
+      ],
       "parts": ["80-couples", "90-sources"],
-      "nav": [["couples", "Couples de serrage"], ["sources", "Sources"]],
       "modeles": []
     }
   ]
