@@ -14,10 +14,14 @@
 // Une pastille ou le bouton d'une carte (button.zone-btn) appelle choisirZone : la pastille et la carte deviennent
 // actives, la 3D surligne la zone et la vise, le schéma 2D la cadre, et la variante de la zone s'affiche dans
 // l'image. Les liens des cartes mènent aux pages des ateliers, sans JavaScript : sans app.js, ils marchent encore.
+// Défilement après le choix (montrerChoix) : sur deux colonnes, la carte vient à l'écran si elle n'y est pas. Sur une
+// seule, la scène est au-dessus des cartes : une pastille ne fait pas défiler la page, pour garder le vélo à l'écran,
+// et le bouton d'une carte ramène l'image.
 //
 // Sans la 3D, la liste « Ce qui est approché » vient des META des pièces : scene.js se charge sans three.js.
 //
-// Importé sous Node (tests), le module ne démarre pas : seuls ses calculs servent.
+// Importé sous Node sans document, le module ne démarre pas : seuls ses calculs servent. tests/js/app.test.mjs le
+// démarre aussi sur une page factice pour suivre choisirZone et les défilements.
 // Les modules d'exemple de three.js que demande creerScene, avec le nom qu'ils exportent.
 const ADDONS = Object.freeze([
   ['OrbitControls', 'three/addons/controls/OrbitControls.js'],
@@ -59,6 +63,10 @@ export function approximationsSansScene({ PIECES, listerApproximations }) {
 }
 
 const reduit = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+// Une seule colonne : la requête de la règle « Une seule colonne sous 1100 px » de 00-head.html, à l'identique
+// (tests/js/app.test.mjs le vérifie).
+const UNE_COLONNE = '(max-width:1100px)';
+const uneColonne = () => globalThis.matchMedia?.(UNE_COLONNE).matches === true;
 
 // ---- État de la page, posé par demarrer ----
 let ui = null;
@@ -83,8 +91,8 @@ const zoneDe = id => ui.zones.find(z => z.id === id) ?? null;
 
 /**
  * Choisit une zone : sa pastille et sa carte de « Où intervenir » deviennent actives, la 3D la surligne et la vise,
- * le schéma 2D la surligne et la cadre, et sa variante s'affiche dans l'image. La carte défile dans la vue si elle
- * n'y est pas en entier.
+ * le schéma 2D la surligne et la cadre, et sa variante s'affiche dans l'image. Ne fait pas défiler la page : les
+ * pastilles et les boutons des cartes s'en chargent (montrerChoix).
  * @param {string} id L'id d'une zone de zones.json.
  * @returns {boolean} false si la page n'a pas de scène ou si la zone est inconnue.
  */
@@ -97,12 +105,9 @@ export function choisirZone(id) {
     ui.pins[i].classList.toggle('on', on);
     ui.pins[i].setAttribute('aria-pressed', String(on));
   });
-  let active = null;
   for (const carte of ui.cartes) {
-    if (carte.dataset.zone === id) {
-      carte.setAttribute('aria-current', 'true');
-      active = carte;
-    } else carte.removeAttribute('aria-current');
+    if (carte.dataset.zone === id) carte.setAttribute('aria-current', 'true');
+    else carte.removeAttribute('aria-current');
   }
   for (const b of ui.boutons) b.setAttribute('aria-pressed', String(b.dataset.zone === id));
   ui.schema?.surligner(id);
@@ -112,17 +117,28 @@ export function choisirZone(id) {
     etat.scene.viser(id);
   }
   rendreVariante();
-  if (active) montrerCarte(active);
   return true;
 }
 
-// Fait défiler la page jusqu'à la carte, seulement si elle n'est pas en entier entre la barre du haut et le bas de
-// l'écran. scroll-padding-top (00-head.html) la garde sous la barre.
-function montrerCarte(carte) {
-  const r = carte.getBoundingClientRect();
+// Choisit la zone, puis fait défiler la page. Deux colonnes : la carte de la zone vient à l'écran si elle n'y est pas
+// en entier, après une pastille comme après un bouton. Une seule colonne : la scène est au-dessus des cartes ; une
+// pastille ne fait pas défiler la page, pour garder le vélo à l'écran, et le bouton d'une carte (`depuisCarte`)
+// ramène l'image, son haut sous la barre.
+function montrerChoix(id, depuisCarte) {
+  if (!choisirZone(id)) return;
+  if (!uneColonne()) montrer(ui.cartes.find(c => c.dataset.zone === id), 'nearest');
+  else if (depuisCarte) montrer(ui.stage, 'start');
+}
+
+// Fait défiler la page jusqu'à l'élément, seulement s'il n'est pas en entier entre la barre du haut et le bas de
+// l'écran. scroll-padding-top (00-head.html) le garde sous la barre. Doux, sauf si l'appareil demande moins de
+// mouvement.
+function montrer(e, bloc) {
+  if (!e) return;
+  const r = e.getBoundingClientRect();
   const haut = document.querySelector('.top')?.getBoundingClientRect().bottom ?? 0;
   if (r.top >= haut && r.bottom <= window.innerHeight) return;
-  carte.scrollIntoView({ block: 'nearest', behavior: reduit() ? 'auto' : 'smooth' });
+  e.scrollIntoView({ block: bloc, behavior: reduit() ? 'auto' : 'smooth' });
 }
 
 // Les boutons de la variante, dans l'image : seulement en 3D, seulement si la zone en a une dans zones.json.
@@ -370,13 +386,13 @@ function demarrer() {
     pin.hidden = true;
     pin.setAttribute('aria-label', z.nom);
     pin.setAttribute('aria-pressed', 'false');
-    pin.addEventListener('click', () => choisirZone(z.id));
+    pin.addEventListener('click', () => montrerChoix(z.id, false));
     $('#pins').append(pin);
     ui.pins.push(pin);
   });
   for (const b of ui.boutons) {
     b.setAttribute('aria-pressed', 'false');
-    b.addEventListener('click', () => choisirZone(b.dataset.zone));
+    b.addEventListener('click', () => montrerChoix(b.dataset.zone, true));
   }
 
   ui.onglets.forEach(b => b.addEventListener('click', () => choisirMode(b.dataset.mode)));

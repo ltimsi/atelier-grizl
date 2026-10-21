@@ -399,8 +399,9 @@ class TestPages(Site):
                          [("header", ["page-h"]), ("section", ["accueil-grille"]), ("section", ["accueil-bloc"]),
                           ("div", ["intro"]), ("section", ["accueil-bloc"])])
         self.assertEqual(un(blocs[0], "h1").texte(), "Ton Grizl CF 7, tel qu’il sort du carton")
+        # Sans « à droite » : sous 1100 px, « Où intervenir » est sous la scène.
         self.assertEqual(un(blocs[0], "p.lead").texte(), "Fais tourner le vélo, touche une pastille, ou choisis une "
-                         "zone à droite pour ouvrir ses ateliers.")
+                         "zone pour ouvrir ses ateliers.")
         grille = blocs[1]
         self.assertEqual([(e.tag, e.get("id") or e.classes()) for e in elements(grille)],
                          [("figure", "scene"), ("section", ["ou-intervenir"]), ("dialog", "approche-liste")])
