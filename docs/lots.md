@@ -10,14 +10,22 @@ Pour chaque lot : relecture du texte, des planches et des pièces 3D par Lamine,
 - Sans WebGL, la page passe au schéma 2D et le dit.
 - Cotes : celles de la fiche Canyon et des documents Shimano, Continental et DT Swiss enregistrés dans `src/scene/sources.js`. Ce qui n'est pas publié est dessiné au mieux et listé plus bas.
 - Contrôle visuel du 20/10/2026 avec `tools/scene-check.js` : 420 px en clair et en sombre, 360 px, 844 x 390 en paysage, 420 px sans WebGL. Aucune erreur, pas de défilement horizontal, l'atelier `#freins-plaquettes` s'ouvre dans la fiche. Au plus 240 286 triangles par image, pour un budget de 500 000.
-- Comparaison avec la photo officielle du coloris (`canyon-photo-4553-fv`), vélo vu de profil et calé sur les axes des roues. Le tube oblique et le tube supérieur ont la même largeur sur les deux images, à quelques pixels près. Écarts visibles, laissés tels quels :
-  - cocottes plus hautes que sur la photo : la main est posée au point publié par Canyon (stack et reach efficaces), dont la définition reste à vérifier ;
-  - forme des cocottes, des leviers, de la manivelle, de la chape du dérailleur et de la couronne de fourche : formes approchées ;
-  - pédalier et chaîne : position choisie pour la lisibilité ;
-  - pas de logos ni de marquages sur le cadre, les jantes et les pneus ;
-  - teinte et motif de la peinture : ceux de la maquette, ils changent avec l'éclairage du studio ;
+- Comparaison avec la photo officielle du coloris (`canyon-photo-4553-fv`), vélo vu de profil et calé sur les axes des roues. Le tube oblique et le tube supérieur ont la même largeur sur les deux images, à quelques pixels près. Écarts visibles, tous laissés tels quels sauf la teinte de la cassette et de la chaîne :
+  - cocottes plus hautes et un peu plus en arrière que sur la photo : la main est posée au point publié par Canyon (stack et reach efficaces), dont la définition reste à vérifier ;
+  - cocottes et leviers : cocotte plus ronde et corne plus basse, deux lames fines et droites au lieu d'un levier large et courbé ; formes approchées ;
+  - manivelle : bras droit en barre, au lieu du bras GRX sculpté avec son araignée ; forme approchée ;
+  - pédalier : position choisie pour la lisibilité, plus inclinée que sur la photo ;
+  - chaîne et dérailleur : la chaîne est dessinée sur un pignon moyen choisi pour la lisibilité, la photo la montre sur un petit pignon ; la chape du dérailleur penche donc autrement, et elle est pleine au lieu d'ajourée ; formes approchées ;
+  - cassette et chaîne : leur teinte suit maintenant la photo, un acier argenté un peu chaud, au lieu d'un blanc presque uniforme (réglage du 21/10/2026). De profil, les pignons se fondent encore en un seul disque, alors que la photo les montre bien séparés : leurs faces sont parallèles et le dessin n'a pas les ombres entre les pignons. De même, les maillons de la chaîne ne se distinguent pas de loin ;
+  - peinture : plus rose et marbrée dans la 3D, plus lie-de-vin avec un motif en traits sur la photo ; c'est la peinture de la maquette validée, et sa teinte change avec l'éclairage du studio ;
+  - pas de logos ni de marquages : « CANYON » et « GRIZL » sur le cadre, DT Swiss sur les jantes, Continental et Terra Adventure sur les pneus ;
   - durite avant : trajet approché ; de profil, côté transmission, elle dépasse derrière le fourreau, alors qu'on ne la voit pas sur la photo ;
-  - pédale : la photo en montre une, la fiche dit « Pédales : Non inclus » ; la 3D suit la fiche.
+  - couronne de fourche : un ressaut net sous la douille dans la 3D, une jonction lisse sur la photo ; forme approchée ;
+  - valve : couleur laiton sur la photo, acier dans la 3D ; elle est trop petite pour se voir à la largeur d'un téléphone ;
+  - pneus : un peu plus grands sur la photo, d'un écart du même ordre que l'incertitude du relevé ; le rayon extérieur du pneu monté reste approché ;
+  - pédale : la photo en montre une, la fiche dit « Pédales : Non inclus » ; la 3D suit la fiche ;
+  - selle : galbe plus marqué sur la photo, avec un bec qui plonge ; forme approchée ;
+  - haubans : dans la 3D, ils rejoignent le tube de selle un peu sous le tube supérieur ; sur la photo, ils arrivent à sa hauteur (écart relevé le 21/10/2026).
 - Points ouverts : les « À vérifier à la livraison » de la liste ci-dessous, et les contradictions relevées dans [composants-origine.md](recherche/composants-origine.md).
 
 ### Ce qui est approché
@@ -38,7 +46,7 @@ Formes approchées :
 
 - Profils et diamètres des tubes du cadre : non publiés, formes approchées d’après la photo officielle de profil.
 - Raccords entre les tubes : formes approchées.
-- Haubans : ils rejoignent le tube de selle un peu sous le tube supérieur, comme sur la photo officielle. La hauteur exacte n’est pas publiée.
+- Haubans : ils rejoignent le tube de selle un peu sous le tube supérieur. Sur la photo officielle, ils arrivent à la hauteur du tube supérieur. La hauteur exacte n’est pas publiée.
 - Fourche : forme des fourreaux et de la couronne approchée d’après les photos officielles.
 - Déport de la fourche : non publié. Il découle ici des autres cotes de la géométrie.
 - Pattes du cadre, de la fourche et patte de dérailleur : formes approchées. Seul l’écartement des axes est publié.

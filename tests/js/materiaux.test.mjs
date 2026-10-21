@@ -173,3 +173,18 @@ test('creerMateriaux : chaque appel crée des matières neuves', () => {
   assert.notEqual(a.reel.paint, b.reel.paint);
   assert.notEqual(a.simple.paint, b.simple.paint);
 });
+
+test('creerMateriaux : cassette et chaîne en acier argenté un peu chaud, pas blanc, comme sur la photo officielle', () => {
+  // Sur canyon-photo-4553-fv, la cassette et la chaîne sont d'un acier argenté tirant sur le chaud. Le rendu les
+  // donnait presque blanches.
+  const { cassette, chain } = creerMateriaux(THREE, {}).reel;
+  for (const [nom, m] of [['cassette', cassette], ['chaîne', chain]]) {
+    assert.equal(m.metalness, 1, `${nom} : métal`);
+    const hsl = m.color.getHSL({}, THREE.SRGBColorSpace);
+    assert.ok(hsl.l < 0.75, `${nom} : trop clair (${hsl.l})`);
+    const rgb = m.color.getRGB({}, THREE.SRGBColorSpace);
+    assert.ok(rgb.r > rgb.b, `${nom} : teinte froide`);
+  }
+  assert.ok(chain.color.getHSL({}, THREE.SRGBColorSpace).l < cassette.color.getHSL({}, THREE.SRGBColorSpace).l,
+    'la chaîne est plus sombre que la cassette');
+});

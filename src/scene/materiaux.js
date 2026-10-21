@@ -161,8 +161,11 @@ export function creerMateriaux(THREE, { texturePeinture, textureRuban, textureBr
     pad: phy(0x8a8c90, .3, 1),
     padFace: phy(0x3a3532, .9, .2),
     hose: phy(0x0c0c0d, .35, 0, { clearcoat: .5 }),
-    chain: phy(0x9fa3a8, .26, 1),
-    cassette: phy(0xc4c7cb, .2, 1),
+    // Chaîne et cassette : teinte, rugosité et métal réglés d'après la photo officielle de profil
+    // (canyon-photo-4553-fv) : un acier argenté un peu chaud, la chaîne plus sombre que la cassette. Leur forme
+    // n'a pas changé : de profil, les pignons, tous parallèles, se fondent encore en un disque.
+    chain: phy(0x8a857b, .3, 1),
+    cassette: phy(0xc9b9a0, .14, 1),
     cogSpider: phy(0x17181a, .32, .8),
     ring: phy(0x141517, .3, .8),
     crank: phy(0x121315, .26, .78, { clearcoat: .3 }),

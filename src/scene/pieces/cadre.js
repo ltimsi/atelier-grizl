@@ -37,8 +37,8 @@ export const META = Object.freeze({
   approche: Object.freeze([
     'Profils et diamètres des tubes du cadre : non publiés, formes approchées d’après la photo officielle de profil.',
     'Raccords entre les tubes : formes approchées.',
-    'Haubans : ils rejoignent le tube de selle un peu sous le tube supérieur, comme sur la photo officielle. ' +
-      'La hauteur exacte n’est pas publiée.',
+    'Haubans : ils rejoignent le tube de selle un peu sous le tube supérieur. Sur la photo officielle, ils arrivent ' +
+      'à la hauteur du tube supérieur. La hauteur exacte n’est pas publiée.',
     'Fourche : forme des fourreaux et de la couronne approchée d’après les photos officielles.',
     'Déport de la fourche : non publié. Il découle ici des autres cotes de la géométrie.',
     'Pattes du cadre, de la fourche et patte de dérailleur : formes approchées. Seul l’écartement des axes est publié.',
