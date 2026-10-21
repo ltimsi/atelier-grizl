@@ -12,9 +12,12 @@
 //   1. toutes les pages, chaque index.html du dossier hors js/ et vendor/ : aucune erreur dans la console ni requête
 //      en échec, pas de défilement horizontal (scrollWidth <= innerWidth), une capture <page>.png de l'écran à
 //      l'arrivée, et la page entière <page>-page.png pour l'accueil, freins/ et freins/plaquettes/. Sous 900 px, #side
-//      est hors de l'écran tant que #menu-btn n'est pas cliqué ; le bouton l'ouvre, Échap le referme (capture
-//      menu-ouvert.png sur freins/plaquettes/). Sans JavaScript, le menu est en tête de page et le bouton n'est pas
-//      affiché. Les pages « Ce qui est approché » et « Sources » doivent se remplir ;
+//      est hors de l'écran tant que #menu-btn n'est pas cliqué ; le bouton l'ouvre et rend le reste de la page (.main)
+//      inerte, Échap le referme et lève l'inertie (capture menu-ouvert.png sur freins/plaquettes/, où Tab, menu
+//      ouvert, ne doit jamais sortir du menu). Sans JavaScript, le menu est en tête de page et le bouton n'est pas
+//      affiché. Les pages « Ce qui est approché » et « Sources » doivent se remplir. Chaque pièce 3D (figure.v3d) est
+//      ouverte par son onglet et doit se dessiner (sans WebGL : afficher son message). Puis la page est tout dépliée
+//      (chaque <details> ouvert, chaque figure des onglets montrée) et ne doit toujours pas défiler en largeur ;
 //   2. accueil : la scène est dessinée (sans WebGL : le schéma 2D, et la page le dit). L'aide de la scène a un fond qui
 //      ne passe sur aucune pastille, en 3D comme en 2D. Un clic sur la pastille 2 rend active (aria-current) la carte
 //      « Étrier et plaquettes » de « Où intervenir », puis la pastille 3 celle des manettes, puis le bouton de la carte
@@ -33,7 +36,9 @@
 //      parent ne le rogne). La pièce 3D (figure.v3d canvas, derrière l'onglet « Pièce en 3D ») est dessinée : la
 //      visionneuse a fait au moins une image, et une image refaite sur le moment couvre au moins 2 % du canevas. Sans
 //      WebGL, elle affiche son message. « Tout déplier » ouvre les 10 étapes. Le mode pas à pas s'ouvre sur « 1 / 10 »,
-//      la flèche droite passe à « 2 / 10 », Échap le ferme et rend le focus à son bouton ;
+//      la flèche droite passe à « 2 / 10 », Échap le ferme et rend le focus à son bouton. Sur une page neuve, le
+//      premier Tab montre « Aller au contenu » à l'écran, Entrée mène à #contenu et le Tab suivant reste dans le
+//      contenu (capture evitement.png) ;
 //   6. recherche, depuis freins/plaquettes/ : « TL-FC36 » donne au moins un résultat, et le premier mène à
 //      freins/disques/ ;
 //   7. modules absents, chacun servi en 404 dans sa propre page d'accueil :
@@ -44,7 +49,8 @@
 //   8. sans JavaScript (--sans-js) : sur freins/plaquettes/, cliquer le summary de l'étape 1 l'ouvre, aucun contenu de
 //      la page (main) n'est caché par un attribut hidden, les deux figures sont à la suite, et ni la barre des étapes,
 //      ni la recherche, ni le bouton Menu ne s'affichent, puisqu'ils ne feraient rien. Sur freins/, pas de filtres et
-//      toutes les cartes.
+//      toutes les cartes. À l'accueil, ni onglets de rendu, ni aide, ni boutons de la scène, et la scène dit « Le vélo
+//      en 3D a besoin de JavaScript. » au lieu de « Montage du vélo en 3D… » ; les liens de « Où intervenir » restent.
 // Captures : une par page, et celles des passes, dans <sortie>.
 //
 // <sortie> reçoit aussi rapport.json : { erreurs, debordement, debordements, triangles, ancienFavori, webgl, mouvement,
@@ -60,13 +66,17 @@
 //     relevé (null pour une passe qui n'a pas tourné) ;
 //   avertissements : avertissements de la console, sans doublon (le repli 2D en écrit un, voulu) ;
 //   attendus : ce que le contrôle provoque lui-même : erreurs du module servi en 404, et requêtes abandonnées
-//     (net::ERR_ABORTED) parce que la page est partie ailleurs, comme la racine qui redirige une ancienne ancre.
+//     (net::ERR_ABORTED) par la racine ouverte sur une ancienne ancre, qui part aussitôt ailleurs. Ailleurs, une
+//     requête abandonnée est une erreur.
 // Code de sortie 1 si erreurs n'est pas vide, si debordement est vrai, si triangles dépasse 500 000 ou si, avec
 // JavaScript, ancienFavori n'est pas vrai ; 2 si les arguments sont faux ; 0 sinon.
 //
 // Le dossier est servi en HTTP sur 127.0.0.1, sur un port libre, comme nginx sur le serveur : une adresse en
-// « dossier/ » sert dossier/index.html, et « dossier » sans barre finale renvoie vers « dossier/ ». Chromium refuse les
-// modules ES et les cartes d'imports en file://. Le serveur s'arrête à la fin, même en cas d'échec.
+// « dossier/ » sert dossier/index.html, et « dossier » sans barre finale renvoie vers « dossier/ ». Chaque réponse porte
+// la politique de contenu (Content-Security-Policy) de deploy/nginx.conf, relue au démarrage : une violation devient
+// une erreur de console, comme en ligne. Une adresse qui sort de la racine est refusée (403), une adresse mal encodée
+// ou qui contient un octet nul aussi (400). Chromium refuse les modules ES et les cartes d'imports en file://. Le
+// serveur s'arrête à la fin, même en cas d'échec.
 const { chromium } = require('playwright');
 const path = require('path'); const fs = require('fs'); const http = require('http');
 
@@ -99,6 +109,12 @@ const ANCIENNES_ANCRES = [
 const FAVORI = 'index.html#freins-plaquettes';
 const TITRE_ATELIER = 'Changer les plaquettes';
 const MODULES_ABSENTS = [['scene', 'js/scene/scene.js'], ['roues', 'js/scene/pieces/roues.js'], ['app', 'js/scene/app.js']];
+const STATUT_SANS_JS = 'Le vélo en 3D a besoin de JavaScript.'; // la scène de l'accueil sans JavaScript (05-top.html)
+// La politique de contenu que nginx envoie en ligne, lue dans deploy/nginx.conf ; null si elle n'y est plus.
+const CSP = (() => {
+  const conf = fs.readFileSync(path.join(__dirname, '..', 'deploy', 'nginx.conf'), 'utf8');
+  return conf.match(/add_header\s+Content-Security-Policy\s+"([^"]+)"/)?.[1] ?? null;
+})();
 
 function lireArguments(argv) {
   const drapeaux = argv.filter(a => a.startsWith('--'));
@@ -133,15 +149,21 @@ const nomDe = rel => (rel === '' ? 'accueil' : rel.replace(/\/$/, '').replace(/\
 
 function servir(racine) {
   return new Promise(resolve => {
+    const securite = CSP ? { 'Content-Security-Policy': CSP } : {};
     const srv = http.createServer((req, res) => {
       const fin = (code, entetes = {}) => {
-        res.writeHead(code, entetes);
+        res.writeHead(code, { ...securite, ...entetes });
         res.end();
       };
       let rel;
       try {
         rel = decodeURIComponent(new URL(req.url, 'http://127.0.0.1').pathname);
       } catch {
+        fin(400);
+        return;
+      }
+      // Un octet nul ferait lever fs.stat hors de son rappel, et tomber le serveur.
+      if (rel.includes('\0')) {
         fin(400);
         return;
       }
@@ -166,7 +188,7 @@ function servir(racine) {
             return;
           }
           res.writeHead(200, {
-            'Content-Type': TYPES[path.extname(fichier)] || 'application/octet-stream', 'Cache-Control': 'no-cache',
+            ...securite, 'Content-Type': TYPES[path.extname(fichier)] || 'application/octet-stream', 'Cache-Control': 'no-cache',
           });
           res.end(buf);
         });
@@ -199,6 +221,7 @@ async function controler(opts) {
 
   const pages = pagesDu(racine);
   for (const p of [ACCUEIL, CATEGORIE, ATELIER, DISQUES]) controle(pages.includes(p), `page absente : ${p || 'accueil'}`);
+  controle(CSP, 'deploy/nginx.conf : pas de Content-Security-Policy à envoyer avec les pages');
   const srv = await servir(racine);
   const base = `http://127.0.0.1:${srv.address().port}/`;
   let browser = null;
@@ -221,7 +244,8 @@ async function controler(opts) {
   // Ouvre `adresse` (relative à la racine) dans un contexte neuf et attend qu'elle soit prête.
   // `absent` : chemin servi en 404, dont les erreurs sont attendues. `arrivee` : la page part ailleurs dès son
   // chargement (ancienne ancre) ; on attend l'adresse qui satisfait ce prédicat, puis le chargement de cette page.
-  // `image` : attendre la première image 3D de l'accueil.
+  // Seule une page ouverte avec `arrivee` a le droit d'abandonner des requêtes (net::ERR_ABORTED) : celles de la racine
+  // qu'elle quitte aussitôt. `image` : attendre la première image 3D de l'accueil.
   async function ouvrir(adresse, { absent = null, attente = 180000, arrivee = null, image = true } = {}) {
     const ctx = await browser.newContext({
       viewport: { width: largeur, height: hauteur }, deviceScaleFactor: 2, colorScheme: theme,
@@ -242,7 +266,7 @@ async function controler(opts) {
     page.on('requestfailed', r => {
       const raison = r.failure()?.errorText ?? '';
       const t = `${ici(page)} : requête échouée : ${r.url()} (${raison})`;
-      if (duAbsent(r.url()) || raison === 'net::ERR_ABORTED') rapport.attendus.push(t);
+      if (duAbsent(r.url()) || (arrivee && raison === 'net::ERR_ABORTED')) rapport.attendus.push(t);
       else erreur(t);
     });
     page.on('response', r => {
@@ -341,15 +365,18 @@ async function controler(opts) {
   }
 
   // Sous 900 px : #side hors de l'écran (et hors d'atteinte du clavier) tant que #menu-btn n'est pas cliqué ; le
-  // bouton l'ouvre, Échap le referme. Sans JavaScript : le menu en tête de page, sans bouton.
-  async function controlerMenu(page, ou, nomCapture) {
+  // bouton l'ouvre et rend .main inerte (le tiroir est modal), Échap le referme et lève l'inertie. Avec `tab`, Tab est
+  // pressé, menu ouvert, une fois de plus qu'il n'y a de liens dans le menu : le focus ne doit jamais aller ailleurs
+  // dans .app (ni dans .main, ni sur le lien d'évitement).
+  // Sans JavaScript : le menu en tête de page, sans bouton.
+  async function controlerMenu(page, ou, nomCapture, tab = false) {
     const lire = () => page.evaluate(() => {
       const s = document.getElementById('side'), b = document.getElementById('menu-btn');
       const r = s ? s.getBoundingClientRect() : null;
       return s ? {
         gauche: Math.round(r.left), droite: Math.round(r.right), visibilite: getComputedStyle(s).visibility,
         bouton: Boolean(b) && b.getClientRects().length > 0, ouvert: b ? b.getAttribute('aria-expanded') : null,
-        ecran: window.innerWidth,
+        ecran: window.innerWidth, inerte: Boolean(document.querySelector('.main')?.inert),
       } : null;
     });
     const horsEcran = m => m.droite <= 0 && m.visibilite === 'hidden';
@@ -362,18 +389,79 @@ async function controler(opts) {
     }
     controle(avant.bouton, `${ou} : pas de bouton Menu sous 900 px`);
     controle(horsEcran(avant), `${ou} : le menu est à l’écran avant le clic sur Menu ${JSON.stringify(avant)}`);
+    controle(!avant.inerte, `${ou} : la page est inerte avant le clic sur Menu`);
     await page.click('#menu-btn');
     await pause(PAUSE_MENU);
     const ouvert = await lire();
     controle(ouvert.gauche >= 0 && ouvert.droite > 0 && ouvert.droite <= ouvert.ecran &&
       ouvert.visibilite === 'visible' && ouvert.ouvert === 'true', `${ou} : Menu n’ouvre pas le menu ${JSON.stringify(ouvert)}`);
+    controle(ouvert.inerte, `${ou} : menu ouvert, le reste de la page (.main) n’est pas inerte`);
     await relever(page, `${ou}, menu ouvert`);
     if (nomCapture) await capturer(page, nomCapture);
+    if (tab) {
+      const liens = await page.$$eval('#side a', as => as.length);
+      ouvert.tab = [];
+      for (let i = 0; i <= liens; i++) {
+        await page.keyboard.press('Tab');
+        ouvert.tab.push(await page.evaluate(() => {
+          const a = document.activeElement;
+          return a?.closest('#side') ? 'menu' : a?.closest('.app') ? 'page' : (a?.tagName.toLowerCase() ?? 'rien');
+        }));
+      }
+      controle(!ouvert.tab.includes('page'), `${ou} : menu ouvert, Tab sort du menu vers la page ${JSON.stringify(ouvert.tab)}`);
+    }
     await page.keyboard.press('Escape');
     await pause(PAUSE_MENU);
     const apres = await lire();
     controle(horsEcran(apres) && apres.ouvert === 'false', `${ou} : Échap ne referme pas le menu ${JSON.stringify(apres)}`);
+    controle(!apres.inerte, `${ou} : menu refermé, le reste de la page reste inerte`);
     return { avant, ouvert, apres };
+  }
+
+  // Chaque pièce 3D de la page (figure.v3d), derrière son onglet : l'onglet cliqué et la pièce amenée à l'écran, la
+  // visionneuse la construit ; on attend sa première image, ou sans WebGL, son message. Une pièce qui ne se construit
+  // pas laisse aussi une erreur dans la console.
+  async function dessinerPieces(page, ou) {
+    const pieces = page.locator('figure.v3d');
+    const vues = [];
+    for (let k = 0, n = await pieces.count(); k < n; k++) {
+      const f = pieces.nth(k);
+      const vue = { modele: await f.getAttribute('data-model') };
+      if (await f.evaluate(x => x.hidden)) {
+        // Les boutons des onglets suivent l'ordre des figures de leur boîte.
+        const rang = await f.evaluate(x => [...x.parentElement.children].filter(e => e.tagName === 'FIGURE').indexOf(x));
+        await f.locator('xpath=..').locator(':scope > .onglets button').nth(rang).click();
+      }
+      await f.scrollIntoViewIfNeeded();
+      if (sansGl) {
+        vue.message = await f.locator('.v3d-fallback').first().waitFor({ timeout: 30000 }).then(() => true, () => false);
+        controle(vue.message, `${ou} : sans WebGL, la pièce 3D « ${vue.modele} » n’affiche pas son message`);
+      } else {
+        vue.images = await page.waitForFunction(x => {
+          const v = x.__viewer;
+          return v && v.renderer && v.renderer.info.render.frame > 0 ? v.renderer.info.render.frame : false;
+        }, await f.elementHandle(), { timeout: 60000 }).then(h => h.jsonValue(), () => 0);
+        controle(vue.images > 0, `${ou} : la pièce 3D « ${vue.modele} » ne se dessine pas derrière son onglet`);
+      }
+      await relever(page, `${ou}, pièce 3D « ${vue.modele} »`);
+      vues.push(vue);
+    }
+    return vues;
+  }
+
+  // La page tout dépliée : chaque <details> ouvert et chaque figure rangée derrière un onglet montrée. C'est dépliée
+  // qu'on lit une étape au téléphone : elle ne doit pas défiler en largeur non plus.
+  async function toutDeplier(page, ou) {
+    const ouverts = await page.evaluate(() => {
+      const details = [...document.querySelectorAll('details')].filter(d => !d.open);
+      for (const d of details) d.open = true;
+      const figures = [...document.querySelectorAll('.figures > figure')].filter(f => f.hidden);
+      for (const f of figures) f.hidden = false;
+      return { details: details.length, figures: figures.length };
+    });
+    await pause(300);
+    const e = await relever(page, `${ou}, tout déplié`);
+    return { ...ouverts, large: e.large };
   }
 
   try {
@@ -389,8 +477,12 @@ async function controler(opts) {
         const fiche = { large: e.large, ecran: e.ecran };
         await capturer(page, nom + '.png');
         if (PLEINE_PAGE.includes(adresse)) await capturer(page, nom + '-page.png', { pleine: true });
-        if (menuReplie) fiche.menu = await controlerMenu(page, ou, adresse === ATELIER ? 'menu-ouvert.png' : null);
+        if (menuReplie) {
+          fiche.menu = await controlerMenu(page, ou, adresse === ATELIER ? 'menu-ouvert.png' : null, adresse === ATELIER);
+        }
         await relever(page, ou);
+        if (!sansJs) fiche.pieces3d = await dessinerPieces(page, ou);
+        fiche.deplie = await toutDeplier(page, ou);
         rapport.pages[ou] = fiche;
         await fermer(ctx);
       }
@@ -785,6 +877,36 @@ async function controler(opts) {
           'freins/plaquettes/ : la flèche droite ne passe pas à l’étape 2 ' + JSON.stringify(suivant));
         controle(!ferme.ouvert && ferme.focus === 'pas-a-pas',
           'freins/plaquettes/ : Échap ne ferme pas le pas à pas ou ne rend pas le focus ' + JSON.stringify(ferme));
+
+        // Le lien d'évitement, sur une page neuve : le premier Tab le montre à l'écran, Entrée mène au contenu, et le
+        // Tab suivant reste dans le contenu, sans repasser par le menu.
+        const { page: neuve } = await ouvrir(ATELIER);
+        await neuve.keyboard.press('Tab');
+        const lien = await neuve.evaluate(() => {
+          const a = document.activeElement, r = a.getBoundingClientRect();
+          const x = r.left + r.width / 2, y = r.top + r.height / 2;
+          return {
+            evitement: a.matches('a.evitement'), texte: a.textContent,
+            aLEcran: r.width > 1 && r.height > 1 && r.top >= 0 && r.left >= 0 && r.bottom <= window.innerHeight &&
+              r.right <= window.innerWidth,
+            dessus: a.contains(document.elementFromPoint(x, y)),
+          };
+        });
+        await capturer(neuve, 'evitement.png');
+        await neuve.keyboard.press('Enter');
+        await pause(PAUSE_ANIMATION);
+        await neuve.keyboard.press('Tab');
+        const suite = await neuve.evaluate(() => ({
+          ancre: location.hash, dansLeContenu: Boolean(document.activeElement?.closest('main#contenu')),
+          focus: document.activeElement ? document.activeElement.tagName.toLowerCase() +
+            (document.activeElement.id ? '#' + document.activeElement.id : '') : null,
+        }));
+        at.evitement = { ...lien, ...suite };
+        controle(lien.evitement && lien.texte === 'Aller au contenu' && lien.aLEcran && lien.dessus,
+          'freins/plaquettes/ : le premier Tab ne montre pas « Aller au contenu » ' + JSON.stringify(lien));
+        controle(suite.ancre === '#contenu' && suite.dansLeContenu,
+          'freins/plaquettes/ : « Aller au contenu » ne mène pas au contenu ' + JSON.stringify(suite));
+        await relever(neuve, 'freins/plaquettes/, après « Aller au contenu »');
       });
 
       // ---- 6. Recherche ----
@@ -894,6 +1016,25 @@ async function controler(opts) {
         controle(!s.categorie.filtres, 'sans JavaScript : les filtres de freins/ s’affichent');
         controle(s.categorie.cartes > 0 && s.categorie.visibles === s.categorie.cartes,
           `sans JavaScript : ${s.categorie.visibles} cartes visibles sur ${s.categorie.cartes}`);
+
+        // L'accueil : rien d'inerte dans la scène, et elle dit pourquoi elle reste vide.
+        ({ page } = await ouvrir(ACCUEIL));
+        s.accueil = await page.evaluate(() => {
+          const vu = e => Boolean(e) && e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden';
+          return {
+            commandes: ['#scene .modes', '#scene-aide', '#scene-statut', '#approche', '#vue-ensemble']
+              .filter(sel => vu(document.querySelector(sel))),
+            statut: [...document.querySelectorAll('#scene .status')].filter(vu).map(e => e.textContent.trim()),
+            liens: [...document.querySelectorAll('.ou-intervenir a[href]')].filter(vu).length,
+          };
+        });
+        controle(s.accueil.commandes.length === 0,
+          'sans JavaScript : accueil : commandes inertes ou aide affichées : ' + s.accueil.commandes.join(', '));
+        controle(s.accueil.statut.length === 1 && s.accueil.statut[0] === STATUT_SANS_JS,
+          `sans JavaScript : accueil : la scène dit ${JSON.stringify(s.accueil.statut)} au lieu de « ${STATUT_SANS_JS} »`);
+        controle(s.accueil.liens > 0, 'sans JavaScript : accueil : aucun lien vers les ateliers dans « Où intervenir »');
+        await relever(page, 'sans JavaScript, accueil');
+        await capturer(page, 'sans-js-accueil.png', { sel: '#scene' });
       });
     }
   } catch (e) {
