@@ -1,99 +1,175 @@
-// Usage : node scene-check.js <page.html> <dossier> <largeur> <hauteur> <light|dark> [--disable-webgl] [--mouvement]
+// Usage : node scene-check.js <dossier dist/site> <sortie> <largeur> <hauteur> <clair|sombre> [--disable-webgl]
+//         [--mouvement] [--sans-js]
 //
-// Contrôle de la page d'accueil (dist/site/index.html), dans Chromium sans écran. Par défaut, le navigateur demande de
+// Contrôle du site en plusieurs pages (dist/site/), dans Chromium sans écran. Par défaut, le navigateur demande de
 // réduire les animations : vols de caméra et défilements instantanés, captures stables. Avec --mouvement, il ne le
-// demande pas : vols de caméra, sortie animée des plaquettes, cuisson de l'ombre à la fin, défilements doux.
-//   1. la page sans ancre : scene-reel.png (la scène au chargement, rendu réaliste en vue d'ensemble), puis
-//      scene-2d.png (onglet « Schéma 2D ») ; ensuite chaque zone par sa puce et chaque atelier par la liste de la
-//      fiche, avec une capture atelier-<id>.png par atelier ouvert ; enfin le disque XT en vue d'ensemble, pour
-//      compter les triangles de la variante la plus lourde, et la liste « Ce qui est approché ». À chaque atelier
-//      ouvert, la tête de la fiche dit « D’origine : … » et « À monter : … » si l'atelier a data-de et data-vers, et
-//      ne les dit pas sinon. L'aide de la scène a un fond, et ce fond ne passe sur aucune pastille, en 3D comme en 2D ;
-//   2. la page chargée sur index.html#freins-plaquettes : l'atelier doit se trouver dans #fiche. Une fois la 3D et
-//      son bouton de variante montés, le haut du titre de l'atelier doit être sur la ligne où le navigateur pose une
-//      ancre (haut de l'écran plus scroll-padding-top), à 6 px près : le bouton de variante ne le pousse pas.
-//      Deux réglages montrent la poussée là où Chromium la cacherait : l'ancrage du défilement (overflow-anchor) est
-//      coupé, car il la compense tout seul et tous les navigateurs ne l'ont pas ; three.js arrive avec un retard,
-//      comme sur un téléphone, pour que la 3D se monte après l'événement load, jusqu'auquel Chromium garde l'ancre
-//      en place (capture ancre-freins-plaquettes.png, l'écran tel qu'il s'affiche) ;
-//   3. liens entre ateliers et Retour : la puce des manettes puis le bouton de la liste ouvrent freins-purge,
-//      l'adresse devient #freins-purge sans nouvelle entrée d'historique. Le lien « 2.3 » de « À démonter avant »
-//      ouvre freins-plaquettes dans la fiche, avec une entrée d'historique, sans faire défiler la page plus bas que
-//      la fiche. Retour rouvre freins-purge dans la fiche, l'adresse redevient #freins-purge et la carte est à l'écran.
-//      Suivant rouvre freins-plaquettes (captures lien-freins-plaquettes.png et retour-freins-purge.png) ;
-//   4. modules absents, chacun servi en 404 dans sa propre page :
-//      js/scene/scene.js : la page passe au schéma 2D et le dit, les pastilles et les puces ouvrent les ateliers ;
-//      js/scene/pieces/roues.js (la 3D et le schéma 2D en ont besoin) : la page le dit, la scène vide disparaît, les
-//        puces ouvrent toujours les ateliers dans la fiche ;
-//      js/scene/app.js : le garde-fou de la page le dit, la scène et la fiche disparaissent, les ateliers restent
-//        lisibles dans leur chapitre et chaque figure 3D des chapitres affiche son propre message.
-//      Seules les erreurs du fichier absent sont attendues. Captures absent-<nom>.png.
-// Avec --disable-webgl, Chromium démarre sans WebGL : la page doit passer au schéma 2D et le dire, sans erreur.
-// scene-reel.png montre alors ce repli.
+// demande pas : vols de caméra, sortie animée des plaquettes, défilements doux, menu qui glisse. Avec --disable-webgl,
+// Chromium démarre sans WebGL : l'accueil doit passer au schéma 2D et le dire, la pièce 3D d'un atelier doit afficher
+// son message. Avec --sans-js, JavaScript est coupé : seules les passes 1 et 8 tournent, les autres en ont besoin.
 //
-// Le dossier reçoit aussi rapport.json : { erreurs, debordement, triangles, ancreOuverte, ancreDecalage, webgl,
-// mouvement, historique, absents, avertissements, attendus, captures }.
-//   erreurs : messages d'erreur de la console, erreurs de page, requêtes échouées ou en erreur HTTP, et contrôles
-//     de la page qui échouent (préfixe « contrôle : ») ;
-//   debordement : la page a défilé en largeur à au moins une étape ;
-//   triangles : le plus grand nombre de triangles d'une image 3D, lu sur <html data-triangles> (0 sans WebGL) ;
-//   ancreOuverte : #freins-plaquettes est dans #fiche après le chargement sur son ancre ;
-//   ancreDecalage : en pixels, le haut du titre de cet atelier moins la ligne de l'ancre ;
-//   historique : ce que la passe 3 a vu (adresses, longueurs d'historique, défilement le plus bas) ;
-//   absents : pour chaque module servi en 404, ce que la page montre ;
+// Points de rupture du site : une seule colonne jusqu'à 1100 px de large, menu derrière son bouton jusqu'à 900 px.
+//
+//   1. toutes les pages, chaque index.html du dossier hors js/ et vendor/ : aucune erreur dans la console ni requête
+//      en échec, pas de défilement horizontal (scrollWidth <= innerWidth), une capture <page>.png de l'écran à
+//      l'arrivée, et la page entière <page>-page.png pour l'accueil, freins/ et freins/plaquettes/. Sous 900 px, #side
+//      est hors de l'écran tant que #menu-btn n'est pas cliqué ; le bouton l'ouvre, Échap le referme (capture
+//      menu-ouvert.png sur freins/plaquettes/). Sans JavaScript, le menu est en tête de page et le bouton n'est pas
+//      affiché. Les pages « Ce qui est approché » et « Sources » doivent se remplir ;
+//   2. accueil : la scène est dessinée (sans WebGL : le schéma 2D, et la page le dit). L'aide de la scène a un fond qui
+//      ne passe sur aucune pastille, en 3D comme en 2D. Un clic sur la pastille 2 rend active (aria-current) la carte
+//      « Étrier et plaquettes » de « Où intervenir », puis la pastille 3 celle des manettes, puis le bouton de la carte
+//      « Étrier et plaquettes » la sienne. Les pastilles sont cliquées à la souris là où elles sont, sans que le script
+//      fasse défiler la page ; le bouton aussi, une fois la page descendue jusqu'à lui, comme après avoir lu les
+//      cartes. Sur une seule colonne, une pastille ne fait pas défiler la page et le bouton d'une carte ramène l'image à
+//      l'écran (95 % au moins entre la barre du haut et le bas de l'écran) ; sur deux colonnes, la carte choisie est à
+//      l'écran. Ensuite, avec WebGL, les variantes de #variante (disque XT en vue d'ensemble, la
+//      plus lourde, pour le budget de triangles ; plaquettes sorties) ; l'onglet « Schéma 2D » ; la fenêtre « Ce qui
+//      est approché », qui s'ouvre et se remplit ;
+//   3. anciennes ancres de la racine : index.html#freins-plaquettes et #freins-plaquettes arrivent sur
+//      freins/plaquettes/, #freins sur freins/, #freins-pl-2 sur freins/plaquettes/#freins-pl-2, avec la planche à
+//      l'écran sous la barre. La racine ne reste pas derrière Retour : Retour quitte le site ;
+//   4. catégorie freins/ : le filtre « Remplacer » laisse 2 cartes visibles, « Tout » les rend toutes ;
+//   5. atelier freins/plaquettes/ : le lien du fil d'Ariane, atteint par Tab, garde son anneau de focus entier (aucun
+//      parent ne le rogne). La pièce 3D (figure.v3d canvas, derrière l'onglet « Pièce en 3D ») est dessinée : la
+//      visionneuse a fait au moins une image, et une image refaite sur le moment couvre au moins 2 % du canevas. Sans
+//      WebGL, elle affiche son message. « Tout déplier » ouvre les 10 étapes. Le mode pas à pas s'ouvre sur « 1 / 10 »,
+//      la flèche droite passe à « 2 / 10 », Échap le ferme et rend le focus à son bouton ;
+//   6. recherche, depuis freins/plaquettes/ : « TL-FC36 » donne au moins un résultat, et le premier mène à
+//      freins/disques/ ;
+//   7. modules absents, chacun servi en 404 dans sa propre page d'accueil :
+//      js/scene/scene.js : la page passe au schéma 2D et le dit, les boutons des cartes choisissent toujours la zone ;
+//      js/scene/pieces/roues.js (la 3D et le schéma 2D en ont besoin) : la page le dit et retire la scène vide ;
+//      js/scene/app.js : le garde-fou de la page le dit et retire la scène.
+//      Dans les trois cas, les liens de « Où intervenir » restent. Seules les erreurs du fichier absent sont attendues ;
+//   8. sans JavaScript (--sans-js) : sur freins/plaquettes/, cliquer le summary de l'étape 1 l'ouvre, aucun contenu de
+//      la page (main) n'est caché par un attribut hidden, les deux figures sont à la suite, et ni la barre des étapes,
+//      ni la recherche, ni le bouton Menu ne s'affichent, puisqu'ils ne feraient rien. Sur freins/, pas de filtres et
+//      toutes les cartes.
+// Captures : une par page, et celles des passes, dans <sortie>.
+//
+// <sortie> reçoit aussi rapport.json : { erreurs, debordement, debordements, triangles, ancienFavori, webgl, mouvement,
+// sansJs, pages, accueil, anciennesAncres, categorie, atelier, recherche, absents, sansJavaScript, avertissements,
+// attendus, captures }.
+//   erreurs : messages d'erreur de la console, erreurs de page, requêtes échouées ou en erreur HTTP, et contrôles qui
+//     échouent (préfixe « contrôle : »), chacun avec la page où il arrive ;
+//   debordement : la page a défilé en largeur à au moins une étape ; debordements dit où ;
+//   triangles : le plus grand nombre de triangles d'une image 3D de l'accueil, lu sur <html data-triangles> (0 sans
+//     WebGL ou sans JavaScript) ;
+//   ancienFavori : index.html#freins-plaquettes arrive sur la page de l'atelier 2.3 (null sans JavaScript) ;
+//   pages, accueil, anciennesAncres, categorie, atelier, recherche, absents, sansJavaScript : ce que chaque passe a
+//     relevé (null pour une passe qui n'a pas tourné) ;
 //   avertissements : avertissements de la console, sans doublon (le repli 2D en écrit un, voulu) ;
-//   attendus : erreurs de la console et réponses HTTP dues au module servi en 404, que la passe 4 provoque.
-// Code de sortie 1 si erreurs n'est pas vide, si debordement est vrai, si triangles dépasse 500 000 ou si
-// ancreOuverte est faux ; 2 si les arguments sont faux ; 0 sinon.
+//   attendus : ce que le contrôle provoque lui-même : erreurs du module servi en 404, et requêtes abandonnées
+//     (net::ERR_ABORTED) parce que la page est partie ailleurs, comme la racine qui redirige une ancienne ancre.
+// Code de sortie 1 si erreurs n'est pas vide, si debordement est vrai, si triangles dépasse 500 000 ou si, avec
+// JavaScript, ancienFavori n'est pas vrai ; 2 si les arguments sont faux ; 0 sinon.
 //
-// La page est servie en HTTP sur 127.0.0.1, depuis son dossier, sur un port libre : Chromium refuse les modules ES
-// et les cartes d'imports en file://. Le serveur s'arrête à la fin, même en cas d'échec.
+// Le dossier est servi en HTTP sur 127.0.0.1, sur un port libre, comme nginx sur le serveur : une adresse en
+// « dossier/ » sert dossier/index.html, et « dossier » sans barre finale renvoie vers « dossier/ ». Chromium refuse les
+// modules ES et les cartes d'imports en file://. Le serveur s'arrête à la fin, même en cas d'échec.
 const { chromium } = require('playwright');
 const path = require('path'); const fs = require('fs'); const http = require('http');
 
 const BUDGET_TRIANGLES = 500000;
-const ANCRE = 'freins-plaquettes';
-const TOLERANCE_ANCRE = 6; // en pixels
 const ARGS_GL = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'];
 const TYPES = {
-  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json',
-  '.css': 'text/css', '.svg': 'image/svg+xml', '.txt': 'text/plain; charset=utf-8', '.png': 'image/png',
-  '.webp': 'image/webp',
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
+  '.json': 'application/json', '.css': 'text/css', '.svg': 'image/svg+xml', '.txt': 'text/plain; charset=utf-8',
+  '.png': 'image/png', '.webp': 'image/webp',
 };
-const DRAPEAUX = ['--disable-webgl', '--mouvement'];
-const USAGE = 'Usage : node scene-check.js <page.html> <dossier> <largeur> <hauteur> <light|dark> ' +
-  '[--disable-webgl] [--mouvement]';
+const DRAPEAUX = ['--disable-webgl', '--mouvement', '--sans-js'];
+const THEMES = { clair: 'light', sombre: 'dark' };
+const USAGE = 'Usage : node scene-check.js <dossier dist/site> <sortie> <largeur> <hauteur> <clair|sombre> ' +
+  '[--disable-webgl] [--mouvement] [--sans-js]';
+// Les points de rupture du site (00-head.html) : max-width:1100px et max-width:900px.
+const UNE_COLONNE = 1100;
+const MENU_REPLIE = 900;
+// Les pages que les passes ouvrent : sans elles, le contrôle ne vaut rien.
+const ACCUEIL = '', CATEGORIE = 'freins/', ATELIER = 'freins/plaquettes/', DISQUES = 'freins/disques/';
+const PLEINE_PAGE = [ACCUEIL, CATEGORIE, ATELIER];
+const ETAPES_ATELIER = 10; // les étapes de freins/plaquettes/
+const CARTES_REMPLACER = 2; // les ateliers « Remplacer » de freins/
+// Ancienne adresse de la racine, page d'arrivée.
+const ANCIENNES_ANCRES = [
+  ['index.html#freins-plaquettes', 'freins/plaquettes/'],
+  ['#freins-plaquettes', 'freins/plaquettes/'],
+  ['#freins', 'freins/'],
+  ['#freins-pl-2', 'freins/plaquettes/#freins-pl-2'],
+];
+const FAVORI = 'index.html#freins-plaquettes';
+const TITRE_ATELIER = 'Changer les plaquettes';
+const MODULES_ABSENTS = [['scene', 'js/scene/scene.js'], ['roues', 'js/scene/pieces/roues.js'], ['app', 'js/scene/app.js']];
 
 function lireArguments(argv) {
   const drapeaux = argv.filter(a => a.startsWith('--'));
   if (drapeaux.some(d => !DRAPEAUX.includes(d))) return null;
-  const [page, dossier, largeur, hauteur, theme, ...reste] = argv.filter(a => !a.startsWith('--'));
+  const [dossier, sortie, largeur, hauteur, theme, ...reste] = argv.filter(a => !a.startsWith('--'));
   const w = Number(largeur), h = Number(hauteur);
-  const ok = page && dossier && Number.isInteger(w) && w > 0 && Number.isInteger(h) && h > 0 &&
-    (theme === 'light' || theme === 'dark') && fs.existsSync(page) && reste.length === 0;
+  const ok = dossier && sortie && Number.isInteger(w) && w > 0 && Number.isInteger(h) && h > 0 &&
+    Object.prototype.hasOwnProperty.call(THEMES, theme) && fs.existsSync(path.join(dossier, 'index.html')) &&
+    reste.length === 0;
   return ok ? {
-    page: path.resolve(page), dossier: path.resolve(dossier), largeur: w, hauteur: h, theme,
-    sansGl: drapeaux.includes('--disable-webgl'), mouvement: drapeaux.includes('--mouvement'),
+    racine: fs.realpathSync(path.resolve(dossier)), sortie: path.resolve(sortie), largeur: w, hauteur: h,
+    theme: THEMES[theme], sansGl: drapeaux.includes('--disable-webgl'), mouvement: drapeaux.includes('--mouvement'),
+    sansJs: drapeaux.includes('--sans-js'),
   } : null;
 }
+
+// Les pages du site : chaque dossier qui a un index.html, hors js/ et vendor/ à la racine. L'accueil d'abord.
+function pagesDu(racine) {
+  const pages = [];
+  (function parcourir(rel) {
+    const dossier = path.join(racine, rel);
+    if (fs.existsSync(path.join(dossier, 'index.html'))) pages.push(rel);
+    for (const e of fs.readdirSync(dossier, { withFileTypes: true })) {
+      if (e.isDirectory() && !(rel === '' && ['js', 'vendor'].includes(e.name))) parcourir(rel + e.name + '/');
+    }
+  })('');
+  return pages.sort((a, b) => (a === '' ? -1 : b === '' ? 1 : a.localeCompare(b)));
+}
+
+// Nom de fichier d'une page : « accueil », « freins », « freins-plaquettes ».
+const nomDe = rel => (rel === '' ? 'accueil' : rel.replace(/\/$/, '').replace(/\//g, '-'));
 
 function servir(racine) {
   return new Promise(resolve => {
     const srv = http.createServer((req, res) => {
+      const fin = (code, entetes = {}) => {
+        res.writeHead(code, entetes);
+        res.end();
+      };
       let rel;
       try {
-        rel = decodeURIComponent(req.url.split('?')[0].split('#')[0]);
+        rel = decodeURIComponent(new URL(req.url, 'http://127.0.0.1').pathname);
       } catch {
-        res.writeHead(400);
-        res.end();
+        fin(400);
         return;
       }
       const f = path.join(racine, rel);
-      if (!f.startsWith(racine + path.sep)) { res.writeHead(403); res.end(); return; }
-      fs.readFile(f, (err, buf) => {
-        if (err) { res.writeHead(404); res.end(); return; }
-        res.writeHead(200, { 'Content-Type': TYPES[path.extname(f)] || 'application/octet-stream' });
-        res.end(buf);
+      if (f !== racine && !f.startsWith(racine + path.sep)) {
+        fin(403);
+        return;
+      }
+      fs.stat(f, (err, st) => {
+        if (err) {
+          fin(404);
+          return;
+        }
+        if (st.isDirectory() && !rel.endsWith('/')) {
+          fin(301, { Location: encodeURI(rel + '/') });
+          return;
+        }
+        const fichier = st.isDirectory() ? path.join(f, 'index.html') : f;
+        fs.readFile(fichier, (e, buf) => {
+          if (e) {
+            fin(404);
+            return;
+          }
+          res.writeHead(200, {
+            'Content-Type': TYPES[path.extname(fichier)] || 'application/octet-stream', 'Cache-Control': 'no-cache',
+          });
+          res.end(buf);
+        });
       });
     });
     srv.listen(0, '127.0.0.1', () => resolve(srv));
@@ -101,447 +177,727 @@ function servir(racine) {
 }
 
 const pause = ms => new Promise(r => setTimeout(r, ms));
+const premiereLigne = e => (e && e.stack ? e.stack.split('\n')[0] : String(e));
 
 async function controler(opts) {
-  const { page: fichier, dossier, largeur, hauteur, theme, sansGl, mouvement } = opts;
+  const { racine, sortie, largeur, hauteur, theme, sansGl, mouvement, sansJs } = opts;
   const rapport = {
-    erreurs: [], debordement: false, triangles: 0, ancreOuverte: false, ancreDecalage: null, webgl: !sansGl,
-    mouvement, historique: {}, absents: {}, avertissements: [], attendus: [], captures: [],
+    erreurs: [], debordement: false, debordements: [], triangles: 0, ancienFavori: null, webgl: !sansGl, mouvement,
+    sansJs, pages: {}, accueil: null, anciennesAncres: null, categorie: null, atelier: null, recherche: null,
+    absents: null, sansJavaScript: null, avertissements: [], attendus: [], captures: [],
   };
   const erreur = s => { rapport.erreurs.push(s); };
-  const controle = (ok, s) => { if (!ok) erreur('contrôle : ' + s); };
+  const controle = (ok, s) => {
+    if (!ok) erreur('contrôle : ' + s);
+    return Boolean(ok);
+  };
   // Après une action qui anime (vol de caméra, plaquettes, défilement doux), le temps que l'animation finisse.
   const PAUSE_ANIMATION = mouvement ? 1400 : 300;
-  fs.mkdirSync(dossier, { recursive: true });
+  const PAUSE_MENU = mouvement ? 500 : 150; // le menu glisse en 0,2 s
+  const uneColonne = largeur <= UNE_COLONNE, menuReplie = largeur <= MENU_REPLIE;
+  fs.mkdirSync(sortie, { recursive: true });
 
-  const srv = await servir(path.dirname(fichier));
-  const base = `http://127.0.0.1:${srv.address().port}/${path.basename(fichier)}`;
+  const pages = pagesDu(racine);
+  for (const p of [ACCUEIL, CATEGORIE, ATELIER, DISQUES]) controle(pages.includes(p), `page absente : ${p || 'accueil'}`);
+  const srv = await servir(racine);
+  const base = `http://127.0.0.1:${srv.address().port}/`;
   let browser = null;
-  try {
-    browser = await chromium.launch({ args: sansGl ? [...ARGS_GL, '--disable-webgl'] : ARGS_GL });
+  // Les contextes ouverts par la passe en cours, fermés à sa fin, même si elle échoue.
+  let contextes = [];
+  const fermer = async ctx => {
+    await ctx.close().catch(() => {});
+    contextes = contextes.filter(c => c !== ctx);
+  };
 
-    // Ouvre la page dans un contexte neuf. `absent` : chemin servi en 404, dont les erreurs sont attendues.
-    // `sansAncrage` : coupe l'ancrage du défilement de Chromium, dès que le document a son <head>.
-    // `retardThree` : en millisecondes, retard de three.module.min.js, pour une 3D montée après l'événement load.
-    async function ouvrir(ancre, { absent = null, attente = 180000, sansAncrage = false, retardThree = 0 } = {}) {
-      const ctx = await browser.newContext({
-        viewport: { width: largeur, height: hauteur }, deviceScaleFactor: 2, colorScheme: theme,
-        reducedMotion: mouvement ? 'no-preference' : 'reduce',
-      });
-      if (sansAncrage) {
-        await ctx.addInitScript(() => document.addEventListener('DOMContentLoaded', () => {
-          const s = document.createElement('style');
-          s.textContent = '*{overflow-anchor:none!important}';
-          document.head.append(s);
-        }, { capture: true }));
-      }
-      const duAbsent = url => absent !== null && url.endsWith('/' + absent);
-      if (absent) await ctx.route(u => duAbsent(u.href), r => r.fulfill({ status: 404, body: '' }));
-      if (retardThree) {
-        await ctx.route(u => u.pathname.endsWith('/three.module.min.js'), async r => {
-          await pause(retardThree);
-          await r.continue();
-        });
-      }
-      const page = await ctx.newPage();
-      page.on('console', m => {
-        const t = m.text();
-        if (m.type() === 'error') {
-          if (duAbsent(m.location()?.url ?? '')) rapport.attendus.push(`${absent} : console : ${t}`);
-          else erreur('console : ' + t);
-        } else if (m.type() === 'warning' && !rapport.avertissements.includes(t)) rapport.avertissements.push(t);
-      });
-      page.on('pageerror', e => erreur('page : ' + e.message));
-      page.on('requestfailed', r => {
-        const t = 'requête échouée : ' + r.url() + ' (' + (r.failure()?.errorText ?? '') + ')';
-        if (duAbsent(r.url())) rapport.attendus.push(`${absent} : ${t}`);
-        else erreur(t);
-      });
-      page.on('response', r => {
-        if (r.status() < 400) return;
-        if (duAbsent(r.url())) rapport.attendus.push(`${absent} : HTTP ${r.status()}`);
-        else erreur('HTTP ' + r.status() + ' : ' + r.url());
-      });
-      await page.goto(base + ancre);
-      // Prête : le message « Montage du vélo en 3D… » disparaît quand la scène est montée, que la page passe au 2D,
-      // ou que la page dit qu'elle n'a ni l'un ni l'autre.
-      await page.waitForFunction(() => {
-        const s = document.getElementById('scene-statut');
-        return s && (s.hidden || s.getClientRects().length === 0);
-      }, null, { timeout: attente }).catch(() => erreur('contrôle : la page reste sur « Montage du vélo en 3D… »' +
-        (absent ? ` (${absent} absent)` : '')));
-      return { ctx, page };
+  // Où l'on est, pour les messages : le chemin de la page, « accueil » pour la racine.
+  const ici = page => {
+    try {
+      return decodeURI(new URL(page.url()).pathname).replace(/^\//, '') || 'accueil';
+    } catch {
+      return '?';
     }
+  };
 
-    const etat = page => page.evaluate(() => {
-      const vu = e => Boolean(e) && e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden';
-      const tete = document.querySelector('#fiche .fiche-tete');
-      return {
-        debordement: document.documentElement.scrollWidth > window.innerWidth + 1,
-        triangles: Number(document.documentElement.dataset.triangles ?? 0),
-        alerte: vu(document.getElementById('scene-alerte')) ? document.getElementById('scene-alerte').textContent : null,
-        svg2d: !document.getElementById('plan').hasAttribute('hidden') &&
-          document.getElementById('plan').getBoundingClientRect().height > 0,
-        canevas: !document.getElementById('gl').hidden,
-        scene: vu(document.getElementById('scene-stage')),
-        fiche: vu(document.getElementById('fiche')),
-        titre: document.getElementById('fiche-titre')?.textContent ?? null,
-        ouvert: document.querySelector('#fiche .fiche-atelier > section.atelier')?.id ?? null,
-        tete: tete ? tete.textContent : null,
-        hash: location.hash,
-        historique: history.length,
-      };
+  // Ouvre `adresse` (relative à la racine) dans un contexte neuf et attend qu'elle soit prête.
+  // `absent` : chemin servi en 404, dont les erreurs sont attendues. `arrivee` : la page part ailleurs dès son
+  // chargement (ancienne ancre) ; on attend l'adresse qui satisfait ce prédicat, puis le chargement de cette page.
+  // `image` : attendre la première image 3D de l'accueil.
+  async function ouvrir(adresse, { absent = null, attente = 180000, arrivee = null, image = true } = {}) {
+    const ctx = await browser.newContext({
+      viewport: { width: largeur, height: hauteur }, deviceScaleFactor: 2, colorScheme: theme,
+      reducedMotion: mouvement ? 'no-preference' : 'reduce', javaScriptEnabled: !sansJs,
     });
-    // Après chaque étape : défilement en largeur, et les triangles de la dernière image 3D.
-    async function relever(page) {
-      const e = await etat(page);
-      rapport.debordement ||= e.debordement;
-      rapport.triangles = Math.max(rapport.triangles, e.triangles);
-      return e;
+    contextes.push(ctx);
+    const duAbsent = url => absent !== null && url.endsWith('/' + absent);
+    if (absent) await ctx.route(u => duAbsent(u.href), r => r.fulfill({ status: 404, body: '' }));
+    const page = await ctx.newPage();
+    page.on('console', m => {
+      const t = m.text();
+      if (m.type() === 'error') {
+        if (duAbsent(m.location()?.url ?? '')) rapport.attendus.push(`${ici(page)} : ${absent} : console : ${t}`);
+        else erreur(`${ici(page)} : console : ${t}`);
+      } else if (m.type() === 'warning' && !rapport.avertissements.includes(t)) rapport.avertissements.push(t);
+    });
+    page.on('pageerror', e => erreur(`${ici(page)} : page : ${e.message}`));
+    page.on('requestfailed', r => {
+      const raison = r.failure()?.errorText ?? '';
+      const t = `${ici(page)} : requête échouée : ${r.url()} (${raison})`;
+      if (duAbsent(r.url()) || raison === 'net::ERR_ABORTED') rapport.attendus.push(t);
+      else erreur(t);
+    });
+    page.on('response', r => {
+      if (r.status() < 400) return;
+      if (duAbsent(r.url())) rapport.attendus.push(`${ici(page)} : ${absent} : HTTP ${r.status()}`);
+      else erreur(`${ici(page)} : HTTP ${r.status()} : ${r.url()}`);
+    });
+    if (arrivee) {
+      await page.goto(base + adresse, { waitUntil: 'commit' });
+      await page.waitForURL(arrivee, { timeout: 30000 })
+        .catch(() => erreur(`contrôle : ${adresse} : la page n’est pas partie ailleurs (${ici(page)})`));
+    } else {
+      await page.goto(base + adresse);
     }
-    // Fait `action`, puis attend l'image 3D qu'elle demande : data-triangles est retiré avant, et la page le repose
-    // à l'image suivante. Sans 3D, ou pour une action qui ne change pas la 3D, une courte pause suffit.
-    async function agir(page, nom, action, redessine = true) {
-      if (sansGl || !redessine) {
-        await action();
-        await pause(Math.max(400, PAUSE_ANIMATION));
-        return;
+    await pret(page, { attente, image: image && !absent });
+    return { ctx, page };
+  }
+
+  // Prête : site.js branché, et à l'accueil, la scène montée (ou le repli affiché) et sa première image ; les pages
+  // « Ce qui est approché » et « Sources » remplies ; les polices chargées. Sans JavaScript : l'événement load.
+  async function pret(page, { attente, image }) {
+    const ou = ici(page);
+    if (!sansJs) {
+      await page.waitForFunction(() => window.siteBranche === true, null, { timeout: 30000 })
+        .catch(() => erreur(`contrôle : ${ou} : site.js ne s’est pas branché`));
+      if (await page.$('#scene')) {
+        // Le message « Montage du vélo en 3D… » disparaît quand la scène est montée, que la page passe au 2D, ou que
+        // la page dit qu'elle n'a ni l'un ni l'autre.
+        await page.waitForFunction(() => {
+          const s = document.getElementById('scene-statut');
+          return s && (s.hidden || s.getClientRects().length === 0);
+        }, null, { timeout: attente }).catch(() => erreur(`contrôle : ${ou} : la page reste sur « Montage du vélo en 3D… »`));
+        if (image) await premiereImage(page, `${ou} au chargement`);
       }
-      await page.evaluate(() => { delete document.documentElement.dataset.triangles; });
-      await action();
-      // La scène ne dessine qu'à l'écran : un bouton de la fiche a pu la faire sortir de l'écran (paysage).
-      await page.locator('#scene-stage').scrollIntoViewIfNeeded().catch(() => {});
-      await page.waitForFunction(() => document.documentElement.dataset.triangles !== undefined, null, { timeout: 60000 })
-        .catch(() => erreur('contrôle : aucune image 3D dessinée après ' + nom));
-      await pause(PAUSE_ANIMATION);
-    }
-    // La tête de la fiche nomme la pièce d'origine et la pièce à monter si l'atelier ouvert a data-de et data-vers.
-    async function controlerTete(page, quand) {
-      const t = await page.evaluate(() => {
-        const s = document.querySelector('#fiche .fiche-atelier > section.atelier');
-        return {
-          id: s?.id ?? null, de: s?.dataset.de ?? null, vers: s?.dataset.vers ?? null,
-          tete: document.querySelector('#fiche .fiche-tete')?.textContent ?? '',
-        };
-      });
-      if (t.de && t.vers) {
-        controle(t.tete.includes(`D’origine : ${t.de}`) && t.tete.includes(`À monter : ${t.vers}`),
-          `${quand}, ${t.id} : la tête de fiche ne dit pas « D’origine : ${t.de} » et « À monter : ${t.vers} »`);
-      } else {
-        controle(!/D’origine :|À monter :/.test(t.tete), `${quand}, ${t.id} : « D’origine » ou « À monter » en trop`);
+      if (await page.$('#approche-page, #sources-page')) {
+        await page.waitForSelector('#approche-page section.appr, #sources-page section.sources-type', { timeout: 30000 })
+          .catch(() => erreur(`contrôle : ${ou} : la liste de la page ne s’est pas remplie`));
       }
+    } else {
+      await page.waitForLoadState('load');
     }
-    // Aucune pastille visible sous le panneau de l'aide : le centre de chaque pastille doit montrer la pastille et
-    // pas l'aide. L'aide ignore le pointeur : le temps du relevé, elle le reprend pour que elementFromPoint la voie.
-    async function controlerPastilles(page, quand) {
-      const couvertes = await page.evaluate(() => {
-        const aide = document.getElementById('scene-aide');
-        const avant = aide.style.pointerEvents;
-        aide.style.pointerEvents = 'auto';
-        const sous = [...document.querySelectorAll('#pins .zpin')].filter(b => b.getClientRects().length).filter(b => {
-          const r = b.getBoundingClientRect();
-          const x = r.left + r.width / 2, y = r.top + r.height / 2;
-          if (x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) return false;
-          return aide.contains(document.elementFromPoint(x, y));
-        }).map(b => b.textContent);
-        aide.style.pointerEvents = avant;
-        return sous;
-      });
-      controle(couvertes.length === 0, `${quand} : l’aide passe sur la pastille ${couvertes.join(', ')}`);
+    await page.evaluate(() => document.fonts.ready.then(() => true)).catch(() => {});
+    await pause(300);
+  }
+
+  // Attend la première image 3D de l'accueil (rien à attendre sans WebGL).
+  async function premiereImage(page, quand) {
+    if (sansGl) return;
+    await page.waitForFunction(() => document.documentElement.dataset.triangles !== undefined, null, { timeout: 60000 })
+      .catch(() => erreur('contrôle : aucune image 3D dessinée ' + quand));
+  }
+
+  // Après chaque étape : défilement en largeur, et les triangles de la dernière image 3D de l'accueil.
+  async function relever(page, quand) {
+    const e = await page.evaluate(() => ({
+      large: document.documentElement.scrollWidth, ecran: window.innerWidth,
+      triangles: Number(document.documentElement.dataset.triangles ?? 0),
+    }));
+    if (e.large > e.ecran) {
+      rapport.debordement = true;
+      rapport.debordements.push(`${quand} : ${e.large} px pour ${e.ecran}`);
     }
-    // Un élément, découpé dans la page entière : la capture d'élément de Playwright laisse un bas vide quand
-    // l'élément est presque aussi haut que l'écran (paysage 844 x 390).
-    async function capturer(page, nom, sel) {
-      await page.locator(sel).scrollIntoViewIfNeeded();
+    rapport.triangles = Math.max(rapport.triangles, e.triangles);
+    return e;
+  }
+
+  // Une capture de l'écran, de la page entière (`pleine`), ou d'un élément (`sel`), découpé dans la page entière :
+  // la capture d'élément de Playwright laisse un bas vide quand l'élément est presque aussi haut que l'écran.
+  // La page entière est prise à l'échelle CSS (1 pixel par pixel CSS) : au double, l'accueil sur téléphone dépasse
+  // 8 192 pixels de haut, la taille de texture la plus grande de SwiftShader, la capture échoue et le processus GPU
+  // de Chromium tombe avec elle (plus de WebGL pour la suite).
+  async function capturer(page, nom, { sel = null, pleine = false } = {}) {
+    const fichier = path.join(sortie, nom);
+    if (sel) {
+      await page.locator(sel).first().scrollIntoViewIfNeeded();
       const clip = await page.$eval(sel, e => {
         const r = e.getBoundingClientRect();
         return { x: r.left + window.scrollX, y: r.top + window.scrollY, width: r.width, height: r.height };
       });
-      await page.screenshot({ path: path.join(dossier, nom), fullPage: true, clip });
-      rapport.captures.push(nom);
+      await page.screenshot({ path: fichier, fullPage: true, clip });
+    } else {
+      await page.screenshot({ path: fichier, fullPage: pleine, scale: pleine ? 'css' : 'device' });
     }
-    // La scène, les puces et le début de la fiche : du haut de la scène jusqu'à une hauteur d'écran dans la fiche.
-    async function capturerAtelier(page, nom) {
-      await page.locator('#scene').scrollIntoViewIfNeeded();
-      const clip = await page.evaluate(h => {
-        const y = document.getElementById('scene').getBoundingClientRect().top + window.scrollY;
-        const fin = document.getElementById('fiche').getBoundingClientRect().top + window.scrollY + h;
-        const bas = Math.min(fin, document.documentElement.scrollHeight);
-        return { x: 0, y, width: document.documentElement.clientWidth, height: bas - y };
-      }, hauteur);
-      await page.screenshot({ path: path.join(dossier, nom), fullPage: true, clip });
-      rapport.captures.push(nom);
-    }
-    async function capturerEcran(page, nom) {
-      await page.screenshot({ path: path.join(dossier, nom) });
-      rapport.captures.push(nom);
-    }
-    // Attend la première image 3D (rien à attendre sans WebGL).
-    async function premiereImage(page, quand) {
-      if (sansGl) return;
-      await page.waitForFunction(() => document.documentElement.dataset.triangles !== undefined, null, { timeout: 60000 })
-        .catch(() => erreur('contrôle : aucune image 3D dessinée ' + quand));
-    }
+    rapport.captures.push(nom);
+  }
 
-    // ---- 1. La page sans ancre ----
-    {
-      const { ctx, page } = await ouvrir('');
-      await premiereImage(page, 'au chargement');
-      await pause(500);
-      let e = await relever(page);
-      if (sansGl) {
-        controle(e.alerte !== null, 'sans WebGL, la page ne dit pas que la 3D manque');
-        controle(e.svg2d && !e.canevas, 'sans WebGL, le schéma 2D n’est pas visible');
-        controle(await page.$eval('#mode-reel', b => b.disabled), 'sans WebGL, l’onglet 3D réaliste reste actif');
-      } else {
-        controle(e.alerte === null, 'la 3D ne s’est pas montée : ' + e.alerte);
-        controle(e.canevas && !e.svg2d, 'le rendu réaliste n’est pas affiché');
+  // Une passe : ses erreurs de script n'arrêtent pas les suivantes, et ses contextes sont fermés à la fin.
+  async function passe(nom, corps) {
+    try {
+      await corps();
+    } catch (e) {
+      erreur(`script, ${nom} : ${premiereLigne(e)}`);
+    } finally {
+      for (const ctx of [...contextes]) await fermer(ctx);
+    }
+  }
+
+  // Sous 900 px : #side hors de l'écran (et hors d'atteinte du clavier) tant que #menu-btn n'est pas cliqué ; le
+  // bouton l'ouvre, Échap le referme. Sans JavaScript : le menu en tête de page, sans bouton.
+  async function controlerMenu(page, ou, nomCapture) {
+    const lire = () => page.evaluate(() => {
+      const s = document.getElementById('side'), b = document.getElementById('menu-btn');
+      const r = s ? s.getBoundingClientRect() : null;
+      return s ? {
+        gauche: Math.round(r.left), droite: Math.round(r.right), visibilite: getComputedStyle(s).visibility,
+        bouton: Boolean(b) && b.getClientRects().length > 0, ouvert: b ? b.getAttribute('aria-expanded') : null,
+        ecran: window.innerWidth,
+      } : null;
+    });
+    const horsEcran = m => m.droite <= 0 && m.visibilite === 'hidden';
+    const avant = await lire();
+    if (!controle(avant, `${ou} : pas de #side`)) return null;
+    if (sansJs) {
+      controle(avant.gauche >= 0 && avant.droite > 0 && avant.visibilite === 'visible' && !avant.bouton,
+        `${ou} : sans JavaScript, le menu n’est pas en tête de page ou le bouton Menu s’affiche ${JSON.stringify(avant)}`);
+      return { avant };
+    }
+    controle(avant.bouton, `${ou} : pas de bouton Menu sous 900 px`);
+    controle(horsEcran(avant), `${ou} : le menu est à l’écran avant le clic sur Menu ${JSON.stringify(avant)}`);
+    await page.click('#menu-btn');
+    await pause(PAUSE_MENU);
+    const ouvert = await lire();
+    controle(ouvert.gauche >= 0 && ouvert.droite > 0 && ouvert.droite <= ouvert.ecran &&
+      ouvert.visibilite === 'visible' && ouvert.ouvert === 'true', `${ou} : Menu n’ouvre pas le menu ${JSON.stringify(ouvert)}`);
+    await relever(page, `${ou}, menu ouvert`);
+    if (nomCapture) await capturer(page, nomCapture);
+    await page.keyboard.press('Escape');
+    await pause(PAUSE_MENU);
+    const apres = await lire();
+    controle(horsEcran(apres) && apres.ouvert === 'false', `${ou} : Échap ne referme pas le menu ${JSON.stringify(apres)}`);
+    return { avant, ouvert, apres };
+  }
+
+  try {
+    browser = await chromium.launch({ args: sansGl ? [...ARGS_GL, '--disable-webgl'] : ARGS_GL });
+
+    // ---- 1. Toutes les pages ----
+    await passe('toutes les pages', async () => {
+      for (const adresse of pages) {
+        const ou = adresse || 'accueil';
+        const { ctx, page } = await ouvrir(adresse);
+        const nom = nomDe(adresse);
+        const e = await relever(page, ou);
+        const fiche = { large: e.large, ecran: e.ecran };
+        await capturer(page, nom + '.png');
+        if (PLEINE_PAGE.includes(adresse)) await capturer(page, nom + '-page.png', { pleine: true });
+        if (menuReplie) fiche.menu = await controlerMenu(page, ou, adresse === ATELIER ? 'menu-ouvert.png' : null);
+        await relever(page, ou);
+        rapport.pages[ou] = fiche;
+        await fermer(ctx);
       }
-      const fondAide = await page.$eval('#scene-aide', a => getComputedStyle(a).backgroundColor);
-      controle(!/^(transparent|rgba\(0, 0, 0, 0\))$/.test(fondAide), 'l’aide de la scène n’a pas de fond : ' + fondAide);
-      await page.locator('#scene').scrollIntoViewIfNeeded();
-      await controlerPastilles(page, 'vue d’ensemble');
-      await capturer(page, 'scene-reel.png', '#scene');
+    });
 
-      await agir(page, 'l’onglet 2D', () => page.click('#mode-2d'), false);
-      e = await relever(page);
-      controle(e.svg2d, 'onglet « Schéma 2D » : le schéma n’est pas visible');
-      await page.locator('#scene').scrollIntoViewIfNeeded();
-      await controlerPastilles(page, 'schéma 2D');
-      await capturer(page, 'scene-2d.png', '#scene');
-      if (!sansGl) await agir(page, 'l’onglet 3D réaliste', () => page.click('#mode-reel'));
-
-      // Chaque zone par sa puce, puis chaque autre atelier de la zone par la liste de la fiche.
-      const zones = await page.$$eval('#chips button', bs => bs.length);
-      const vus = [];
-      for (let i = 0; i < zones; i++) {
-        const puce = page.locator('#chips button').nth(i);
-        const nom = (await puce.textContent()).replace(/^\d+/, '').trim();
-        await agir(page, 'la puce ' + nom, () => puce.click());
-        e = await relever(page);
-        controle(e.titre === nom, `puce « ${nom} » : la fiche s’appelle « ${e.titre} »`);
-        controle(e.ouvert !== null, `puce « ${nom} » : aucun atelier dans la fiche`);
-        if (e.ouvert) {
-          vus.push(e.ouvert);
-          await controlerTete(page, `puce « ${nom} »`);
-          await capturerAtelier(page, `atelier-${e.ouvert}.png`);
-        }
-        const autres = await page.$$eval('#fiche .fiche-ateliers button', bs => bs.length);
-        for (let j = 0; j < autres; j++) {
-          const b = page.locator('#fiche .fiche-ateliers button').nth(j);
-          if ((await b.getAttribute('aria-pressed')) === 'true') continue;
-          await agir(page, 'un atelier de la liste', () => b.click(), false); // même zone : la 3D ne change pas
-          e = await relever(page);
-          controle(e.ouvert !== null && !vus.includes(e.ouvert), `zone « ${nom} », bouton ${j + 1} : atelier ${e.ouvert}`);
-          if (e.ouvert && !vus.includes(e.ouvert)) {
-            vus.push(e.ouvert);
-            await controlerTete(page, `zone « ${nom} »`);
-            await capturerAtelier(page, `atelier-${e.ouvert}.png`);
-          }
-        }
-      }
-      const ateliers = await page.$$eval('section.atelier[data-zone]', ss => ss.map(s => s.id));
-      const manquants = ateliers.filter(id => !vus.includes(id));
-      controle(manquants.length === 0, 'ateliers jamais ouverts : ' + manquants.join(', '));
-
-      // Le disque XT en vue d'ensemble : la variante la plus lourde, pour le budget de triangles.
-      if (!sansGl) {
-        await agir(page, 'la puce des disques', () => page.locator('#chips button').nth(0).click());
-        const xt = page.locator('#fiche .swap button').nth(1);
-        if (await xt.count()) {
-          await agir(page, 'la variante XT', () => xt.click());
-          await agir(page, 'la vue d’ensemble', () => page.click('#vue-ensemble'));
-          await relever(page);
-          await agir(page, 'la variante d’origine', () => page.locator('#fiche .swap button').nth(0).click());
-        } else erreur('contrôle : pas de bouton de variante pour les disques');
-        // La sortie des plaquettes, animée avec --mouvement, puis leur retour.
-        await agir(page, 'la puce de l’étrier', () => page.locator('#chips button').nth(1).click());
-        const sorties = page.locator('#fiche .swap button').nth(1);
-        if (await sorties.count()) {
-          await agir(page, 'les plaquettes sorties', () => sorties.click());
-          await relever(page);
-          await agir(page, 'les plaquettes en place', () => page.locator('#fiche .swap button').nth(0).click());
-        } else erreur('contrôle : pas de bouton de variante pour l’étrier');
-      }
-
-      // La liste « Ce qui est approché » s'ouvre et se remplit.
-      await page.click('#approche');
-      await pause(500);
-      const liste = await page.evaluate(() => ({
-        ouverte: document.getElementById('approche-liste').open,
-        pieces: document.querySelectorAll('#approche-contenu section.appr').length,
-      }));
-      controle(liste.ouverte && liste.pieces > 0, 'liste « Ce qui est approché » : ' + JSON.stringify(liste));
-      await page.click('#approche-liste form button');
-      await relever(page);
-      await ctx.close();
-    }
-
-    // ---- 2. La page chargée sur l'ancre d'un atelier ----
-    {
-      const { ctx, page } = await ouvrir('#' + ANCRE, { sansAncrage: true, retardThree: 2500 });
-      // La page a défilé jusqu'à l'atelier : la scène est hors de l'écran et ne dessine pas. Prête quand le bouton de
-      // variante est monté (avec WebGL), puis le temps que tout se pose.
-      if (!sansGl) {
-        await page.waitForFunction(() => document.querySelector('#fiche .swap')?.getClientRects().length > 0, null,
-          { timeout: 60000 }).catch(() => {});
-      }
-      await pause(1500);
-      const e = await relever(page);
-      rapport.ancreOuverte = e.ouvert === ANCRE &&
-        await page.evaluate(id => Boolean(document.querySelector('#fiche #' + id)), ANCRE);
-      const puces = await page.$$eval('#chips button', bs => bs.map(b => b.getAttribute('aria-pressed')));
-      controle(puces.filter(p => p === 'true').length === 1, 'ancre : aucune zone choisie ' + JSON.stringify(puces));
-      const place = await page.evaluate(id => {
-        const h = document.querySelector(`#fiche #${id} > h3`);
-        const swap = document.querySelector('#fiche .swap');
-        return {
-          titre: h ? h.getBoundingClientRect().top : null,
-          ligne: parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0,
-          variante: Boolean(swap) && swap.getClientRects().length > 0,
-          ancrage: getComputedStyle(document.documentElement).overflowAnchor,
-          chargee: document.readyState,
-        };
-      }, ANCRE);
-      if (place.titre === null) erreur('contrôle : ancre : pas de titre h3 dans l’atelier ouvert');
-      else {
-        rapport.ancreDecalage = Math.round((place.titre - place.ligne) * 10) / 10;
-        controle(Math.abs(rapport.ancreDecalage) <= TOLERANCE_ANCRE,
-          `ancre : le titre de l’atelier est à ${rapport.ancreDecalage} px de la ligne de l’ancre`);
-      }
-      if (!sansGl) controle(place.variante, 'ancre : le bouton de variante n’est pas monté');
-      controle(place.ancrage === 'none', 'ancre : l’ancrage du défilement n’est pas coupé : ' + place.ancrage);
-      await controlerTete(page, 'ancre');
-      await capturerEcran(page, `ancre-${ANCRE}.png`);
-      await ctx.close();
-    }
-
-    // ---- 3. Liens entre ateliers et Retour ----
-    {
-      const h = rapport.historique;
-      const { ctx, page } = await ouvrir('');
-      await premiereImage(page, 'au chargement (historique)');
-      const manettes = page.locator('#chips button', { hasText: 'Manettes' });
-      await agir(page, 'la puce des manettes', () => manettes.click());
-      await agir(page, 'le bouton de la purge', () => page.locator('#fiche .fiche-ateliers button', { hasText: '2.7' }).click(),
-        false);
-      let e = await relever(page);
-      h.purge = { ouvert: e.ouvert, hash: e.hash, historique: e.historique };
-      controle(e.ouvert === 'freins-purge', 'historique : la liste n’ouvre pas freins-purge : ' + e.ouvert);
-      controle(e.hash === '#freins-purge', 'historique : l’adresse ne dit pas #freins-purge : « ' + e.hash + ' »');
-      const lien = page.locator('#fiche #freins-purge .a-dem a[href="#freins-plaquettes"]');
-      if (!(await lien.count())) erreur('contrôle : historique : pas de lien vers 2.3 dans la purge ouverte');
-      else {
-        await lien.scrollIntoViewIfNeeded();
-        await pause(300);
-        await page.evaluate(() => {
-          window.__plusBas = window.scrollY;
-          window.addEventListener('scroll', () => { window.__plusBas = Math.max(window.__plusBas, window.scrollY); });
-        });
-        await agir(page, 'le lien 2.3', () => lien.click(), false); // la scène est hors de l'écran : pas d'image
-        await pause(1500); // défilement doux jusqu'au titre de l'atelier
-        e = await relever(page);
-        const vue = await page.evaluate(() => {
-          const f = document.getElementById('fiche').getBoundingClientRect();
-          const t = document.querySelector('#fiche #freins-plaquettes > h3')?.getBoundingClientRect();
+    if (!sansJs) {
+      // ---- 2. Accueil ----
+      await passe('accueil', async () => {
+        const a = rapport.accueil = {};
+        const { page } = await ouvrir(ACCUEIL);
+        const etat = () => page.evaluate(() => {
+          const vu = e => Boolean(e) && e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden';
+          const st = document.getElementById('scene-stage'), r = st.getBoundingClientRect();
+          const haut = document.querySelector('.top')?.getBoundingClientRect().bottom ?? 0;
+          const cartes = [...document.querySelectorAll('.zone-carte[data-zone]')];
+          const actives = cartes.filter(c => c.getAttribute('aria-current') === 'true');
+          const aLEcran = c => {
+            const q = c.getBoundingClientRect();
+            return q.top >= haut - 1 && q.bottom <= window.innerHeight + 1;
+          };
+          const alerte = document.getElementById('scene-alerte');
           return {
-            plusBas: window.__plusBas, basFiche: f.bottom + window.scrollY,
-            titre: t ? t.top : null, ecran: window.innerHeight,
+            alerte: vu(alerte) ? alerte.textContent : null,
+            svg2d: !document.getElementById('plan').hasAttribute('hidden') &&
+              document.getElementById('plan').getBoundingClientRect().height > 0,
+            canevas: !document.getElementById('gl').hidden,
+            scene: vu(st),
+            actives: actives.map(c => c.dataset.zone),
+            nomActif: actives.length === 1 ? (actives[0].querySelector('.zone-btn')?.textContent.trim() ?? null) : null,
+            cartesALEcran: cartes.filter(aLEcran).map(c => c.dataset.zone),
+            scrollY: Math.round(window.scrollY),
+            // La part de l'image entre la barre du haut et le bas de l'écran.
+            image: r.height ? Math.round(Math.max(0, Math.min(r.bottom, window.innerHeight) - Math.max(r.top, haut)) /
+              r.height * 1000) / 1000 : 0,
+            variante: vu(document.getElementById('variante')) ?
+              [...document.querySelectorAll('#variante button')].map(b => b.textContent) : null,
           };
         });
-        h.lien = { ouvert: e.ouvert, hash: e.hash, historique: e.historique, ...vue };
-        controle(e.ouvert === 'freins-plaquettes', 'historique : le lien 2.3 n’ouvre pas freins-plaquettes : ' + e.ouvert);
-        controle(e.hash === '#freins-plaquettes', 'historique : après le lien, l’adresse est « ' + e.hash + ' »');
-        controle(e.historique === h.purge.historique + 1,
-          `historique : le lien ajoute ${e.historique - h.purge.historique} entrée(s) au lieu d’une`);
-        controle(vue.plusBas <= vue.basFiche,
-          `historique : le lien fait défiler la page sous la fiche (${vue.plusBas} pour un bas de fiche à ${vue.basFiche})`);
-        controle(vue.titre !== null && vue.titre >= 0 && vue.titre < vue.ecran,
-          'historique : le titre de 2.3 n’est pas à l’écran après le lien');
-        await capturerEcran(page, 'lien-freins-plaquettes.png');
-
-        await page.goBack({ timeout: 15000 }).catch(err => erreur('contrôle : Retour : ' + err.message.split('\n')[0]));
-        await page.waitForFunction(() => location.hash === '#freins-purge', null, { timeout: 10000 }).catch(() => {});
-        await pause(PAUSE_ANIMATION + 700);
-        e = await relever(page);
-        const carte = await page.evaluate(() => {
-          const r = document.querySelector('#fiche #freins-purge')?.getBoundingClientRect();
-          return r ? { haut: r.top, bas: r.bottom, ecran: window.innerHeight } : null;
-        });
-        h.retour = { ouvert: e.ouvert, hash: e.hash, titre: e.titre, carte };
-        controle(e.ouvert === 'freins-purge', 'historique : Retour ne rouvre pas freins-purge : ' + e.ouvert);
-        controle(e.hash === '#freins-purge', 'historique : après Retour, l’adresse est « ' + e.hash + ' »');
-        controle(carte !== null && carte.bas > 0 && carte.haut < carte.ecran,
-          'historique : après Retour, la carte de la purge n’est pas à l’écran ' + JSON.stringify(carte));
-        await capturerEcran(page, 'retour-freins-purge.png');
-
-        await page.goForward({ timeout: 15000 }).catch(err => erreur('contrôle : Suivant : ' + err.message.split('\n')[0]));
-        await page.waitForFunction(() => location.hash === '#freins-plaquettes', null, { timeout: 10000 }).catch(() => {});
-        await pause(PAUSE_ANIMATION + 700);
-        e = await relever(page);
-        h.suivant = { ouvert: e.ouvert, hash: e.hash };
-        controle(e.ouvert === 'freins-plaquettes' && e.hash === '#freins-plaquettes',
-          `historique : Suivant donne ${e.ouvert} et « ${e.hash} »`);
-      }
-      await ctx.close();
-    }
-
-    // ---- 4. Modules absents ----
-    for (const [nom, absent] of [['scene', 'js/scene/scene.js'], ['roues', 'js/scene/pieces/roues.js'],
-      ['app', 'js/scene/app.js']]) {
-      const { ctx, page } = await ouvrir('', { absent, attente: 30000 });
-      await pause(1000);
-      const e = await relever(page);
-      const vue = await page.evaluate(() => {
-        const vu = el => Boolean(el) && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
-        const ateliers = [...document.querySelectorAll('section.atelier[data-zone]')];
-        const figures = [...document.querySelectorAll('figure.v3d[data-model] .v3d-stage')];
-        return {
-          puces: document.querySelectorAll('#chips button').length,
-          pastilles: [...document.querySelectorAll('#pins .zpin')].filter(vu).length,
-          ateliersLisibles: ateliers.filter(s => !s.closest('#fiche') && vu(s)).length,
-          ateliers: ateliers.length,
-          figures: figures.length,
-          figuresAvecMessage: figures.filter(f => f.querySelector('.v3d-fallback')).length,
+        // Fait `action`, attend l'image 3D qu'elle demande (data-triangles est retiré avant, la page le repose à
+        // l'image suivante), puis le temps que l'animation finisse. Sans 3D, ou pour une action qui ne change pas la
+        // 3D, une pause suffit.
+        const agir = async (nom, action, redessine = true) => {
+          if (sansGl || !redessine) {
+            await action();
+            await pause(Math.max(400, PAUSE_ANIMATION));
+            return;
+          }
+          await page.evaluate(() => { delete document.documentElement.dataset.triangles; });
+          await action();
+          await page.waitForFunction(() => document.documentElement.dataset.triangles !== undefined, null,
+            { timeout: 60000 }).catch(() => erreur('contrôle : accueil : aucune image 3D dessinée après ' + nom));
+          await pause(PAUSE_ANIMATION);
         };
-      });
-      rapport.absents[nom] = { alerte: e.alerte, scene: e.scene, svg2d: e.svg2d, fiche: e.fiche, ...vue };
-      const quoi = `${absent} absent`;
-      controle(e.alerte !== null && e.alerte.trim().length > 0, `${quoi} : la page ne dit rien`);
-      if (nom === 'scene') {
-        controle(e.scene && e.svg2d && !e.canevas, `${quoi} : le schéma 2D n’est pas affiché`);
-        controle(vue.pastilles > 0, `${quoi} : aucune pastille sur le schéma`);
-      } else {
-        controle(!e.scene, `${quoi} : la scène vide reste à l’écran`);
-      }
-      if (nom === 'app') {
-        controle(!e.fiche, `${quoi} : la fiche inerte reste à l’écran`);
-        controle(vue.ateliersLisibles === vue.ateliers && vue.ateliers > 0,
-          `${quoi} : ${vue.ateliersLisibles} atelier(s) lisible(s) dans le chapitre sur ${vue.ateliers}`);
-        controle(vue.figures > 0 && vue.figuresAvecMessage === vue.figures,
-          `${quoi} : ${vue.figuresAvecMessage} figure(s) 3D avec leur message sur ${vue.figures}`);
-      } else {
-        // Chaque puce ouvre un atelier de sa zone dans la fiche.
-        controle(vue.puces > 0, `${quoi} : aucune puce`);
-        for (let i = 0; i < vue.puces; i++) {
-          const puce = page.locator('#chips button').nth(i);
-          const zone = (await puce.textContent()).replace(/^\d+/, '').trim();
-          await puce.click();
-          await pause(300);
-          const f = await relever(page);
-          controle(f.titre === zone && f.ouvert !== null, `${quoi}, puce « ${zone} » : fiche ${f.titre}, atelier ${f.ouvert}`);
+        // Clique la pastille n (1 à 3) à la souris, là où elle est. Un clic de Playwright ferait d'abord défiler la
+        // page jusqu'à elle, et « la pastille ne fait pas défiler la page » ne se verrait plus. Si la pastille n'est
+        // pas à l'écran, l'image y est ramenée d'abord. Rend le défilement juste avant le clic, ou null.
+        const cliquerPastille = async n => {
+          const viser = () => page.evaluate(k => {
+            const b = document.querySelectorAll('#pins .zpin')[k];
+            if (!b || b.hidden) return null;
+            const r = b.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+            const haut = document.querySelector('.top')?.getBoundingClientRect().bottom ?? 0;
+            const ecran = x > 0 && x < window.innerWidth && y > haut && y < window.innerHeight;
+            return { x, y, ecran, dessus: ecran && b.contains(document.elementFromPoint(x, y)) };
+          }, n - 1);
+          let p = await viser();
+          if (p && !p.ecran) {
+            await page.evaluate(() => document.getElementById('scene-stage').scrollIntoView({ block: 'center', behavior: 'instant' }));
+            p = await viser();
+          }
+          if (!controle(p, `accueil : la pastille ${n} n’est pas affichée`)) return null;
+          if (!controle(p.dessus, `accueil : la pastille ${n} est couverte`)) return null;
+          const y0 = await page.evaluate(() => Math.round(window.scrollY));
+          await page.mouse.click(p.x, p.y);
+          return y0;
+        };
+        // Après le choix d'une zone : sa carte, seule active, et le défilement de la page.
+        const choix = async (quoi, zone, nom, y0, depuisCarte) => {
+          const e = await etat();
+          await relever(page, 'accueil, ' + quoi);
+          controle(e.actives.length === 1 && e.actives[0] === zone && e.nomActif === nom,
+            `accueil, ${quoi} : carte active ${JSON.stringify(e.actives)} (« ${e.nomActif} ») au lieu de « ${nom} »`);
+          if (!uneColonne) {
+            controle(e.cartesALEcran.includes(zone), `accueil, ${quoi} : la carte « ${nom} » n’est pas à l’écran`);
+          } else if (!depuisCarte) {
+            controle(e.scrollY === y0, `accueil, ${quoi} : la page a défilé de ${y0} à ${e.scrollY} px (une colonne)`);
+          } else {
+            controle(e.image >= 0.95, `accueil, ${quoi} : l’image n’est qu’à ${Math.round(e.image * 100)} % à l’écran (une colonne)`);
+          }
+          return { scrollAvant: y0, scrollApres: e.scrollY, image: e.image, actives: e.actives, cartesALEcran: e.cartesALEcran };
+        };
+
+        let e = await etat();
+        await relever(page, 'accueil au chargement');
+        if (sansGl) {
+          controle(e.alerte !== null, 'accueil : sans WebGL, la page ne dit pas que la 3D manque');
+          controle(e.svg2d && !e.canevas, 'accueil : sans WebGL, le schéma 2D n’est pas visible');
+          controle(await page.$eval('#mode-reel', b => b.disabled), 'accueil : sans WebGL, l’onglet 3D réaliste reste actif');
+        } else {
+          controle(e.alerte === null, 'accueil : la 3D ne s’est pas montée : ' + e.alerte);
+          controle(e.canevas && !e.svg2d, 'accueil : le rendu réaliste n’est pas affiché');
         }
-      }
-      await page.evaluate(() => window.scrollTo(0, 0));
-      await capturerEcran(page, `absent-${nom}.png`);
-      if (nom === 'app' && vue.figures) {
-        await page.locator('figure.v3d[data-model]').first().scrollIntoViewIfNeeded();
-        await capturerEcran(page, 'absent-app-figure.png');
-      }
-      await ctx.close();
+        a.chargement = { alerte: e.alerte, svg2d: e.svg2d, canevas: e.canevas };
+        const fondAide = await page.$eval('#scene-aide', x => getComputedStyle(x).backgroundColor);
+        controle(!/^(transparent|rgba\(0, 0, 0, 0\))$/.test(fondAide), 'accueil : l’aide de la scène n’a pas de fond : ' + fondAide);
+        // Aucune pastille visible sous le panneau de l'aide : le centre de chaque pastille doit montrer la pastille
+        // et pas l'aide. L'aide ignore le pointeur : le temps du relevé, elle le reprend pour que elementFromPoint la
+        // voie.
+        const controlerPastilles = async quand => {
+          await page.locator('#scene').scrollIntoViewIfNeeded();
+          const couvertes = await page.evaluate(() => {
+            const aide = document.getElementById('scene-aide');
+            const avant = aide.style.pointerEvents;
+            aide.style.pointerEvents = 'auto';
+            const sous = [...document.querySelectorAll('#pins .zpin')].filter(b => b.getClientRects().length).filter(b => {
+              const r = b.getBoundingClientRect();
+              const x = r.left + r.width / 2, y = r.top + r.height / 2;
+              if (x < 0 || y < 0 || x >= window.innerWidth || y >= window.innerHeight) return false;
+              return aide.contains(document.elementFromPoint(x, y));
+            }).map(b => b.textContent);
+            aide.style.pointerEvents = avant;
+            return sous;
+          });
+          controle(couvertes.length === 0, `accueil, ${quand} : l’aide passe sur la pastille ${couvertes.join(', ')}`);
+        };
+        await controlerPastilles(sansGl ? 'schéma 2D' : 'vue d’ensemble');
+        await capturer(page, 'accueil-scene.png', { sel: '#scene' });
+
+        // Pastille 2, depuis le haut de la page : la carte « Étrier et plaquettes ».
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+        let y0 = null;
+        await agir('la pastille 2', async () => { y0 = await cliquerPastille(2); });
+        if (y0 !== null) a.pastille2 = await choix('pastille 2', 'etrier', 'Étrier et plaquettes', y0, false);
+        await capturer(page, 'accueil-pastille-2.png');
+
+        // Pastille 3, après la vue d'ensemble (la pastille 3 peut sortir du cadre de l'étrier) et depuis le haut.
+        await agir('la vue d’ensemble', () => page.click('#vue-ensemble'));
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+        y0 = null;
+        await agir('la pastille 3', async () => { y0 = await cliquerPastille(3); });
+        if (y0 !== null) a.pastille3 = await choix('pastille 3', 'manettes', 'Manettes et durites', y0, false);
+
+        // Le bouton de la carte « Étrier et plaquettes », comme après avoir lu les cartes : il est au milieu de
+        // l'écran, et l'image en partie au-dessus.
+        const bouton = page.locator('button.zone-btn[data-zone="etrier"]');
+        await bouton.evaluate(b => b.scrollIntoView({ block: 'center', behavior: 'instant' }));
+        await pause(200);
+        const avantBouton = await etat();
+        const bb = await bouton.boundingBox();
+        await agir('le bouton « Étrier et plaquettes »', () => page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2));
+        a.boutonEtrier = {
+          imageAvant: avantBouton.image,
+          ...await choix('bouton « Étrier et plaquettes »', 'etrier', 'Étrier et plaquettes', avantBouton.scrollY, true),
+        };
+        await capturer(page, 'accueil-bouton-etrier.png');
+
+        if (!sansGl) {
+          // Le disque XT en vue d'ensemble : la variante la plus lourde, pour le budget de triangles.
+          const variantes = page.locator('#variante button');
+          await agir('le bouton des disques', () => page.click('button.zone-btn[data-zone="disques"]'));
+          if (await variantes.count() >= 2) {
+            await agir('la variante XT', () => variantes.nth(1).click());
+            controle(await variantes.nth(1).getAttribute('aria-pressed') === 'true', 'accueil : la variante XT n’est pas pressée');
+            await agir('la vue d’ensemble', () => page.click('#vue-ensemble'));
+            await relever(page, 'accueil, disque XT en vue d’ensemble');
+            await capturer(page, 'accueil-variante-xt.png', { sel: '#scene-stage' });
+            await agir('la variante d’origine', () => variantes.nth(0).click());
+          } else erreur('contrôle : accueil : pas de bouton de variante pour les disques');
+          // La sortie des plaquettes, animée avec --mouvement, puis leur retour.
+          await agir('le bouton de l’étrier', () => page.click('button.zone-btn[data-zone="etrier"]'));
+          if (await variantes.count() >= 2) {
+            await agir('les plaquettes sorties', () => variantes.nth(1).click());
+            await relever(page, 'accueil, plaquettes sorties');
+            await agir('les plaquettes en place', () => variantes.nth(0).click());
+          } else erreur('contrôle : accueil : pas de bouton de variante pour l’étrier');
+          a.triangles = rapport.triangles;
+        } else {
+          await agir('le bouton des disques', () => page.click('button.zone-btn[data-zone="disques"]'), false);
+          e = await etat();
+          controle(e.variante === null, 'accueil : sans WebGL, la variante des disques s’affiche');
+        }
+
+        // L'onglet « Schéma 2D ».
+        await agir('l’onglet 2D', () => page.click('#mode-2d'), false);
+        e = await etat();
+        await relever(page, 'accueil, schéma 2D');
+        controle(e.svg2d, 'accueil, onglet « Schéma 2D » : le schéma n’est pas visible');
+        controle(e.variante === null, 'accueil, onglet « Schéma 2D » : la variante reste affichée');
+        await controlerPastilles('schéma 2D');
+        await capturer(page, 'accueil-2d.png', { sel: '#scene' });
+        if (!sansGl) await agir('l’onglet 3D réaliste', () => page.click('#mode-reel'));
+
+        // La fenêtre « Ce qui est approché » s'ouvre et se remplit.
+        await page.click('#approche');
+        await pause(500);
+        a.approche = await page.evaluate(() => ({
+          ouverte: document.getElementById('approche-liste').open,
+          pieces: document.querySelectorAll('#approche-contenu section.appr').length,
+        }));
+        controle(a.approche.ouverte && a.approche.pieces > 0, 'accueil, « Ce qui est approché » : ' + JSON.stringify(a.approche));
+        await relever(page, 'accueil, « Ce qui est approché »');
+        await page.click('#approche-liste form button');
+        await relever(page, 'accueil, fin');
+      });
+
+      // ---- 3. Anciennes ancres de la racine ----
+      await passe('anciennes ancres', async () => {
+        rapport.anciennesAncres = {};
+        for (const [depart, cible] of ANCIENNES_ANCRES) {
+          const [chemin, ancre = ''] = cible.split('#');
+          const { ctx, page } = await ouvrir(depart, { arrivee: u => u.pathname === '/' + chemin });
+          await pause(PAUSE_ANIMATION);
+          const r = await page.evaluate(id => {
+            const haut = document.querySelector('.top')?.getBoundingClientRect().bottom ?? 0;
+            const c = id ? document.getElementById(id) : null, q = c ? c.getBoundingClientRect() : null;
+            return {
+              chemin: location.pathname, ancre: location.hash, historique: history.length,
+              titre: document.querySelector('h1')?.textContent.trim() ?? null,
+              cible: c ? {
+                haut: Math.round(q.top), bas: Math.round(q.bottom), barre: Math.round(haut),
+                vue: q.height > 0 && q.top >= haut - 2 && q.top < window.innerHeight,
+              } : null,
+            };
+          }, ancre);
+          const arrive = r.chemin === '/' + chemin && r.ancre === (ancre ? '#' + ancre : '');
+          controle(arrive, `${depart} arrive sur ${r.chemin}${r.ancre} au lieu de /${cible}`);
+          if (ancre) controle(r.cible && r.cible.vue, `${depart} : #${ancre} n’est pas à l’écran sous la barre ${JSON.stringify(r.cible)}`);
+          if (chemin === ATELIER) controle(r.titre === TITRE_ATELIER, `${depart} : la page s’appelle « ${r.titre} »`);
+          if (depart === FAVORI) {
+            rapport.ancienFavori = arrive && r.titre === TITRE_ATELIER;
+            await capturer(page, 'ancre-freins-plaquettes.png');
+          }
+          if (ancre) await capturer(page, `ancre-${ancre}.png`);
+          await relever(page, `${depart} arrivé sur ${ici(page)}`);
+          // Retour quitte le site : la racine n'est pas restée derrière. Si elle y était, Retour la rouvrirait et elle
+          // renverrait aussitôt vers la même page. (Le nouvel onglet de Playwright commence par about:blank.)
+          await page.goBack({ timeout: 10000 }).catch(() => null);
+          await pause(500);
+          r.retour = page.url();
+          controle(!r.retour.startsWith(base), `${depart} : Retour reste sur le site (${r.retour}), la racine est derrière`);
+          rapport.anciennesAncres[depart] = { ...r, arrive };
+          await fermer(ctx);
+        }
+      });
+
+      // ---- 4. Catégorie ----
+      await passe('catégorie', async () => {
+        const { page } = await ouvrir(CATEGORIE);
+        const visibles = () => page.$$eval('a.carte[data-type]',
+          cs => cs.filter(c => !c.hidden && c.getClientRects().length > 0).map(c => c.dataset.type));
+        const toutes = await visibles();
+        await page.click('div.filtres button[data-type="remplacer"]');
+        await pause(200);
+        const remplacer = await visibles();
+        const presse = await page.$eval('div.filtres button[data-type="remplacer"]', b => b.getAttribute('aria-pressed'));
+        await relever(page, 'freins/, filtre « Remplacer »');
+        await capturer(page, 'freins-remplacer.png');
+        await page.click('div.filtres button[data-type="tout"]');
+        await pause(200);
+        const retour = await visibles();
+        rapport.categorie = { toutes: toutes.length, remplacer, presse, retour: retour.length };
+        controle(remplacer.length === CARTES_REMPLACER && remplacer.every(t => t === 'remplacer'),
+          `freins/, filtre « Remplacer » : cartes visibles ${JSON.stringify(remplacer)} au lieu de ${CARTES_REMPLACER} « remplacer »`);
+        controle(presse === 'true', 'freins/, filtre « Remplacer » : le bouton n’est pas pressé');
+        controle(toutes.length > CARTES_REMPLACER && retour.length === toutes.length,
+          `freins/, filtre « Tout » : ${retour.length} cartes sur ${toutes.length}`);
+      });
+
+      // ---- 5. Atelier ----
+      await passe('atelier', async () => {
+        const at = rapport.atelier = {};
+        const { page } = await ouvrir(ATELIER);
+
+        // Le lien du fil d'Ariane, atteint au clavier depuis le haut de la page : son anneau de focus ne doit être
+        // rogné par aucun parent (overflow). Sous 900 px, .crumbs tient sur une ligne en overflow:hidden.
+        let atteint = false;
+        for (let i = 0; i < 80 && !atteint; i++) {
+          await page.keyboard.press('Tab');
+          atteint = await page.evaluate(() => document.activeElement?.matches('.crumbs a') ?? false);
+        }
+        if (controle(atteint, 'freins/plaquettes/ : Tab n’atteint pas le lien du fil d’Ariane')) {
+          at.focusFil = await page.evaluate(() => {
+            const a = document.activeElement, s = getComputedStyle(a), r = a.getBoundingClientRect();
+            const marge = (parseFloat(s.outlineOffset) || 0) + (parseFloat(s.outlineWidth) || 0);
+            const anneau = { haut: r.top - marge, bas: r.bottom + marge, gauche: r.left - marge, droite: r.right + marge };
+            const rognePar = [];
+            for (let p = a.parentElement; p && p !== document.documentElement; p = p.parentElement) {
+              const cs = getComputedStyle(p);
+              if (cs.overflowX === 'visible' && cs.overflowY === 'visible') continue;
+              const q = p.getBoundingClientRect(), bord = k => parseFloat(cs[k]) || 0;
+              const boite = {
+                haut: q.top + bord('borderTopWidth'), bas: q.bottom - bord('borderBottomWidth'),
+                gauche: q.left + bord('borderLeftWidth'), droite: q.right - bord('borderRightWidth'),
+              };
+              if (anneau.haut < boite.haut - 0.5 || anneau.bas > boite.bas + 0.5 || anneau.gauche < boite.gauche - 0.5 ||
+                anneau.droite > boite.droite + 0.5) rognePar.push(p.tagName.toLowerCase() + '.' + String(p.className).split(' ')[0]);
+            }
+            return { lien: a.textContent, focusVisible: a.matches(':focus-visible'), contour: s.outlineStyle, marge, rognePar };
+          });
+          controle(at.focusFil.focusVisible && at.focusFil.contour !== 'none',
+            'freins/plaquettes/ : pas d’anneau de focus sur le lien du fil d’Ariane');
+          controle(at.focusFil.rognePar.length === 0,
+            `freins/plaquettes/ : l’anneau de focus du fil d’Ariane est rogné par ${at.focusFil.rognePar.join(', ')}`);
+          await capturer(page, 'fil-ariane-focus.png', { sel: '.top' });
+        }
+
+        // La pièce 3D, derrière son onglet.
+        const figure = page.locator('figure.v3d');
+        if (controle(await figure.count() === 1, 'freins/plaquettes/ : pas de pièce 3D (figure.v3d)')) {
+          if (await figure.evaluate(f => f.hidden)) {
+            await page.locator('div.figures .onglets button', { hasText: 'Pièce en 3D' }).click();
+          }
+          await figure.scrollIntoViewIfNeeded();
+          if (sansGl) {
+            const message = await page.waitForSelector('figure.v3d .v3d-fallback', { timeout: 30000 }).then(() => true, () => false);
+            const canevas = await page.$('figure.v3d canvas');
+            at.piece3d = { message, canevas: Boolean(canevas) };
+            controle(message && !canevas, 'freins/plaquettes/ : sans WebGL, la pièce 3D n’affiche pas son message');
+          } else {
+            await page.waitForFunction(() => {
+              const v = document.querySelector('figure.v3d')?.__viewer;
+              return Boolean(v && v.renderer && v.renderer.info.render.frame > 0);
+            }, null, { timeout: 60000 }).catch(() => {});
+            // Les images faites par la visionneuse, puis une image refaite sur le moment et relue tout de suite :
+            // une fois affiché, le tampon d'un canevas WebGL ne se relit plus.
+            at.piece3d = await page.evaluate(() => {
+              const v = document.querySelector('figure.v3d')?.__viewer;
+              const c = document.querySelector('figure.v3d .v3d-stage canvas');
+              if (!v || !v.renderer || !c) return { canevas: Boolean(c), images: 0 };
+              const images = v.renderer.info.render.frame;
+              v.renderer.render(v.scene, v.camera);
+              const gl = v.renderer.getContext(), w = gl.drawingBufferWidth, h = gl.drawingBufferHeight;
+              const px = new Uint8Array(w * h * 4);
+              gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
+              let pleins = 0;
+              for (let i = 3; i < px.length; i += 4) if (px[i] > 0) pleins++;
+              const r = c.getBoundingClientRect();
+              return {
+                canevas: true, images, triangles: v.renderer.info.render.triangles,
+                couvert: Math.round(pleins / (w * h) * 1000) / 1000, largeur: Math.round(r.width), hauteur: Math.round(r.height),
+              };
+            });
+            controle(at.piece3d.canevas && at.piece3d.images > 0 && at.piece3d.couvert >= 0.02 && at.piece3d.largeur > 0 &&
+              at.piece3d.hauteur > 0, 'freins/plaquettes/ : la pièce 3D n’est pas dessinée ' + JSON.stringify(at.piece3d));
+          }
+          await relever(page, 'freins/plaquettes/, pièce 3D');
+          await capturer(page, 'freins-plaquettes-3d.png', { sel: 'figure.v3d' });
+        }
+
+        // « Tout déplier », puis « Tout replier ».
+        const etapes = () => page.$$eval('li.step > details', ds => ({ toutes: ds.length, ouvertes: ds.filter(d => d.open).length }));
+        const depart = await etapes();
+        await page.click('#tout-deplier');
+        await pause(200);
+        const deplie = await etapes();
+        const libelle = await page.$eval('#tout-deplier', b => b.textContent);
+        await relever(page, 'freins/plaquettes/, tout déplié');
+        await page.click('#tout-deplier');
+        await pause(200);
+        const replie = await etapes();
+        at.toutDeplier = { depart, deplie, libelle, replie };
+        controle(depart.toutes === ETAPES_ATELIER && depart.ouvertes === 0,
+          `freins/plaquettes/ : ${depart.toutes} étapes (${depart.ouvertes} ouvertes) au lieu de ${ETAPES_ATELIER} repliées`);
+        controle(deplie.ouvertes === ETAPES_ATELIER && libelle === 'Tout replier',
+          `freins/plaquettes/ : « Tout déplier » ouvre ${deplie.ouvertes} étapes (« ${libelle} »)`);
+        controle(replie.ouvertes === 0, `freins/plaquettes/ : « Tout replier » laisse ${replie.ouvertes} étapes ouvertes`);
+
+        // Le mode pas à pas.
+        const pap = () => page.evaluate(() => {
+          const b = document.querySelector('div.pas-a-pas');
+          return {
+            ouvert: Boolean(b) && !b.hidden && b.getClientRects().length > 0,
+            position: b?.querySelector('.pap-pos')?.textContent ?? null,
+            titre: b?.querySelector('h2')?.textContent ?? null, focus: document.activeElement?.id ?? null,
+          };
+        });
+        await page.click('#pas-a-pas');
+        await pause(300);
+        const ouvert = await pap();
+        await page.keyboard.press('ArrowRight');
+        await pause(300);
+        const suivant = await pap();
+        await relever(page, 'freins/plaquettes/, pas à pas');
+        await capturer(page, 'freins-plaquettes-pas-a-pas.png');
+        await page.keyboard.press('Escape');
+        await pause(300);
+        const ferme = await pap();
+        at.pasAPas = { ouvert, suivant, ferme };
+        controle(ouvert.ouvert && ouvert.position === `1 / ${ETAPES_ATELIER}`,
+          'freins/plaquettes/ : le pas à pas ne s’ouvre pas sur la première étape ' + JSON.stringify(ouvert));
+        controle(suivant.ouvert && suivant.position === `2 / ${ETAPES_ATELIER}`,
+          'freins/plaquettes/ : la flèche droite ne passe pas à l’étape 2 ' + JSON.stringify(suivant));
+        controle(!ferme.ouvert && ferme.focus === 'pas-a-pas',
+          'freins/plaquettes/ : Échap ne ferme pas le pas à pas ou ne rend pas le focus ' + JSON.stringify(ferme));
+      });
+
+      // ---- 6. Recherche ----
+      await passe('recherche', async () => {
+        const { page } = await ouvrir(ATELIER);
+        await page.fill('#recherche', 'TL-FC36');
+        await page.waitForSelector('#resultats:not([hidden]) a', { timeout: 5000 }).catch(() => {});
+        const resultats = await page.$$eval('#resultats a', as => as.map(a => ({ texte: a.textContent, adresse: a.href })));
+        await relever(page, 'recherche « TL-FC36 »');
+        await capturer(page, 'recherche.png');
+        const r = rapport.recherche = { resultats, arrivee: null };
+        if (controle(resultats.length >= 1, 'recherche « TL-FC36 » : aucun résultat')) {
+          await Promise.all([
+            page.waitForURL(u => u.pathname === '/' + DISQUES, { timeout: 30000 }).catch(() => {}),
+            page.locator('#resultats a').first().click(),
+          ]);
+          r.arrivee = new URL(page.url()).pathname;
+          controle(r.arrivee === '/' + DISQUES, `recherche « TL-FC36 » : le premier résultat mène à ${r.arrivee}`);
+          await pret(page, { attente: 30000, image: false });
+          await relever(page, 'recherche, arrivée');
+        }
+      });
+
+      // ---- 7. Modules absents ----
+      await passe('modules absents', async () => {
+        rapport.absents = {};
+        for (const [nom, absent] of MODULES_ABSENTS) {
+          const { ctx, page } = await ouvrir(ACCUEIL, { absent, attente: 30000 });
+          await pause(1000);
+          const quoi = `accueil, ${absent} absent`;
+          const vue = await page.evaluate(() => {
+            const vu = el => Boolean(el) && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
+            const alerte = document.getElementById('scene-alerte');
+            return {
+              alerte: vu(alerte) ? alerte.textContent : null,
+              scene: vu(document.getElementById('scene-stage')),
+              svg2d: !document.getElementById('plan').hasAttribute('hidden') &&
+                document.getElementById('plan').getBoundingClientRect().height > 0,
+              canevas: !document.getElementById('gl').hidden,
+              pastilles: [...document.querySelectorAll('#pins .zpin')].filter(vu).length,
+              liens: [...document.querySelectorAll('.ou-intervenir a[href]')].filter(vu).length,
+            };
+          });
+          controle(vue.alerte !== null && vue.alerte.trim().length > 0, `${quoi} : la page ne dit rien`);
+          if (nom === 'scene') {
+            controle(vue.scene && vue.svg2d && !vue.canevas, `${quoi} : le schéma 2D n’est pas affiché`);
+            controle(vue.pastilles > 0, `${quoi} : aucune pastille sur le schéma`);
+          } else {
+            controle(!vue.scene, `${quoi} : la scène vide reste à l’écran`);
+          }
+          controle(vue.liens > 0, `${quoi} : aucun lien vers les ateliers dans « Où intervenir »`);
+          if (nom !== 'app') {
+            // Les boutons des cartes choisissent toujours la zone.
+            await page.click('button.zone-btn[data-zone="etrier"]');
+            await pause(300);
+            vue.carteActive = await page.$$eval('.zone-carte[aria-current="true"]', cs => cs.map(c => c.dataset.zone));
+            controle(vue.carteActive.length === 1 && vue.carteActive[0] === 'etrier',
+              `${quoi} : le bouton « Étrier et plaquettes » rend active ${JSON.stringify(vue.carteActive)}`);
+          }
+          rapport.absents[nom] = vue;
+          await relever(page, quoi);
+          await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+          await capturer(page, `absent-${nom}.png`);
+          await fermer(ctx);
+        }
+      });
+    } else {
+      // ---- 8. Sans JavaScript ----
+      await passe('sans JavaScript', async () => {
+        const s = rapport.sansJavaScript = {};
+        let { page } = await ouvrir(ATELIER);
+        const etape = page.locator('li.step > details').first();
+        const avant = await etape.evaluate(d => d.open);
+        await etape.locator('summary').click();
+        await pause(200);
+        s.etape1 = { avant, apres: await etape.evaluate(d => d.open) };
+        controle(!s.etape1.avant && s.etape1.apres, 'sans JavaScript : le summary de l’étape 1 ne l’ouvre pas ' + JSON.stringify(s.etape1));
+        Object.assign(s, await page.evaluate(() => {
+          const montre = sel => [...document.querySelectorAll(sel)].some(e => e.getClientRects().length > 0);
+          const etapes = [...document.querySelectorAll('li.step')];
+          return {
+            js: document.documentElement.classList.contains('js'),
+            etapes: etapes.length,
+            etapesCachees: etapes.filter(li => li.closest('[hidden]') || li.querySelector('[hidden]')).length,
+            cachesDansLaPage: [...document.querySelectorAll('main [hidden]')].map(e => e.tagName.toLowerCase() +
+              (e.id ? '#' + e.id : '') + (e.className ? '.' + String(e.className).split(' ')[0] : '')),
+            figures: [...document.querySelectorAll('.figures > figure')].map(f => !f.hidden && f.getClientRects().length > 0),
+            commandes: ['.etapes-barre', '.search', '#menu-btn'].filter(montre),
+          };
+        }));
+        controle(!s.js, 'sans JavaScript : la classe js est posée');
+        controle(s.etapes === ETAPES_ATELIER && s.etapesCachees === 0, `sans JavaScript : ${s.etapesCachees} étape(s) cachée(s) sur ${s.etapes}`);
+        controle(s.cachesDansLaPage.length === 0, 'sans JavaScript : contenu caché par hidden : ' + s.cachesDansLaPage.join(', '));
+        controle(s.figures.length === 2 && s.figures.every(Boolean), 'sans JavaScript : figures ' + JSON.stringify(s.figures));
+        controle(s.commandes.length === 0, 'sans JavaScript : commandes inertes affichées : ' + s.commandes.join(', '));
+        await relever(page, 'sans JavaScript, étape 1 ouverte');
+        await capturer(page, 'sans-js-etape-1.png', { sel: 'ol.steps' });
+
+        ({ page } = await ouvrir(CATEGORIE));
+        s.categorie = await page.evaluate(() => {
+          const cartes = [...document.querySelectorAll('a.carte[data-type]')];
+          return {
+            filtres: [...document.querySelectorAll('div.filtres')].some(e => e.getClientRects().length > 0),
+            cartes: cartes.length, visibles: cartes.filter(c => !c.hidden && c.getClientRects().length > 0).length,
+          };
+        });
+        controle(!s.categorie.filtres, 'sans JavaScript : les filtres de freins/ s’affichent');
+        controle(s.categorie.cartes > 0 && s.categorie.visibles === s.categorie.cartes,
+          `sans JavaScript : ${s.categorie.visibles} cartes visibles sur ${s.categorie.cartes}`);
+      });
     }
   } catch (e) {
-    erreur('script : ' + (e && e.stack ? e.stack.split('\n')[0] : String(e)));
+    erreur('script : ' + premiereLigne(e));
   } finally {
     if (browser) await browser.close().catch(() => {});
     await new Promise(r => srv.close(r));
@@ -557,13 +913,18 @@ async function controler(opts) {
     return;
   }
   const rapport = await controler(opts);
-  fs.writeFileSync(path.join(opts.dossier, 'rapport.json'), JSON.stringify(rapport, null, 2) + '\n');
+  fs.writeFileSync(path.join(opts.sortie, 'rapport.json'), JSON.stringify(rapport, null, 2) + '\n');
   const echecs = [];
   if (rapport.erreurs.length) echecs.push(rapport.erreurs.length + ' erreur(s)');
   if (rapport.debordement) echecs.push('défilement horizontal');
   if (rapport.triangles > BUDGET_TRIANGLES) echecs.push(`${rapport.triangles} triangles pour ${BUDGET_TRIANGLES}`);
-  if (!rapport.ancreOuverte) echecs.push(`#${ANCRE} absent de #fiche`);
-  console.log(JSON.stringify({ ...rapport, avertissements: rapport.avertissements.length }, null, 2));
+  if (!opts.sansJs && rapport.ancienFavori !== true) echecs.push(`${FAVORI} n’arrive pas sur ${ATELIER}`);
+  console.log(JSON.stringify({
+    erreurs: rapport.erreurs, debordements: rapport.debordements, triangles: rapport.triangles,
+    ancienFavori: rapport.ancienFavori, webgl: rapport.webgl, mouvement: rapport.mouvement, sansJs: rapport.sansJs,
+    pages: Object.keys(rapport.pages).length, captures: rapport.captures.length,
+    avertissements: rapport.avertissements.length, attendus: rapport.attendus.length,
+  }, null, 2));
   console.log(echecs.length ? 'ÉCHEC : ' + echecs.join(' ; ') : 'OK');
   process.exitCode = echecs.length ? 1 : 0;
 })();

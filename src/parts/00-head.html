@@ -599,8 +599,10 @@ a.cat p{margin:0;font-size:.86rem;color:var(--ink-2)}
   .js .side.open{transform:none;visibility:visible;transition:transform .2s}
   .js .menu-btn{display:inline-flex}
   .top{flex-wrap:wrap}
-  /* Le fil d'Ariane tient sur une ligne : la page courante, que le titre répète, se coupe d'une ellipse. */
-  .crumbs{flex:1 1 0;flex-wrap:nowrap;white-space:nowrap;overflow:hidden}
+  /* Le fil d'Ariane tient sur une ligne : la page courante, que le titre répète, se coupe d'une ellipse. Les 4 px
+     de marge intérieure, repris par la marge extérieure, laissent entier l'anneau de focus de ses liens (2 px décalés
+     de 2 px), que overflow:hidden couperait en haut et en bas. */
+  .crumbs{flex:1 1 0;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;padding-block:4px;margin-block:-4px}
   .crumbs > :last-child{overflow:hidden;text-overflow:ellipsis;min-width:0}
   .search{flex-basis:100%;order:3}
   .precsuiv{grid-template-columns:minmax(0,1fr)}

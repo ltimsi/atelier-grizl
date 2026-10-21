@@ -8,8 +8,8 @@
 <script>
 (function () {
   'use strict';
-  /* Garde-fou de la page d'accueil. js/scene/app.js pose data-app sur <html> dès qu'il démarre. Un module ES non
-     asynchrone s'exécute avant DOMContentLoaded : s'il n'a pas démarré à ce moment (fichier absent, refusé ou en
+  /* Garde-fou de la page d'accueil. js/scene/app.js pose data-app sur l'élément racine dès qu'il démarre. Un module
+     ES non asynchrone s'exécute avant DOMContentLoaded : s'il n'a pas démarré à ce moment (fichier absent, refusé ou en
      erreur, navigateur sans modules), la page le dit, retire la scène inerte et lance la visionneuse des chapitres,
      qui affiche son propre message sans three.js. Les ateliers restent accessibles par le menu et par « Où intervenir ». */
   document.addEventListener('DOMContentLoaded', function () {
