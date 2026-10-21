@@ -305,7 +305,8 @@ def page_atelier(chapitre: Chapitre, i: int, nom: str | None = None) -> Page:
     pastilles du type, du nombre d'étapes et de ce qu'il faut démonter, pièce d'origine et pièce à monter), puis les
     colonnes de `colonnes()`, avec la barre des étapes juste au-dessus des étapes de la colonne de gauche s'il y en a.
     Sans rien à droite, une seule colonne. Après l'article : l'atelier précédent et le suivant. Une pièce 3D charge
-    three.js, la visionneuse et son modèle."""
+    three.js, la visionneuse et son modèle, et le garde-fou de 99-foot : si js/scene/app.js ne démarre pas, il lance
+    la visionneuse, qui dit dans la boîte de la pièce que la 3D n'a pas pu se charger."""
     a = chapitre.ateliers[i]
     chemin = _chemin(chapitre, a)
     gauche, droite = colonnes(a)
@@ -351,7 +352,7 @@ def page_atelier(chapitre: Chapitre, i: int, nom: str | None = None) -> Page:
     return Page(chemin=chemin, titre=titre, fil=[("Ateliers", None), (nom or _nom(chapitre), f"{chapitre.id}/"),
                                                  (titre, None)],
                 contenu=contenu, categorie=chapitre.id,
-                scripts=dict(three=True, app=True, modeles=modeles) if modeles else {})
+                scripts=dict(three=True, app=True, modeles=modeles, garde_fou=True) if modeles else {})
 
 
 def page_a_venir(lot: dict) -> Page:
@@ -480,7 +481,8 @@ def ancres(pages: list[Page]) -> dict[str, str]:
 def toutes_les_pages(config: dict) -> list[Page]:
     """Toutes les pages, dans l'ordre du menu : Mon vélo, chaque catégorie publiée suivie de ses ateliers, les
     catégories à venir, les références. Les liens « #id » de chaque contenu sont réécrits vers la page qui porte l'id
-    (les pages d'atelier d'abord : un résumé recopié sur la page de la catégorie garde l'adresse de son atelier)."""
+    (les pages d'atelier d'abord : un résumé recopié sur la page de la catégorie garde l'adresse de son atelier), et
+    l'id d'une catégorie à venir vers sa page."""
     chapitres = chapitres_publies(config)
     publies, a_venir = _lots(config)
     pages = [page_accueil(config, chapitres, lire_zones())]
@@ -501,6 +503,10 @@ def toutes_les_pages(config: dict) -> list[Page]:
     if doublons:
         raise ValueError("deux pages à la même adresse : " + ", ".join(doublons))
     table = ancres(ateliers + [p for p in pages if all(p is not q for q in ateliers)])
+    # Une catégorie à venir n'a pas encore de contenu, mais sa page existe : « #montage » mène à « montage/ ». Un id
+    # qui n'est sur aucune page, comme « #montage-position », reste un texte.
+    for lot in a_venir:
+        table.setdefault(lot["categorie"]["id"], f'{lot["categorie"]["id"]}/')
     for page in pages:
         page.contenu = reecrire_liens(page.contenu, page.chemin, table)
     return pages

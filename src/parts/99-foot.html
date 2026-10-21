@@ -8,13 +8,19 @@
 <script>
 (function () {
   'use strict';
-  /* Garde-fou de la page d'accueil. js/scene/app.js pose data-app sur l'élément racine dès qu'il démarre. Un module
-     ES non asynchrone s'exécute avant DOMContentLoaded : s'il n'a pas démarré à ce moment (fichier absent, refusé ou en
-     erreur, navigateur sans modules), la page le dit, retire la scène inerte et lance la visionneuse des chapitres,
-     qui affiche son propre message sans three.js. Les ateliers restent accessibles par le menu et par « Où intervenir ». */
+  /* Garde-fou des pages qui chargent js/scene/app.js : l'accueil et les ateliers qui ont une pièce 3D. app.js pose
+     data-app sur l'élément racine dès qu'il démarre. Un module ES non asynchrone s'exécute avant DOMContentLoaded :
+     s'il n'a pas démarré à ce moment (fichier absent, refusé ou en erreur, navigateur sans modules), le garde-fou lance
+     la visionneuse des pièces, qui affiche son propre message sans three.js. Sur un atelier, c'est tout : la planche
+     et le texte restent. À l'accueil, la page le dit aussi et retire la scène inerte. Les ateliers restent accessibles
+     par le menu et par « Où intervenir ». */
   document.addEventListener('DOMContentLoaded', function () {
+    if (document.documentElement.hasAttribute('data-app')) return;
     var scene = document.getElementById('scene');
-    if (!scene || document.documentElement.hasAttribute('data-app')) return;
+    if (!scene) {
+      try { if (window.AtelierViewer) window.AtelierViewer.start(); } catch (e) { if (window.console) console.warn(e); }
+      return;
+    }
     var alerte = document.getElementById('scene-alerte'), statut = document.getElementById('scene-statut');
     scene.classList.add('sans-rendu');
     if (statut) statut.hidden = true;

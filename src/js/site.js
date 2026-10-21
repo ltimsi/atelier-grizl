@@ -107,13 +107,18 @@ function anciennesAncres() {
   window.addEventListener('hashchange', suivre);
 }
 
+// Le menu du téléphone, un tiroir par-dessus la page. Ouvert, il est modal : le reste de l'application (.main, barre du
+// haut comprise, que le tiroir recouvre, et le lien d'évitement qui y mène) est inerte, comme .app pendant le pas à
+// pas. Tab reste dans le menu, Échap ou un clic à côté le ferme.
 function menu() {
   const side = document.getElementById('side'), bouton = document.getElementById('menu-btn');
   if (!side || !bouton) return;
+  const autour = [document.querySelector('.main'), document.querySelector('.evitement')].filter(Boolean);
   const ouvert = () => side.classList.contains('open');
   const basculer = (ouvrir, rendreFocus) => {
     side.classList.toggle('open', ouvrir);
     bouton.setAttribute('aria-expanded', String(ouvrir));
+    for (const e of autour) e.inert = ouvrir;
     if (ouvrir) (side.querySelector('[aria-current="page"]') ?? side.querySelector('a'))?.focus();
     else if (rendreFocus) bouton.focus();
   };

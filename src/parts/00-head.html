@@ -97,6 +97,10 @@ h4{font-family:var(--f-mono);font-size:.74rem;font-weight:600;letter-spacing:.08
 
 /* Squelette : le menu à gauche, puis la barre du haut, le contenu et le pied */
 .app{display:grid;grid-template-columns:var(--side-w) minmax(0,1fr);min-height:100vh}
+/* Lien d'évitement « Aller au contenu », premier arrêt de Tab : hors de l'écran, en haut, tant qu'il n'a pas le focus.
+   Placé en absolu, il ne prend pas de case dans la grille de .app. */
+.evitement{position:absolute;z-index:60;left:calc(env(safe-area-inset-left,0px) + 8px);top:calc(env(safe-area-inset-top,0px) + 8px);padding:8px 14px;border-radius:8px;background:var(--acc);color:var(--on-acc);font-family:var(--f-mono);font-size:.8rem;font-weight:600;text-decoration:none;transform:translateY(calc(-100% - 16px - env(safe-area-inset-top,0px)))}
+.evitement:focus{transform:none}
 .side{position:sticky;top:0;align-self:start;height:100vh;height:100dvh;overflow-y:auto;overscroll-behavior:contain;background:var(--side);border-right:1px solid var(--line);padding:22px 14px 24px;display:flex;flex-direction:column;gap:22px}
 .brand{padding:0 8px}
 .brand .label{color:var(--acc)}
@@ -621,3 +625,9 @@ a.cat p{margin:0;font-size:.86rem;color:var(--ink-2)}
 @media (prefers-reduced-motion: reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 @media (min-width:900px){html{scroll-behavior:smooth}}
 </style>
+<noscript><style>
+/* Sans JavaScript, la scène de l'accueil ne montera ni la 3D ni le schéma : pas d'onglets de rendu, pas de boutons ni
+   d'aide pour la faire tourner, et à la place de « Montage du vélo en 3D… », la phrase de 05-top.html qui dit pourquoi.
+   Pas html:not(.js) : la classe tombe aussi quand seul le module commun du site manque, alors que la scène marche. */
+#scene .modes,#scene-aide,#scene-statut,#approche,#vue-ensemble{display:none}
+</style></noscript>

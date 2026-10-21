@@ -4,7 +4,8 @@
 // pastilles, bouton de variante, boucle d'image, ResizeObserver et légende du mode simple.
 //
 // Chargement : app.js n'a aucun import statique, pour démarrer même si un module de la scène manque. Il pose
-// data-app sur <html> dès son démarrage : sans lui, le garde-fou de 99-foot.html dit que la page n'a pas pu se charger.
+// data-app sur <html> dès son démarrage : sans lui, le garde-fou de 99-foot.html prend le relais (à l'accueil, il dit
+// que la page n'a pas pu se charger ; sur un atelier, il lance la visionneuse, qui dit que la 3D manque).
 // Le schéma 2D (geometrie.js, schema2d.js et les pièces qu'il lit) arrive par import() dynamique, comme three.js, ses
 // modules d'exemple et la scène. Si la 3D manque, ou si WebGL n'est pas là, la page passe au schéma 2D, grise les
 // onglets 3D et le dit. Si le schéma manque aussi, la page le dit et retire la scène vide. La visionneuse des

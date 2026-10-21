@@ -49,7 +49,8 @@ class Page:
     #   modeles     pièces 3D de la page (js/viewer.js puis un js/m-<modèle>.js par pièce)
     #   app         js/scene/app.js, la scène 3D
     #   references  js/references.js, les pages « Ce qui est approché » et « Sources »
-    #   garde_fou   le script de 99-foot qui prévient quand la scène ne démarre pas
+    #   garde_fou   le script de 99-foot qui prend le relais quand js/scene/app.js ne démarre pas : il le dit à
+    #               l'accueil, et lance la visionneuse des pièces 3D, qui affiche alors son message
     scripts: dict = field(default_factory=dict)
 
 
@@ -298,11 +299,17 @@ def _titre(page):
     return NOM if not page.chemin or page.titre == NOM else f"{page.titre} · {NOM}"
 
 
+# L'id du contenu de chaque page (main.page), que vise le lien d'évitement « Aller au contenu ».
+CONTENU = "contenu"
+
+
 def _application(page, config, chapitres):
-    """Le corps de la page : menu à gauche, puis barre du haut, contenu et pied."""
+    """Le corps de la page : le lien d'évitement, le menu à gauche, puis barre du haut, contenu et pied. Le lien
+    d'évitement, caché tant qu'il n'a pas le focus, est le premier arrêt de Tab : il saute le menu et la barre du haut."""
     pied = _pied()[0].strip().replace("<!--VERSION-->", _echapper(f'{config["version"]} du {datetime.date.today().isoformat()}'))
     return "\n".join([
         f'<div class="app" data-base="{base(page.chemin)}">',
+        f'<a class="evitement" href="#{CONTENU}">Aller au contenu</a>',
         '<aside class="side" id="side" aria-label="Menu">',
         '<div class="brand">',
         '  <div class="label">Grizl CF 7 · M · Floating Violet</div>',
@@ -321,7 +328,7 @@ def _application(page, config, chapitres):
         '<div class="results" id="resultats" hidden></div>',
         "</div>",
         "</header>",
-        '<main class="page">',
+        f'<main class="page" id="{CONTENU}">',
         page.contenu,
         "</main>",
         pied,

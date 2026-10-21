@@ -231,10 +231,16 @@ class TestPages(Site):
                 self.assertIn(morceau, html, slug)
             self.assertEqual(re.findall(r'js/m-(\w+)\.js', html), [modele], slug)
             self.assertNotIn("zones-data", html)
-            self.assertNotIn("hasAttribute('data-app')", html)
+            # Le garde-fou, script classique après app.js : si app.js ne démarre pas, il lance la visionneuse, qui
+            # affiche son message sans three.js au lieu d'une boîte vide.
+            garde = html.index("hasAttribute('data-app')")
+            self.assertGreater(garde, html.index('src="../../js/scene/app.js"'), slug)
+            self.assertGreater(html.rfind("<script>", 0, garde), html.index('src="../../js/scene/app.js"'), slug)
+            self.assertIn("window.AtelierViewer.start()", html[garde:html.index("</script>", garde)], slug)
         for chemin in ("freins/rodage/", "freins/systeme/", "freins/", "outils/", "montage/"):
             html = self.html(chemin)
-            for absent in ("importmap", "viewer.js", "scene/app.js", "references.js", "zones-data", "liens-data"):
+            for absent in ("importmap", "viewer.js", "scene/app.js", "references.js", "zones-data", "liens-data",
+                           "hasAttribute('data-app')"):
                 self.assertNotIn(absent, html, chemin)
             self.assertIn("js/site.js", html, chemin)
         for chemin in ("approche/", "sources/"):
@@ -243,6 +249,21 @@ class TestPages(Site):
         html = self.html("freins/plaquettes/", "artifact")
         self.assertIn("https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js", html)
         self.assertIn('src="../../js/m-caliper.js"', html)
+
+    def test_liens_vers_les_categories_a_venir(self):
+        # « #montage » et « #tubeless » mènent aux pages des catégories à venir, sans ancre ; « #montage-position »,
+        # qui n'est sur aucune page, reste un texte gris.
+        for cible in ("site", "artifact"):
+            plan = un(self.arbre("", cible), "ol.plan")
+            self.assertEqual([(a.get("href"), a.texte()) for a in dom.selectionner(plan, "a")],
+                             [("montage/", "Chapitre 1"), ("freins/", "Chapitre 2"), ("tubeless/", "Chapitre 3"),
+                              ("freins/rodage/", "Chapitre 2")], cible)
+            gris = dom.selectionner(plan, "span.muted")
+            self.assertEqual([s.texte() for s in gris], ["Chapitre 1"], cible)
+            self.assertIn("Reporter ta position", gris[0].parent.texte(), cible)
+            disques = self.html("freins/disques/", cible)
+            self.assertIn('vois le <a href="../../montage/">chapitre 1</a>.', disques, cible)
+            self.assertNotIn('<span class="muted">chapitre 1</span>', disques, cible)
 
     def test_liens_data(self):
         html = self.html("")
@@ -310,6 +331,12 @@ class TestPages(Site):
                 html = self.html(chemin, cible)
                 self.assertIn('class="side"', html, f"{cible} {chemin}")
                 self.assertIn('id="recherche"', html, f"{cible} {chemin}")
+                # Le lien d'évitement, premier enfant de .app, mène au contenu de la page.
+                app = un(dom.analyser(html), "div.app")
+                premier = elements(app)[0]
+                self.assertEqual((premier.tag, premier.classes(), premier.get("href"), premier.texte()),
+                                 ("a", ["evitement"], "#contenu", "Aller au contenu"), f"{cible} {chemin}")
+                self.assertEqual(un(app, '[id="contenu"]').tag, "main", f"{cible} {chemin}")
 
     def test_texte_des_ateliers_conserve(self):
         for a in self.chapitres["freins"].ateliers:
@@ -421,6 +448,24 @@ class TestPages(Site):
         self.assertEqual(len(dom.selectionner(intro, "dl.specs > div")), 6)
         self.assertEqual(len(dom.selectionner(intro, "ol.plan > li")), 5)
         self.assertEqual(un(intro, "aside.note.info > p.note-t").texte(), "Règle des sources")
+
+    def test_accueil_sans_javascript(self):
+        # Sans JavaScript, ni onglets de rendu ni boutons ni aide dans la scène, et une phrase à la place de
+        # « Montage du vélo en 3D… ». Par <noscript>, pas par html:not(.js), qui vaut aussi quand seul site.js manque.
+        for cible in ("site", "artifact"):
+            html = self.html("", cible)
+            style = re.search(r"<noscript><style>(.*?)</style></noscript>", html, re.S)
+            self.assertIsNotNone(style, cible)
+            self.assertLess(style.start(), html.index('<div class="app"'), cible)
+            regles = re.sub(r"/\*.*?\*/", "", style.group(1), flags=re.S).strip()
+            selecteurs, _, declaration = regles.partition("{")
+            self.assertEqual(set(selecteurs.split(",")),
+                             {"#scene .modes", "#scene-aide", "#scene-statut", "#approche", "#vue-ensemble"}, cible)
+            self.assertEqual(declaration, "display:none}", cible)
+            scene = un(self.arbre("", cible), '[id="scene-stage"]')
+            phrase = un(un(scene, "noscript"), "div.status")
+            self.assertEqual(phrase.texte(), "Le vélo en 3D a besoin de JavaScript.", cible)
+            self.assertEqual(un(scene, '[id="scene-statut"]').texte(), "Montage du vélo en 3D…", cible)
 
     def test_page_composants(self):
         racine = self.arbre("composants/")

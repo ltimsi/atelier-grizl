@@ -316,9 +316,11 @@ class TestDocument(unittest.TestCase):
         d = self.doc("freins/plaquettes/", categorie="freins", fil=[("Ateliers", None), ("Freins", "freins/")],
                      contenu='<h1 id="titre">Changer les plaquettes</h1>')
         self.assertIn('<div class="app" data-base="../../">', d)
-        ordre = ['<aside class="side" id="side"', '<nav class="nav"', '<header class="top">',
+        # Le lien d'évitement en tête de .app, avant le menu, vers le contenu de la page.
+        ordre = ['<div class="app" data-base="../../">\n<a class="evitement" href="#contenu">Aller au contenu</a>\n'
+                 '<aside class="side" id="side"', '<nav class="nav"', '<header class="top">',
                  '<button class="menu-btn" id="menu-btn"', '<nav class="crumbs"', '<input id="recherche"',
-                 '<div class="results" id="resultats"', '<main class="page">', '<h1 id="titre">', "</main>",
+                 '<div class="results" id="resultats"', '<main class="page" id="contenu">', '<h1 id="titre">', "</main>",
                  '<footer class="wrap footer">']
         positions = [d.find(o) for o in ordre]
         self.assertNotIn(-1, positions, [o for o, p in zip(ordre, positions) if p < 0])
