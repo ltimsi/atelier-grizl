@@ -13,8 +13,13 @@
 //
 // Ateliers : les section.atelier[data-zone] des chapitres, relevées au démarrage dans l'ordre du document.
 // ouvrirZone(id) les liste dans la fiche et ouvre le premier ; ouvrirAtelier(id) déplace la section dans la fiche et
-// laisse à sa place un renvoi. Une ancre #id d'atelier, au chargement ou par hashchange, ouvre cet atelier. Toute autre
-// ancre garde le comportement du navigateur.
+// laisse à sa place un renvoi.
+//
+// Adresse et historique : l'atelier ouvert est dans l'ancre de l'adresse. Une pastille, une puce ou un bouton de la
+// liste la remplace (history.replaceState) ; un lien du texte vers un atelier ouvre l'atelier dans la fiche et ajoute
+// une entrée (history.pushState), sans passer par le saut d'ancre du navigateur. Retour et Suivant (popstate) rouvrent
+// l'atelier de l'entrée, puis le navigateur rend la position de lecture de cette entrée. Au chargement, ou par
+// hashchange, une ancre d'atelier ouvre cet atelier. Toute autre ancre garde le comportement du navigateur.
 //
 // Sans la 3D, la liste « Ce qui est approché » vient des META des pièces : scene.js se charge sans three.js. La note
 // « Formes approchées » de la fiche n'apparaît pas : la zone d'une pièce se lit sur ses maillages, que seule la 3D
@@ -81,6 +86,36 @@ export function idDuHash(hash) {
   }
 }
 
+/** L'ancre d'un atelier dans l'adresse, encodée comme idDuHash la décode. */
+export const ancreDe = id => '#' + encodeURIComponent(id);
+
+/**
+ * L'atelier visé par un clic, ou null pour laisser faire le navigateur : un clic simple (bouton principal, sans
+ * touche de modification, pas déjà traité) sur un lien interne #id, ouvert dans cette page, dont l'id est un atelier.
+ * @param {MouseEvent} e Le clic. @param {(id: string) => boolean} estAtelier
+ */
+export function atelierDuClic(e, estAtelier) {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return null;
+  const a = e.target?.closest?.('a[href^="#"]');
+  if (!a || (a.target && a.target !== '_self')) return null;
+  const id = idDuHash(a.getAttribute('href'));
+  return id && estAtelier(id) ? id : null;
+}
+
+/**
+ * L'atelier qu'une entrée d'historique demande quand Retour ou Suivant y revient : celui de son ancre ; sinon celui
+ * que la page y a noté avant de suivre un lien (null : aucun atelier ouvert) ; sinon undefined, pour une entrée que la
+ * page n'a pas écrite (une ancre de chapitre, par exemple) : rien ne change.
+ * @param {string} hash location.hash. @param {*} etatEntree history.state. @param {(id: string) => boolean} estAtelier
+ * @returns {string | null | undefined}
+ */
+export function atelierDeLEntree(hash, etatEntree, estAtelier) {
+  const id = idDuHash(hash);
+  if (id && estAtelier(id)) return id;
+  if (etatEntree && typeof etatEntree === 'object' && 'atelier' in etatEntree) return etatEntree.atelier ?? null;
+  return undefined;
+}
+
 const reduit = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 
 // ---- État de la page, posé par demarrer ----
@@ -109,6 +144,7 @@ const ulDe = items => {
   return ul;
 };
 const zoneDe = id => ui.zones.find(z => z.id === id) ?? null;
+const estAtelier = id => Boolean(ui?.parId.has(id) && zoneDe(ui.parId.get(id).dataset.zone));
 
 /**
  * Ouvre une zone : pastille et puce actives, zone surlignée et visée, ses ateliers listés dans la fiche.
@@ -227,7 +263,7 @@ function rendreFiche() {
     const b = el('button', null, s.querySelector('h3')?.textContent.trim() || s.id);
     b.type = 'button';
     b.setAttribute('aria-pressed', String(s.id === etat.atelier));
-    b.addEventListener('click', () => ouvrirAtelier(s.id));
+    b.addEventListener('click', () => { if (ouvrirAtelier(s.id)) noterAtelier(); });
     const li = el('li');
     li.append(b);
     return li;
@@ -466,12 +502,74 @@ function echec3D(raison, schema) {
   document.getElementById('scene').classList.add('sans-rendu');
 }
 
+// ---- Adresse et historique ----
+
+// Les appels à history sont protégés : une page servie dans un cadre qui les refuse ouvre quand même ses ateliers.
+function historique(methode, ...args) {
+  try {
+    history[methode](...args);
+  } catch (e) {
+    console.warn('Historique indisponible :', e.message);
+  }
+}
+
+// L'atelier ouvert par une pastille, une puce ou la liste remplace l'ancre de l'entrée courante.
+function noterAtelier() {
+  if (etat.atelier && location.hash !== ancreDe(etat.atelier)) {
+    historique('replaceState', { atelier: etat.atelier }, '', ancreDe(etat.atelier));
+  }
+}
+
+// Un lien du texte vers un atelier : l'entrée courante garde l'atelier qu'elle montrait, une entrée neuve porte
+// l'atelier du lien, puis la page défile jusqu'à lui.
+function suivreLien(id) {
+  if (location.hash !== ancreDe(id)) {
+    const courant = history.state && typeof history.state === 'object' ? history.state : {};
+    historique('replaceState', { ...courant, atelier: etat.atelier }, '');
+    historique('pushState', { atelier: id }, '', ancreDe(id));
+  }
+  if (ouvrirAtelier(id)) defilerVers(id, 'smooth');
+}
+
+// Retour ou Suivant : l'atelier de l'entrée revient dans la fiche avant que le navigateur rende sa position de lecture.
+function revenir() {
+  const id = atelierDeLEntree(location.hash, history.state, estAtelier);
+  if (id === undefined || id === etat.atelier) return;
+  if (id === null) {
+    ranger();
+    rendreFiche();
+  } else ouvrirAtelier(id);
+}
+
+function defilerVers(id, comportement) {
+  ui.parId.get(id).scrollIntoView({ block: 'start', behavior: reduit() ? 'auto' : comportement });
+}
+
 // ---- Démarrage ----
 
+// Une ancre d'atelier au chargement ou par hashchange : l'atelier s'ouvre et la page défile jusqu'à lui. Déjà ouvert
+// (Retour l'a rouvert juste avant), il ne bouge pas : le navigateur rend la position de lecture.
+// @returns {string | null} l'atelier ouvert ici.
 function suivreAncre(comportement) {
   const id = idDuHash(location.hash);
-  if (!id || !ouvrirAtelier(id)) return;
-  ui.parId.get(id).scrollIntoView({ block: 'start', behavior: reduit() ? 'auto' : comportement });
+  if (!id || id === etat.atelier || !ouvrirAtelier(id)) return null;
+  defilerVers(id, comportement);
+  return id;
+}
+
+// Au chargement sur l'ancre d'un atelier, la page défile tout de suite jusqu'à lui. Ce qui se monte ensuite au-dessus
+// (bouton de variante de la 3D, message d'échec) le pousserait vers le bas, sur un navigateur sans ancrage du
+// défilement : une fois la 3D montée ou en échec, la page revise l'atelier, sauf si on a touché, fait défiler à la
+// main ou tapé quelque chose entre-temps.
+function garderAncre(id, montage) {
+  let touche = false;
+  const noter = () => { touche = true; };
+  const types = ['pointerdown', 'wheel', 'touchstart', 'keydown'];
+  types.forEach(t => window.addEventListener(t, noter, { capture: true, passive: true }));
+  montage.finally(() => {
+    types.forEach(t => window.removeEventListener(t, noter, { capture: true }));
+    if (!touche && etat.atelier === id) defilerVers(id, 'auto');
+  });
 }
 
 function demarrer() {
@@ -510,13 +608,13 @@ function demarrer() {
     pin.hidden = true;
     pin.setAttribute('aria-label', z.nom);
     pin.setAttribute('aria-pressed', 'false');
-    pin.addEventListener('click', () => ouvrirZone(z.id));
+    pin.addEventListener('click', () => { if (ouvrirZone(z.id)) noterAtelier(); });
     $('#pins').append(pin);
     const puce = el('button');
     puce.type = 'button';
     puce.setAttribute('aria-pressed', 'false');
     puce.append(el('span', null, String(i + 1)), z.nom);
-    puce.addEventListener('click', () => ouvrirZone(z.id));
+    puce.addEventListener('click', () => { if (ouvrirZone(z.id)) noterAtelier(); });
     ui.rangee.append(puce);
     ui.pins.push(pin);
     ui.puces.push(puce);
@@ -553,9 +651,17 @@ function demarrer() {
   mesurer();
   choisirMode(etat.mode);
   demander();
+  document.addEventListener('click', e => {
+    const id = atelierDuClic(e, estAtelier);
+    if (!id) return;
+    e.preventDefault();
+    suivreLien(id);
+  });
+  window.addEventListener('popstate', revenir);
   window.addEventListener('hashchange', () => suivreAncre('smooth'));
-  suivreAncre('auto');
-  monter3D();
+  const ancre = suivreAncre('auto');
+  const montage = monter3D();
+  if (ancre) garderAncre(ancre, montage);
 }
 
 if (typeof document !== 'undefined') demarrer();

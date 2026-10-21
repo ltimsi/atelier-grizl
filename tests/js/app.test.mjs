@@ -4,7 +4,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { notesDeZone, approximationsSansScene, idDuHash, chargerLibs } from '../../src/scene/app.js';
+import {
+  notesDeZone, approximationsSansScene, idDuHash, chargerLibs, atelierDuClic, atelierDeLEntree, ancreDe,
+} from '../../src/scene/app.js';
 import * as scene from '../../src/scene/scene.js';
 
 const LISTE = [
@@ -71,6 +73,44 @@ test('chargerLibs : les cinq modules de three.js, ou un échec qui remonte', asy
   await assert.rejects(chargerLibs(async () => { throw new Error('absent'); }), /absent/);
   // Un module chargé mais vide (mauvais fichier servi) est un échec aussi.
   await assert.rejects(chargerLibs(async nom => (nom === 'three' ? { REVISION: '160' } : {})), /OrbitControls/);
+});
+
+test('atelierDuClic : un clic simple sur un lien interne vers un atelier, sinon null', () => {
+  const ateliers = new Set(['freins-plaquettes', 'atelier a']);
+  const estAtelier = id => ateliers.has(id);
+  const lien = (href, target = '') => ({ getAttribute: n => (n === 'href' ? href : null), target });
+  const clic = (a, plus = {}) => ({
+    defaultPrevented: false, button: 0, metaKey: false, ctrlKey: false, shiftKey: false, altKey: false,
+    target: { closest: () => a }, ...plus,
+  });
+  assert.equal(atelierDuClic(clic(lien('#freins-plaquettes')), estAtelier), 'freins-plaquettes');
+  assert.equal(atelierDuClic(clic(lien('#atelier%20a')), estAtelier), 'atelier a', 'ancre décodée');
+  assert.equal(atelierDuClic(clic(lien('#fiche')), estAtelier), null, 'ancre qui n’est pas un atelier');
+  assert.equal(atelierDuClic(clic(lien('#freins')), estAtelier), null, 'chapitre');
+  assert.equal(atelierDuClic(clic(lien('#')), estAtelier), null);
+  assert.equal(atelierDuClic(clic(null), estAtelier), null, 'pas de lien');
+  assert.equal(atelierDuClic(clic(lien('#freins-plaquettes', '_blank')), estAtelier), null, 'nouvel onglet');
+  for (const plus of [{ ctrlKey: true }, { metaKey: true }, { shiftKey: true }, { altKey: true }, { button: 1 },
+    { defaultPrevented: true }]) {
+    assert.equal(atelierDuClic(clic(lien('#freins-plaquettes'), plus), estAtelier), null, JSON.stringify(plus));
+  }
+});
+
+test('atelierDeLEntree : l’atelier de l’ancre, sinon celui noté dans l’entrée, sinon rien à changer', () => {
+  const estAtelier = id => id === 'freins-purge' || id === 'freins-plaquettes';
+  assert.equal(atelierDeLEntree('#freins-purge', null, estAtelier), 'freins-purge');
+  assert.equal(atelierDeLEntree('#freins-purge', { atelier: 'freins-plaquettes' }, estAtelier), 'freins-purge',
+    'l’ancre d’abord');
+  assert.equal(atelierDeLEntree('', { atelier: null }, estAtelier), null, 'entrée sans atelier ouvert');
+  assert.equal(atelierDeLEntree('#fiche', { atelier: 'freins-purge' }, estAtelier), 'freins-purge');
+  assert.equal(atelierDeLEntree('#freins', null, estAtelier), undefined, 'entrée que la page n’a pas écrite');
+  assert.equal(atelierDeLEntree('', undefined, estAtelier), undefined);
+  assert.equal(atelierDeLEntree('', { autre: 1 }, estAtelier), undefined);
+});
+
+test('ancreDe : l’ancre d’un atelier, que idDuHash relit', () => {
+  assert.equal(ancreDe('freins-purge'), '#freins-purge');
+  assert.equal(idDuHash(ancreDe('atelier a')), 'atelier a');
 });
 
 test('app.js : aucun import statique, pour démarrer même si un module de la scène manque', () => {
