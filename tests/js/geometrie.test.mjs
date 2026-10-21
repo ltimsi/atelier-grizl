@@ -137,6 +137,8 @@ test('rayons : la fiche ne les compte pas, la photo officielle en montre vingt-q
   assert.equal(GEO.nombreRayons.v, 24);
   assert.equal(GEO.nombreRayons.src, 'canyon-photo-4553-fv');
   assert.ok(!GEO.nombreRayons.approche);
+  // Un des rayons est déduit de l'écart entre les autres : le nombre reste à compter sur la roue.
+  assert.equal(GEO.nombreRayons.aVerifier, 'nombre de rayons, à compter sur la roue');
 });
 
 test('étriers : position approchée d’après la photo officielle, l’avant au-dessus de l’axe et derrière lui', () => {

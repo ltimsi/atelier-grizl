@@ -49,6 +49,7 @@ export const META = Object.freeze({
   aVerifier: Object.freeze([
     'jante à crochets ou sans crochets : à lire sur le marquage de la jante',
     'modèle des moyeux : à lire sur les moyeux',
+    'nombre de rayons, à compter sur la roue',
   ]),
 });
 

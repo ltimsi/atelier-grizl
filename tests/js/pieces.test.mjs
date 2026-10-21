@@ -393,6 +393,10 @@ test('freins : PLAQUETTES décrit les deux plaquettes de l’étrier avant', () 
   assert.ok((a - plan) * (b - plan) < 0, 'une plaquette de chaque côté du disque avant');
 });
 
+test('roues : le nombre de rayons reste à compter sur la roue', () => {
+  assert.ok(roues.META.aVerifier.includes('nombre de rayons, à compter sur la roue'));
+});
+
 test('freins : la sortie des plaquettes est signalée comme approchée', () => {
   // L'animation de la variante « Plaquettes sorties » choisit un sens et une course : le manuel ne les donne pas.
   const note = freins.META.approche.find(t => /^Sortie des plaquettes/.test(t));
