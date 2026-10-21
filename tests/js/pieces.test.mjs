@@ -393,6 +393,14 @@ test('freins : PLAQUETTES décrit les deux plaquettes de l’étrier avant', () 
   assert.ok((a - plan) * (b - plan) < 0, 'une plaquette de chaque côté du disque avant');
 });
 
+test('freins : la sortie des plaquettes est signalée comme approchée', () => {
+  // L'animation de la variante « Plaquettes sorties » choisit un sens et une course : le manuel ne les donne pas.
+  const note = freins.META.approche.find(t => /^Sortie des plaquettes/.test(t));
+  assert.ok(note, 'aucune note sur la sortie des plaquettes');
+  assert.match(note, /sens et course de l’animation approchés/);
+  for (const mot of ['clip', 'axe', 'ressort']) assert.ok(note.includes(mot), `« ${mot} » absent de la note`);
+});
+
 test('freins : le modèle de l’étrier reste à lire sur la pièce', () => {
   assert.ok(freins.META.aVerifier.includes('modèle exact de l\'étrier, à lire sur la pièce'));
 });

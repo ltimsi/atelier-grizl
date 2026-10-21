@@ -57,6 +57,8 @@ export const META = Object.freeze({
     'Étriers GRX à fixation flat mount : Canyon ne donne pas le modèle. Forme approchée d’après la photo officielle, ' +
       'qui montre aussi leur place autour du moyeu.',
     'Plaquettes : forme approchée.',
+    'Sortie des plaquettes : sens et course de l’animation approchés. Le chapitre dit seulement de retirer le clip, ' +
+      'puis l’axe, puis les plaquettes avec leur ressort. La roue reste en place pour qu’on voie l’étrier.',
     'Durites : grosseur et trajet le long de la fourche et de la base approchés. Aucune photo officielle ne montre ' +
       'le côté gauche du vélo.',
   ]),
