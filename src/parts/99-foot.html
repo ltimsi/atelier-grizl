@@ -8,6 +8,26 @@
 <script>
 (function () {
   'use strict';
+  /* Garde-fou de la page d'accueil. js/scene/app.js pose data-app sur <html> dès qu'il démarre. Un module ES non
+     asynchrone s'exécute avant DOMContentLoaded : s'il n'a pas démarré à ce moment (fichier absent, refusé ou en
+     erreur, navigateur sans modules), la page le dit, retire la scène et la fiche inertes, et lance la visionneuse des
+     chapitres, qui affiche son propre message sans three.js. Les ateliers restent lisibles dans leur chapitre. */
+  document.addEventListener('DOMContentLoaded', function () {
+    var scene = document.getElementById('scene');
+    if (!scene || document.documentElement.hasAttribute('data-app')) return;
+    var alerte = document.getElementById('scene-alerte'), statut = document.getElementById('scene-statut');
+    var fiche = document.getElementById('fiche'), puces = document.getElementById('chips');
+    scene.classList.add('sans-rendu');
+    if (statut) statut.hidden = true;
+    if (fiche) fiche.hidden = true;
+    if (puces) puces.hidden = true;
+    if (alerte) {
+      alerte.textContent = 'La page n’a pas pu se charger en entier. Les ateliers restent lisibles plus bas, dans leur chapitre.';
+      alerte.hidden = false;
+    }
+    try { if (window.AtelierViewer) window.AtelierViewer.start(); } catch (e) { if (window.console) console.warn(e); }
+  });
+
   /* Chapitre courant dans la barre de navigation */
   var links = Array.prototype.slice.call(document.querySelectorAll('.chapnav a'));
   var byId = {}; links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });

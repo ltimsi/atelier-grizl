@@ -154,6 +154,20 @@ class TestBuild(unittest.TestCase):
         for libelle in ("Schéma 2D", "3D simple", "3D réaliste"):
             self.contient(page, f"<b>{libelle}</b>")
 
+    def test_garde_fou(self):
+        # Si js/scene/app.js ne démarre pas, un script classique placé après lui le dit et lance la visionneuse.
+        app = (RACINE / "src" / "scene" / "app.js").read_text(encoding="utf-8")
+        self.assertIn("document.documentElement.dataset.app = ", app)
+        for cible in ("site", "artifact"):
+            page = self.page(cible)
+            module = page.index('<script type="module" src="js/scene/app.js">')
+            garde = page.find("hasAttribute('data-app')")
+            self.assertGreater(garde, module, f"{cible} : garde-fou absent ou avant app.js")
+            debut, fin = page.rfind("<script>", 0, garde), page.find("</script>", garde)
+            self.assertGreater(debut, module, f"{cible} : le garde-fou n'est pas un script classique après app.js")
+            for morceau in ("DOMContentLoaded", "sans-rendu", "AtelierViewer.start()", "scene-alerte"):
+                self.assertIn(morceau, page[debut:fin], f"{cible} : {morceau} absent du garde-fou")
+
     def test_pied_de_page(self):
         page = self.page()
         self.contient(page, PIED)
@@ -238,6 +252,17 @@ class TestControleAteliers(unittest.TestCase):
     def test_zone_sans_atelier(self):
         err = assemble.controles(self.page(zones=ZONES[:-1]))
         self.assertIn(f"zone « {ZONES[-1]} » sans atelier publié", err)
+
+
+class TestDeploiement(unittest.TestCase):
+    def test_js_sans_cache(self):
+        # Les modules ES n'ont pas de version dans leur nom : chaque .js se revalide, pour qu'un déploiement ne mélange
+        # jamais deux versions des modules. Un add_header dans ce bloc couperait l'héritage des en-têtes de sécurité.
+        conf = (RACINE / "deploy" / "nginx.conf").read_text(encoding="utf-8")
+        m = re.search(r"location ~\* \\\.js\$ \{(.*?)\}", conf, re.S)
+        self.assertIsNotNone(m, "bloc location des .js introuvable")
+        self.assertRegex(m.group(1), r"\bexpires (-1|epoch);")
+        self.assertNotIn("add_header", m.group(1))
 
 
 if __name__ == "__main__":

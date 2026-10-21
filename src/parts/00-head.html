@@ -256,6 +256,8 @@ details > div{padding:0 14px 12px}
 .scene .modes button[aria-selected="true"]{background:var(--panel);box-shadow:0 1px 3px var(--shadow)}
 .scene .modes button[aria-selected="true"] small{color:var(--acc)}
 .scene .modes button:disabled{opacity:.45;cursor:not-allowed}
+/* Ni 3D ni schéma 2D : app.js, ou le garde-fou de 99-foot.html, réduit la scène à son message. */
+.scene.sans-rendu .modes,.scene.sans-rendu .stage,.scene.sans-rendu figcaption{display:none}
 .scene-alerte{margin:0;font-family:var(--f-mono);font-size:.78rem;color:var(--hot);background:var(--hot-2);border-radius:8px;padding:8px 10px}
 .scene .stage{position:relative;width:100%;aspect-ratio:4/3.3;max-height:74vh;background:var(--plate);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .scene .stage.studio{background:radial-gradient(120% 95% at 50% 36%,var(--studio-hi) 0%,var(--studio-lo) 100%)}

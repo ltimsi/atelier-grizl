@@ -3,6 +3,7 @@
 // importé sous Node, le module ne démarre pas.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { notesDeZone, approximationsSansScene, idDuHash, chargerLibs } from '../../src/scene/app.js';
 import * as scene from '../../src/scene/scene.js';
 
@@ -70,4 +71,11 @@ test('chargerLibs : les cinq modules de three.js, ou un échec qui remonte', asy
   await assert.rejects(chargerLibs(async () => { throw new Error('absent'); }), /absent/);
   // Un module chargé mais vide (mauvais fichier servi) est un échec aussi.
   await assert.rejects(chargerLibs(async nom => (nom === 'three' ? { REVISION: '160' } : {})), /OrbitControls/);
+});
+
+test('app.js : aucun import statique, pour démarrer même si un module de la scène manque', () => {
+  const code = readFileSync(new URL('../../src/scene/app.js', import.meta.url), 'utf8');
+  assert.ok(!/^\s*import\s[^(]/m.test(code), 'import statique dans app.js');
+  assert.match(code, /import\('\.\/schema2d\.js'\)/, 'le schéma 2D se charge par import()');
+  assert.match(code, /import\('\.\/scene\.js'\)/, 'la scène se charge par import()');
 });

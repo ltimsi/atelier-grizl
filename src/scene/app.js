@@ -3,10 +3,13 @@
 // Porté de l'interface de la maquette (docs/superpowers/specs/2026-10-20-maquette-velo-3d.html) : onglets de rendu,
 // pastilles et puces, fiche, bouton de variante, boucle d'image, ResizeObserver et légende du mode simple.
 //
-// Chargement : le schéma 2D ne demande pas three.js et se dessine tout de suite. three.js, ses modules d'exemple et la
-// scène arrivent ensuite par import() dynamique. Si l'un d'eux manque, ou si WebGL n'est pas là, la page passe au
-// schéma 2D, grise les onglets 3D et le dit. La visionneuse des chapitres (viewer.js) démarre dans tous les cas : sans
-// window.THREE, elle affiche son propre message.
+// Chargement : app.js n'a aucun import statique, pour démarrer même si un module de la scène manque. Il pose
+// data-app sur <html> dès son démarrage : sans lui, le garde-fou de 99-foot.html dit que la page n'a pas pu se charger.
+// Le schéma 2D (geometrie.js, schema2d.js et les pièces qu'il lit) arrive par import() dynamique, comme three.js, ses
+// modules d'exemple et la scène. Si la 3D manque, ou si WebGL n'est pas là, la page passe au schéma 2D, grise les
+// onglets 3D et le dit. Si le schéma manque aussi, la page le dit et retire la scène vide : les puces ouvrent toujours
+// les ateliers. La visionneuse des chapitres (viewer.js) démarre dans tous les cas : sans window.THREE, elle affiche
+// son propre message.
 //
 // Ateliers : les section.atelier[data-zone] des chapitres, relevées au démarrage dans l'ordre du document.
 // ouvrirZone(id) les liste dans la fiche et ouvre le premier ; ouvrirAtelier(id) déplace la section dans la fiche et
@@ -18,9 +21,6 @@
 // construit.
 //
 // Importé sous Node (tests), le module ne démarre pas : seuls ses calculs servent.
-import { GEO, points } from './geometrie.js';
-import { dessinerSchema } from './schema2d.js';
-
 // Les modules d'exemple de three.js que demande creerScene, avec le nom qu'ils exportent.
 const ADDONS = Object.freeze([
   ['OrbitControls', 'three/addons/controls/OrbitControls.js'],
@@ -33,6 +33,7 @@ const TEXTES = Object.freeze({
   aide3d: 'Un doigt pour tourner, deux pour zoomer.',
   aide2d: 'Vue côté transmission. En pointillés : les pièces du côté gauche. Touche une pastille pour zoomer.',
   echec: 'La 3D n’a pas pu se charger sur cet appareil. Le schéma 2D reste disponible.',
+  echecTout: 'Ni la 3D ni le schéma 2D n’ont pu se charger. Les zones ci-dessous ouvrent quand même leurs ateliers.',
   aVenir: 'Atelier à venir.',
   renvoi: 'Atelier ouvert en haut de page',
   listeSans3d: 'La liste vient de la scène 3D, qui n’a pas pu se charger.',
@@ -92,6 +93,7 @@ const etat = {
   scene: null, // l'interface de creerScene, une fois montée
   module: null, // scene.js une fois chargé : la liste de secours en vient
   echec: false, // la 3D n'a pas pu se monter
+  sansRendu: false, // ni la 3D ni le schéma 2D
   variantes: {}, // par zone : l'indice du libellé affiché
 };
 
@@ -172,8 +174,8 @@ function choisirZone(id) {
     ui.puces[i].setAttribute('aria-pressed', String(on));
     if (on) montrerPuce(ui.puces[i]);
   });
-  ui.schema.surligner(id);
-  if (etat.mode === '2d') ui.schema.cadrer(id);
+  ui.schema?.surligner(id);
+  if (etat.mode === '2d') ui.schema?.cadrer(id);
   if (etat.scene) {
     etat.scene.surligner(id);
     etat.scene.viser(id);
@@ -311,7 +313,7 @@ async function ouvrirListe() {
 // ---- Rendu, pastilles et boucle d'image ----
 
 function choisirMode(m) {
-  if (m !== '2d' && etat.echec) return;
+  if (etat.sansRendu || (m !== '2d' && etat.echec)) return;
   etat.mode = m;
   ui.onglets.forEach(b => {
     const on = b.dataset.mode === m;
@@ -326,7 +328,7 @@ function choisirMode(m) {
   ui.aide.textContent = m === '2d' ? TEXTES.aide2d : TEXTES.aide3d;
   ui.statut.hidden = m === '2d' || etat.scene !== null || etat.echec;
   if (m === '2d') {
-    ui.schema.cadrer(etat.vue2d); // le SVG vient d'apparaître : son cadre prend maintenant le rapport de l'image
+    ui.schema?.cadrer(etat.vue2d); // le SVG vient d'apparaître : son cadre prend maintenant le rapport de l'image
     ui.vbPose = null;
   } else if (etat.scene) etat.scene.rendu(m);
   rendreVariante();
@@ -342,8 +344,8 @@ function poserPastilles(places) {
 }
 
 function placerPastilles() {
-  if (etat.mode === '2d') poserPastilles(ui.schema.pastilles(ui.W, ui.H));
-  else if (etat.scene) poserPastilles(etat.scene.pastilles());
+  if (etat.mode === '2d' && ui.schema) poserPastilles(ui.schema.pastilles(ui.W, ui.H));
+  else if (etat.mode !== '2d' && etat.scene) poserPastilles(etat.scene.pastilles());
   else ui.pins.forEach(b => { b.hidden = true; });
 }
 
@@ -378,7 +380,7 @@ function mesurer() {
   ui.W = Math.max(1, ui.stage.clientWidth);
   ui.H = Math.max(1, ui.stage.clientHeight);
   etat.scene?.redimensionner(ui.W, ui.H);
-  if (etat.mode === '2d') ui.schema.cadrer(etat.vue2d);
+  if (etat.mode === '2d') ui.schema?.cadrer(etat.vue2d);
   placerPastilles();
 }
 
@@ -401,6 +403,23 @@ function demarrerVisionneuse() {
   }
 }
 
+// Le schéma 2D, dessiné dès que ses modules arrivent. null s'il en manque un : l'onglet « Schéma 2D » se grise.
+async function chargerSchema() {
+  try {
+    const [{ GEO, points }, { dessinerSchema }] = await Promise.all([import('./geometrie.js'), import('./schema2d.js')]);
+    const schema = dessinerSchema(ui.svg, points(GEO), ui.zones);
+    ui.schema = schema;
+    schema.surligner(etat.zone);
+    if (etat.mode === '2d') schema.cadrer(etat.vue2d);
+    placerPastilles();
+    return schema;
+  } catch (e) {
+    console.warn('Schéma 2D indisponible :', e.message);
+    ui.onglets.forEach(b => { if (b.dataset.mode === '2d') b.disabled = true; });
+    return null;
+  }
+}
+
 async function monter3D() {
   const module = await ui.moduleScene;
   let libs = null;
@@ -412,8 +431,8 @@ async function monter3D() {
   }
   demarrerVisionneuse();
   etat.module = module;
-  if (!module || !libs) return echec3D();
-  if (!webglPossible()) return echec3D('WebGL absent');
+  if (!module || !libs) return echec3D(null, await ui.moduleSchema);
+  if (!webglPossible()) return echec3D('WebGL absent', await ui.moduleSchema);
   try {
     const s = module.creerScene(libs, ui.canvas, ui.zones);
     s.redimensionner(ui.W, ui.H);
@@ -423,19 +442,28 @@ async function monter3D() {
     else s.ensemble(); // recadre au rapport de l'image, que le canevas n'avait pas s'il était caché
     etat.scene = s;
   } catch (e) {
-    return echec3D(e);
+    return echec3D(e, await ui.moduleSchema);
   }
   choisirMode(etat.mode);
   rendreFiche();
 }
 
-function echec3D(raison) {
+// Sans 3D : le schéma 2D prend le relais. Sans schéma non plus, la page le dit et retire la scène vide.
+function echec3D(raison, schema) {
   if (raison) console.warn('Scène 3D indisponible :', raison instanceof Error ? raison.message : raison);
   etat.echec = true;
-  ui.onglets.forEach(b => { if (b.dataset.mode !== '2d') b.disabled = true; });
-  ui.alerte.textContent = TEXTES.echec;
+  ui.onglets.forEach(b => { if (b.dataset.mode !== '2d' || !schema) b.disabled = true; });
   ui.alerte.hidden = false;
-  choisirMode('2d');
+  if (schema) {
+    ui.alerte.textContent = TEXTES.echec;
+    choisirMode('2d');
+    return;
+  }
+  etat.sansRendu = true;
+  ui.alerte.textContent = TEXTES.echecTout;
+  ui.statut.hidden = true;
+  ui.pins.forEach(b => { b.hidden = true; });
+  document.getElementById('scene').classList.add('sans-rendu');
 }
 
 // ---- Démarrage ----
@@ -447,6 +475,7 @@ function suivreAncre(comportement) {
 }
 
 function demarrer() {
+  document.documentElement.dataset.app = 'demarre'; // lu par le garde-fou de 99-foot.html
   const $ = s => document.querySelector(s);
   const donnees = $('#zones-data');
   if (!$('#scene') || !donnees) {
@@ -467,13 +496,13 @@ function demarrer() {
     aide: $('#scene-aide'), legende: $('#key'), statut: $('#scene-statut'), alerte: $('#scene-alerte'),
     dialogue: $('#approche-liste'), contenu: $('#approche-contenu'),
     onglets: [...document.querySelectorAll('#scene .modes [role="tab"]')],
-    pins: [], puces: [], W: 1, H: 1, visible: true, boucle: 0, vbPose: null,
+    pins: [], puces: [], W: 1, H: 1, visible: true, boucle: 0, vbPose: null, schema: null,
     moduleScene: import('./scene.js').catch(e => {
       console.warn('scene.js indisponible :', e.message);
       return null;
     }),
   };
-  ui.schema = dessinerSchema(ui.svg, points(GEO), zones);
+  ui.moduleSchema = chargerSchema();
 
   zones.forEach((z, i) => {
     const pin = el('button', 'zpin', String(i + 1));
@@ -507,7 +536,7 @@ function demarrer() {
     if (etat.mode !== '2d') etat.scene?.ensemble();
     else {
       etat.vue2d = null;
-      ui.schema.cadrer(null);
+      ui.schema?.cadrer(null);
     }
   });
   $('#approche').addEventListener('click', ouvrirListe);
