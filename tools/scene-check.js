@@ -209,6 +209,8 @@ async function controler(opts) {
       }
       await page.evaluate(() => { delete document.documentElement.dataset.triangles; });
       await action();
+      // La scène ne dessine qu'à l'écran : un bouton de la fiche a pu la faire sortir de l'écran (paysage).
+      await page.locator('#scene-stage').scrollIntoViewIfNeeded().catch(() => {});
       await page.waitForFunction(() => document.documentElement.dataset.triangles !== undefined, null, { timeout: 60000 })
         .catch(() => erreur('contrôle : aucune image 3D dessinée après ' + nom));
       await pause(PAUSE_ANIMATION);
