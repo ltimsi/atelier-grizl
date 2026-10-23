@@ -4,8 +4,7 @@
     "nom": "Disques de frein",
     "ancre": "disqueArriere",
     "vue": { "cible": "disqueArriere", "dir": [-0.25, 0.18, -1], "dist": 760 },
-    "schema": { "centre": "disqueArriere", "largeur": 560 },
-    "variante": { "libelles": ["D’origine · SM-RT64", "XT · RT-MT800"] }
+    "schema": { "centre": "disqueArriere", "largeur": 560 }
   },
   {
     "id": "etrier",

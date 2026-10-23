@@ -15,7 +15,7 @@
 import { GEO, cheminChaine } from './geometrie.js';
 import { COTES as COTES_CADRE, poseSelle } from './pieces/cadre.js';
 import { COTES as COTES_ROUES } from './pieces/roues.js';
-import { COTES as COTES_TRANSMISSION, DENTS_CASSETTE } from './pieces/transmission.js';
+import { COTES as COTES_TRANSMISSION, DENTS_CASSETTE, CORPS_DERAILLEUR, PIVOT_CHAPE } from './pieces/transmission.js';
 import { poseCintre, COCOTTE, LEVIER } from './pieces/poste.js';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -127,14 +127,14 @@ export function formesSchema(p, geo = GEO) {
   const gDurites = groupe('manettes');
   const u = nrm(sub(CROWN, FA)), lFourreau = Math.hypot(...sub(CROWN, FA)), derriere = [-u[1], u[0]];
   const leFourreau = (t, ecart) => add(add(FA, mul(u, lFourreau * t)), mul(derriere, ecart));
-  chemin(gDurites, [av(10, 38), av(40, 52), leFourreau(0.45, 28), leFourreau(0.75, 29), leFourreau(1, 18)], 'h', false);
+  chemin(gDurites, [av(10, -38), av(40, -52), leFourreau(0.45, 19), leFourreau(0.75, 20), leFourreau(1, 12)], 'h', false);
   chemin(gDurites, [ar(10, -38), ar(10, -48), add(RA, [125, 5]), add(RA, [170, -1]), add(RA, [200, -10])], 'h', false);
   const pose = poseCintre(p, geo);
   const arrierePivot = [-dHT[1], dHT[0]];
   const lePivot = (k, r) => add(add(HTt, mul(dHT, k)), mul(arrierePivot, r));
   const axeCintre = pose.points.map(q => [q[0], q[1]]);
   const sousLeRuban = axeCintre.slice(0, pose.iCollier + 1).reverse();
-  chemin(gDurites, [...sousLeRuban, lePivot(32, 40), lePivot(16, 31), lePivot(6, 21)], 'h', false);
+  chemin(gDurites, [...sousLeRuban, lePivot(30, -26), lePivot(17, -20), lePivot(10, -17)], 'h', false);
 
   capsule(groupe(), BB, PL, 14, 10, 'h'); // manivelle gauche
 
@@ -222,13 +222,15 @@ export function formesSchema(p, geo = GEO) {
   cercle(gManivelle, BB, 12, 'n');
   const gDerailleur = groupe();
   boite(gDerailleur, [RA[0] - 6, RA[1] - 16], 16, 34, -0.3 / D2R, 'k'); // patte de dérailleur, comme cadre.js
-  const pied = add(RA, [-8.7, -24.6]), moyeuChape = add(poulieHaute, [8, 10]); // comme transmission.js
-  capsule(gDerailleur, add(pied, [3, -10]), add(moyeuChape, [-2, 10]), 9, 8, 'k');
-  capsule(gDerailleur, poulieHaute, poulieBasse, 14, 30, 'n'); // chape
+  // Chape, du pivot au galet bas, puis le corps et le pivot, comme transmission.js.
+  const pivot = add(RA, PIVOT_CHAPE);
+  capsule(gDerailleur, pivot, poulieBasse, 14, 22, 'n'); // chape
   for (const c of [poulieHaute, poulieBasse]) {
     chemin(gDerailleur, engrenage(c, geo.dentsPoulie.v, rayons.poulie + 2.2, rayons.poulie - 1.5), 'o');
     cercle(gDerailleur, c, 4, 'n');
   }
+  chemin(gDerailleur, CORPS_DERAILLEUR.map(q => add(RA, q)), 'k'); // corps, devant le galet haut comme sur la photo
+  cercle(gDerailleur, pivot, 13.5, 'k');
 
   // ---- Les étriers, en pointillés, par-dessus la fourche et les haubans pour rester lisibles ----
   boite(groupe('etrier'), av(E.avance, 0), E.long, E.large, geo.angleEtrierAvant.v + 90, 'h', 'étrier avant');

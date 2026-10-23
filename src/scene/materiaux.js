@@ -4,7 +4,8 @@
 // Le navigateur (app.js) les met dans une THREE.DataTexture, puis passe les textures à creerMateriaux.
 // Module testable sous Node : three.js arrive en paramètre, jamais par import.
 
-// Peinture Floating Violet : les trois teintes lues sur la photo officielle de Canyon (SOURCES['canyon-photo-4553-fv']).
+// Peinture Floating Violet (coloris R126_P06) : trois teintes, lues sur la photo officielle de Canyon du cadre dans ce
+// coloris. La photo du Grizl CF 8 Di2 (SOURCES['canyon-photo-4556-fv']) montre la même peinture.
 // deep est le prune profond, base la teinte courante, light le reflet des veines.
 export const TEINTES_FLOATING_VIOLET = Object.freeze({
   deep: Object.freeze([58, 8, 32]),
@@ -162,7 +163,7 @@ export function creerMateriaux(THREE, { texturePeinture, textureRuban, textureBr
     padFace: phy(0x3a3532, .9, .2),
     hose: phy(0x0c0c0d, .35, 0, { clearcoat: .5 }),
     // Chaîne et cassette : teinte, rugosité et métal réglés d'après la photo officielle de profil
-    // (canyon-photo-4553-fv) : un acier argenté un peu chaud, la chaîne plus sombre que la cassette. Leur forme
+    // (canyon-photo-4556-fv) : un acier argenté un peu chaud, la chaîne plus sombre que la cassette. Leur forme
     // n'a pas changé : de profil, les pignons, tous parallèles, se fondent encore en un disque.
     chain: phy(0x8a857b, .3, 1),
     cassette: phy(0xc9b9a0, .14, 1),

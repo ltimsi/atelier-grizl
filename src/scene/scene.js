@@ -150,8 +150,9 @@ function texture(THREE, pixels, largeur, hauteur, { repete, srgb = false, anisot
  *   surligner(id | null) : les maillages de la zone en émissif, les autres normaux ;
  *   viser(id) : vol de la caméra vers la vue de la zone, en 850 ms (tout de suite si l'utilisateur préfère réduire
  *   les animations) ; ensemble() : vol vers la vue d'ensemble ;
- *   variante(id, k) : 'disques' montre les disques de la variante k ; 'etrier' sort (k = 1) ou rentre (k = 0) les
- *   plaquettes. L'ombre est recuite après chaque changement ; pour les plaquettes, à la fin de leur sortie ;
+ *   variante(id, k) : 'etrier', la seule zone à variante de zones.json, sort (k = 1) ou rentre (k = 0) les
+ *   plaquettes, et l'ombre est recuite à la fin de leur sortie. Un maillage qui porte une variante, s'il y en a, ne
+ *   reste visible que pour son k ;
  *   redimensionner(w, h) : taille de l'image, en pixels CSS ;
  *   image(now) : à appeler à chaque image ; dessine si besoin et renvoie true quand il a dessiné ;
  *   pastilles() : la place de l'ancre de chaque zone dans l'image, [{ id, x, y, visible }] ;

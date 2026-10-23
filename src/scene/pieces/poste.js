@@ -1,21 +1,27 @@
-// Pièce 3D : poste de pilotage d'origine. Capot et entretoise du jeu de direction, potence Canyon ST0046, cintre Canyon
-// HB0067 et son ruban Ergospeed Gel noir, embouts, cocottes Shimano GRX ST-RX610-R à droite et BL-RX610-L à gauche,
-// leviers, durites du cintre jusqu'au capot du jeu de direction et gaine du dérailleur.
+// Pièce 3D : poste de pilotage d'origine du Grizl CF 8 Di2. Capot et entretoise du jeu de direction, potence Canyon
+// ST0046, cintre Canyon HB0067 et son ruban Ergospeed Gel noir, embouts, manettes Shimano GRX Di2 ST-RX825 des deux
+// côtés (cocotte, levier de frein et palette), durites du cintre jusqu'au capot du jeu de direction. Les manettes
+// passent les vitesses sans fil : aucune gaine ne part du cintre.
 //
 // Repère de geometrie.js, en millimètres : x vers l'avant, y vers le haut, z vers la droite du cycliste.
 // Les cotes viennent de GEO, de points() et de COTES, chacune avec son document dans SOURCES. Les autres nombres de ce
 // fichier sont des valeurs de dessin : formes de la potence, du capot, de la courbe du cintre, des cocottes et des
 // leviers, épaisseur du ruban, trajet des durites. META.approche les liste, sans chiffre.
+// Lu sur la photo officielle de profil (canyon-photo-4556-fv), à l'échelle de l'empattement : le profil de la cocotte
+// (repose-main bas et long, haute corne à l'avant), le levier qui descend sous la corne, la palette plus petite derrière
+// lui, et les durites qui sortent du ruban près de la potence pour plonger dans le capot du jeu de direction, devant le
+// pivot, sous la potence.
 //
 // La main d'abord. Canyon publie la position de la main sur la cocotte droite (ancres.mains : reach et stack
 // efficaces). La cocotte est posée pour que son point de saisie tombe exactement là. Le cintre est ensuite construit
 // en arrière, depuis son collier dans la potence, avec le déport et la descente du marquage officiel. Deux réglages
 // non publiés rattrapent l'écart : la place de la cocotte sur la courbe du cintre et la rotation du cintre dans la
 // potence. Ils sont calculés, pas choisis.
-// Zones : cocottes, leviers et durites en zone 'manettes' ; le reste sans zone. Aucune variante.
+// Zones : cocottes, leviers, palettes et durites en zone 'manettes' ; le reste sans zone. Aucune variante.
 // Aucun import : le module ne reçoit que les outils de construction, les points et GEO.
 
-const FICHE = 'canyon-4553';
+const FICHE = 'canyon-4556';
+const MANETTE = 'shimano-st-rx825';
 const cote = (v, src) => Object.freeze({ v, src });
 
 // Cotes publiées propres à ces pièces. Potence, largeur, déport et descente du cintre sont dans GEO.
@@ -24,30 +30,33 @@ export const COTES = Object.freeze({
   evasement: cote(16, 'canyon-hb0067'), // « Flare 16° », aussi marqué sur le cintre
   inclinaison: cote(5, 'canyon-hb0067'), // « Downsweep: 5° »
   largeurDrops: cote(510, 'canyon-hb0067'), // « 440mm (510mm in the drops) »
-  collierCocotteMin: cote(23.8, 'shimano-st-rx610-r'), // « Clamp band / Diameter (mm) 23.8-24.2 »
-  collierCocotteMax: cote(24.2, 'shimano-st-rx610-r'),
+  collierCocotteMin: cote(23.8, MANETTE), // « Clamp band (mm) 23.8-24.2 »
+  collierCocotteMax: cote(24.2, MANETTE),
 });
 
 export const META = Object.freeze({
   id: 'poste',
-  nom: 'Jeu de direction, potence ST0046, cintre HB0067, ruban, cocottes GRX, leviers et durites',
-  zone: null, // cocottes, leviers et durites en zone 'manettes', le reste sans zone
+  nom: 'Jeu de direction, potence ST0046, cintre HB0067, ruban, manettes GRX Di2 ST-RX825 et durites',
+  zone: null, // cocottes, leviers, palettes et durites en zone 'manettes', le reste sans zone
   sources: Object.freeze([
     FICHE,
-    'canyon-photo-4553-fv',
+    'canyon-photo-4556-fv',
     'canyon-geometrie-velo-route',
     'canyon-hb0067',
     'canyon-photo-hb0067-marquage',
     'canyon-photo-st0046',
-    'shimano-rx610-1x12',
-    'shimano-st-rx610-r',
-    'shimano-bl-rx610-l',
+    MANETTE,
+    'shimano-gamme-rx820-1x12-di2',
+    'shimano-dm-gadbr10',
   ]),
   approche: Object.freeze([
-    'Point de saisie de la cocotte : Canyon ne le précise pas. Il est pris sur le dessus de la cocotte, au plat où ' +
-      'se pose la main, avant la corne.',
-    'Cocottes : forme approchée d’après la photo officielle du vélo. La cocotte gauche est dessinée comme la droite.',
-    'Leviers : forme approchée d’après la photo officielle du vélo. Le petit levier de la manette droite est approché.',
+    'Point de saisie de la cocotte : Canyon ne le précise pas. Il est pris sur le dessus de la cocotte, au creux où ' +
+      'la main se cale contre le pied de la corne.',
+    'Cocottes : Shimano ne publie pas leurs cotes. Repose-main et corne en forme approchée d’après la photo officielle ' +
+      'du vélo. La cocotte gauche est dessinée comme la droite. Les nervures et le marquage du repose-main ne sont pas ' +
+      'dessinés.',
+    'Leviers : levier de frein et palette plus petite derrière lui, en forme approchée d’après la photo officielle du ' +
+      'vélo, des deux côtés. La zone striée du levier n’est pas dessinée.',
     'Place des cocottes sur la courbe du cintre et rotation du cintre dans la potence : non publiées. Elles sont ' +
       'calculées pour que la main tombe au point publié par Canyon.',
     'Courbe du cintre : seuls le déport, la descente, l’évasement, l’inclinaison et les largeurs sont publiés. ' +
@@ -57,11 +66,11 @@ export const META = Object.freeze({
     'Ruban : épaisseur et début du ruban approchés.',
     'Potence : longueur et angle publiés. Corps, capot de serrage et vis approchés d’après la photo officielle.',
     'Capot et entretoise du jeu de direction : formes et hauteurs approchées. Le nombre d’entretoises n’est pas publié.',
-    'Durites et gaine : grosseur et trajet approchés. Elles longent le cintre sous le ruban et entrent dans le capot ' +
-      'du jeu de direction, comme sur la photo officielle.',
+    'Durites : grosseur et trajet approchés. Elles longent le cintre sous le ruban, en sortent près de la potence et ' +
+      'entrent dans le capot du jeu de direction, devant le pivot, comme sur la photo officielle.',
   ]),
   aVerifier: Object.freeze([
-    'référence du levier gauche : la fiche ne donne pas sa référence complète, à lire sur la pièce',
+    'manette gauche : avec ou sans boutons de vitesses, la fiche ne donne pas sa référence complète, à lire sur la pièce',
     'sens de montage de la potence, à regarder sur le vélo',
   ]),
 });
@@ -76,30 +85,36 @@ const RAYON_RUBAN = (COTES.collierCocotteMin.v + COTES.collierCocotteMax.v) / 4 
 // Cocotte : sections le long de la cocotte depuis le collier, sur l'axe du cintre. [x, dessus, dessous, demi-largeur].
 // La main se pose au plat, PRISE. CALAGE : angle entre la cocotte et le cintre à son collier, en degrés.
 // COCOTTE, LEVIER et poseCintre sont exportés pour le schéma 2D (schema2d.js), qui dessine le même poste de profil.
-const PRISE = [42, 48];
-const CALAGE = 40;
+// ST-RX825, de profil sur la photo : un repose-main bas et long sur le cintre, qui monte vers une haute corne arrondie,
+// puis le levier sous la corne. La main se cale au creux, contre le pied de la corne : c'est le point de saisie.
+const PRISE = [66, 35];
+const CALAGE = 12;
 export const COCOTTE = [
-  [-24, 13, -9, 10],
-  [-15, 35, -15, 14.5],
-  [-4, 42, -17.5, 16],
-  [9, 46, -17, 16.5],
-  [24, 47.5, -14, 17],
-  [PRISE[0], PRISE[1], -9, 17],
-  [58, 50, -3, 16],
-  [70, 56, 2, 14.5],
-  [80, 64, 6, 13],
-  [88, 70, 10, 11.5],
-  [94, 71, 16, 10],
-  [98.5, 65, 24, 8],
-  [101, 54, 33, 5.5],
+  [-14, 12, -8, 10],
+  [-4, 18, -13, 14],
+  [8, 21, -16, 15.5],
+  [22, 22.5, -19, 16],
+  [36, 24, -20, 16.5],
+  [48, 27, -19, 16.5],
+  [58, 32, -17.5, 16],
+  [PRISE[0], PRISE[1], -15.5, 15.5],
+  [73, 41, -13, 14],
+  [79, 48.5, -10, 12.5],
+  [87, 51, -6.5, 11.5],
+  [95, 49, -2, 10.5],
+  [102, 42, 2, 9],
+  [108, 31, 5.5, 7],
+  [111, 18, 7.5, 4.5],
 ];
-// Leviers, dans le repère de la cocotte : le grand levier de frein, puis le petit levier de la manette droite.
-export const LEVIER = [[82, 12], [88, -10], [92, -40], [90, -70], [83, -96], [75, -110]];
-const PETIT_LEVIER = [[78, 8], [84, -16], [86, -40]];
+// Leviers, dans le repère de la cocotte : le levier de frein sous la corne, puis la palette, plus petite, derrière lui.
+export const LEVIER = [[103, 3], [106, -12], [105, -36], [101, -58], [95, -77], [90, -88]];
+const PALETTE = [[88, -2], [87, -26], [83, -48], [77, -66], [73, -76]];
 // Potence et jeu de direction, le long du pivot depuis le haut de la douille.
 const POTENCE = { serrage: 21, rayonSerrage: 21, rayonCollier: 21.5, demiCollier: 22, capot: 10, bouchon: 4 };
 const DURITE = 2.6;
-const ENTREE = { hauteur: 6, recul: 21 }; // entrée des durites à l'arrière du capot du jeu de direction
+// Entrée des durites dans le capot du jeu de direction : le long du pivot depuis le haut de la douille, devant le pivot,
+// et l'écart de chaque durite au plan du vélo.
+const ENTREE = { hauteur: 9, avance: 17, z: 5 };
 
 const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
@@ -109,9 +124,9 @@ const v = (q, z = 0) => [q[0], q[1], z];
 
 /**
  * Ajoute au groupe des outils le jeu de direction, la potence, le cintre, le ruban, les embouts, les cocottes, les
- * leviers, les durites et la gaine du cintre. Les outils en ressortent sans zone ni variante.
- * Noms des maillages que vérifient les tests : cocotte droite, cocotte gauche, levier, durite, collier du cintre,
- * embout de cintre. Les autres : cintre, potence, jeu de direction, gaine.
+ * leviers, les palettes et les durites. Les outils en ressortent sans zone ni variante.
+ * Noms des maillages que vérifient les tests : cocotte droite, cocotte gauche, levier, palette, durite, collier du
+ * cintre, embout de cintre. Les autres : cintre, potence, jeu de direction.
  * @param {object} o Les outils de creerOutils.
  * @param {object} p Les points de points(geo).
  * @param {object} geo GEO, ou un objet de même forme.
@@ -140,10 +155,10 @@ function directionEtPotence(o, p) {
   const jeu = m => { m.name = 'jeu de direction'; return m; };
   const potence = m => { m.name = 'potence'; return m; };
 
-  // Capot conique sur la douille, entrée des durites à l'arrière, entretoise jusqu'à la potence.
+  // Capot conique sur la douille, entrée des durites devant le pivot, entretoise jusqu'à la potence.
   jeu(o.tube(v(HTt), v(le(POTENCE.capot)), 26.5, 21.5, 'black', { seg: 44 }));
-  const entree = add(le(ENTREE.hauteur), mul(arriere, ENTREE.recul - 3));
-  jeu(o.rbox(v(entree), [12, 11, 30], Math.atan2(dHT[1], dHT[0]) - Math.PI / 2, 'black', 3));
+  const entree = add(le(ENTREE.hauteur - 1), mul(arriere, -ENTREE.avance));
+  jeu(o.rbox(v(entree), [12, 10, 24], Math.atan2(dHT[1], dHT[0]) - Math.PI / 2, 'black', 3));
   const basPotence = le(-POTENCE.serrage, S0);
   if (Math.hypot(...sub(basPotence, le(POTENCE.capot))) > 0.5) {
     jeu(o.tube(v(le(POTENCE.capot)), v(basPotence), 18.5, 18.5, 'black', { seg: 40 }));
@@ -247,7 +262,7 @@ function cintre(o, p, pts) {
   o.tube(e0, e1, RAYON_RUBAN + 0.3, RAYON_RUBAN + 0.3, 'black', { seg: 32 }).name = 'embout de cintre';
 }
 
-// Cocotte, grand levier et, à droite, le petit levier de la manette.
+// Cocotte, levier de frein et palette.
 // L'arrière de la cocotte serre le cintre au plus près.
 function cocotte(o, pose, s, p) {
   const T = o.THREE;
@@ -280,19 +295,19 @@ function cocotte(o, pose, s, p) {
   placer(corps).name = nom;
 
   // Leviers : une lame qui suit le chemin, épaisse dans le plan du vélo, fine en travers.
-  const lame = (chemin, z, demiLargeur) => {
+  const lame = (chemin, z, demiEpaisseur, demiLargeur, role, nomLame) => {
     const forme = new T.Shape();
-    forme.moveTo(-3.5, -demiLargeur);
-    forme.lineTo(3.5, -demiLargeur);
-    forme.lineTo(3.5, demiLargeur);
-    forme.lineTo(-3.5, demiLargeur);
+    forme.moveTo(-demiEpaisseur, -demiLargeur);
+    forme.lineTo(demiEpaisseur, -demiLargeur);
+    forme.lineTo(demiEpaisseur, demiLargeur);
+    forme.lineTo(-demiEpaisseur, demiLargeur);
     forme.closePath();
     const trajet = new T.CatmullRomCurve3(chemin.map(([x, y]) => new T.Vector3(x, y, z)));
-    const m = o.mesh(new T.ExtrudeGeometry(forme, { steps: 40, bevelEnabled: false, extrudePath: trajet }), 'black');
-    placer(m).name = 'levier';
+    const m = o.mesh(new T.ExtrudeGeometry(forme, { steps: 40, bevelEnabled: false, extrudePath: trajet }), role);
+    placer(m).name = nomLame;
   };
-  lame(LEVIER, 0, 8);
-  if (s > 0) lame(PETIT_LEVIER, -6, 5);
+  lame(LEVIER, 0, 3.5, 8, 'black', 'levier');
+  lame(PALETTE, -s * 3, 2.5, 5, 'hood', 'palette');
 }
 
 // Volume d'une cocotte : sections superelliptiques, lissées en Catmull-Rom, fermées aux deux bouts.
@@ -336,8 +351,8 @@ function volume(T, cles, n = 24, e = 2.6) {
   return g;
 }
 
-// Durite de frein (et gaine du dérailleur à droite) : de la cocotte le long du cintre, sous le ruban, jusqu'au début
-// du ruban, puis vers le bas et l'arrière jusqu'à l'entrée du capot du jeu de direction.
+// Durite de frein : de la cocotte le long du cintre, sous le ruban, jusqu'au début du ruban, puis vers le bas, sous la
+// potence, jusqu'à l'entrée du capot du jeu de direction, devant le pivot.
 function durites(o, p, pts, iCollier, s) {
   const T = o.THREE;
   const axe = new T.CatmullRomCurve3(pts.map(q => new T.Vector3(...q)));
@@ -354,16 +369,12 @@ function durites(o, p, pts, iCollier, s) {
       q.push(c.add(off).toArray());
     }
     const sortie = q[q.length - 1];
-    q.push([sortie[0] - 14, sortie[1] - 20, sortie[2] - s * 10]);
-    q.push(v(le(32, 40), s * 24), v(le(16, 31), s * zEntree), v(le(ENTREE.hauteur, ENTREE.recul), s * zEntree));
+    q.push([sortie[0] - 4, sortie[1] - 14, sortie[2] - s * 18]);
+    q.push(v(le(30, -26), s * 26), v(le(17, -ENTREE.avance - 3), s * (zEntree + 5)),
+      v(le(ENTREE.hauteur + 1, -ENTREE.avance), s * zEntree));
     const m = o.tubeCourbe(q, DURITE, role, 90);
     m.name = nom;
     return m;
   };
-  trace([-0.45, -0.89], 5, 'hose', 'durite');
-  if (s > 0) {
-    o.zone(null);
-    trace([-0.92, -0.39], 12, 'housing', 'gaine');
-    o.zone('manettes');
-  }
+  trace([-0.45, -0.89], ENTREE.z, 'hose', 'durite');
 }

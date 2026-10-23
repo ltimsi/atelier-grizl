@@ -25,9 +25,9 @@
 //      fasse défiler la page ; le bouton aussi, une fois la page descendue jusqu'à lui, comme après avoir lu les
 //      cartes. Sur une seule colonne, une pastille ne fait pas défiler la page et le bouton d'une carte ramène l'image à
 //      l'écran (95 % au moins entre la barre du haut et le bas de l'écran) ; sur deux colonnes, la carte choisie est à
-//      l'écran. Ensuite, avec WebGL, les variantes de #variante (disque XT en vue d'ensemble, la
-//      plus lourde, pour le budget de triangles ; plaquettes sorties) ; l'onglet « Schéma 2D » ; la fenêtre « Ce qui
-//      est approché », qui s'ouvre et se remplit ;
+//      l'écran. Ensuite, avec WebGL : la zone des disques, sans variante (#variante reste caché), puis la vue
+//      d'ensemble, pour le budget de triangles ; la variante de l'étrier (plaquettes sorties) ; l'onglet « Schéma 2D » ;
+//      la fenêtre « Ce qui est approché », qui s'ouvre et se remplit ;
 //   3. anciennes ancres de la racine : index.html#freins-plaquettes et #freins-plaquettes arrivent sur
 //      freins/plaquettes/, #freins sur freins/, #freins-pl-2 sur freins/plaquettes/#freins-pl-2, avec la planche à
 //      l'écran sous la barre. La racine ne reste pas derrière Retour : Retour quitte le site ;
@@ -640,17 +640,14 @@ async function controler(opts) {
         await capturer(page, 'accueil-bouton-etrier.png');
 
         if (!sansGl) {
-          // Le disque XT en vue d'ensemble : la variante la plus lourde, pour le budget de triangles.
+          // Les disques : un seul type, donc pas de variante. Puis la vue d'ensemble, pour le budget de triangles.
           const variantes = page.locator('#variante button');
           await agir('le bouton des disques', () => page.click('button.zone-btn[data-zone="disques"]'));
-          if (await variantes.count() >= 2) {
-            await agir('la variante XT', () => variantes.nth(1).click());
-            controle(await variantes.nth(1).getAttribute('aria-pressed') === 'true', 'accueil : la variante XT n’est pas pressée');
-            await agir('la vue d’ensemble', () => page.click('#vue-ensemble'));
-            await relever(page, 'accueil, disque XT en vue d’ensemble');
-            await capturer(page, 'accueil-variante-xt.png', { sel: '#scene-stage' });
-            await agir('la variante d’origine', () => variantes.nth(0).click());
-          } else erreur('contrôle : accueil : pas de bouton de variante pour les disques');
+          e = await etat();
+          controle(e.variante === null, 'accueil : la zone des disques montre une variante');
+          await agir('la vue d’ensemble', () => page.click('#vue-ensemble'));
+          await relever(page, 'accueil, disques en vue d’ensemble');
+          await capturer(page, 'accueil-disques.png', { sel: '#scene-stage' });
           // La sortie des plaquettes, animée avec --mouvement, puis leur retour.
           await agir('le bouton de l’étrier', () => page.click('button.zone-btn[data-zone="etrier"]'));
           if (await variantes.count() >= 2) {

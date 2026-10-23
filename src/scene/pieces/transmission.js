@@ -1,45 +1,53 @@
-// Pièce 3D : transmission d'origine. Pédalier Shimano GRX FC-RX610-1 (plateau de 40, manivelles de 165), boîtier
-// BB-RS500-PB, cassette SLX CS-M7100-12 en 10-45, chaîne CN-M7100, dérailleur GRX RD-RX822-GS à chape courte et sa gaine.
-// Pas de pédales : le vélo est livré sans.
+// Pièce 3D : transmission d'origine du Grizl CF 8 Di2. Pédalier Shimano GRX FC-RX820-1 (plateau de 40, manivelles de
+// 165), boîtier Pressfit BB72, cassette Deore XT CS-M8200-12 en 9-45, chaîne Shimano XT et dérailleur Deore XT Di2
+// RD-M8250-GS à chape moyenne. Le dérailleur est sans fil et porte sa batterie : aucune gaine ni aucun fil ne le relie
+// au cadre, comme sur la photo officielle. Pas de pédales : le vélo est livré sans.
 //
 // Repère de geometrie.js, en millimètres : x vers l'avant, y vers le haut, z vers la droite du cycliste.
 // Les cotes viennent de GEO, de points() et de COTES, chacune avec son document dans SOURCES. Les autres nombres de ce
 // fichier sont des valeurs de dessin : épaisseurs des pignons et du plateau, profil des dents, chaîne, bras, cuvettes,
-// corps et chape du dérailleur, trajet de la gaine. META.approche les liste, sans chiffre.
-// Lu sur la photo officielle de profil (canyon-photo-4553-fv) : angle des quatre bras du plateau par rapport à la
-// manivelle, grand pignon foncé, place du dérailleur sous la patte, sortie de la gaine près de la patte.
+// corps, batterie et chape du dérailleur. META.approche les liste, sans chiffre.
+// Lu sur la photo officielle de profil (canyon-photo-4556-fv), à l'échelle de l'empattement : angle des quatre bras du
+// plateau par rapport à la manivelle, grand pignon foncé, contour du corps du dérailleur, son axe B sous la patte, le
+// capuchon du pivot de la chape, le galet bas et le brin de chaîne entre les galets. La chaîne y est sur le treize dents.
+// La cassette : son petit pignon et sa bague de blocage ne font qu'une pièce (« The smallest sprocket and the lock ring
+// are combined into a single part », manuel Shimano DM-MACS010, shimano-dm-macs010).
 // Aucune zone : les ateliers de la transmission ne sont pas dans cette livraison.
 // Un seul import : cheminChaine, du module pur geometrie.js. three.js arrive par les outils.
 import { cheminChaine } from '../geometrie.js';
 
-const FICHE = 'canyon-4553';
+const FICHE = 'canyon-4556';
+const DERAILLEUR = 'shimano-rd-m8250-gs';
 const cote = (v, src) => Object.freeze({ v, src });
 
-// Cotes publiées propres à ces pièces. Ligne de chaîne, plateau, manivelles et galets sont dans GEO.
+// Cotes publiées propres à ces pièces. Ligne de chaîne, plateau, manivelles, galets et largeur de la boîte de pédalier
+// sont dans GEO.
 export const COTES = Object.freeze({
-  entraxe: cote(110, 'shimano-fc-rx610-1'), // « P.C.D. (mm) 110 »
-  brasPlateau: cote(4, 'shimano-fc-rx610-1'), // « Spider/gear arms 4 »
-  facteurQ: cote(151, 'shimano-fc-rx610-1'), // « Q-factor (mm) 151 »
-  largeurBoite: cote(86.5, 'shimano-bb-rs500-pb'), // « Press-Fit bottom bracket shell width (mm) 86.5 »
+  entraxe: cote(110, 'shimano-fc-rx820-1'), // « P.C.D. (mm) 110 »
+  brasPlateau: cote(4, 'shimano-fc-rx820-1'), // « Spider/gear arms 4 »
+  facteurQ: cote(151, 'shimano-fc-rx820-1'), // « Q-factor (mm) 151 »
+  capacite: cote(36, DERAILLEUR), // « Total capacity 36T »
+  grandPignonMax: cote(45, DERAILLEUR), // « Low sprocket Max. 45T »
+  petitPignonMin: cote(9, DERAILLEUR), // « Top sprocket ... Min. 9T »
 });
 
-// Dentures de la CS-M7100-12 en 10-45, du plus petit pignon au plus grand :
-// « Combination 10-12-14-16-18-21-24-28-32-36-40-45T » (shimano-cs-m7100-12).
-export const DENTS_CASSETTE = Object.freeze([10, 12, 14, 16, 18, 21, 24, 28, 32, 36, 40, 45]);
+// Dentures de la CS-M8200-12 en 9-45, du plus petit pignon au plus grand :
+// « Combination ... 9-11-13-15-17-19-21-24-28-33-39-45T » (shimano-cs-m8200-12).
+export const DENTS_CASSETTE = Object.freeze([9, 11, 13, 15, 17, 19, 21, 24, 28, 33, 39, 45]);
 
 export const META = Object.freeze({
   id: 'transmission',
-  nom: 'Pédalier GRX FC-RX610-1, boîtier BB-RS500, cassette SLX CS-M7100, chaîne CN-M7100 et dérailleur GRX RD-RX822',
+  nom: 'Pédalier GRX FC-RX820-1, boîtier BB72, cassette XT CS-M8200, chaîne Shimano XT et dérailleur XT Di2 RD-M8250',
   zone: null, // les ateliers de la transmission ne sont pas dans cette livraison
   sources: Object.freeze([
     FICHE,
-    'canyon-photo-4553-fv',
-    'shimano-rx610-1x12',
-    'shimano-fc-rx610-1',
-    'shimano-bb-rs500-pb',
-    'shimano-cs-m7100-12',
-    'shimano-cn-m7100',
-    'shimano-rd-rx822-gs',
+    'canyon-4556-en',
+    'canyon-photo-4556-fv',
+    'shimano-fc-rx820-1',
+    'shimano-cs-m8200-12',
+    'shimano-dm-macs010',
+    DERAILLEUR,
+    'shimano-bt-dn320',
   ]),
   approche: Object.freeze([
     'Plateau : nombre de dents, entraxe des vis et nombre de bras publiés. Profil des dents, épaisseur et découpe ' +
@@ -48,16 +56,24 @@ export const META = Object.freeze({
       'approchés. Angle des bras lu au mieux sur la photo officielle.',
     'Axe de pédalier et cuvettes du boîtier : seule la largeur de la boîte est publiée. Diamètres et formes approchés.',
     'Cassette : dentures et matières publiées par Shimano. Épaisseur des pignons, fenêtres et araignée approchées. ' +
-      'Le grand pignon en aluminium est dessiné foncé, comme sur la photo officielle.',
+      'Le grand pignon en aluminium est dessiné foncé, comme sur la photo officielle. Le petit pignon et sa bague de ' +
+      'blocage sont dessinés d’une pièce, comme le dit le manuel Shimano de la cassette.',
     'Position de la cassette sur la roue libre et écart entre les pignons : non publiés, approchés.',
-    'Chaîne : largeur, plaques et rouleaux approchés. Elle est dessinée sur un seul pignon, choisi pour la lisibilité.',
-    'Dérailleur : chape courte selon la fiche Canyon, galets de treize dents selon Shimano. Corps, biellettes, chape, ' +
-      'écart des galets et place sous la patte approchés d’après la photo officielle.',
-    'Gaine du dérailleur : sortie du cadre et trajet approchés d’après la photo officielle.',
+    'Chaîne : Canyon la nomme Shimano XT, sans référence. Largeur, plaques et rouleaux approchés. Elle est dessinée ' +
+      'sur le pignon où la montre la photo officielle.',
+    'Dérailleur : chape moyenne selon la fiche Canyon, galets de treize dents, sans fil et à batterie intégrée selon ' +
+      'Shimano. Contour du corps, capuchon du pivot, chape et galet bas approchés d’après la photo officielle. ' +
+      'Épaisseur du corps, biellettes et place sous la patte approchées.',
+    'Galet haut du dérailleur : caché par le corps sur la photo officielle. Sa place est approchée.',
+    'Batterie : logée dans le corps du dérailleur. Sa place et son logement sont approchés, la photo officielle ne les ' +
+      'montre pas distinctement.',
+    'Logos, inscriptions, bouton et voyant du dérailleur, de la cassette et du pédalier : non dessinés.',
   ]),
   aVerifier: Object.freeze([
     'longueur des manivelles, gravée sur la manivelle',
     'place du dérailleur sous la patte : elle dépend du type de patte, à regarder sur le vélo',
+    'référence de la chaîne : Canyon dit seulement Shimano XT, à lire sur la chaîne',
+    'référence exacte du boîtier de pédalier, à lire sur la pièce',
   ]),
 });
 
@@ -66,34 +82,65 @@ const D2R = Math.PI / 180;
 const DENT = { pointe: 3, pied: 1.5 }; // dents des pignons et du plateau, au-dessus et sous le cercle primitif
 const EP_PIGNON = 1.6;
 const EP_PLATEAU = 2;
-const RAYON_CORPS = 17.6; // trou des petits pignons, posés sur le corps de roue libre dessiné par roues.js
+const RAYON_CORPS = 17.6; // trou des pignons, posés sur le corps de roue libre dessiné par roues.js
+// Petit pignon et sa bague de blocage, d'une pièce : le pignon de neuf dents est trop petit pour le corps de roue libre,
+// la bague se visse dedans. trou : trou du pignon ; bague : rayons extérieurs des crans et rayon intérieur.
+const PETIT_PIGNON = { trou: 12.5, bague: [15.5, 14.4, 11], ep: 2.2 };
 const ARAIGNEE = { dentsMin: 28, trou: 34, coque: [31, 35], voile: 4 }; // grands pignons portés par l'araignée
 // Chaîne : centres des plaques intérieures et extérieures de part et d'autre du plan de la chaîne, épaisseur et
 // demi-hauteur des plaques, rayon et longueur des rouleaux et des axes.
 const CHAINE = { int: 1.55, ext: 2.35, ep: 0.8, demiHauteur: 4.4, rouleau: 3.8, longRouleau: 2.3, axe: 1.8, longAxe: 5.6 };
 // Pédalier : vis du plateau à ces angles de la manivelle droite, lus au mieux sur la photo officielle.
-const ANGLES_VIS = [56, 125, 228, 303];
+const ANGLES_VIS = [53, 124, 222, 302];
 const BRAS = { ep: 4.5, largeurPied: 22, largeurBout: 14 }; // bras de l'araignée, devant le plateau
 const MANIVELLE = { ep: 13, biseau: 2, rayonAxe: 17, rayonOeil: 11.5, trouPedale: 6.35, moyeu: 20 };
 const COUPELLE = { rayon: 24, ep: 3 }; // collerette des cuvettes du boîtier, contre la boîte
 const RAYON_AXE = 12;
-// Dérailleur : pied sur la patte dessinée par cadre.js, face extérieure de cette patte, chape et galets.
-const PIED_DERAILLEUR = [-8.7, -24.6]; // depuis l'axe de la roue arrière
-const FACE_PATTE = 85;
-const CHAPE = { ecart: 6, ep: 1.8, lobeHaut: 14, lobeHautInterieur: 11, lobeBas: 30, lobeBasInterieur: 26 };
+// Dérailleur, de profil, depuis l'axe de la roue arrière, lu sur la photo officielle : l'axe B sur la patte dessinée par
+// cadre.js ; le contour du corps (bloc arrière qui loge la batterie, biellettes, bas du corps au-dessus de la chape) ;
+// le capuchon du pivot de la chape. Le corps est une épaisseur de ce contour, entre le plan de la chape et le dehors de
+// la patte, qu'il coiffe. CORPS_DERAILLEUR et PIVOT_CHAPE servent aussi au schéma 2D (schema2d.js).
+const PIED_DERAILLEUR = [-9.5, -27.5];
+export const CORPS_DERAILLEUR = Object.freeze([
+  [-62.5, -22.5], [-21, -17.8], [-8, -21], [3, -33], [21.5, -43.5], [45, -76], [47, -90], [38, -98], [20, -102],
+  [3.5, -101.5], [-17.5, -95.5], [-38.5, -80.5], [-62.5, -68.5],
+].map(q => Object.freeze(q)));
+export const PIVOT_CHAPE = Object.freeze([34.4, -108.5]);
+const CORPS = { z: 83, ep: 26, biseau: 2.5 }; // milieu et épaisseur du corps, en z
+const BIELLETTE = { centre: [13, -68], taille: [62, 22, 3], angle: -0.83 }; // biellette extérieure, en relief
+// Batterie, dans le bloc arrière du corps, et la trappe de son logement, sur la face extérieure.
+const BATTERIE = { centre: [-40, -45], taille: [34, 30, 16], trappe: [30, 24, 1.5] };
+const PIVOT = { rayon: 13.5, capuchon: 8.5 };
+// Chape : demi-écart des plaques autour du plan de la chaîne, épaisseur, rayons des plaques autour du pivot, du galet
+// haut et du galet bas. La plaque extérieure va du pivot au galet bas ; une patte la relie au galet haut.
+const CHAPE = { ecart: 6, ep: 1.8, pivot: 14, haut: 11, bas: 22, basInterieur: 19 };
 const GALET = { pointe: 2.2, pied: 1.5, ep: 2.2, moyeu: 7 };
-const GAINE = 2.6;
 
 const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
-const mul = (a, k) => [a[0] * k, a[1] * k];
 const pol = (c, r, deg) => [c[0] + r * Math.cos(deg * D2R), c[1] + r * Math.sin(deg * D2R)];
-const v3 = (q, z) => [q[0], q[1], z];
+
+// Enveloppe convexe de cercles [centre, rayon] : le contour d'une plaque de chape, dans le sens trigonométrique.
+function enveloppe(cercles) {
+  const pts = cercles.flatMap(([c, r]) => Array.from({ length: 48 }, (_, i) => pol(c, r, i * 7.5)));
+  pts.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const vire = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const demi = liste => {
+    const h = [];
+    for (const q of liste) {
+      while (h.length >= 2 && vire(h[h.length - 2], h[h.length - 1], q) <= 0) h.pop();
+      h.push(q);
+    }
+    return h.slice(0, -1);
+  };
+  return [...demi(pts), ...demi(pts.slice().reverse())];
+}
 
 /**
- * Ajoute au groupe des outils le pédalier, le boîtier, la cassette, la chaîne, le dérailleur et sa gaine.
+ * Ajoute au groupe des outils le pédalier, le boîtier, la cassette, la chaîne et le dérailleur avec sa batterie.
  * Aucun maillage n'a de zone ni de variante, et les outils en ressortent sans zone ni variante.
- * Noms des maillages que vérifient les tests : pignon 10 à pignon 45, plateau, manivelle droite, manivelle gauche,
- * chaîne, galet. Les autres : araignée de cassette, contre-écrou, axe de pédalier, boîtier, capuchon, dérailleur, gaine.
+ * Noms des maillages que vérifient les tests : pignon 9 à pignon 45, plateau, manivelle droite, manivelle gauche,
+ * chaîne, galet, boîtier, dérailleur, batterie. Les autres : araignée de cassette, bague du petit pignon, axe de
+ * pédalier, capuchon.
  * @param {object} o Les outils de creerOutils.
  * @param {object} p Les points de points(geo).
  * @param {object} geo GEO, ou un objet de même forme.
@@ -175,7 +222,7 @@ function pedalier(o, p, geo, zPlateau) {
   oeil.absarc(L, 0, MANIVELLE.trouPedale, 0, Math.PI * 2, true);
   profil.holes.push(oeil);
   const demiQ = COTES.facteurQ.v / 2, demiEp = MANIVELLE.ep / 2 + MANIVELLE.biseau;
-  const zBoite = COTES.largeurBoite.v / 2, zMoyeu = zBoite + COUPELLE.ep + 0.75;
+  const zBoite = geo.largeurBoite.v / 2, zMoyeu = zBoite + COUPELLE.ep + 0.75;
   for (const [s, cote, a] of [[1, 'droite', angle], [-1, 'gauche', angle + 180]]) {
     const n = nom(`manivelle ${cote}`);
     const m = n(o.extr(profil, MANIVELLE.ep, 'crank', MANIVELLE.biseau));
@@ -198,7 +245,7 @@ function pedalier(o, p, geo, zPlateau) {
   }
 }
 
-// Les douze pignons, l'araignée qui porte les grands et le contre-écrou.
+// Les douze pignons, l'araignée qui porte les grands, et la bague de blocage, d'une pièce avec le petit pignon.
 function cassette(o, p, pas, zPignon) {
   const { RA } = p;
   const dernier = DENTS_CASSETTE[DENTS_CASSETTE.length - 1];
@@ -206,8 +253,9 @@ function cassette(o, p, pas, zPignon) {
     const r = n * pas / (2 * Math.PI);
     const porte = n >= ARAIGNEE.dentsMin;
     const fenetres = porte ? { n: n >= 36 ? 6 : 5, r0: ARAIGNEE.trou + 6, r1: r - 9, gap: 0.2 } : null;
-    const forme = o.engrenage(n, r + DENT.pointe, r - DENT.pied, porte ? ARAIGNEE.trou : RAYON_CORPS, fenetres);
-    // Le grand pignon est en aluminium anodisé, les autres en acier (fiche Shimano) : il est foncé sur la photo.
+    const trou = porte ? ARAIGNEE.trou : k === 0 ? PETIT_PIGNON.trou : RAYON_CORPS;
+    const forme = o.engrenage(n, r + DENT.pointe, r - DENT.pied, trou, fenetres);
+    // Le grand pignon est en aluminium, les autres en acier (fiche Shimano) : il est foncé sur la photo.
     const m = o.extr(forme, EP_PIGNON, n === dernier ? 'cogSpider' : 'cassette');
     m.position.set(RA[0], RA[1], zPignon(k));
     m.name = `pignon ${n}`;
@@ -223,11 +271,11 @@ function cassette(o, p, pas, zPignon) {
   ], 48, 'cogSpider');
   araignee.position.set(RA[0], RA[1], 0);
   araignee.name = 'araignée de cassette';
-  // Contre-écrou à crans, contre le petit pignon.
-  const z0 = zPignon(0) + EP_PIGNON / 2, ep = 2.2;
-  const ecrou = o.extr(o.engrenage(12, 20, 18.6, 12.5), ep, 'cogSpider');
-  ecrou.position.set(RA[0], RA[1], z0 + ep / 2);
-  ecrou.name = 'contre-écrou';
+  // Bague de blocage à crans, contre le petit pignon, dont elle fait partie.
+  const z0 = zPignon(0) + EP_PIGNON / 2, [rCran, rPied, rTrou] = PETIT_PIGNON.bague;
+  const bague = o.extr(o.engrenage(12, rCran, rPied, rTrou), PETIT_PIGNON.ep, 'cogSpider');
+  bague.position.set(RA[0], RA[1], z0 + PETIT_PIGNON.ep / 2);
+  bague.name = 'bague du petit pignon';
 }
 
 // Chaîne : maillons le long du chemin de geometrie.js. Plan du plateau à l'avant, du pignon dessiné à l'arrière,
@@ -281,53 +329,43 @@ function chaine(o, p, pas, plans) {
   }
 }
 
-// Dérailleur à chape courte : pied sur la patte, biellettes, corps, chape, galets, butée de gaine et gaine.
+// Dérailleur à chape moyenne, sans fil : axe B sur la patte, corps avec la batterie, biellette extérieure, pivot et
+// capuchon de la chape, plaques de chape et galets. Aucune gaine, aucune molette de réglage de câble.
 function derailleur(o, p, geo, z) {
   const T = o.THREE;
   const { RA, poulieHaute: H, poulieBasse: B } = p;
-  const rd = m => { m.name = 'dérailleur'; return m; };
-  const pied = add(RA, PIED_DERAILLEUR);
+  const rd = (m, nom = 'dérailleur') => { m.name = nom; return m; };
+  const versVelo = q => add(RA, q);
+  const forme = pts => new T.Shape(pts.map(q => new T.Vector2(...q)));
 
-  // Pied : sur la face extérieure de la patte, vis de fixation, bras qui monte vers l'arrière jusqu'à la butée de gaine.
-  rd(o.rbox([pied[0] - 8, pied[1] - 2, FACE_PATTE + 6], [26, 22, 12], -0.35, 'rd', 4));
-  rd(o.boulon([pied[0], pied[1], FACE_PATTE + 12.6], [0, 0, 1], 3.2, 1.4, 'steel'));
-  const butee = add(pied, [-24, 8]);
-  rd(o.rbox([butee[0] + 4, butee[1] - 3, FACE_PATTE + 6], [18, 13, 10], 0.6, 'rd', 3));
-  const molette = [add(butee, [-3, 4]), add(butee, [-8, 13])];
-  rd(o.tube(v3(molette[0], FACE_PATTE + 6), v3(molette[1], FACE_PATTE + 6), 3.4, 3.4, 'black', { seg: 16 }));
+  // Corps : le contour de la photo, en épaisseur, du côté extérieur de la patte. L'axe B affleure sur sa face.
+  const corps = rd(o.extr(forme(CORPS_DERAILLEUR.map(versVelo)), CORPS.ep, 'rd', CORPS.biseau));
+  corps.position.z = CORPS.z;
+  const face = CORPS.z + CORPS.ep / 2 + CORPS.biseau;
+  rd(o.boulon([...versVelo(PIED_DERAILLEUR), face + 0.8], [0, 0, 1], 4.2, 1.6, 'black'));
+  rd(o.rbox([...versVelo(BIELLETTE.centre), face + BIELLETTE.taille[2] / 2 - 1.5], BIELLETTE.taille, BIELLETTE.angle,
+    'rd', 1.2));
+  // Batterie, logée dans le bloc arrière du corps, et la trappe de son logement, à peine en relief.
+  const cb = versVelo(BATTERIE.centre);
+  rd(o.rbox([...cb, CORPS.z], BATTERIE.taille, 0, 'black', 2), 'batterie');
+  rd(o.rbox([cb[0], cb[1] + 3, face + BATTERIE.trappe[2] / 2 - 0.7], BATTERIE.trappe, 0, 'black', 0.6));
 
-  // Biellettes et corps : du pied vers le bas, jusqu'au moyeu de la chape, du côté extérieur de la chaîne.
-  const moyeu = add(H, [8, 10]);
-  const zMoyeu = z + CHAPE.ecart + CHAPE.ep / 2;
-  const a = [pied[0] + 3, pied[1] - 10, FACE_PATTE + 4], b = [moyeu[0] - 2, moyeu[1] + 10, zMoyeu + 6];
-  const d = [b[0] - a[0], b[1] - a[1]], l = Math.hypot(...d), n = [-d[1] / l, d[0] / l];
-  rd(o.tube(a, b, 9, 8, 'rd', { seg: 24 }));
-  const decale = q => [q[0] + n[0] * 11, q[1] + n[1] * 11, q[2] - 3]; // biellette intérieure, plus fine
-  rd(o.tube(decale(a), decale(b), 3.5, 3.5, 'rd', { seg: 12 }));
-  const milieu = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2 + 5];
-  rd(o.ell(milieu, [l * 0.55, 15, 8], 'rd', Math.atan2(d[1], d[0])));
-  // Moyeu de la chape (embrayage), son couvercle et le levier du stabilisateur.
-  rd(o.tubeZ(moyeu, zMoyeu, zMoyeu + 14, 12, 'rd', 32));
-  rd(o.tubeZ(moyeu, zMoyeu + 14, zMoyeu + 16, 9, 'black', 32));
-  rd(o.rbox([moyeu[0] + 10, moyeu[1] + 8, zMoyeu + 12], [12, 6, 5], 0.5, 'black', 2));
+  // Pivot de la chape : du dessus de la plaque extérieure au corps, avec son capuchon.
+  const P = versVelo(PIVOT_CHAPE), zPlaque = z + CHAPE.ecart + CHAPE.ep / 2;
+  const zCorps = CORPS.z - CORPS.ep / 2 - CORPS.biseau;
+  rd(o.tubeZ(P, zPlaque, zCorps + 1.5, PIVOT.rayon, 'rd', 32));
+  rd(o.tubeZ(P, zCorps + 1.5, zCorps + 4, PIVOT.capuchon, 'black', 32));
 
-  // Chape : deux plaques de part et d'autre de la chaîne, un grand lobe autour du galet bas. La plaque intérieure est
-  // réduite près du galet haut pour passer sous les grands pignons.
-  const dc = [B[0] - H[0], B[1] - H[1]], cl = Math.hypot(...dc), ca = Math.atan2(dc[1], dc[0]);
-  const centre = mul(add(H, B), 0.5);
-  const plaque = (haut, bas) => {
-    const s = new T.Shape();
-    s.absarc(-cl / 2, 0, haut, Math.PI / 2, Math.PI * 1.5, false);
-    s.lineTo(cl / 2, -bas);
-    s.absarc(cl / 2, 0, bas, -Math.PI / 2, Math.PI / 2, false);
-    s.closePath();
-    return s;
-  };
-  const plaques = [[1, CHAPE.lobeHaut, CHAPE.lobeBas], [-1, CHAPE.lobeHautInterieur, CHAPE.lobeBasInterieur]];
-  for (const [s, haut, bas] of plaques) {
-    const m = rd(o.extr(plaque(haut, bas), CHAPE.ep, 'rd', 0.4));
-    m.position.set(centre[0], centre[1], z + s * CHAPE.ecart);
-    m.rotation.z = ca;
+  // Chape : la plaque extérieure, du pivot au galet bas, et sa patte jusqu'au galet haut, cachée par le corps ; la
+  // plaque intérieure, d'un galet à l'autre.
+  const plaques = [
+    [1, [[P, CHAPE.pivot], [B, CHAPE.bas]]],
+    [1, [[P, CHAPE.pivot - 2], [H, CHAPE.haut]]],
+    [-1, [[H, CHAPE.haut], [B, CHAPE.basInterieur]]],
+  ];
+  for (const [s, cercles] of plaques) {
+    const m = rd(o.extr(forme(enveloppe(cercles)), CHAPE.ep, 'rd', 0.4));
+    m.position.z = z + s * CHAPE.ecart;
   }
 
   // Galets de treize dents (fiche Shimano), dans le plan de la chaîne, avec leur moyeu et leur vis.
@@ -338,14 +376,6 @@ function derailleur(o, p, geo, z) {
     g.name = 'galet';
     rd(o.tubeZ(c, z - CHAPE.ecart + 1, z + CHAPE.ecart - 1, GALET.moyeu, 'pulley', 24));
     rd(o.tubeZ(c, z - CHAPE.ecart - 1.5, z + CHAPE.ecart + 1.5, 3.5, 'steel', 12));
-    rd(o.boulon([c[0], c[1], z + CHAPE.ecart + CHAPE.ep / 2 + 1.2], [0, 0, 1], 4, 1, 'steel'));
+    rd(o.boulon([c[0], c[1], z + CHAPE.ecart + CHAPE.ep / 2 + 1.2], [0, 0, 1], 4, 1, 'black'));
   }
-
-  // Gaine : elle sort de la base droite, près de la patte, passe au-dessus de l'axe et descend dans la molette.
-  const gaine = o.tubeCourbe([
-    [RA[0] + 55, RA[1] - 11, 81], [RA[0] + 30, RA[1] + 2, 88], [RA[0] - 8, RA[1] + 17, 94],
-    [RA[0] - 36, RA[1] + 12, FACE_PATTE + 7], v3(add(molette[1], [-1, 6]), FACE_PATTE + 6),
-    v3(molette[1], FACE_PATTE + 6),
-  ], GAINE, 'housing', 48);
-  gaine.name = 'gaine';
 }

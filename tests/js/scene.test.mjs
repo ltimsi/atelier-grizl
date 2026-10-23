@@ -114,8 +114,19 @@ test('scène : approximations par pièce, avec leurs zones et leurs sources, pui
   assert.ok(geo.aVerifier.includes(GEO.angleDirection.aVerifier), 'angle de direction à vérifier');
   assert.equal(new Set(geo.aVerifier).size, geo.aVerifier.length, 'pas de doublon');
   const ids = geo.sources.map(s => s.id);
-  assert.ok(ids.includes('canyon-4553'), 'fiche Canyon');
+  assert.ok(ids.includes('canyon-4556'), 'fiche Canyon du Grizl CF 8 Di2');
+  assert.ok(!ids.some(id => /4553/.test(id)), 'plus de fiche du CF 7');
   assert.deepEqual(new Set(ids), new Set(Object.values(GEO).map(e => e.src).filter(Boolean)));
+});
+
+test('scène : la variante de l’étrier est la seule, et aucun maillage ne dépend d’une variante', () => {
+  const avecVariante = ZONES.filter(z => z.variante).map(z => z.id);
+  assert.deepEqual(avecVariante, ['etrier']);
+  for (const module of PIECES) groupeDe(module).traverse(o => {
+    if (o.isMesh) assert.equal(o.userData.variante, null, `${module.META.id} : ${o.name || o.userData.role}`);
+  });
+  const code = readFileSync(new URL('../../src/scene/scene.js', import.meta.url), 'utf8');
+  assert.ok(!/'disques' montre/.test(code), 'scene.js décrit encore la variante des disques');
 });
 
 test('scène : une source absente de SOURCES est refusée', () => {

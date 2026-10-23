@@ -65,12 +65,13 @@ Formes approchées :
 - sens de la tête de la tige de selle à la livraison, donc son recul
 - marquage de la tige de selle : la fiche la nomme de plusieurs façons, à lire sur la tige
 - ce que mesure la longueur publiée par Fizik, la selle ou ses rails
+- cotes de Fizik : le repère lu comme l’endroit où la selle a sa largeur publiée, et la section des rails lue en millimètres. Deux lectures à vérifier sur la selle
 
 #### Roues Canyon GR 30 CF, pneus Schwalbe G-One RX et axes traversants
 
 Formes approchées :
 
-- Profil de la jante : hauteur et largeur intérieure publiées, et Canyon annonce des jantes sans crochets. Largeur extérieure, flancs, siège du talon et creux central sont approchés.
+- Profil de la jante : hauteur, largeur intérieure et largeur extérieure publiées, et Canyon annonce des jantes sans crochets. Flancs, siège du talon et creux central sont approchés.
 - Section du pneu : ronde, à la largeur publiée. Le rayon extérieur du pneu monté n’est pas publié, il est approché d’après la photo officielle.
 - Crampons : Schwalbe décrit des crampons extérieurs appariés, sans cote. Petits crampons serrés au centre, crampons d’épaule plus gros et groupés par deux : taille, hauteur, inclinaison et nombre sont approchés d’après les photos officielles.
 - Moyeux : Canyon nomme des moyeux DT Swiss à rayons droits. Corps, flasques et position des flasques sont approchés.
@@ -87,61 +88,67 @@ Formes approchées :
 - version du pneu, gomme et code de sculpture : à lire sur le flanc
 - valves tubeless : présentes ou non dans le carton
 
-#### Disques SM-RT64 et XT RT-MT800, étriers GRX, plaquettes et durites
+#### Disques Deore XT MT800, étriers GRX, plaquettes L05A-RF et durites
 
 Formes approchées :
 
-- Disque d’origine : piste en acier sur un support en aluminium peint, comme le dit la fiche Shimano. Bras, trous et rivets sont approchés d’après la photo officielle de Canyon.
-- Disque XT : piste, araignée, rivets et ailettes de refroidissement en forme approchée. Aucune photo produit Shimano du disque XT n’a servi.
-- Épaisseur du disque XT : Shimano le range parmi les disques d’épaisseur standard. Il est dessiné à l’épaisseur standard donnée par la fiche du disque d’origine.
-- Bagues Center Lock : forme approchée. Celle du XT est dessinée à denture extérieure, celle d’origine reste à identifier.
-- Étriers GRX à fixation flat mount : Canyon ne donne pas le modèle. Forme approchée d’après la photo officielle, qui montre aussi leur place autour du moyeu.
-- Plaquettes : forme approchée.
+- Disque XT : piste, fentes, araignée, rivets et ailettes de refroidissement en forme approchée d’après la photo officielle du vélo, où on le voit à travers la roue. Le même disque aux deux roues.
+- Épaisseur du disque : Shimano range ce disque parmi les disques d’épaisseur standard, sans valeur dans les documents cités. Elle est approchée.
+- Bague Center Lock : forme approchée, dessinée à denture extérieure.
+- Étriers à fixation flat mount : Canyon ne donne pas le modèle. Ils sont dessinés sur celui que Shimano associe aux manettes du vélo. Corps, logements des pistons, raccord et vis approchés d’après la photo officielle, qui montre aussi leur place autour du moyeu.
+- Plaquettes : en résine à ailettes, comme les plaquettes standard de cet étrier selon Shimano. Plaque, garniture et ailettes en forme approchée.
 - Sortie des plaquettes : sens et course de l’animation approchés. Le chapitre dit seulement de retirer le clip, puis l’axe, puis les plaquettes avec leur ressort. La roue reste en place pour qu’on voie l’étrier.
-- Durites : grosseur et trajet le long de la fourche et de la base approchés. Aucune photo officielle ne montre le côté gauche du vélo.
+- Durites : grosseur et trajet le long de la fourche et de la base gauches approchés. Les photos officielles ne montrent pas ce trajet.
 
 À vérifier à la livraison :
 
 - modèle exact de l'étrier, à lire sur la pièce
+- modèle exact du disque : la fiche Canyon nomme un disque XT, ses pièces d’usure proposent un disque Ultegra, à lire sur la pièce
 - type de bague Center Lock d'origine, à lire sur la pièce
+- épaisseur neuve du disque, à lire sur la pièce
+- plaquettes d’origine et leur épaisseur neuve, à lire sur la pièce
 - trajet des durites le long de la fourche et de la base, à regarder sur le vélo
 
-#### Pédalier GRX FC-RX610-1, boîtier BB-RS500, cassette SLX CS-M7100, chaîne CN-M7100 et dérailleur GRX RD-RX822
+#### Pédalier GRX FC-RX820-1, boîtier BB72, cassette XT CS-M8200, chaîne Shimano XT et dérailleur XT Di2 RD-M8250
 
 Formes approchées :
 
 - Plateau : nombre de dents, entraxe des vis et nombre de bras publiés. Profil des dents, épaisseur et découpe intérieure approchés.
 - Manivelles et araignée : longueur, facteur Q et nombre de bras publiés. Profil et épaisseur des manivelles approchés. Angle des bras lu au mieux sur la photo officielle.
 - Axe de pédalier et cuvettes du boîtier : seule la largeur de la boîte est publiée. Diamètres et formes approchés.
-- Cassette : dentures et matières publiées par Shimano. Épaisseur des pignons, fenêtres et araignée approchées. Le grand pignon en aluminium est dessiné foncé, comme sur la photo officielle.
+- Cassette : dentures et matières publiées par Shimano. Épaisseur des pignons, fenêtres et araignée approchées. Le grand pignon en aluminium est dessiné foncé, comme sur la photo officielle. Le petit pignon et sa bague de blocage sont dessinés d’une pièce, comme le dit le manuel Shimano de la cassette.
 - Position de la cassette sur la roue libre et écart entre les pignons : non publiés, approchés.
-- Chaîne : largeur, plaques et rouleaux approchés. Elle est dessinée sur un seul pignon, choisi pour la lisibilité.
-- Dérailleur : chape courte selon la fiche Canyon, galets de treize dents selon Shimano. Corps, biellettes, chape, écart des galets et place sous la patte approchés d’après la photo officielle.
-- Gaine du dérailleur : sortie du cadre et trajet approchés d’après la photo officielle.
+- Chaîne : Canyon la nomme Shimano XT, sans référence. Largeur, plaques et rouleaux approchés. Elle est dessinée sur le pignon où la montre la photo officielle.
+- Dérailleur : chape moyenne selon la fiche Canyon, galets de treize dents, sans fil et à batterie intégrée selon Shimano. Contour du corps, capuchon du pivot, chape et galet bas approchés d’après la photo officielle. Épaisseur du corps, biellettes et place sous la patte approchées.
+- Galet haut du dérailleur : caché par le corps sur la photo officielle. Sa place est approchée.
+- Batterie : logée dans le corps du dérailleur. Sa place et son logement sont approchés, la photo officielle ne les montre pas distinctement.
+- Logos, inscriptions, bouton et voyant du dérailleur, de la cassette et du pédalier : non dessinés.
 
 À vérifier à la livraison :
 
 - longueur des manivelles, gravée sur la manivelle
 - place du dérailleur sous la patte : elle dépend du type de patte, à regarder sur le vélo
+- référence de la chaîne : Canyon dit seulement Shimano XT, à lire sur la chaîne
+- référence exacte du boîtier de pédalier, à lire sur la pièce
 
-#### Jeu de direction, potence ST0046, cintre HB0067, ruban, cocottes GRX, leviers et durites
+#### Jeu de direction, potence ST0046, cintre HB0067, ruban, manettes GRX Di2 ST-RX825 et durites
 
 Formes approchées :
 
-- Point de saisie de la cocotte : Canyon ne le précise pas. Il est pris sur le dessus de la cocotte, au plat où se pose la main, avant la corne.
-- Cocottes : forme approchée d’après la photo officielle du vélo. La cocotte gauche est dessinée comme la droite.
-- Leviers : forme approchée d’après la photo officielle du vélo. Le petit levier de la manette droite est approché.
+- Point de saisie de la cocotte : Canyon ne le précise pas. Il est pris sur le dessus de la cocotte, au creux où la main se cale contre le pied de la corne.
+- Cocottes : Shimano ne publie pas leurs cotes. Repose-main et corne en forme approchée d’après la photo officielle du vélo. La cocotte gauche est dessinée comme la droite. Les nervures et le marquage du repose-main ne sont pas dessinés.
+- Leviers : levier de frein et palette plus petite derrière lui, en forme approchée d’après la photo officielle du vélo, des deux côtés. La zone striée du levier n’est pas dessinée.
 - Place des cocottes sur la courbe du cintre et rotation du cintre dans la potence : non publiées. Elles sont calculées pour que la main tombe au point publié par Canyon.
 - Courbe du cintre : seuls le déport, la descente, l’évasement, l’inclinaison et les largeurs sont publiés. La forme de la courbe et la longueur des drops sont approchées.
 - Inclinaison de la partie haute du cintre : Canyon la donne sans dessin. Elle est dessinée vers le bas, du collier vers les cocottes.
 - Ruban : épaisseur et début du ruban approchés.
 - Potence : longueur et angle publiés. Corps, capot de serrage et vis approchés d’après la photo officielle.
 - Capot et entretoise du jeu de direction : formes et hauteurs approchées. Le nombre d’entretoises n’est pas publié.
-- Durites et gaine : grosseur et trajet approchés. Elles longent le cintre sous le ruban et entrent dans le capot du jeu de direction, comme sur la photo officielle.
+- Durites : grosseur et trajet approchés. Elles longent le cintre sous le ruban, en sortent près de la potence et entrent dans le capot du jeu de direction, devant le pivot, comme sur la photo officielle.
 
 À vérifier à la livraison :
 
-- référence du levier gauche : la fiche ne donne pas sa référence complète, à lire sur la pièce
+- manette gauche : avec ou sans boutons de vitesses, la fiche ne donne pas sa référence complète, à lire sur la pièce
 - sens de montage de la potence, à regarder sur le vélo
 
 #### Géométrie
@@ -150,7 +157,7 @@ Formes approchées :
 
 - Le rayon extérieur du pneu monté n’est pas publié. Il est approché.
 - La fiche donne une plage de hauteurs de selle, pas une valeur. La selle est posée vers le milieu de cette plage.
-- La forme de la tête de tige n’est pas publiée. L’écart entre le haut de la tige et le dessus de la selle est approché d’après la hauteur de selle au-dessus des rails que publie Fizik.
+- La forme de la tête de tige n’est pas publiée. L’écart entre le haut de la tige et le dessus de la selle est approché d’après la hauteur de selle que publie Fizik, lue ici depuis l’axe des rails.
 - La forme de la fourche n’est pas publiée. La position de la couronne sous la douille est approchée.
 - La position latérale du disque avant n’est pas publiée. Elle est approchée.
 - La position latérale du disque arrière n’est pas publiée. Elle est approchée.
@@ -159,13 +166,13 @@ Formes approchées :
 - La position de l’étrier arrière autour du moyeu n’est pas publiée. Elle est lue au mieux sur la photo officielle.
 - Le pédalier est dessiné dans une position choisie pour la lisibilité. Ce n’est pas une position réelle.
 - Le pas de la chaîne n’est pas relevé sur un document du fabricant. La valeur retenue est celle du pas courant des chaînes de vélo.
-- La chaîne est dessinée sur un seul pignon, choisi pour la lisibilité. Ce n’est pas un rapport réel.
+- La chaîne est dessinée sur un seul pignon, celui où la montre la photo officielle, lu au mieux.
 - La position latérale de la cassette n’est pas publiée. Elle est approchée.
 - L’écart entre deux pignons de la cassette n’est pas publié. Il est approché.
-- La position de la poulie haute du dérailleur n’est pas publiée. Elle est approchée.
-- La distance entre le pignon et la poulie haute du dérailleur n’est pas publiée. Elle est approchée.
-- La fiche indique une cage courte, sans cote. L’écart entre les poulies est approché.
-- L’inclinaison de la cage du dérailleur n’est pas publiée. Elle est approchée.
+- La position du galet haut du dérailleur n’est pas publiée. Il est caché sur la photo officielle : sa place est approchée d’après le brin de chaîne visible.
+- La distance entre le pignon et le galet haut du dérailleur n’est pas publiée. Elle est approchée d’après la photo officielle.
+- La fiche indique une chape moyenne, sans cote. L’écart entre les galets est approché d’après la photo officielle.
+- L’inclinaison de la chape du dérailleur n’est pas publiée. Elle est approchée d’après la photo officielle.
 - Le nombre d’entretoises montées à la livraison n’est pas publié. La hauteur de la potence est approchée.
 
 À vérifier à la livraison :

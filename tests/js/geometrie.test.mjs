@@ -12,7 +12,18 @@ const proche = (reel, attendu, tol, nom) =>
   assert.ok(Math.abs(reel - attendu) <= tol, `${nom} : ${reel} au lieu de ${attendu} (tolérance ${tol})`);
 const textesDeGEO = () => Object.values(GEO).flatMap(e => [e.note, e.aVerifier]).filter(t => t !== undefined);
 
-test('cotes Canyon : la fiche 4553, taille M', () => {
+// Les cotes du cadre, colonne M de la fiche du Grizl CF 8 Di2 (canyon-4556).
+const COTES_FICHE = [
+  'empattement', 'bases', 'differenceBoitierMoyeu', 'stack', 'reach', 'longueurDouille', 'angleDirection',
+  'angleTubeSelle', 'longueurTubeSelle', 'longueurTubeSuperieur', 'stackEfficace', 'reachEfficace', 'largeurBoite',
+  'diametreDisque', 'longueurManivelle', 'dentsPlateau', 'longueurPotence', 'largeurCintre',
+];
+
+test('cotes Canyon : la fiche 4556 du Grizl CF 8 Di2, taille M', () => {
+  for (const cle of COTES_FICHE) {
+    assert.equal(GEO[cle].src, 'canyon-4556', `${cle} : source`);
+    assert.ok(!GEO[cle].approche, `${cle} : publiée`);
+  }
   const p = points();
   proche(p.FA[0] - p.RA[0], 1076, 0.5, 'empattement');
   proche(dist(p.BB, p.RA), 440, 0.5, 'bases');
@@ -32,11 +43,13 @@ test('cotes Canyon : la fiche 4553, taille M', () => {
   proche(GEO.longueurTubeSuperieur.v, 581, 0, 'tube supérieur de la fiche');
 });
 
-test('position des mains : stack et reach efficaces, cintre de 440 d’axe en axe', () => {
+test('position des mains : stack et reach efficaces du CF 8 Di2, cintre de 440 d’axe en axe', () => {
   const p = points();
   const m = p.ancres.mains;
-  proche(m[0] - p.BB[0], 544, 2, 'reach efficace');
-  proche(m[1] - p.BB[1], 683, 2, 'stack efficace');
+  assert.equal(GEO.reachEfficace.v, 531);
+  assert.equal(GEO.stackEfficace.v, 690);
+  proche(m[0] - p.BB[0], 531, 0.05, 'reach efficace');
+  proche(m[1] - p.BB[1], 690, 0.05, 'stack efficace');
   proche(m[2], 220, 0.01, 'cocotte droite, côté transmission');
   const g = p.ancres.cocotteGauche;
   proche(g[0], m[0], 0.01, 'cocotte gauche, x');
@@ -66,10 +79,12 @@ test('tige de selle : l’insertion reste dans la plage publiée', () => {
   assert.ok(sorti >= 140 && sorti <= 240, `longueur sortie ${sorti}`);
   proche(dist(p.BB, p.SPt) + GEO.retraitSelle.v, GEO.hauteurSelle.v, 0.01, 'hauteur de selle');
   assert.ok(GEO.hauteurSelle.v >= 710 && GEO.hauteurSelle.v <= 810, 'dans la plage de la fiche');
-  // L'écart entre le haut de la tige et le dessus de la selle reste approché : Fizik publie une hauteur de selle
-  // au-dessus des rails, pas cet écart.
+  // L'écart entre le haut de la tige et le dessus de la selle reste approché : Fizik publie une hauteur de selle sans
+  // dire d'où il la prend. La note ne lui prête pas de repère.
   assert.equal(GEO.retraitSelle.approche, true);
   assert.match(GEO.retraitSelle.note, /Fizik/);
+  assert.match(GEO.retraitSelle.note, /lue ici depuis l’axe des rails/);
+  assert.ok(!/au-dessus des rails/.test(GEO.retraitSelle.note), GEO.retraitSelle.note);
 });
 
 test('poste de pilotage : la main est devant le coude du cintre, au-dessus de la potence', () => {
@@ -99,7 +114,20 @@ test('chaîne : quatre arcs sur le pignon, les deux poulies et le plateau', () =
   const pres = chemin.filter(q => dist(q, p.BB) < 2 * rPlateau);
   assert.ok(pres.length >= 10 && pres.every(q => dist(q, p.BB) <= rPlateau + 1e-6), 'rien ne dépasse du plateau');
   assert.ok(chemin.every(q => q[1] > 0), 'la chaîne reste au-dessus du sol');
-  assert.ok(p.poulieBasse[0] > p.poulieHaute[0] && p.poulieBasse[1] < p.poulieHaute[1], 'cage courte inclinée vers l’avant');
+  // Chape moyenne, comme sur la photo officielle : le galet bas est derrière le galet haut, et plus bas.
+  assert.ok(p.poulieBasse[0] < p.poulieHaute[0] && p.poulieBasse[1] < p.poulieHaute[1], 'chape tournée vers l’arrière');
+  // Entre les deux galets, la chaîne croise : elle part du devant du galet haut et arrive derrière le galet bas.
+  // Le brin est tangent aux deux galets.
+  const r = p.rayons.poulie;
+  const brin = chemin.filter(q => Math.abs(dist(q, p.poulieHaute) - r) < 1e-6 || Math.abs(dist(q, p.poulieBasse) - r) < 1e-6);
+  const dernierHaut = chemin.filter(q => Math.abs(dist(q, p.poulieHaute) - r) < 1e-6).at(-1);
+  const premierBas = chemin.find(q => Math.abs(dist(q, p.poulieBasse) - r) < 1e-6);
+  assert.ok(brin.length > 4 && dernierHaut && premierBas, 'arcs des galets');
+  const d = [premierBas[0] - dernierHaut[0], premierBas[1] - dernierHaut[1]], l = Math.hypot(...d);
+  for (const [c, q] of [[p.poulieHaute, dernierHaut], [p.poulieBasse, premierBas]]) {
+    const rayon = [q[0] - c[0], q[1] - c[1]];
+    proche((rayon[0] * d[0] + rayon[1] * d[1]) / l, 0, 1e-6, 'brin tangent au galet');
+  }
 });
 
 test('sources connues : chaque cote a une source enregistrée ou est approchée', () => {
@@ -117,8 +145,10 @@ test('sources connues : chaque cote a une source enregistrée ou est approchée'
 
 test('transmission et poste : cotes officielles Shimano et Canyon', () => {
   const attendu = {
-    ligneChaine: [49.7, 'shimano-fc-rx610-1'], // « Chain line (mm) 49.7 »
-    dentsPoulie: [13, 'shimano-rd-rx822-gs'], // « Pulley / Teeth 13T »
+    ligneChaine: [49.7, 'shimano-fc-rx820-1'], // « Chain line (mm) 49.7 »
+    dentsPoulie: [13, 'shimano-rd-m8250-gs'], // « Teeth 13T »
+    longueurManivelle: [165, 'canyon-4556'], // « 165,0 (S-M) »
+    dentsPlateau: [40, 'canyon-4556'], // « plateau 40 »
     anglePotence: [6, 'canyon-photo-st0046'], // marquage « ANGLE 6° » de la potence de 60
     deportCintre: [70, 'canyon-photo-hb0067-marquage'], // marquage « REACH 70 mm »
     descenteCintre: [128, 'canyon-photo-hb0067-marquage'], // marquage « DROP 128 mm »
@@ -206,12 +236,6 @@ test('registre des sources : forme, types et documents attendus', () => {
     assert.match(s.url, /^https:\/\/\S+$/, `${id} : url`);
     assert.ok(types.includes(s.type), `${id} : type ${s.type}`);
   }
-  assert.equal(SOURCES['canyon-4553'].type, 'fiche');
-  assert.equal(SOURCES['canyon-4553'].url,
-    'https://www.canyon.com/fr-ch/velos-de-gravel/adventure/grizl/cf/grizl-cf-7/4553.html?dwvar_4553_pv_rahmenfarbe=R126_P06');
-  assert.equal(SOURCES['canyon-photo-4553-fv'].type, 'photo');
-  assert.equal(SOURCES['canyon-photo-4553-fv'].url,
-    'https://dma.canyon.com/image/upload/w_1600,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1785934004/2027_FULL_grizl_cf-7_4553_R126_P06_talwxt');
   const manuels = Object.values(SOURCES).filter(s => s.type === 'manuel').map(s => s.url);
   for (const url of [
     'https://si.shimano.com/fr/pdfs/dm/GADBR01/DM-GADBR01-10-FRE.pdf',
@@ -250,6 +274,44 @@ test('registre des sources : les documents du Grizl CF 8 Di2', () => {
     assert.equal(SOURCES[id].type, 'photo', id);
     assert.match(SOURCES[id].url, /grizl_cf-8-di2_4556_R126_P06/, id);
   }
+});
+
+// Le Grizl CF 7 et ses pièces, que le CF 8 Di2 remplace : fiche, photos, pneus, selle, transmission, manettes, disques.
+const CF7 = /4553|cf-7|CF 7|continental|terra-adventure|terra adventure|selle royal|\bSRX\b|rx822|m7100|rx610|sm-rt64|rs500/i;
+
+test('registre des sources : plus aucune source du Grizl CF 7 ni de ses pièces', () => {
+  for (const [id, s] of Object.entries(SOURCES)) {
+    for (const t of [id, s.titre, s.url]) assert.ok(!CF7.test(t), `${id} : « ${t} »`);
+  }
+  // Le motif attrape bien les anciennes sources.
+  for (const t of ['canyon-4553', 'grizl-cf-7', 'continental-terra-adventure', 'Selle Royal SRX', 'shimano-rd-rx822-gs',
+    'CS-M7100-12', 'FC-RX610-1', 'shimano-rx610-1x12', 'SM-RT64', 'BB-RS500-PB']) assert.ok(CF7.test(t), t);
+  // Les documents du CF 8 Di2 restent, même ceux que seule la recherche cite : la page Sources les montre.
+  for (const id of ['canyon-4556-en', 'shimano-sm-bb72-41b', 'shimano-cn-m8100', 'shimano-dm-gadbr10']) {
+    assert.ok(SOURCES[id], id);
+  }
+});
+
+test('géométrie : chaque source citée existe, aucune n’est du CF 7', () => {
+  for (const [cle, e] of Object.entries(GEO)) {
+    if (e.src === null) continue;
+    assert.ok(SOURCES[e.src], `${cle} : source inconnue ${e.src}`);
+    assert.ok(!CF7.test(e.src), `${cle} : source du CF 7 ${e.src}`);
+  }
+});
+
+test('en-tête de geometrie.js : le Grizl CF 8 Di2, plus rien du CF 7', () => {
+  const code = readFileSync(new URL('../../src/scene/geometrie.js', import.meta.url), 'utf8');
+  assert.match(code.split('\n')[0], /Grizl CF 8 Di2, taille M/);
+  assert.ok(!CF7.test(code), 'le CF 7 est encore cité');
+});
+
+test('transmission dessinée : la chaîne sur un pignon de la cassette, la chape approchée', () => {
+  for (const cle of ['dentsPignonDessine', 'decalagePoulieHaute', 'descentePoulieHaute', 'ecartPoulies', 'angleCage']) {
+    assert.equal(GEO[cle].approche, true, cle);
+    assert.ok(/photo officielle/.test(GEO[cle].note), `${cle} : « ${GEO[cle].note} »`);
+  }
+  assert.ok(/moyenne/.test(GEO.ecartPoulies.note), 'la fiche Canyon donne une chape moyenne');
 });
 
 test('modules purs : ni import, ni DOM, ni three.js', () => {

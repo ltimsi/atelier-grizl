@@ -1,4 +1,4 @@
-// Géométrie du Canyon Grizl CF 7, taille M : cotes publiées, cotes approchées, points dérivés.
+// Géométrie du Canyon Grizl CF 8 Di2, taille M : cotes publiées, cotes approchées, points dérivés.
 //
 // Repère des points, en millimètres :
 //   x vers l'avant, avec l'axe de la roue arrière à x = 0 ;
@@ -12,7 +12,7 @@
 
 const D2R = Math.PI / 180;
 
-const FICHE = 'canyon-4553';
+const FICHE = 'canyon-4556';
 
 // Cote publiée par un document enregistré dans SOURCES.
 const pub = (v, src = FICHE, plus = {}) => Object.freeze({ v, src, ...plus });
@@ -26,7 +26,7 @@ const DEFINITION_MAIN =
   'Elle ne précise pas ce point sur la cocotte : à vérifier.';
 
 export const GEO = Object.freeze({
-  // ---- Cadre : colonne M de la fiche Canyon 4553 (repères entre parenthèses) ----
+  // ---- Cadre : colonne M de la fiche Canyon 4556 (repères entre parenthèses) ----
   empattement: pub(1076), // (h)
   bases: pub(440), // (g) de l'axe du boîtier à l'axe de la roue arrière
   differenceBoitierMoyeu: pub(75), // (l) axe du boîtier sous l'axe du moyeu
@@ -41,21 +41,22 @@ export const GEO = Object.freeze({
   angleTubeSelle: pub(73.5), // (f) en degrés
   longueurTubeSelle: pub(522), // (b) du boîtier au haut du tube, sur son axe
   longueurTubeSuperieur: pub(581), // (c) horizontale, de l'axe du tube de selle à la douille
-  stackEfficace: pub(683, FICHE, { aVerifier: DEFINITION_MAIN }), // (o)
-  reachEfficace: pub(544, FICHE, { aVerifier: DEFINITION_MAIN }), // (p)
-  // Boîte de pédalier : « Shimano Pressfit BB72 ; PF 86,5 » sur la fiche du CF 8 Di2, donc 86,5 de large.
-  // Le cadre (cadre.js) la dessine à moitié de chaque côté du plan du vélo.
-  largeurBoite: pub(86.5, 'canyon-4556'),
+  stackEfficace: pub(690, FICHE, { aVerifier: DEFINITION_MAIN }), // (o)
+  reachEfficace: pub(531, FICHE, { aVerifier: DEFINITION_MAIN }), // (p)
+  // Boîte de pédalier : « Shimano Pressfit BB72 ; PF 86,5 », donc 86,5 de large. Le cadre (cadre.js) la dessine à
+  // moitié de chaque côté du plan du vélo, et les cuvettes du boîtier (transmission.js) s'y appuient.
+  largeurBoite: pub(86.5),
 
   // ---- Cadre : cotes non publiées ----
   rayonPneu: apr(356, 'Le rayon extérieur du pneu monté n’est pas publié. Il est approché.'),
   hauteurSelle: apr(760,
     'La fiche donne une plage de hauteurs de selle, pas une valeur. La selle est posée vers le milieu de cette plage.'),
-  // Le haut de la tige est pris à la hauteur de l'axe des rails, dans la tête. Fizik publie la hauteur du dessus de la
-  // selle au-dessus des rails (« Height at 75mm 51 mm ») ; avec le recul de la tête, l'écart en découle, arrondi.
+  // Le haut de la tige est pris à la hauteur de l'axe des rails, dans la tête. Fizik publie une hauteur de selle
+  // (« Height at 75mm 51 mm ») sans dire d'où il la prend : elle est lue ici depuis l'axe des rails, comme dans
+  // cadre.js. Avec le recul de la tête, l'écart en découle, arrondi.
   retraitSelle: apr(48,
     'La forme de la tête de tige n’est pas publiée. L’écart entre le haut de la tige et le dessus de la selle est ' +
-    'approché d’après la hauteur de selle au-dessus des rails que publie Fizik.'),
+    'approché d’après la hauteur de selle que publie Fizik, lue ici depuis l’axe des rails.'),
   ecartCouronne: apr(16,
     'La forme de la fourche n’est pas publiée. La position de la couronne sous la douille est approchée.'),
 
@@ -64,7 +65,7 @@ export const GEO = Object.freeze({
   // « 24 front and rear » sur la page des roues GR 30 CF. On en compte aussi vingt-quatre à chaque roue sur la photo
   // officielle du vélo (canyon-photo-4556-fv).
   nombreRayons: pub(24, 'canyon-gr30cf'),
-  diametreDisque: pub(160), // avant et arrière
+  diametreDisque: pub(160), // « diamètre 160 / 160 », avant et arrière
   decalageDisqueAvant: apr(40, 'La position latérale du disque avant n’est pas publiée. Elle est approchée.'),
   decalageDisqueArriere: apr(57, 'La position latérale du disque arrière n’est pas publiée. Elle est approchée.'),
   rayonEtrier: apr(72, 'La distance des étriers à leur moyeu n’est pas publiée. Elle est approchée.'),
@@ -74,27 +75,37 @@ export const GEO = Object.freeze({
     'La position de l’étrier arrière autour du moyeu n’est pas publiée. Elle est lue au mieux sur la photo officielle.'),
 
   // ---- Transmission ----
-  longueurManivelle: pub(165), // 2XS à M
-  dentsPlateau: pub(40),
+  longueurManivelle: pub(165), // « 165,0 (S-M) »
+  dentsPlateau: pub(40), // « plateau 40 »
   angleManivelle: apr(-25,
     'Le pédalier est dessiné dans une position choisie pour la lisibilité. Ce n’est pas une position réelle.'),
   pasChaine: apr(12.7,
     'Le pas de la chaîne n’est pas relevé sur un document du fabricant. La valeur retenue est celle du pas courant des chaînes de vélo.'),
-  dentsPignonDessine: apr(21,
-    'La chaîne est dessinée sur un seul pignon, choisi pour la lisibilité. Ce n’est pas un rapport réel.'),
-  ligneChaine: pub(49.7, 'shimano-fc-rx610-1'), // « Chain line (mm) 49.7 » de la FC-RX610-1 : plan du plateau
+  // La chaîne et le dérailleur sont dessinés comme sur la photo officielle de profil (canyon-photo-4556-fv) : la chaîne
+  // y est sur le treize dents, la chape tournée vers l'arrière, le galet bas derrière et sous le galet haut.
+  dentsPignonDessine: apr(13,
+    'La chaîne est dessinée sur un seul pignon, celui où la montre la photo officielle, lu au mieux.'),
+  ligneChaine: pub(49.7, 'shimano-fc-rx820-1'), // « Chain line (mm) 49.7 » de la FC-RX820-1 : plan du plateau
   zPetitPignon: apr(64, 'La position latérale de la cassette n’est pas publiée. Elle est approchée.'),
   ecartPignons: apr(3.9, 'L’écart entre deux pignons de la cassette n’est pas publié. Il est approché.'),
-  decalagePoulieHaute: apr(6, 'La position de la poulie haute du dérailleur n’est pas publiée. Elle est approchée.'),
-  descentePoulieHaute: apr(32,
-    'La distance entre le pignon et la poulie haute du dérailleur n’est pas publiée. Elle est approchée.'),
-  ecartPoulies: apr(60, 'La fiche indique une cage courte, sans cote. L’écart entre les poulies est approché.'),
-  angleCage: apr(15, 'L’inclinaison de la cage du dérailleur n’est pas publiée. Elle est approchée.'),
-  dentsPoulie: pub(13, 'shimano-rd-rx822-gs'), // « Pulley / Teeth 13T » : le rayon des galets en découle avec le pas
+  // Galet haut : caché par le corps du dérailleur sur la photo. Il est placé pour que le brin de chaîne visible entre
+  // les deux galets leur soit tangent.
+  decalagePoulieHaute: apr(14,
+    'La position du galet haut du dérailleur n’est pas publiée. Il est caché sur la photo officielle : sa place est ' +
+    'approchée d’après le brin de chaîne visible.'),
+  descentePoulieHaute: apr(52,
+    'La distance entre le pignon et le galet haut du dérailleur n’est pas publiée. Elle est approchée d’après la ' +
+    'photo officielle.'),
+  ecartPoulies: apr(91,
+    'La fiche indique une chape moyenne, sans cote. L’écart entre les galets est approché d’après la photo officielle.'),
+  // Négatif : le galet bas est derrière le galet haut, comme sur la photo.
+  angleCage: apr(-40,
+    'L’inclinaison de la chape du dérailleur n’est pas publiée. Elle est approchée d’après la photo officielle.'),
+  dentsPoulie: pub(13, 'shimano-rd-m8250-gs'), // « Teeth 13T » : le rayon des galets en découle avec le pas
 
   // ---- Poste de pilotage ----
-  longueurPotence: pub(60), // « 60 mm en S à L »
-  largeurCintre: pub(440), // « 440 mm en M à 2XL », d'axe en axe au niveau des cocottes
+  longueurPotence: pub(60), // « 60 (S-L) »
+  largeurCintre: pub(440), // « 440 (M-2XL) », d'axe en axe au niveau des cocottes
   hauteurPotence: apr(42,
     'Le nombre d’entretoises montées à la livraison n’est pas publié. La hauteur de la potence est approchée.'),
   // Potence de 60 : marquage « ANGLE 6° » sur la photo officielle. Montée vers le bas, elle monte de 90 - 71 - 6 degrés.
@@ -189,12 +200,19 @@ export function points(geo = GEO) {
   return { RA, FA, BB, HTt, HTb, STt, SPt, S0, S1, PR, PL, CF, CR, CROWN, dHT, dST, poulieHaute, poulieBasse, rayons, ancres };
 }
 
-// Chemin 2D de la chaîne : arrière du pignon, poulie haute, poulie basse, avant du plateau. À lisser par l'appelant.
+// Chemin 2D de la chaîne : arrière du pignon, devant du galet haut, arrière et dessous du galet bas, avant du plateau.
+// Entre les deux galets, de même rayon, la chaîne croise : le brin est leur tangente intérieure, qui touche le galet
+// haut sous l'angle a et le galet bas à l'opposé. À lisser par l'appelant.
 export function cheminChaine(p) {
+  const r = p.rayons.poulie, H = p.poulieHaute, B = p.poulieBasse;
+  const d = Math.hypot(B[0] - H[0], B[1] - H[1]);
+  if (d <= 2 * r) throw new Error('chaîne : les galets du dérailleur se touchent');
+  const a = (Math.atan2(B[1] - H[1], B[0] - H[0]) + Math.acos(2 * r / d)) / D2R;
+  const haut = a > 90 ? a - 360 : a; // le galet haut est parcouru de son dessus vers l'avant, en tournant vers le bas
   return [
     ...arc(p.RA, p.rayons.pignon, 90, 270),
-    ...arc(p.poulieHaute, p.rayons.poulie, 90, -90),
-    ...arc(p.poulieBasse, p.rayons.poulie, 180, 270),
+    ...arc(H, r, 90, haut),
+    ...arc(B, r, haut + 180, 270),
     ...arc(p.BB, p.rayons.plateau, -90, 90),
   ];
 }

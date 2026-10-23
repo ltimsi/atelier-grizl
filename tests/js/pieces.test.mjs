@@ -188,6 +188,27 @@ for (const module of PIECES) {
   });
 }
 
+// Le Grizl CF 7 et ses pièces : fiche, photos, pneus, selle, transmission, manettes et disques d'avant le CF 8 Di2.
+const CF7 = /4553|cf-7|CF 7|continental|terra-adventure|terra adventure|selle royal|\bSRX\b|rx822|m7100|rx610|sm-rt64|rs500/i;
+
+test('aucune pièce ni cote ne cite une source du CF 7, et chaque source citée existe', () => {
+  for (const { META, COTES } of PIECES) {
+    const ids = [...META.sources, ...Object.values(COTES ?? {}).map(c => c.src)];
+    for (const id of ids) {
+      assert.ok(SOURCES[id], `${META.id} : source inconnue ${id}`);
+      assert.ok(!CF7.test(id) && !CF7.test(SOURCES[id].titre), `${META.id} : source du CF 7 ${id}`);
+    }
+    for (const t of textesDeMeta(META)) assert.ok(!CF7.test(t), `${META.id} : « ${t} »`);
+  }
+  for (const [cle, e] of Object.entries(GEO)) if (e.src) assert.ok(!CF7.test(e.src), `GEO.${cle} : ${e.src}`);
+});
+
+test('aucun maillage ne porte de variante : la zone des disques n’en a plus', () => {
+  for (const module of PIECES) for (const m of construire(module).maillages) {
+    assert.equal(m.userData.variante, null, `${module.META.id} : ${m.name || m.userData.role}`);
+  }
+});
+
 test('budget : toutes les pièces ensemble, instances comprises', () => {
   let total = 0;
   for (const module of PIECES) for (const m of construire(module).maillages) total += triangles(m);
@@ -259,6 +280,12 @@ test('cadre : le META cite la selle Fizik et la photo de la tige du CF 8 Di2, et
   // Plus rien du CF 7 : ni sa fiche, ni ses photos, ni sa selle.
   for (const id of cadre.META.sources) assert.ok(!/4553/.test(id), `source du CF 7 : ${id}`);
   for (const t of textesDeMeta(cadre.META)) assert.ok(!/SRX|Selle Royal/.test(t), `ancienne selle dans « ${t} »`);
+});
+
+test('cadre : la lecture des cotes Fizik, repère de largeur et section des rails, reste à vérifier', () => {
+  const t = cadre.META.aVerifier.find(x => /Fizik/.test(x) && /repère/.test(x) && /rails/.test(x));
+  assert.ok(t, 'aucune ligne sur le repère et les rails de Fizik');
+  assert.match(t, /vérifier/);
 });
 
 test('cadre : la selle Fizik fait 150 mm de large et 270 mm de long, 75 mm de large à 113 mm du bec', () => {
@@ -395,6 +422,10 @@ test('roues : jantes GR 30 CF de 30 mm de haut, 27 mm à l’intérieur, 33 mm �
   assert.equal(jantes.length, 2);
   assert.equal(roues.COTES.hauteurJante.v, 30);
   assert.equal(roues.COTES.largeurInterneJante.v, 27);
+  // « External width: 33mm, ETRTO 622x27TSS » sur la page de la paire de roues.
+  assert.equal(roues.COTES.largeurExterieureJante.v, 33);
+  assert.equal(roues.COTES.largeurExterieureJante.src, 'canyon-gr30cf');
+  assert.ok(!roues.META.approche.some(t => /[Ll]argeur extérieure[^.]*approch/.test(t)), 'largeur extérieure publiée');
   for (const m of jantes) {
     const axe = roueDe(m, p) === 'avant' ? p.FA : p.RA;
     const v = sommets(m), r = v.map(q => auMoyeu(q, axe));
@@ -479,28 +510,66 @@ test('roues : les moyeux tiennent entre les pattes du cadre, les axes les traver
 
 // ---- Freins : disques, étriers, plaquettes et durites du cadre ----
 
-test('freins : disques d’origine et XT, deux variantes de la zone disques', () => {
+test('freins : un seul type de disque, en zone disques, sans variante', () => {
   const { maillages } = construire(freins);
-  for (const k of [0, 1]) {
-    const disques = maillages.filter(m => m.userData.variante?.zone === 'disques' && m.userData.variante.k === k);
-    assert.ok(disques.length > 0, `aucun maillage pour k = ${k}`);
-    for (const m of disques) assert.equal(m.userData.zone, 'disques');
-  }
-  for (const m of maillages) if (m.userData.variante) assert.equal(m.userData.variante.zone, 'disques');
+  const disques = maillages.filter(m => m.userData.zone === 'disques');
+  assert.ok(disques.length > 0, 'aucun maillage en zone disques');
+  for (const m of maillages) assert.equal(m.userData.variante, null, m.name || m.userData.role);
+  // Une seule piste par roue : il n'y a plus de second disque à montrer en variante.
+  assert.equal(parNom(maillages, 'piste').length, 2);
 });
 
-test('freins : pistes de 160 mm, dans le plan de chaque disque, pour les deux variantes', () => {
+test('freins : pistes de 160 mm, une par roue, dans le plan de chaque disque', () => {
   const p = points(GEO), { maillages } = construire(freins);
   const pistes = parNom(maillages, 'piste');
-  for (const k of [0, 1]) for (const cote of ['avant', 'arrière']) {
-    const m = pistes.filter(x => x.userData.variante.k === k && roueDe(x, p) === cote);
-    assert.equal(m.length, 1, `piste ${cote} k = ${k}`);
+  assert.equal(pistes.length, 2, 'une piste par roue');
+  for (const cote of ['avant', 'arrière']) {
+    const m = pistes.filter(x => roueDe(x, p) === cote);
+    assert.equal(m.length, 1, `piste ${cote}`);
+    assert.equal(m[0].userData.zone, 'disques');
     const axe = cote === 'avant' ? p.FA : p.RA;
     const r = sommets(m[0]).map(v => auMoyeu(v, axe));
-    assert.ok(Math.abs(Math.max(...r) - GEO.diametreDisque.v / 2) < 0.5, `piste ${cote} k = ${k} : rayon ${Math.max(...r)}`);
+    assert.ok(Math.abs(Math.max(...r) - GEO.diametreDisque.v / 2) < 0.5, `piste ${cote} : rayon ${Math.max(...r)}`);
     const [z0, z1] = etendueZ(m);
     const plan = -(cote === 'avant' ? GEO.decalageDisqueAvant.v : GEO.decalageDisqueArriere.v);
-    assert.ok(Math.abs((z0 + z1) / 2 - plan) < 0.05, `piste ${cote} k = ${k} centrée en ${(z0 + z1) / 2}`);
+    assert.ok(Math.abs((z0 + z1) / 2 - plan) < 0.05, `piste ${cote} centrée en ${(z0 + z1) / 2}`);
+  }
+});
+
+test('freins : le META cite l’étrier BR-RX820, le disque XT et la fiche du CF 8 Di2, plus le SM-RT64', () => {
+  for (const id of ['shimano-br-rx820', 'shimano-deore-xt-m8000', 'canyon-4556', 'canyon-4556-en', 'canyon-photo-4556-fv']) {
+    assert.ok(freins.META.sources.includes(id), `${id} absent`);
+  }
+  assert.match(freins.META.nom, /MT800/);
+  assert.match(freins.META.nom, /L05A-RF/);
+  for (const t of textesDeMeta(freins.META)) assert.ok(!/SM-RT64|RT64|d’origine · /.test(t), `ancien disque dans « ${t} »`);
+  // Canyon liste un disque XT, mais propose un disque Ultegra dans ses pièces d'usure : à lire sur la pièce.
+  const disque = freins.META.aVerifier.find(t => /disque/.test(t) && /XT/.test(t) && /Ultegra/.test(t));
+  assert.ok(disque, 'la contradiction sur le disque n’est pas notée');
+  assert.match(disque, /à lire sur la pièce/);
+  assert.equal(freins.COTES, undefined, 'l’épaisseur du disque n’a plus de source : elle est approchée');
+  assert.ok(freins.META.approche.some(t => /^Épaisseur du disque/.test(t)), 'épaisseur approchée');
+});
+
+test('freins : étriers à deux pistons opposés, et plaquettes à ailettes qui dépassent du corps', () => {
+  const p = points(GEO), { maillages } = construire(freins);
+  for (const [nom, c, plan] of [['étrier avant', p.CF, -GEO.decalageDisqueAvant.v], ['étrier arrière', p.CR, -GEO.decalageDisqueArriere.v]]) {
+    const pistons = parNom(maillages, `${nom}, piston`);
+    assert.equal(pistons.length, 2, `${nom} : deux logements de piston`);
+    const z = pistons.map(m => new THREE.Box3().setFromPoints(sommets(m)).getCenter(new THREE.Vector3()).z - plan);
+    assert.ok(z[0] * z[1] < 0, `${nom} : un piston de chaque côté du disque`);
+    assert.ok(parNom(maillages, nom).length > 0, `${nom} absent`);
+  }
+  // Ailettes des plaquettes avant : au-delà du bord du disque et du corps de l'étrier, vers l'extérieur.
+  const corps = parNom(maillages, 'étrier avant').flatMap(sommets);
+  const rCorps = Math.max(...corps.map(q => auMoyeu(q, p.FA)));
+  for (const { groupe } of freins.PLAQUETTES) {
+    const ailettes = [];
+    groupe.updateMatrixWorld(true);
+    groupe.traverse(o => { if (o.isMesh && o.name === 'ailette') ailettes.push(o); });
+    assert.ok(ailettes.length > 0, 'plaquette sans ailette');
+    const r = Math.max(...ailettes.flatMap(sommets).map(q => auMoyeu(q, p.FA)));
+    assert.ok(r > rCorps + 3, `ailette à ${r.toFixed(1)} mm de l’axe, corps de l’étrier à ${rCorps.toFixed(1)}`);
   }
 });
 
@@ -550,29 +619,72 @@ test('freins : la sortie des plaquettes est signalée comme approchée', () => {
   for (const mot of ['clip', 'axe', 'ressort']) assert.ok(note.includes(mot), `« ${mot} » absent de la note`);
 });
 
-test('freins : le modèle de l’étrier reste à lire sur la pièce', () => {
+test('freins : le modèle de l’étrier et les plaquettes d’origine restent à lire sur la pièce', () => {
   assert.ok(freins.META.aVerifier.includes('modèle exact de l\'étrier, à lire sur la pièce'));
+  assert.ok(freins.META.aVerifier.some(t => /plaquettes d’origine/.test(t) && /à lire sur la pièce/.test(t)));
 });
 
 // ---- Transmission : pédalier, boîtier, cassette, chaîne et dérailleur ----
 
-const DENTS_CS_M7100_10_45 = [10, 12, 14, 16, 18, 21, 24, 28, 32, 36, 40, 45]; // fiche Shimano de la CS-M7100-12
+// « Combination ... 9-11-13-15-17-19-21-24-28-33-39-45T » : fiche Shimano de la CS-M8200-12.
+const DENTS_CS_M8200_9_45 = [9, 11, 13, 15, 17, 19, 21, 24, 28, 33, 39, 45];
 
-test('transmission : dentures de la cassette CS-M7100 10-45, celles de la fiche Shimano', () => {
-  assert.deepEqual([...transmission.DENTS_CASSETTE], DENTS_CS_M7100_10_45);
-  assert.ok(transmission.META.sources.includes('shimano-cs-m7100-12'));
+test('transmission : dentures de la cassette CS-M8200 9-45, celles de la fiche Shimano', () => {
+  assert.deepEqual([...transmission.DENTS_CASSETTE], DENTS_CS_M8200_9_45);
+  assert.ok(transmission.META.sources.includes('shimano-cs-m8200-12'));
   // Les pignons dessinés : un par denture, du plus petit à l'extérieur au plus grand vers le moyeu.
   const pignons = construire(transmission).maillages.filter(m => /^pignon \d+$/.test(m.name));
   const parZ = pignons.map(m => ({ n: Number(m.name.split(' ')[1]), z: m.position.z })).sort((a, b) => b.z - a.z);
-  assert.deepEqual(parZ.map(x => x.n), DENTS_CS_M7100_10_45);
+  assert.deepEqual(parZ.map(x => x.n), DENTS_CS_M8200_9_45);
   parZ.forEach(({ z }, k) => {
     assert.ok(Math.abs(z - (GEO.zPetitPignon.v - k * GEO.ecartPignons.v)) < 1e-9, `pignon ${k} en z ${z}`);
   });
 });
 
-test('transmission : la fiche Canyon qui donne la chape courte est une source du dérailleur', () => {
-  assert.ok(transmission.META.sources.includes('canyon-4553'));
-  assert.ok(transmission.META.sources.includes('shimano-rd-rx822-gs'));
+test('transmission : le META cite le dérailleur, la cassette, le pédalier et la fiche du CF 8 Di2', () => {
+  for (const id of ['shimano-rd-m8250-gs', 'shimano-cs-m8200-12', 'shimano-fc-rx820-1', 'canyon-4556', 'canyon-photo-4556-fv']) {
+    assert.ok(transmission.META.sources.includes(id), `${id} absent`);
+  }
+  assert.match(transmission.META.nom, /RD-M8250/);
+  assert.match(transmission.META.nom, /CS-M8200/);
+  assert.match(transmission.META.nom, /FC-RX820-1/);
+  // Canyon dit « Shimano XT » pour la chaîne : sa référence reste à lire.
+  assert.ok(transmission.META.aVerifier.some(t => /chaîne/.test(t) && /à lire sur la chaîne/.test(t)));
+});
+
+test('transmission : le dérailleur tient la cassette, d’après sa capacité et son grand pignon publiés', () => {
+  const { capacite, grandPignonMax, petitPignonMin } = transmission.COTES;
+  for (const c of [capacite, grandPignonMax, petitPignonMin]) assert.equal(c.src, 'shimano-rd-m8250-gs');
+  assert.deepEqual([capacite.v, grandPignonMax.v, petitPignonMin.v], [36, 45, 9]);
+  const D = transmission.DENTS_CASSETTE, petit = D[0], grand = D[D.length - 1];
+  assert.ok(grand <= grandPignonMax.v && petit >= petitPignonMin.v, `cassette ${petit}-${grand}`);
+  assert.ok(grand - petit <= capacite.v, `écart de ${grand - petit} dents pour une capacité de ${capacite.v}`);
+  assert.ok(D.includes(GEO.dentsPignonDessine.v), 'la chaîne est dessinée sur un pignon de la cassette');
+});
+
+test('transmission : ni gaine ni fil, et la batterie est logée dans le dérailleur', () => {
+  const { maillages } = construire(transmission);
+  for (const m of maillages) {
+    assert.notEqual(m.userData.role, 'housing', `${m.name} : une gaine`);
+    assert.ok(!/gaine|fil/.test(m.name), `${m.name}`);
+  }
+  const batterie = parNom(maillages, 'batterie');
+  assert.equal(batterie.length, 1, 'une batterie');
+  const corps = new THREE.Box3().setFromPoints(parNom(maillages, 'dérailleur').flatMap(sommets));
+  const b = new THREE.Box3().setFromPoints(sommets(batterie[0]));
+  assert.ok(corps.containsBox(b), 'la batterie dépasse du dérailleur');
+  assert.ok(transmission.META.sources.includes('shimano-bt-dn320'), 'la batterie a sa source');
+});
+
+test('transmission : le boîtier lit la largeur de boîte de GEO, 43,25 mm de chaque côté', () => {
+  assert.equal(transmission.COTES.largeurBoite, undefined, 'une seule largeur de boîte : GEO.largeurBoite');
+  const cuvettes = parNom(construire(transmission).maillages, 'boîtier');
+  assert.equal(cuvettes.length, 2);
+  const faces = cuvettes.map(m => {
+    const z = sommets(m).map(v => Math.abs(v.z));
+    return Math.min(...z);
+  });
+  for (const f of faces) assert.ok(Math.abs(f - GEO.largeurBoite.v / 2) < 0.01, `cuvette contre la boîte en ${f}`);
 });
 
 test('transmission : aucune zone, aucune variante', () => {
@@ -582,7 +694,7 @@ test('transmission : aucune zone, aucune variante', () => {
   }
 });
 
-test('transmission : plateau de 40 dents sur la ligne de chaîne de la FC-RX610-1', () => {
+test('transmission : plateau de 40 dents sur la ligne de chaîne de la FC-RX820-1', () => {
   const p = points(GEO), plateau = parNom(construire(transmission).maillages, 'plateau');
   assert.equal(plateau.length, 1);
   const v = sommets(plateau[0]), [z0, z1] = etendueZ(plateau);
@@ -654,13 +766,57 @@ test('poste : la main tombe sur le dessus de chaque cocotte, au point publié pa
 
 test('poste : cocottes, leviers et durites en zone manettes, le reste sans zone ni variante', () => {
   const { maillages } = construire(poste);
-  const manettes = ['cocotte droite', 'cocotte gauche', 'levier', 'durite'];
+  const manettes = ['cocotte droite', 'cocotte gauche', 'levier', 'palette', 'durite'];
   for (const nom of manettes) assert.ok(parNom(maillages, nom).length > 0, `${nom} absent`);
   for (const m of parNom(maillages, 'durite')) assert.equal(m.userData.role, 'hose');
   for (const m of maillages) {
     assert.equal(m.userData.variante, null);
     const attendue = manettes.includes(m.name) ? 'manettes' : null;
     assert.equal(m.userData.zone, attendue, `${m.name || m.userData.role} : zone ${m.userData.zone}`);
+  }
+});
+
+test('poste : manettes ST-RX825 des deux côtés, sans gaine, une durite par manette', () => {
+  const { maillages } = construire(poste);
+  for (const id of ['shimano-st-rx825', 'canyon-4556', 'canyon-photo-4556-fv']) {
+    assert.ok(poste.META.sources.includes(id), `${id} absent`);
+  }
+  assert.match(poste.META.nom, /ST-RX825/);
+  for (const c of ['collierCocotteMin', 'collierCocotteMax']) assert.equal(poste.COTES[c].src, 'shimano-st-rx825', c);
+  // Manettes sans fil : aucune gaine de dérailleur ne part du cintre.
+  for (const m of maillages) assert.notEqual(m.userData.role, 'housing', m.name);
+  assert.equal(parNom(maillages, 'gaine').length, 0);
+  const durites = parNom(maillages, 'durite');
+  assert.equal(durites.length, 2, 'une durite par manette');
+  // Chaque côté : un levier de frein et une palette plus petite derrière lui.
+  for (const s of [1, -1]) {
+    const cote = m => Math.sign(new THREE.Box3().setFromPoints(sommets(m)).getCenter(new THREE.Vector3()).z) === s;
+    const levier = parNom(maillages, 'levier').filter(cote), palette = parNom(maillages, 'palette').filter(cote);
+    assert.equal(levier.length, 1, `levier côté ${s}`);
+    assert.equal(palette.length, 1, `palette côté ${s}`);
+    const taille = m => new THREE.Box3().setFromPoints(sommets(m)).getSize(new THREE.Vector3()).length();
+    assert.ok(taille(palette[0]) < taille(levier[0]), 'la palette est plus petite que le levier');
+  }
+  // La manette gauche est nommée ST-RX825 par la fiche : ses boutons restent à lire sur la pièce.
+  assert.ok(poste.META.aVerifier.some(t => /manette gauche/.test(t) && /boutons/.test(t)));
+});
+
+test('poste : les durites entrent dans le haut de la direction, devant le pivot, sous la potence', () => {
+  const p = points(GEO), durites = parNom(construire(poste).maillages, 'durite');
+  const axe = Math.hypot(...p.dHT), d = [p.dHT[0] / axe, p.dHT[1] / axe];
+  for (const m of durites) {
+    // Chaque sommet : le long du pivot depuis le haut de la douille, et devant le pivot (négatif : derrière).
+    const v = sommets(m).map(q => {
+      const x = q.x - p.HTt[0], y = q.y - p.HTt[1];
+      return { le: x * d[0] + y * d[1], devant: x * d[1] - y * d[0] };
+    });
+    // Le bout de la durite qui descend au capot : à moins d'un rayon de douille du pivot, sous la potence.
+    const capot = v.filter(q => Math.abs(q.devant) < 26.5 && q.le < 25);
+    assert.ok(capot.length > 0, 'la durite n’arrive pas au capot du jeu de direction');
+    const bas = capot.reduce((a, q) => (q.le < a.le ? q : a));
+    assert.ok(bas.le > 0 && bas.le < 20, `durite : entrée à ${bas.le.toFixed(1)} mm au-dessus de la douille`);
+    // L'entrée est devant le pivot, sous la potence.
+    assert.ok(capot.every(q => q.devant > 0), 'la durite passe derrière le pivot');
   }
 });
 

@@ -3,7 +3,7 @@
 //
 // Repère de geometrie.js, en millimètres : x vers l'avant, y vers le haut, z vers la droite du cycliste.
 // Les cotes viennent de GEO, de points() et de COTES, chacune avec son document dans SOURCES.
-// Les autres nombres de ce fichier sont des valeurs de dessin : profil de la jante hors hauteur et largeur intérieure,
+// Les autres nombres de ce fichier sont des valeurs de dessin : profil de la jante hors hauteur et largeurs,
 // section du pneu, crampons, moyeux, rayonnage, valve et têtes d'axe. META.approche les liste, sans chiffre.
 // Lu sur la photo officielle de profil (canyon-photo-4556-fv) : jantes, rayons et écrous de rayon noirs, vingt-quatre
 // rayons par roue, l'angle de leur trou de jante, leur croisement au plus juste, la valve en haut entre deux rayons, la
@@ -19,6 +19,7 @@ export const COTES = Object.freeze({
   largeurPneu: cote(45, 'schwalbe-g-one-rx'), // « ETRTO: 45-622 »
   hauteurJante: cote(30, FICHE), // « jante 30 mm », et « Hauteur de la jantee en mm 30 »
   largeurInterneJante: cote(27, FICHE), // « largeur interne 27 mm »
+  largeurExterieureJante: cote(33, 'canyon-gr30cf'), // « External width: 33mm, ETRTO 622x27TSS »
   axeAvant: cote(100, FICHE), // roue avant et axe traversant, « 12x100 »
   axeArriere: cote(142, FICHE), // roue arrière et axe traversant, « 12x142 »
   diametreAxe: cote(12, FICHE), // le « 12 » de 12x100 et de 12x142
@@ -36,8 +37,8 @@ export const META = Object.freeze({
     'schwalbe-g-one-rx',
   ]),
   approche: Object.freeze([
-    'Profil de la jante : hauteur et largeur intérieure publiées, et Canyon annonce des jantes sans crochets. ' +
-      'Largeur extérieure, flancs, siège du talon et creux central sont approchés.',
+    'Profil de la jante : hauteur, largeur intérieure et largeur extérieure publiées, et Canyon annonce des jantes ' +
+      'sans crochets. Flancs, siège du talon et creux central sont approchés.',
     'Section du pneu : ronde, à la largeur publiée. Le rayon extérieur du pneu monté n’est pas publié, il est approché ' +
       'd’après la photo officielle.',
     'Crampons : Schwalbe décrit des crampons extérieurs appariés, sans cote. Petits crampons serrés au centre, ' +
@@ -62,9 +63,6 @@ export const META = Object.freeze({
 
 // ---- Valeurs de dessin (approchées, voir META.approche) ----
 const FLANC = 4.5; // hauteur du flanc de la jante au-dessus du siège du talon : une jante sans crochets s'arrête là
-// Largeur extérieure de la jante : la valeur du plan du passage au CF 8 Di2. Le relevé des sources ne la cite pas,
-// elle est donc approchée.
-const LARGEUR_EXTERIEURE = 33;
 const CRAMPON = 2.6; // hauteur des crampons du centre, les plus hauts : leur dessus fait le rayon extérieur du pneu
 // Sculpture : un motif se répète MOTIFS fois sur le tour. Au centre, quatre rangées de petits crampons, de trois puis
 // de deux. Sur chaque épaule, une paire : un crampon incliné vers le centre, puis un crampon long au bord. Les deux
@@ -124,7 +122,7 @@ function roue(o, { c, flasques }, geo) {
 
   // Jante sans crochets : flancs droits arrondis en haut, siège du talon et son bourrelet, creux central, puis le dessous
   // en U jusqu'au fond, où entrent les rayons. Sens de parcours : la matière à gauche.
-  const demi = COTES.largeurInterneJante.v / 2, ext = LARGEUR_EXTERIEURE / 2;
+  const demi = COTES.largeurInterneJante.v / 2, ext = COTES.largeurExterieureJante.v / 2;
   const haut = siege + FLANC, bas = haut - COTES.hauteurJante.v;
   const demiProfil = [ // de z = +demi en haut du flanc, vers l'extérieur puis le fond de jante
     [haut, demi + 0.6], [haut, ext - 0.9], [haut - 0.35, ext - 0.3], [haut - 1, ext], [haut - 7, ext],

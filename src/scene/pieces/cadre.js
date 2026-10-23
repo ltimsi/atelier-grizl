@@ -24,10 +24,11 @@ export const COTES = Object.freeze({
   reculTete: cote(18, MARQUAGE), // « SETBACK 18 / 6 mm », selon le sens de la tête
   largeurSelle: cote(150, FIZIK), // « Width 150 mm », comme les « 150 mm » de la fiche
   longueurSelle: cote(270, FIZIK), // « Length 270 mm »
-  largeurRepere: cote(75, FIZIK), // le « 75mm » des deux cotes suivantes : la selle a cette largeur au repère
+  // Le « 75mm » des deux cotes suivantes, lu comme l'endroit où la selle a cette largeur (lecture à vérifier).
+  largeurRepere: cote(75, FIZIK),
   repereDepuisBec: cote(113, FIZIK), // « Length from nose at 75mm 113 mm »
   hauteurRepere: cote(51, FIZIK), // « Height at 75mm 51 mm », prise ici depuis l'axe des rails
-  rail: cote(7, FIZIK), // « Rail Dimension 7x7 »
+  rail: cote(7, FIZIK), // « Rail Dimension 7x7 », lu comme une section en millimètres (lecture à vérifier)
 });
 
 export const META = Object.freeze({
@@ -70,6 +71,8 @@ export const META = Object.freeze({
     'sens de la tête de la tige de selle à la livraison, donc son recul',
     'marquage de la tige de selle : la fiche la nomme de plusieurs façons, à lire sur la tige',
     'ce que mesure la longueur publiée par Fizik, la selle ou ses rails',
+    'cotes de Fizik : le repère lu comme l’endroit où la selle a sa largeur publiée, et la section des rails lue ' +
+      'en millimètres. Deux lectures à vérifier sur la selle',
   ]),
 });
 

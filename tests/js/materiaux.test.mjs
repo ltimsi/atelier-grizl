@@ -175,7 +175,7 @@ test('creerMateriaux : chaque appel crée des matières neuves', () => {
 });
 
 test('creerMateriaux : cassette et chaîne en acier argenté un peu chaud, pas blanc, comme sur la photo officielle', () => {
-  // Sur canyon-photo-4553-fv, la cassette et la chaîne sont d'un acier argenté tirant sur le chaud. Le rendu les
+  // Sur canyon-photo-4556-fv, la cassette et la chaîne sont d'un acier argenté tirant sur le chaud. Le rendu les
   // donnait presque blanches.
   const { cassette, chain } = creerMateriaux(THREE, {}).reel;
   for (const [nom, m] of [['cassette', cassette], ['chaîne', chain]]) {

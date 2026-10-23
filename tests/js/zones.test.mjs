@@ -21,8 +21,9 @@ test('zones attendues', () => {
   assert.deepEqual(ZONES.map(z => z.id), ['disques', 'etrier', 'manettes']);
 });
 
-test('variantes', () => {
-  assert.deepEqual(parId.disques.variante.libelles, ['D’origine · SM-RT64', 'XT · RT-MT800']);
+test('variantes : seule la zone de l’étrier en a une, les disques n’en ont plus', () => {
+  assert.equal(parId.disques.variante, undefined, 'un seul type de disque');
+  assert.deepEqual(ZONES.filter(z => z.variante).map(z => z.id), ['etrier']);
   assert.deepEqual(parId.etrier.variante.libelles, ['Plaquettes en place', 'Plaquettes sorties']);
   assert.equal(parId.manettes.variante, undefined, 'les manettes n’ont pas de variante');
 });
