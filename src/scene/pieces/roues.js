@@ -89,7 +89,7 @@ const pol = (c, r, deg) => [c[0] + r * Math.cos(deg * D2R), c[1] + r * Math.sin(
 
 /**
  * Ajoute au groupe des outils les deux roues : pneus et crampons, jantes, moyeux, rayons et écrous, valves, axes.
- * Aucun maillage n'a de zone ni de variante, et les outils en ressortent sans zone ni variante.
+ * Aucun maillage n'a de zone, et les outils en ressortent sans zone.
  * Noms des maillages que vérifient les tests : pneu, jante, moyeu avant, moyeu arrière, rayons, axe avant, axe arrière.
  * @param {object} o Les outils de creerOutils.
  * @param {object} p Les points de points(geo).
@@ -98,7 +98,6 @@ const pol = (c, r, deg) => [c[0] + r * Math.cos(deg * D2R), c[1] + r * Math.sin(
  */
 export function construire(o, p, geo) {
   o.zone(null);
-  o.variante(null);
   const roues = [
     { c: p.FA, cote: 'avant', largeur: COTES.axeAvant.v, plan: -geo.decalageDisqueAvant.v, ...MOYEUX.avant },
     { c: p.RA, cote: 'arrière', largeur: COTES.axeArriere.v, plan: -geo.decalageDisqueArriere.v, ...MOYEUX.arriere },
@@ -112,7 +111,6 @@ export function construire(o, p, geo) {
   axe(o, p.FA, 'axe avant', [-74, -66], [66, 71]);
   axe(o, p.RA, 'axe arrière', [-88, -80], [85, 91]);
   o.zone(null);
-  o.variante(null);
 }
 
 // Pneu, jante, rayons et valve d'une roue.

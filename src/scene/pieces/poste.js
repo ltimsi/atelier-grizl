@@ -1,7 +1,7 @@
 // Pièce 3D : poste de pilotage d'origine du Grizl CF 8 Di2. Capot et entretoise du jeu de direction, potence Canyon
-// ST0046, cintre Canyon HB0067 et son ruban Ergospeed Gel noir, embouts, manettes Shimano GRX Di2 ST-RX825 des deux
-// côtés (cocotte, levier de frein et palette), durites du cintre jusqu'au capot du jeu de direction. Les manettes
-// passent les vitesses sans fil : aucune gaine ne part du cintre.
+// ST0046, cintre Canyon HB0067 et son ruban Ergospeed Gel noir, embouts, manettes Shimano GRX Di2 (droite ST-RX825,
+// gauche ST-RX825-L ou BL-RX825-L, à lire sur la pièce ; cocotte, levier de frein et palette), durites du cintre
+// jusqu'au capot du jeu de direction. Les manettes passent les vitesses sans fil : aucune gaine ne part du cintre.
 //
 // Repère de geometrie.js, en millimètres : x vers l'avant, y vers le haut, z vers la droite du cycliste.
 // Les cotes viennent de GEO, de points() et de COTES, chacune avec son document dans SOURCES. Les autres nombres de ce
@@ -18,7 +18,7 @@
 // sur la photo : sa place sur la courbe du cintre et la rotation du cintre dans la potence sont lues sur la photo,
 // pas calculées depuis la main. Le cintre est construit en arrière, depuis son collier dans la potence, avec le déport
 // et la descente du marquage officiel.
-// Zones : cocottes, leviers, palettes et durites en zone 'manettes' ; le reste sans zone. Aucune variante.
+// Zones : cocottes, leviers, palettes et durites en zone 'manettes' ; le reste sans zone.
 // Aucun import : le module ne reçoit que les outils de construction, les points et GEO.
 
 const FICHE = 'canyon-4556';
@@ -37,7 +37,8 @@ export const COTES = Object.freeze({
 
 export const META = Object.freeze({
   id: 'poste',
-  nom: 'Jeu de direction, potence ST0046, cintre HB0067, ruban, manettes GRX Di2 ST-RX825 et durites',
+  nom: 'Jeu de direction, potence ST0046, cintre HB0067, ruban, manettes GRX Di2 (droite ST-RX825, gauche ' +
+    'ST-RX825-L ou BL-RX825-L, à lire sur la pièce) et durites',
   zone: null, // cocottes, leviers, palettes et durites en zone 'manettes', le reste sans zone
   sources: Object.freeze([
     FICHE,
@@ -61,6 +62,9 @@ export const META = Object.freeze({
     'Couleur de la palette : plus claire sur la photo officielle, elle est dessinée en noir mat.',
     'Place des cocottes sur la courbe du cintre et rotation du cintre dans la potence : non publiées. Elles sont lues ' +
       'sur la photo officielle du vélo.',
+    'Inclinaison des cocottes : sur la photo officielle, le repose-main ne penche que d’un à deux degrés. Ici, il ' +
+      'penche d’environ six degrés et demi. L’écart vient de la courbe du cintre et de la hauteur de la ' +
+      'potence, approchées.',
     'Courbe du cintre : seuls le déport, la descente, l’évasement, l’inclinaison et les largeurs sont publiés. ' +
       'La forme de la courbe et la longueur des drops sont approchées.',
     'Inclinaison de la partie haute du cintre : Canyon la donne sans dessin. Elle est dessinée vers le bas, du ' +
@@ -133,7 +137,7 @@ const v = (q, z = 0) => [q[0], q[1], z];
 
 /**
  * Ajoute au groupe des outils le jeu de direction, la potence, le cintre, le ruban, les embouts, les cocottes, les
- * leviers, les palettes et les durites. Les outils en ressortent sans zone ni variante.
+ * leviers, les palettes et les durites. Les outils en ressortent sans zone.
  * Noms des maillages que vérifient les tests : cocotte droite, cocotte gauche, levier, palette, durite, collier du
  * cintre, embout de cintre. Les autres : cintre, potence, jeu de direction.
  * @param {object} o Les outils de creerOutils.
@@ -143,7 +147,6 @@ const v = (q, z = 0) => [q[0], q[1], z];
  */
 export function construire(o, p, geo) {
   o.zone(null);
-  o.variante(null);
   directionEtPotence(o, p);
   const pose = poseCintre(p, geo);
   const cotes = [1, -1].map(s => ({ s, pts: pose.points.map(([x, y, z]) => [x, y, s * z]) }));
@@ -153,7 +156,6 @@ export function construire(o, p, geo) {
   for (const { s } of cotes) cocotte(o, pose, s, p);
   for (const { s, pts } of cotes) durites(o, p, pts, pose.iCollier, s);
   o.zone(null);
-  o.variante(null);
 }
 
 // Capot, entretoise, potence, capot de serrage, vis et bouchon.
@@ -310,7 +312,8 @@ function cocotte(o, pose, s, p) {
 }
 
 // Volume d'une cocotte : sections superelliptiques, lissées en Catmull-Rom, fermées aux deux bouts.
-// Chaque section a un sommet exactement en haut, au milieu : le point de saisie en est un.
+// Chaque section a un sommet exactement en haut, au milieu. Celui de la section PRISE est le point du repose-main
+// sous la main publiée : la main est posée au-dessus, à peu près d'une épaisseur de main (voir l'en-tête).
 function volume(T, cles, n = 24, e = 2.6) {
   const lisse = [];
   const at = i => cles[Math.max(0, Math.min(cles.length - 1, i))];

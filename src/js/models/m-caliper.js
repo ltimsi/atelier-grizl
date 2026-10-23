@@ -1,8 +1,9 @@
 /* Atelier Grizl : étrier flat mount du Grizl CF 8 Di2 à deux pistons opposés, plaquettes en résine à ailettes.
-   Canyon ne nomme ni l'étrier ni les plaquettes. L'étrier est dessiné sur le BR-RX820, celui que Shimano recommande avec
-   les manettes ST-RX825 (fiche ST-RX825, fiche BR-RX820) : modèle monté à lire sur la pièce. Les plaquettes sont les
+   La liste des composants du vélo ne nomme ni l'étrier ni les plaquettes ; l'onglet des pièces d'usure de la fiche
+   anglaise de Canyon propose des L05A-RF. L'étrier est dessiné sur le BR-RX820, celui que Shimano recommande avec les
+   manettes ST-RX825 (fiche ST-RX825, fiche BR-RX820) : modèle monté à lire sur la pièce. Les plaquettes sont les
    L05A-RF, en résine, à ailettes (« w/ fin » sur la fiche BR-RX820, plaquette standard du tableau C-192), les plaquettes
-   d'origine à confirmer sur la pièce. Couples du chapitre 2 : axe de plaquettes du BR-RX820 1-1,5 Nm à la clé Allen de
+   d'origine attendues : une pièce d'usure proposée ne prouve pas la pièce montée, à lire sur la pièce. Couples du chapitre 2 : axe de plaquettes du BR-RX820 1-1,5 Nm à la clé Allen de
    3 mm (DM-GADBR01-11), vis de fixation 6-8 Nm (DM-GADBR01), raccord de durite côté étrier 5-7 Nm (DM-GADBR10).
    Pièces : corps monobloc, deux pistons en résine (fiche BR-RX820), deux plaquettes et leurs garnitures, ressort,
    axe et clip de retenue, raccord et vis de purge sous leurs caches, raccord de durite, segment de disque, support
@@ -14,6 +15,8 @@
      ailettes de la L05A-RF sortent au-dessus de la plaque, en peigne, vers l'extérieur ; repères L et R : place
      approchée ;
    - ressort, axe, tête d'axe et clip : forme approchée ;
+   - couleurs : corps, ailettes des plaquettes (finMat) et durite rendus noirs, plaque d'appui en métal clair ; teintes
+     approchées, aucun document cité ne les donne ;
    - raccord de purge et vis de purge, sous leurs caches : place et forme approchées d'après les figures du DM-GADBR10
      et de la vue éclatée, qui les montrent sur la même face du corps ;
    - raccord et durite : forme et trajet approchés ;
@@ -112,7 +115,7 @@
       H.cyl(3.1, 3, 'x', rubber, fit, [10.5, 0, 0], 24, 2.7);
       H.tube([[11, 0, 0], [17, 0, 0], [24, 2.5, -1.5], [29, 10, -5], [31, 22, -9], [31, 36, -12]], 2.5, hoseMat, fit, false, 80, 14);
 
-      /* ---------- Segment de disque (acier 1,8 mm) ---------- */
+      /* ---------- Segment de disque (épaisseur approchée) ---------- */
       var disc = new THREE.Group(); root.add(disc);
       var a0 = Math.PI / 2 - 0.78, a1 = Math.PI / 2 + 0.78, P = [], i;
       for (i = 0; i <= 60; i++) P.push(H.pol(80, a0 + (a1 - a0) * i / 60, 0, DC));
@@ -230,7 +233,7 @@
         { obj: spring, p: [5.5, 19.8, -3.5], text: 'Ressort : s’il touche le disque, change les plaquettes' },
         { obj: pads[0], p: [-13, 28.6, 6.1], text: 'Plaquettes L05A-RF en résine, à confirmer : repères L et R' },
         { obj: lin[0], p: [16.4, 4, 0.5], text: 'Garniture : à changer à 0,5 mm' },
-        { obj: pistons[0], p: [0, 0, 0], text: 'Pistons en résine : à repousser bien droit, outil plat' },
+        { obj: pistons[0], p: [0, 0, 0], text: 'Pistons en résine du BR-RX820 : entonnoir monté sur la manette, puis repousse-les bien droit, outil plat' },
         { obj: bolts[1].userData.head, p: [0, -4.6, 3], text: 'Vis de fixation de l’étrier : 6-8 Nm' },
         { obj: nut, p: [0, 0, 0], text: 'Raccord de durite côté étrier : 5-7 Nm' }
       ];

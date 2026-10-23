@@ -65,6 +65,10 @@ export const META = Object.freeze({
       'officielle. Contour, galbe, bec court plongeant, place sur les rails et courbe des rails sont approchés ' +
       'd’après les photos officielles.',
     'Inscriptions de la tige, de la tête et de la selle : non dessinées.',
+    'Peinture : plus rose et marbrée ici. Sur la photo officielle, elle est lie-de-vin, avec un motif en ' +
+      'traits. Sa teinte change aussi avec l’éclairage du studio.',
+    'Marquages du cadre et de la fourche : « CANYON » sur le tube oblique et la fourche, « GRIZL » sur le tube de ' +
+      'selle et le cadre de repère imprimé sur la fourche, visibles sur la photo officielle, ne sont pas dessinés.',
   ]),
   aVerifier: Object.freeze([
     'type de patte de dérailleur',
@@ -73,6 +77,9 @@ export const META = Object.freeze({
     'ce que mesure la longueur publiée par Fizik, la selle ou ses rails',
     'cotes de Fizik : le repère lu comme l’endroit où la selle a sa largeur publiée, et la section des rails lue ' +
       'en millimètres. Deux lectures à vérifier sur la selle',
+    'angle du tube de selle : sur la photo officielle, il paraît redressé d’environ un degré de plus que l’angle ' +
+      'publié, que le dessin applique. Effet de perspective ou retouche de la photo : on ne peut pas trancher, à ' +
+      'regarder sur le vélo',
   ]),
 });
 
@@ -138,7 +145,7 @@ function fuseau(o, a, b, [la, ea], [lb, eb], role, seg = 32) {
 
 /**
  * Ajoute au groupe des outils le cadre, la fourche, le collier, la tige de selle et la selle.
- * Aucun maillage n'a de zone ni de variante, et les outils en ressortent sans zone ni variante.
+ * Aucun maillage n'a de zone, et les outils en ressortent sans zone.
  * Les maillages dont un test vérifie la cote portent un nom : patte arrière, patte avant, boîte de pédalier,
  * tige de selle, rail de selle, selle.
  * @param {object} o Les outils de creerOutils.
@@ -148,7 +155,6 @@ function fuseau(o, a, b, [la, ea], [lb, eb], role, seg = 32) {
  */
 export function construire(o, p, geo) {
   o.zone(null);
-  o.variante(null);
   cadre(o, p, geo);
   fourche(o, p);
   tigeEtSelle(o, p, geo);

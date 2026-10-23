@@ -64,27 +64,6 @@ export function marbre(taille = 256, graine = 11) {
 }
 
 /**
- * Pixels du relief du ruban de guidon : un fond blanc barré d'une bande noire en diagonale.
- * La bande se raccorde d'un bord à l'autre. À poser en bumpMap, avec RepeatWrapping et repeat (70, 1).
- * @param {number} [taille=64] Côté de l'image en pixels.
- * @returns {Uint8ClampedArray} taille * taille * 4 valeurs RGBA en niveaux de gris, tous les pixels opaques.
- */
-export function reliefRuban(taille = 64) {
-  const pixels = new Uint8ClampedArray(taille * taille * 4);
-  const demiLargeur = 3 * taille / 64; // la bande fait 6 pixels de large pour une image de 64
-  for (let y = 0; y < taille; y++) for (let x = 0; x < taille; x++) {
-    // Écart horizontal à la diagonale x = y, replié pour que la bande passe d'un bord à l'autre.
-    const ecart = ((x - y) % taille + taille) % taille;
-    const distance = Math.min(ecart, taille - ecart) / Math.SQRT2;
-    const v = 255 * Math.min(1, Math.max(0, distance - demiLargeur + .5));
-    const o = (y * taille + x) * 4;
-    pixels[o] = pixels[o + 1] = pixels[o + 2] = v;
-    pixels[o + 3] = 255;
-  }
-  return pixels;
-}
-
-/**
  * Pixels des stries d'un métal brossé : une teinte de gris par ligne, entre 150 et 240.
  * À poser en roughnessMap, avec RepeatWrapping.
  * @param {number} [largeur=8] Largeur de l'image en pixels.
@@ -113,14 +92,13 @@ export function striesBrossees(largeur = 8, hauteur = 256, graine = 1234567) {
  * Cette fonction ne crée aucun canevas. Les textures arrivent toutes faites, et toute texture absente est omise.
  * Réglages attendus côté navigateur, repris de la maquette :
  *   texturePeinture : SRGBColorSpace, RepeatWrapping, repeat (1, 3), anisotropy 4 ;
- *   textureRuban : RepeatWrapping, repeat (70, 1) ;
  *   textureBrossee : RepeatWrapping, repeat (1, 1).
  * @param {object} THREE Le module three.js.
- * @param {{texturePeinture?: object, textureRuban?: object, textureBrossee?: object}} [textures]
- *   texturePeinture : map de la peinture. textureRuban : bumpMap du ruban. textureBrossee : roughnessMap du rotor.
+ * @param {{texturePeinture?: object, textureBrossee?: object}} [textures]
+ *   texturePeinture : map de la peinture. textureBrossee : roughnessMap du rotor.
  * @returns {{reel: Object<string, object>, simple: Object<string, object>}} Une matière par rôle de ROLES, dans chaque jeu.
  */
-export function creerMateriaux(THREE, { texturePeinture, textureRuban, textureBrossee } = {}) {
+export function creerMateriaux(THREE, { texturePeinture, textureBrossee } = {}) {
   const std = (c, r = .7, m = 0) => new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m });
   const phy = (c, r, m, o = {}) => new THREE.MeshPhysicalMaterial({ color: c, roughness: r, metalness: m, ...o });
   // Les options d'une texture, ou rien du tout si elle manque : three.js proteste devant une valeur undefined.
@@ -148,7 +126,8 @@ export function creerMateriaux(THREE, { texturePeinture, textureRuban, textureBr
     protector: phy(0x101112, .7, 0),
     carbon: phy(0x0f1012, .42, .1, { clearcoat: .4, clearcoatRoughness: .35 }),
     black: phy(0x131416, .3, .75),
-    tape: phy(0x0d0d0e, .88, 0, avec(textureRuban, { bumpMap: textureRuban, bumpScale: 1.5 })),
+    // Ruban : lisse, comme sur la photo officielle de profil (canyon-photo-4556-fv), sans relief.
+    tape: phy(0x0d0d0e, .88, 0),
     hood: phy(0x101011, .68, 0),
     saddle: phy(0x0e0e0f, .5, 0, { clearcoat: .25, clearcoatRoughness: .4 }),
     rubber: phy(0x151515, .9, 0),
@@ -156,7 +135,10 @@ export function creerMateriaux(THREE, { texturePeinture, textureRuban, textureBr
     hub: phy(0x17181a, .3, .8),
     spoke: phy(0x1a1b1d, .28, .9),
     steel: phy(0xc9ccd0, .22, 1),
-    rotor: phy(0xd7d9dc, .16, 1, avec(textureBrossee, { roughnessMap: textureBrossee })),
+    // Piste du disque : d'un gris moyen sur la photo officielle, de profil comme en vue d'ensemble. Un acier mi-rugueux
+    // et plus sombre s'en approche dans les deux vues ; poli et clair, il paraissait clair de profil et sombre de trois
+    // quarts. Les ailettes, plus claires sur la photo, sont en acier (steel).
+    rotor: phy(0x7c7f84, .5, 1, avec(textureBrossee, { roughnessMap: textureBrossee })),
     rotorSpider: phy(0x141517, .3, .8),
     caliper: phy(0x18191b, .36, .7),
     pad: phy(0x8a8c90, .3, 1),

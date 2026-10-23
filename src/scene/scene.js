@@ -11,7 +11,7 @@
 // creerScene se testent sous Node.
 import { GEO, points, approximations as approximationsGeo } from './geometrie.js';
 import { SOURCES } from './sources.js';
-import { creerMateriaux, marbre, reliefRuban, striesBrossees } from './materiaux.js';
+import { creerMateriaux, marbre, striesBrossees } from './materiaux.js';
 import { creerStudio, creerOmbre } from './studio.js';
 import { creerOutils } from './outils3d.js';
 import * as cadre from './pieces/cadre.js';
@@ -151,8 +151,7 @@ function texture(THREE, pixels, largeur, hauteur, { repete, srgb = false, anisot
  *   viser(id) : vol de la caméra vers la vue de la zone, en 850 ms (tout de suite si l'utilisateur préfère réduire
  *   les animations) ; ensemble() : vol vers la vue d'ensemble ;
  *   variante(id, k) : 'etrier', la seule zone à variante de zones.json, sort (k = 1) ou rentre (k = 0) les
- *   plaquettes, et l'ombre est recuite à la fin de leur sortie. Un maillage qui porte une variante, s'il y en a, ne
- *   reste visible que pour son k ;
+ *   plaquettes, et l'ombre est recuite à la fin de leur sortie ;
  *   redimensionner(w, h) : taille de l'image, en pixels CSS ;
  *   image(now) : à appeler à chaque image ; dessine si besoin et renvoie true quand il a dessiné ;
  *   pastilles() : la place de l'ancre de chaque zone dans l'image, [{ id, x, y, visible }] ;
@@ -197,7 +196,6 @@ export function creerScene(libs, canvas, zones) {
   // ---- Matières, avec les textures des générateurs de pixels ----
   const materiaux = creerMateriaux(THREE, {
     texturePeinture: texture(THREE, marbre(256), 256, 256, { repete: [1, 3], srgb: true, anisotropie: 4 }),
-    textureRuban: texture(THREE, reliefRuban(64), 64, 64, { repete: [70, 1] }),
     textureBrossee: texture(THREE, striesBrossees(8, 256), 8, 256, { repete: [1, 1] }),
   });
 
@@ -229,7 +227,6 @@ export function creerScene(libs, canvas, zones) {
   // ---- État ----
   let mode = 'reel', zoneSurlignee = null, sale = true, premier = true, vol = null;
   let tPlaquettes = 0, sortie = null, trianglesImage = 0;
-  const variantes = Object.fromEntries(zones.filter(z => z.variante).map(z => [z.id, 0]));
 
   // ---- Matières du mode et surlignage ----
   const surlignees = new Map(); // une copie émissive par matière de base et par mode
@@ -293,13 +290,7 @@ export function creerScene(libs, canvas, zones) {
     voler([0, 0, 0], positionVue([0, 0, 0], DIR_ENSEMBLE, d));
   }
 
-  // ---- Variantes ----
-  function montrerVariantes() {
-    for (const o of maillages) {
-      const v = o.userData.variante;
-      if (v) o.visible = (variantes[v.zone] ?? 0) === v.k;
-    }
-  }
+  // ---- Variante de l'étrier : les plaquettes sortent ----
   function poserPlaquettes(t) {
     tPlaquettes = t;
     const e = adoucir(t);
@@ -315,8 +306,6 @@ export function creerScene(libs, canvas, zones) {
     sortie = { de: tPlaquettes, vers, t0: maintenant(), duree: DUREE_PLAQUETTES * Math.abs(vers - tPlaquettes) };
   }
   function variante(id, k) {
-    variantes[id] = k;
-    montrerVariantes();
     if (id === ZONE_PLAQUETTES) sortirPlaquettes(k ? 1 : 0); // l'ombre est recuite à la fin de la sortie
     else ombre.cuire();
     sale = true;
@@ -367,7 +356,6 @@ export function creerScene(libs, canvas, zones) {
   const triangles = () => trianglesImage;
 
   // ---- Départ ----
-  montrerVariantes();
   rendu('reel');
   ensemble();
   ombre.cuire();

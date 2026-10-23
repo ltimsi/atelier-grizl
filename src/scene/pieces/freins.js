@@ -1,5 +1,6 @@
-// Pièce 3D : disques Shimano Deore XT RT-MT800 d'origine du Grizl CF 8 Di2, étriers flat mount dessinés sur le
-// modèle du BR-RX820, plaquettes en résine à ailettes L05A-RF, durites de la fourche et du cadre jusqu'aux étriers.
+// Pièce 3D : disques Shimano Deore XT MT800 d'origine du Grizl CF 8 Di2 (RT-MT800 ou RT-CL800, à lire sur la pièce),
+// étriers flat mount dessinés sur le modèle du BR-RX820, plaquettes en résine à ailettes (L05A-RF attendues), durites
+// de la fourche et du cadre jusqu'aux étriers.
 //
 // Repère de geometrie.js, en millimètres : x vers l'avant, y vers le haut, z vers la droite du cycliste.
 // Disques et étriers sont à gauche (z négatif). Leur position vient de GEO et de points() : CF, CR, plans des disques.
@@ -12,7 +13,7 @@
 // (fentes, bande d'ailettes claire, araignée noire), l'étrier avant noir derrière le fourreau gauche, son logement de
 // piston rond, la tête de l'axe des plaquettes en haut, le raccord de la durite au bout haut de l'étrier, et les
 // ailettes des plaquettes qui dépassent du corps vers l'extérieur.
-// Zones : les deux disques et leurs bagues en zone 'disques', un seul type de disque et aucune variante ; l'étrier
+// Zones : les deux disques et leurs bagues en zone 'disques', un seul type de disque ; l'étrier
 // avant et ses plaquettes en zone 'etrier' ; l'étrier arrière sans zone ; les durites en zone 'manettes' (la tâche du
 // poste de pilotage construit celles du cintre jusqu'au jeu de direction).
 // Aucun import : le module ne reçoit que les outils de construction, les points et GEO.
@@ -29,14 +30,14 @@ export const PLAQUETTES = [];
 
 export const META = Object.freeze({
   id: 'freins',
-  nom: 'Disques Deore XT MT800, étriers GRX, plaquettes L05A-RF et durites',
+  nom: 'Disques Deore XT MT800, étriers GRX, plaquettes à ailettes en résine (L05A-RF attendues) et durites',
   zone: null, // trois zones selon les maillages : 'disques', 'etrier' et 'manettes'
   sources: Object.freeze([
     'canyon-4556',
     'canyon-4556-en',
     'canyon-photo-4556-fv',
     'canyon-photo-4556-rangement',
-    'shimano-deore-xt-m8000',
+    'shimano-rt-mt800',
     'shimano-c-461',
     'shimano-st-rx825',
     'shimano-br-rx820',
@@ -61,7 +62,8 @@ export const META = Object.freeze({
       'grosseur et trajet approchés.',
     'Durite arrière : grosseur et trajet de l’étrier jusqu’à la base gauche approchés.',
     'Couleurs : la bande d’ailettes du disque, claire sur la photo officielle, et les ailettes des plaquettes, sombres ' +
-      'sur la photo, sont rendues en gris métal.',
+      'sur la photo, sont rendues en gris métal. La piste est rendue dans le gris moyen de la photo, en vue ' +
+      'd’ensemble comme de profil.',
   ]),
   aVerifier: Object.freeze([
     'modèle exact de l\'étrier, à lire sur la pièce',
@@ -104,7 +106,7 @@ const pol = (r, a) => [r * Math.cos(a), r * Math.sin(a)];
 
 /**
  * Ajoute au groupe des outils les disques, leurs bagues, les étriers, les plaquettes et les durites du cadre.
- * Les outils en ressortent sans zone ni variante. Vide puis remplit PLAQUETTES.
+ * Les outils en ressortent sans zone. Vide puis remplit PLAQUETTES.
  * Noms des maillages que vérifient les tests : piste, étrier avant, étrier arrière, « étrier avant, piston »,
  * « étrier arrière, piston », plaquette, ailette, durite. Les autres : bague, et les morceaux sans nom des disques.
  * @param {object} o Les outils de creerOutils.
@@ -115,7 +117,6 @@ const pol = (r, a) => [r * Math.cos(a), r * Math.sin(a)];
 export function construire(o, p, geo) {
   PLAQUETTES.length = 0;
   o.zone(null);
-  o.variante(null);
   const R = geo.diametreDisque.v / 2;
   const avant = { c: p.FA, plan: -geo.decalageDisqueAvant.v };
   const arriere = { c: p.RA, plan: -geo.decalageDisqueArriere.v };
@@ -134,7 +135,6 @@ export function construire(o, p, geo) {
   o.zone('manettes');
   durites(o, p, fixAvant, fixArriere);
   o.zone(null);
-  o.variante(null);
 }
 
 // Forme fermée à partir de points [x, y].
@@ -197,7 +197,7 @@ function disqueMT800(o, { c, plan }, R) {
     const pts = [];
     for (let j = 0; j <= 16; j++) pts.push(pol(r1, a0 + (a1 - a0) * j / 16));
     for (let j = 16; j >= 0; j--) pts.push(pol(r0, a0 + (a1 - a0) * j / 16));
-    o.extr(forme(T, pts), ailettes.epaisseur, 'rotor').position.set(c[0], c[1], plan);
+    o.extr(forme(T, pts), ailettes.epaisseur, 'steel').position.set(c[0], c[1], plan); // plus claires que la piste
   }
   for (let k = 0; k < BRAS; k++) {
     const [x, y] = pol(rivet, angleBras(k));

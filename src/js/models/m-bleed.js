@@ -426,15 +426,15 @@
         { obj: fun, p: [12, 81.5, 7.5], text: 'Entonnoir TL-BR002, vissé à la place de la vis de purge' },
         { obj: blade, p: [-97, -62, 6.2], text: 'Levier : actionne-le environ 10 fois après l’injection' },
         { obj: block, p: [-12, 17.3, 2], text: 'Cale de purge jaune, tenue par l’axe et le clip' },
-        { obj: screwHead, p: [0, 0, 0.9], text: 'Vis de purge de l’étrier, clé de 3 mm : un demi-tour, puis 4-6 Nm' },
+        { obj: screwHead, p: [0, 0, 0.9], text: 'Vis de purge de l’étrier, clé de 3 mm : desserre d’un demi-tour, puis 4-6 Nm au serrage' },
         { obj: capBoss, p: [0, 0, 0.6], text: 'Caches du raccord et de la vis de purge : retirés' }
       ];
-      var pinTilt = { obj: fun, p: [-13, 81.5, 0], text: 'Dessus de l’entonnoir à 20° du sol : change l’angle du cintre' };
+      var pinTilt = { obj: fun, p: [-13, 81.5, 0], text: 'Dessus de l’entonnoir à 20° du sol : change par exemple l’angle du cintre' };
       var pinBoss = { obj: bossTip, p: [0, 2.6, 0], text: 'Raccord de purge : tube de la seringue, puis du sachet' };
       var pinTap = { obj: hoseMid, p: [0, 0, 0], text: 'Bulles : secoue la durite, tape doucement sur la manette ou l’étrier' };
       var pinSyr = { obj: syr, p: [0, 42, 10.3], text: 'Seringue TL-BR001 : huile minérale Shimano uniquement' };
       var pinBag = { obj: bag, p: [-9, 10, 4.5], text: 'Sachet de récupération : l’huile y descend par gravité' };
-      function pinsFor() { return pinCommon.concat(tiltT ? [pinTilt] : [], [pinBoss, mode === 'inj' ? pinSyr : pinBag, pinTap]); }
+      function pinsFor() { return pinCommon.concat([pinBoss, mode === 'inj' ? pinSyr : pinBag, pinTap], tiltT ? [pinTilt] : []); }
 
       function setMode(v) {
         mode = v;

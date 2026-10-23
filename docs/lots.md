@@ -60,6 +60,8 @@ Formes approchées :
 - Tige de selle : deux lames séparées par une fente sur leur longueur, qui s’écartent puis se rejoignent dans la tête, comme sur les photos officielles de Canyon. Épaisseur et courbe des lames, place de la fente, yeux des vis et forme de la tête sont approchés.
 - Selle : largeur, longueur, largeur à un repère mesuré depuis le bec et hauteur à ce repère publiées par Fizik. Fizik ne dit pas d’où il prend cette hauteur : elle part ici de l’axe des rails, ce qui s’accorde avec la photo officielle. Contour, galbe, bec court plongeant, place sur les rails et courbe des rails sont approchés d’après les photos officielles.
 - Inscriptions de la tige, de la tête et de la selle : non dessinées.
+- Peinture : plus rose et marbrée ici. Sur la photo officielle, elle est lie-de-vin, avec un motif en traits. Sa teinte change aussi avec l’éclairage du studio.
+- Marquages du cadre et de la fourche : « CANYON » sur le tube oblique et la fourche, « GRIZL » sur le tube de selle et le cadre de repère imprimé sur la fourche, visibles sur la photo officielle, ne sont pas dessinés.
 
 À vérifier à la livraison :
 
@@ -68,6 +70,7 @@ Formes approchées :
 - marquage de la tige de selle : la fiche la nomme de plusieurs façons, à lire sur la tige
 - ce que mesure la longueur publiée par Fizik, la selle ou ses rails
 - cotes de Fizik : le repère lu comme l’endroit où la selle a sa largeur publiée, et la section des rails lue en millimètres. Deux lectures à vérifier sur la selle
+- angle du tube de selle : sur la photo officielle, il paraît redressé d’environ un degré de plus que l’angle publié, que le dessin applique. Effet de perspective ou retouche de la photo : on ne peut pas trancher, à regarder sur le vélo
 
 #### Roues Canyon GR 30 CF, pneus Schwalbe G-One RX et axes traversants
 
@@ -90,7 +93,7 @@ Formes approchées :
 - version du pneu, gomme et code de sculpture : à lire sur le flanc
 - valves tubeless : présentes ou non dans le carton
 
-#### Disques Deore XT MT800, étriers GRX, plaquettes L05A-RF et durites
+#### Disques Deore XT MT800, étriers GRX, plaquettes à ailettes en résine (L05A-RF attendues) et durites
 
 Formes approchées :
 
@@ -102,7 +105,7 @@ Formes approchées :
 - Sortie des plaquettes : sens et course de l’animation approchés. Le chapitre dit seulement de retirer le clip, puis l’axe, puis les plaquettes avec leur ressort. La roue reste en place pour qu’on voie l’étrier.
 - Durite avant : elle passe dans le fourreau gauche et en sort par un passage à l’arrière, au-dessus de l’étrier, comme sur la photo officielle de la sacoche de cadre. Seule la partie visible est dessinée : place du passage, grosseur et trajet approchés.
 - Durite arrière : grosseur et trajet de l’étrier jusqu’à la base gauche approchés.
-- Couleurs : la bande d’ailettes du disque, claire sur la photo officielle, et les ailettes des plaquettes, sombres sur la photo, sont rendues en gris métal.
+- Couleurs : la bande d’ailettes du disque, claire sur la photo officielle, et les ailettes des plaquettes, sombres sur la photo, sont rendues en gris métal. La piste est rendue dans le gris moyen de la photo, en vue d’ensemble comme de profil.
 
 À vérifier à la livraison :
 
@@ -120,22 +123,23 @@ Formes approchées :
 - Plateau : nombre de dents, entraxe des vis et nombre de bras publiés. Profil des dents, épaisseur et découpe intérieure approchés.
 - Manivelles et araignée : longueur, facteur Q et nombre de bras publiés. Profil et épaisseur des manivelles approchés. Angle des bras lu au mieux sur la photo officielle.
 - Axe de pédalier et cuvettes du boîtier : seule la largeur de la boîte est publiée. Diamètres et formes approchés.
-- Cassette : dentures et matières publiées par Shimano. Épaisseur des pignons, fenêtres et araignée approchées. Le grand pignon en aluminium est dessiné foncé, comme sur la photo officielle. Le petit pignon et sa bague de blocage sont dessinés d’une pièce, comme le dit le manuel Shimano de la cassette.
+- Cassette : dentures et matières publiées par Shimano. Épaisseur des pignons, fenêtres et araignée approchées. Le grand pignon en aluminium est dessiné foncé, comme sur la photo officielle. Le petit pignon et sa bague de blocage sont dessinés d’une pièce, comme le dit le manuel Shimano de la cassette. De profil, les pignons se fondent en un seul disque, alors que la photo officielle les montre séparés, et leur teinte reste plus pâle que le sable doré de la photo.
 - Position de la cassette sur la roue libre et écart entre les pignons : non publiés, approchés.
-- Chaîne : Canyon la nomme Shimano XT, sans référence. Largeur, plaques et rouleaux approchés. Elle est dessinée sur le pignon où la montre la photo officielle.
+- Chaîne : la liste de Canyon la nomme Shimano XT, sans référence. Largeur, plaques et rouleaux approchés. Elle est dessinée sur le pignon où la montre la photo officielle. De loin, ses maillons ne se distinguent pas, et sa teinte n’égale pas celle de la photo.
 - Dérailleur : chape moyenne selon la fiche Canyon, galets de treize dents, sans fil et à batterie intégrée selon Shimano. Contour du corps, capuchon du pivot, chape et galet bas approchés d’après la photo officielle. Épaisseur du corps, biellettes et place sous la patte approchées.
 - Galet haut du dérailleur : caché par le corps sur la photo officielle. Sa place est approchée.
 - Batterie : logée dans le corps du dérailleur. Sa place et son logement sont approchés, la photo officielle ne les montre pas distinctement.
 - Logos, inscriptions, bouton et voyant du dérailleur, de la cassette et du pédalier : non dessinés.
+- Pédales : la photo officielle en montre une, la fiche dit « Pédales : Non inclus ». Le dessin suit la fiche.
 
 À vérifier à la livraison :
 
 - longueur des manivelles, gravée sur la manivelle
 - place du dérailleur sous la patte : elle dépend du type de patte, à regarder sur le vélo
-- référence de la chaîne : Canyon dit seulement Shimano XT, à lire sur la chaîne
+- référence de la chaîne : la liste de Canyon dit seulement Shimano XT, et l’onglet des pièces d’usure de la fiche anglaise propose une chaîne Shimano de douze vitesses, à lire sur la chaîne
 - référence exacte du boîtier de pédalier, à lire sur la pièce
 
-#### Jeu de direction, potence ST0046, cintre HB0067, ruban, manettes GRX Di2 ST-RX825 et durites
+#### Jeu de direction, potence ST0046, cintre HB0067, ruban, manettes GRX Di2 (droite ST-RX825, gauche ST-RX825-L ou BL-RX825-L, à lire sur la pièce) et durites
 
 Formes approchées :
 
@@ -144,6 +148,7 @@ Formes approchées :
 - Leviers : levier de frein et palette plus petite derrière lui, en forme approchée d’après la photo officielle du vélo, des deux côtés. La zone striée du levier n’est pas dessinée.
 - Couleur de la palette : plus claire sur la photo officielle, elle est dessinée en noir mat.
 - Place des cocottes sur la courbe du cintre et rotation du cintre dans la potence : non publiées. Elles sont lues sur la photo officielle du vélo.
+- Inclinaison des cocottes : sur la photo officielle, le repose-main ne penche que d’un à deux degrés. Ici, il penche d’environ six degrés et demi. L’écart vient de la courbe du cintre et de la hauteur de la potence, approchées.
 - Courbe du cintre : seuls le déport, la descente, l’évasement, l’inclinaison et les largeurs sont publiés. La forme de la courbe et la longueur des drops sont approchées.
 - Inclinaison de la partie haute du cintre : Canyon la donne sans dessin. Elle est dessinée vers le bas, du collier vers les cocottes.
 - Ruban : épaisseur et début du ruban approchés.

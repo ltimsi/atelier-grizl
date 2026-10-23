@@ -12,8 +12,8 @@ function pointsEngrenage(n, rPointe, rPied) {
 }
 
 /**
- * Les outils de construction de la scène. Ils ne gardent qu'un état : la zone et la variante en cours.
- * Tout maillage créé reçoit userData = { role, zone, variante } et rejoint `groupe`.
+ * Les outils de construction de la scène. Ils ne gardent qu'un état : la zone en cours.
+ * Tout maillage créé reçoit userData = { role, zone } et rejoint `groupe`.
  * Les signatures sont celles de la maquette. Seuls boulon, engrenage et tubeCourbe changent de nom.
  * @param {object} THREE Le module three.js.
  * @param {Function} RoundedBoxGeometry La classe de three/addons/geometries/RoundedBoxGeometry.js.
@@ -21,7 +21,6 @@ function pointsEngrenage(n, rPointe, rPied) {
  * @param {{reel: Object<string, object>}} materiaux Le résultat de creerMateriaux : seul le jeu `reel` sert ici.
  * @returns {object} Les outils :
  *   zone(id | null) : zone des prochains maillages (celle qu'on surligne dans l'atelier) ;
- *   variante({ zone, k } | null) : variante des prochains maillages, visible seulement si la zone est sur k ;
  *   mesh(geo, role), inst(geo, role, n) : un maillage, une InstancedMesh de n instances ;
  *   tube(a, b, r1, r2, role, { seg, open, sx, sz }) : cône tronqué de a (rayon r1) à b (rayon r2), aplatissable par sx et sz ;
  *   tubeZ([x, y], z0, z1, r, role, seg) : tube parallèle à z ;
@@ -36,7 +35,7 @@ function pointsEngrenage(n, rPointe, rPied) {
  *   THREE : le module reçu, pour les formes, les vecteurs et les matrices que les outils ne couvrent pas.
  */
 export function creerOutils(THREE, RoundedBoxGeometry, groupe, materiaux) {
-  let zoneCourante = null, varianteCourante = null;
+  let zoneCourante = null;
   const Yv = new THREE.Vector3(0, 1, 0);
 
   const matiere = role => {
@@ -45,13 +44,12 @@ export function creerOutils(THREE, RoundedBoxGeometry, groupe, materiaux) {
     return m;
   };
   const etiqueter = (m, role) => {
-    m.userData = { role, zone: zoneCourante, variante: varianteCourante };
+    m.userData = { role, zone: zoneCourante };
     groupe.add(m);
     return m;
   };
 
   const zone = id => { zoneCourante = id ?? null; };
-  const variante = v => { varianteCourante = v ? Object.freeze({ zone: v.zone, k: v.k }) : null; };
 
   const mesh = (geo, role) => etiqueter(new THREE.Mesh(geo, matiere(role)), role);
   const inst = (geo, role, n) => etiqueter(new THREE.InstancedMesh(geo, matiere(role), n), role);
@@ -125,5 +123,5 @@ export function creerOutils(THREE, RoundedBoxGeometry, groupe, materiaux) {
     return g;
   };
 
-  return { zone, variante, mesh, inst, tube, tubeZ, ell, rbox, boulon, extr, engrenage, tubeCourbe, lathe, sousGroupe, THREE };
+  return { zone, mesh, inst, tube, tubeZ, ell, rbox, boulon, extr, engrenage, tubeCourbe, lathe, sousGroupe, THREE };
 }

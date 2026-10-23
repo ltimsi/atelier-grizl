@@ -57,10 +57,13 @@ export const META = Object.freeze({
     'Axe de pédalier et cuvettes du boîtier : seule la largeur de la boîte est publiée. Diamètres et formes approchés.',
     'Cassette : dentures et matières publiées par Shimano. Épaisseur des pignons, fenêtres et araignée approchées. ' +
       'Le grand pignon en aluminium est dessiné foncé, comme sur la photo officielle. Le petit pignon et sa bague de ' +
-      'blocage sont dessinés d’une pièce, comme le dit le manuel Shimano de la cassette.',
+      'blocage sont dessinés d’une pièce, comme le dit le manuel Shimano de la cassette. De profil, les pignons se ' +
+      'fondent en un seul disque, alors que la photo officielle les montre séparés, et leur teinte reste plus pâle ' +
+      'que le sable doré de la photo.',
     'Position de la cassette sur la roue libre et écart entre les pignons : non publiés, approchés.',
-    'Chaîne : Canyon la nomme Shimano XT, sans référence. Largeur, plaques et rouleaux approchés. Elle est dessinée ' +
-      'sur le pignon où la montre la photo officielle.',
+    'Chaîne : la liste de Canyon la nomme Shimano XT, sans référence. Largeur, plaques et rouleaux approchés. Elle ' +
+      'est dessinée sur le pignon où la montre la photo officielle. De loin, ses maillons ne se distinguent pas, et ' +
+      'sa teinte n’égale pas celle de la photo.',
     'Dérailleur : chape moyenne selon la fiche Canyon, galets de treize dents, sans fil et à batterie intégrée selon ' +
       'Shimano. Contour du corps, capuchon du pivot, chape et galet bas approchés d’après la photo officielle. ' +
       'Épaisseur du corps, biellettes et place sous la patte approchées.',
@@ -68,11 +71,13 @@ export const META = Object.freeze({
     'Batterie : logée dans le corps du dérailleur. Sa place et son logement sont approchés, la photo officielle ne les ' +
       'montre pas distinctement.',
     'Logos, inscriptions, bouton et voyant du dérailleur, de la cassette et du pédalier : non dessinés.',
+    'Pédales : la photo officielle en montre une, la fiche dit « Pédales : Non inclus ». Le dessin suit la fiche.',
   ]),
   aVerifier: Object.freeze([
     'longueur des manivelles, gravée sur la manivelle',
     'place du dérailleur sous la patte : elle dépend du type de patte, à regarder sur le vélo',
-    'référence de la chaîne : Canyon dit seulement Shimano XT, à lire sur la chaîne',
+    'référence de la chaîne : la liste de Canyon dit seulement Shimano XT, et l’onglet des pièces d’usure de la ' +
+      'fiche anglaise propose une chaîne Shimano de douze vitesses, à lire sur la chaîne',
     'référence exacte du boîtier de pédalier, à lire sur la pièce',
   ]),
 });
@@ -137,7 +142,7 @@ function enveloppe(cercles) {
 
 /**
  * Ajoute au groupe des outils le pédalier, le boîtier, la cassette, la chaîne et le dérailleur avec sa batterie.
- * Aucun maillage n'a de zone ni de variante, et les outils en ressortent sans zone ni variante.
+ * Aucun maillage n'a de zone, et les outils en ressortent sans zone.
  * Noms des maillages que vérifient les tests : pignon 9 à pignon 45, plateau, manivelle droite, manivelle gauche,
  * chaîne, galet, boîtier, dérailleur, corps du dérailleur, batterie. Les autres : araignée de cassette, bague du petit
  * pignon, axe de pédalier, capuchon.
@@ -148,7 +153,6 @@ function enveloppe(cercles) {
  */
 export function construire(o, p, geo) {
   o.zone(null);
-  o.variante(null);
   const pas = geo.pasChaine.v;
   const kDessine = DENTS_CASSETTE.indexOf(geo.dentsPignonDessine.v);
   if (kDessine < 0) throw new Error(`GEO.dentsPignonDessine : ${geo.dentsPignonDessine.v} dents, absent de la cassette`);
@@ -160,7 +164,6 @@ export function construire(o, p, geo) {
   chaine(o, p, pas, plans);
   derailleur(o, p, geo, plans.arriere);
   o.zone(null);
-  o.variante(null);
 }
 
 // Plateau, araignée, manivelles, axe et cuvettes du boîtier.
@@ -207,7 +210,8 @@ function pedalier(o, p, geo, zPlateau) {
     bras.position.set(BB[0], BB[1], zBras);
     bras.rotation.z = (angle + v) * D2R;
     const [x, y] = pol(BB, rVis, angle + v);
-    nom('manivelle droite')(o.boulon([x, y, zBras + BRAS.ep / 2 + 0.6], [0, 0, 1], 4, 1.2, 'steel'));
+    // Têtes de vis du plateau : sombres, à peine visibles sur la photo officielle.
+    nom('manivelle droite')(o.boulon([x, y, zBras + BRAS.ep / 2 + 0.6], [0, 0, 1], 4, 1.2, 'black'));
   }
 
   // Manivelles : face extérieure au bout à la moitié du facteur Q, moyeu jusqu'à la cuvette.

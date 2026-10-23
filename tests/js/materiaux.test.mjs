@@ -4,8 +4,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../../vendor/three/three.module.min.js';
 import {
-  marbre, reliefRuban, striesBrossees, creerMateriaux, ROLES, TEINTES_FLOATING_VIOLET,
+  marbre, striesBrossees, creerMateriaux, ROLES, TEINTES_FLOATING_VIOLET,
 } from '../../src/scene/materiaux.js';
+import * as materiaux from '../../src/scene/materiaux.js';
 
 const ROLES_ATTENDUS = [
   'paint', 'protector', 'carbon', 'black', 'tape', 'hood', 'saddle', 'rubber', 'rim', 'hub', 'spoke', 'steel',
@@ -77,21 +78,12 @@ test('marbre : se raccorde sans couture quand la texture se répète', () => {
   assert.ok(couture < voisins * 2 + S, `couture visible : écart moyen ${couture / S / 2} contre ${voisins / S / 2} entre voisins`);
 });
 
-test('reliefRuban : déterministe, en niveaux de gris, avec une bande sombre en diagonale', () => {
-  const r = reliefRuban();
-  assert.ok(r instanceof Uint8ClampedArray);
-  assert.equal(r.length, 64 * 64 * 4);
-  assert.deepEqual(r, reliefRuban(64));
-  const px = (x, y) => r[(y * 64 + x) * 4];
-  assert.equal(px(32, 32), 0, 'la diagonale est noire');
-  assert.equal(px(60, 4), 255, 'loin de la diagonale, le fond est blanc');
-  assert.equal(px(4, 60), 255);
-  assert.equal(px(0, 63), px(63, 0), 'la bande se raccorde en répétant la texture');
-  for (let i = 0; i < r.length; i += 4) {
-    assert.equal(r[i], r[i + 1]);
-    assert.equal(r[i], r[i + 2]);
-    assert.equal(r[i + 3], 255);
-  }
+test('ruban : lisse, sans relief, comme sur la photo officielle', () => {
+  // Sur canyon-photo-4556-fv, le ruban du cintre est lisse, avec de fines marques imprimées. La 3D le rayait de
+  // nervures serrées : plus de texture de relief, ni dans le module ni sur la matière.
+  assert.equal(materiaux.reliefRuban, undefined);
+  const m = creerMateriaux(THREE, { textureRuban: new THREE.DataTexture(new Uint8ClampedArray(4), 1, 1) });
+  assert.equal(m.reel.tape.bumpMap, null);
 });
 
 test('striesBrossees : déterministe, une valeur par ligne, entre 150 et 240', () => {
@@ -148,14 +140,11 @@ test('creerMateriaux : une texture absente est omise, sans avertissement de thre
   assert.equal(m.reel.rotor.roughnessMap, null);
 });
 
-test('creerMateriaux : les textures passées vont sur la peinture, le ruban et le rotor', () => {
+test('creerMateriaux : les textures passées vont sur la peinture et le rotor', () => {
   const peinture = new THREE.DataTexture(marbre(8), 8, 8);
-  const ruban = new THREE.DataTexture(reliefRuban(8), 8, 8);
   const brossee = new THREE.DataTexture(striesBrossees(2, 4), 2, 4);
-  const m = creerMateriaux(THREE, { texturePeinture: peinture, textureRuban: ruban, textureBrossee: brossee });
+  const m = creerMateriaux(THREE, { texturePeinture: peinture, textureBrossee: brossee });
   assert.equal(m.reel.paint.map, peinture);
-  assert.equal(m.reel.tape.bumpMap, ruban);
-  assert.equal(m.reel.tape.bumpScale, 1.5);
   assert.equal(m.reel.rotor.roughnessMap, brossee);
   assert.equal(m.simple.paint.map, null, 'le mode simple reste sans texture');
 });
@@ -187,4 +176,14 @@ test('creerMateriaux : cassette et chaîne en acier argenté un peu chaud, pas b
   }
   assert.ok(chain.color.getHSL({}, THREE.SRGBColorSpace).l < cassette.color.getHSL({}, THREE.SRGBColorSpace).l,
     'la chaîne est plus sombre que la cassette');
+});
+
+test('creerMateriaux : piste du disque d’un gris moyen, mi-rugueuse, comme sur la photo de profil et en vue d’ensemble', () => {
+  // Mesuré le 24/10/2026 (secteur bas de la piste avant, pixels neutres) : photo officielle 120 ; la piste claire et
+  // polie donnait 150 de profil et 82 en vue d'ensemble. Gris moyen et mi-rugueux : 126 de profil, 117 en vue d'ensemble.
+  const { rotor } = creerMateriaux(THREE, {}).reel;
+  assert.equal(rotor.metalness, 1);
+  const l = rotor.color.getHSL({}, THREE.SRGBColorSpace).l;
+  assert.ok(l > 0.4 && l < 0.56, `piste : clarté ${l}`);
+  assert.ok(rotor.roughness >= 0.4 && rotor.roughness <= 0.6, `piste : rugosité ${rotor.roughness}`);
 });

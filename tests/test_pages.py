@@ -594,19 +594,34 @@ class TestPages(Site):
         # plaquettes L04C, ni de couple RX400, ni de manette à 45°, ni de repose-main « vers l'avant », ni de disque
         # SM-RT64 du CF 7. Elles montrent le disque XT et ses deux bagues possibles, l'étrier BR-RX820 et ses L05A-RF,
         # et la purge du DM-GADBR10, avec les couples du chapitre.
-        attendus = {"m-rotor.js": ("Deore XT MT800", "TL-LR15", "40\xa0Nm"),
-                    "m-caliper.js": ("BR-RX820", "L05A-RF", "1-1,5\xa0Nm", "6-8\xa0Nm", "5-7\xa0Nm"),
+        # Vague finale : le RT-CL800 possible sur la pastille du disque, l'entonnoir sur la manette avant de repousser
+        # les pistons, le demi-tour puis le serrage de la vis de purge, le « par exemple » de l'angle du cintre.
+        attendus = {"m-rotor.js": ("Deore XT MT800", "TL-LR15", "40\xa0Nm",
+                                   "Disque Deore XT MT800 (ou RT-CL800), 160\xa0mm\xa0: modèle à lire sur la pièce"),
+                    "m-caliper.js": ("BR-RX820", "L05A-RF", "1-1,5\xa0Nm", "6-8\xa0Nm", "5-7\xa0Nm",
+                                     "Pistons en résine du BR-RX820\xa0: entonnoir monté sur la manette"),
                     "m-bleed.js": ("DM-GADBR10", "par l’arrière", "Entonnoir à 20°", "0,5-0,7\xa0Nm", "4-6\xa0Nm",
-                                   "environ 10 fois")}
+                                   "environ 10 fois", "desserre d’un demi-tour, puis 4-6\xa0Nm au serrage",
+                                   "change par exemple l’angle du cintre")}
         for nom, presents in attendus.items():
             textes = {"src": (RACINE / "src" / "js" / "models" / nom).read_text(encoding="utf-8")}
             for cible in ("site", "artifact"):
                 textes[cible] = (self.dossier / cible / "js" / nom).read_text(encoding="utf-8")
             for ou, texte in textes.items():
-                for absent in ("L04C", "RX400", "45°", "45 °", "45\xa0°", "vers l'avant", "vers l’avant", "SM-RT64"):
+                for absent in ("L04C", "RX400", "45°", "45 °", "45\xa0°", "vers l'avant", "vers l’avant", "SM-RT64",
+                               "Canyon ne nomme", "acier 1,8", "ailettes de refroidissement noires"):
                     self.assertNotIn(absent, texte, f"{ou} {nom} : {absent}")
                 for present in presents:
                     self.assertIn(present, texte, f"{ou} {nom} : {present}")
+        # La pastille des 20° vient en fin de liste, et la visionneuse oublie la pastille choisie quand la liste change :
+        # aucun numéro ne passe à une autre pièce. Plus de matière « ceramic » inutilisée.
+        bleed = (RACINE / "src" / "js" / "models" / "m-bleed.js").read_text(encoding="utf-8")
+        self.assertRegex(bleed, r"function pinsFor\(\) \{ return pinCommon\.concat\(\[pinBoss, mode === 'inj' \? pinSyr : pinBag, "
+                                r"pinTap\], tiltT \? \[pinTilt\] : \[\]\); \}")
+        viewer = (RACINE / "src" / "js" / "viewer.js").read_text(encoding="utf-8")
+        set_pins = viewer[viewer.index("Viewer.prototype.setPins"):viewer.index("Viewer.prototype.renderPins")]
+        self.assertIn("this.sel = -1;", set_pins)
+        self.assertNotIn("ceramic", viewer)
 
     def test_approche_et_sources(self):
         for chemin, ident in (("approche/", "approche-page"), ("sources/", "sources-page")):

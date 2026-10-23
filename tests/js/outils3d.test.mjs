@@ -25,35 +25,37 @@ const vecteurProche = (v, attendu, tol = 1e-6, nom = '') =>
   attendu.forEach((a, i) => proche([v.x, v.y, v.z][i], a, tol, `${nom}[${i}]`));
 const boite = obj => new THREE.Box3().setFromObject(obj);
 
-test('étiquetage : zone et variante se retrouvent dans userData', () => {
+test('étiquetage : le rôle et la zone se retrouvent dans userData, et rien d’autre', () => {
   const { groupe, o } = nouveau();
   o.zone('disques');
-  o.variante({ zone: 'disques', k: 1 });
   const t = o.tube([0, 0, 0], [0, 100, 0], 5, 5, 'rotor');
-  assert.deepEqual(t.userData, { role: 'rotor', zone: 'disques', variante: { zone: 'disques', k: 1 } });
+  assert.deepEqual(t.userData, { role: 'rotor', zone: 'disques' });
   assert.equal(t.parent, groupe);
 });
 
-test('étiquetage : sans zone ni variante, userData les porte à null', () => {
+test('étiquetage : sans zone, userData la porte à null', () => {
   const { o } = nouveau();
   const t = o.tube([0, 0, 0], [0, 100, 0], 5, 5, 'paint');
-  assert.deepEqual(t.userData, { role: 'paint', zone: null, variante: null });
+  assert.deepEqual(t.userData, { role: 'paint', zone: null });
 });
 
-test('étiquetage : zone(null) et variante(null) remettent à zéro', () => {
+test('étiquetage : zone(null) remet à zéro', () => {
   const { o } = nouveau();
   o.zone('disques');
-  o.variante({ zone: 'disques', k: 1 });
   o.zone(null);
-  o.variante(null);
-  assert.deepEqual(o.ell([0, 0, 0], [1, 1, 1], 'paint').userData, { role: 'paint', zone: null, variante: null });
+  assert.deepEqual(o.ell([0, 0, 0], [1, 1, 1], 'paint').userData, { role: 'paint', zone: null });
+});
+
+test('outils : plus de variante par maillage, aucune pièce ne s’en sert', () => {
+  // La seule variante de la scène est celle de la zone de l'étrier, qui sort les plaquettes de freins.PLAQUETTES.
+  const { o } = nouveau();
+  assert.equal(o.variante, undefined);
 });
 
 test('étiquetage : tous les outils étiquettent, instances comprises', () => {
   const { groupe, o } = nouveau();
   o.zone('transmission');
-  o.variante({ zone: 'transmission', k: 2 });
-  const attendu = { zone: 'transmission', variante: { zone: 'transmission', k: 2 } };
+  const attendu = { zone: 'transmission' };
   const maillages = [
     o.mesh(new THREE.BoxGeometry(1, 1, 1), 'paint'),
     o.inst(new THREE.BoxGeometry(1, 1, 1), 'chain', 3),
@@ -68,19 +70,10 @@ test('étiquetage : tous les outils étiquettent, instances comprises', () => {
   ];
   for (const m of maillages) {
     assert.equal(m.userData.zone, attendu.zone);
-    assert.deepEqual(m.userData.variante, attendu.variante);
+    assert.equal('variante' in m.userData, false);
     assert.equal(m.parent, groupe);
   }
   assert.equal(groupe.children.length, maillages.length);
-});
-
-test('étiquetage : modifier l’objet passé à variante() ne change pas les maillages déjà faits', () => {
-  const { o } = nouveau();
-  const v = { zone: 'pedales', k: 0 };
-  o.variante(v);
-  const t = o.ell([0, 0, 0], [1, 1, 1], 'paint');
-  v.k = 9;
-  assert.equal(t.userData.variante.k, 0);
 });
 
 test('matière : un rôle inconnu est refusé avec son nom', () => {

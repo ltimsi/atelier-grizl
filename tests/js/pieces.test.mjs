@@ -181,11 +181,11 @@ for (const module of PIECES) {
     }
   });
 
-  test(`${nom} : laisse les outils sans zone ni variante`, () => {
+  test(`${nom} : laisse les outils sans zone, et sans variante`, () => {
     const { outils } = construire(module);
     const temoin = outils.ell([0, 0, 0], [1, 1, 1], 'paint');
     assert.equal(temoin.userData.zone, null);
-    assert.equal(temoin.userData.variante, null);
+    assert.equal('variante' in temoin.userData, false);
   });
 }
 
@@ -204,7 +204,7 @@ test('aucune pièce ni cote ne cite une source du CF 7, et chaque source citée 
 
 test('aucun maillage ne porte de variante : la zone des disques n’en a plus', () => {
   for (const module of PIECES) for (const m of construire(module).maillages) {
-    assert.equal(m.userData.variante, null, `${module.META.id} : ${m.name || m.userData.role}`);
+    assert.equal('variante' in m.userData, false, `${module.META.id} : ${m.name || m.userData.role}`);
   }
 });
 
@@ -387,7 +387,7 @@ const etendueZ = ms => {
 test('roues : aucune zone, aucune variante', () => {
   for (const m of construire(roues).maillages) {
     assert.equal(m.userData.zone, null, `${m.name || m.userData.role} : zone ${m.userData.zone}`);
-    assert.equal(m.userData.variante, null);
+    assert.equal('variante' in m.userData, false);
   }
 });
 
@@ -513,7 +513,7 @@ test('freins : un seul type de disque, en zone disques, sans variante', () => {
   const { maillages } = construire(freins);
   const disques = maillages.filter(m => m.userData.zone === 'disques');
   assert.ok(disques.length > 0, 'aucun maillage en zone disques');
-  for (const m of maillages) assert.equal(m.userData.variante, null, m.name || m.userData.role);
+  for (const m of maillages) assert.equal('variante' in m.userData, false, m.name || m.userData.role);
   // Une seule piste par roue : il n'y a plus de second disque à montrer en variante.
   assert.equal(parNom(maillages, 'piste').length, 2);
 });
@@ -536,11 +536,15 @@ test('freins : pistes de 160 mm, une par roue, dans le plan de chaque disque', (
 });
 
 test('freins : le META cite l’étrier BR-RX820, le disque XT et la fiche du CF 8 Di2, plus le SM-RT64', () => {
-  for (const id of ['shimano-br-rx820', 'shimano-deore-xt-m8000', 'canyon-4556', 'canyon-4556-en', 'canyon-photo-4556-fv']) {
+  for (const id of ['shimano-br-rx820', 'shimano-rt-mt800', 'canyon-4556', 'canyon-4556-en', 'canyon-photo-4556-fv']) {
     assert.ok(freins.META.sources.includes(id), `${id} absent`);
   }
   assert.match(freins.META.nom, /MT800/);
   assert.match(freins.META.nom, /L05A-RF/);
+  // Les plaquettes d'origine restent à lire sur la pièce : le nom les dit attendues, pas certaines.
+  assert.match(freins.META.nom, /plaquettes à ailettes en résine \(L05A-RF attendues\)/);
+  // La page de la gamme Deore XT M8000 servait au CF 7 : la fiche du disque RT-MT800 la remplace.
+  assert.ok(!freins.META.sources.includes('shimano-deore-xt-m8000'));
   for (const t of textesDeMeta(freins.META)) assert.ok(!/SM-RT64|RT64|d’origine · /.test(t), `ancien disque dans « ${t} »`);
   // Canyon liste un disque XT, mais propose un disque Ultegra dans ses pièces d'usure : à lire sur la pièce.
   const disque = freins.META.aVerifier.find(t => /disque/.test(t) && /XT/.test(t) && /Ultegra/.test(t));
@@ -721,7 +725,7 @@ test('transmission : le boîtier lit la largeur de boîte de GEO, 43,25 mm de ch
 test('transmission : aucune zone, aucune variante', () => {
   for (const m of construire(transmission).maillages) {
     assert.equal(m.userData.zone, null, `${m.name || m.userData.role} : zone ${m.userData.zone}`);
-    assert.equal(m.userData.variante, null);
+    assert.equal('variante' in m.userData, false);
   }
 });
 
@@ -816,7 +820,7 @@ test('poste : cocottes, leviers et durites en zone manettes, le reste sans zone 
   for (const nom of manettes) assert.ok(parNom(maillages, nom).length > 0, `${nom} absent`);
   for (const m of parNom(maillages, 'durite')) assert.equal(m.userData.role, 'hose');
   for (const m of maillages) {
-    assert.equal(m.userData.variante, null);
+    assert.equal('variante' in m.userData, false);
     const attendue = manettes.includes(m.name) ? 'manettes' : null;
     assert.equal(m.userData.zone, attendue, `${m.name || m.userData.role} : zone ${m.userData.zone}`);
   }
@@ -828,6 +832,7 @@ test('poste : manettes ST-RX825 des deux côtés, sans gaine, une durite par man
     assert.ok(poste.META.sources.includes(id), `${id} absent`);
   }
   assert.match(poste.META.nom, /ST-RX825/);
+  assert.match(poste.META.nom, /gauche ST-RX825-L ou BL-RX825-L, à lire sur la pièce/);
   for (const c of ['collierCocotteMin', 'collierCocotteMax']) assert.equal(poste.COTES[c].src, 'shimano-st-rx825', c);
   // Manettes sans fil : aucune gaine de dérailleur ne part du cintre.
   for (const m of maillages) assert.notEqual(m.userData.role, 'housing', m.name);
@@ -881,4 +886,34 @@ test('poste : cintre de 510 mm au bout des drops, un embout de chaque côté', (
   const centre = m => new THREE.Box3().setFromPoints(sommets(m)).getCenter(new THREE.Vector3()).z;
   const centres = embouts.map(centre).sort((a, b) => a - b);
   assert.ok(Math.abs(centres[0] + 510 / 2) < 1 && Math.abs(centres[1] - 510 / 2) < 1, `embouts en z ${centres}`);
+});
+
+test('photo officielle : vis du plateau sombres, matière de la piste réservée à la piste', () => {
+  // Sur canyon-photo-4556-fv, les têtes de vis du plateau sont sombres, à peine visibles, et la bande d'ailettes du
+  // disque est claire, plus claire que la piste.
+  const vis = construire(transmission).maillages.filter(m => m.name === 'manivelle droite'
+    && m.geometry.type === 'CylinderGeometry' && m.geometry.parameters.radialSegments === 6);
+  assert.equal(vis.length, 4, 'quatre vis de plateau');
+  for (const m of vis) assert.notEqual(m.userData.role, 'steel', 'vis du plateau en acier clair');
+  for (const m of construire(freins).maillages) {
+    if (m.userData.role === 'rotor') assert.equal(m.name, 'piste', `matière de la piste sur « ${m.name || 'sans nom'} »`);
+  }
+});
+
+test('META : les écarts avec la photo officielle relevés le 24/10/2026 sont dits, pièce par pièce', () => {
+  const trouve = (meta, motif) => [...meta.approche, ...meta.aVerifier].find(t => motif.test(t));
+  // Comparaison avec canyon-photo-4556-fv, vue d'ensemble de l'accueil et profil.
+  for (const [meta, motif] of [
+    [cadre.META, /^Peinture : .*lie-de-vin/],
+    [cadre.META, /^Marquages du cadre et de la fourche : .*CANYON.*GRIZL/],
+    [transmission.META, /^Pédales : .*Non inclus/],
+    [transmission.META, /^Cassette : .*se fondent en un seul disque/],
+    [transmission.META, /^Chaîne : .*maillons ne se distinguent pas/],
+    [poste.META, /^Inclinaison des cocottes : .*photo officielle/],
+  ]) assert.ok(trouve(meta, motif), `${meta.id} : ${motif}`);
+  const tube = cadre.META.aVerifier.find(t => /^angle du tube de selle/.test(t));
+  assert.ok(tube, 'tube de selle plus redressé sur la photo');
+  assert.match(tube, /perspective ou retouche/);
+  // La chaîne : la liste de Canyon dit seulement Shimano XT, ses pièces d'usure en proposent une.
+  assert.match(transmission.META.aVerifier.find(t => /^référence de la chaîne/.test(t)), /pièces d’usure/);
 });

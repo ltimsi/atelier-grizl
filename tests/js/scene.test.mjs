@@ -120,14 +120,22 @@ test('scène : approximations par pièce, avec leurs zones et leurs sources, pui
   assert.deepEqual(new Set(ids), new Set(Object.values(GEO).map(e => e.src).filter(Boolean)));
 });
 
-test('scène : la variante de l’étrier est la seule, et aucun maillage ne dépend d’une variante', () => {
+test('scène : la variante de l’étrier est la seule, et plus aucun maillage ne porte de variante', () => {
   const avecVariante = ZONES.filter(z => z.variante).map(z => z.id);
   assert.deepEqual(avecVariante, ['etrier']);
   for (const module of PIECES) groupeDe(module).traverse(o => {
-    if (o.isMesh) assert.equal(o.userData.variante, null, `${module.META.id} : ${o.name || o.userData.role}`);
+    if (o.isMesh) assert.equal('variante' in o.userData, false, `${module.META.id} : ${o.name || o.userData.role}`);
   });
   const code = readFileSync(new URL('../../src/scene/scene.js', import.meta.url), 'utf8');
   assert.ok(!/'disques' montre/.test(code), 'scene.js décrit encore la variante des disques');
+  // La variante par maillage a disparu : ni dans la scène, ni dans les outils, ni dans les pièces.
+  assert.ok(!/userData\.variante|montrerVariantes/.test(code), 'scene.js lit encore une variante par maillage');
+  const outils = readFileSync(new URL('../../src/scene/outils3d.js', import.meta.url), 'utf8');
+  assert.ok(!/variante/.test(outils), 'outils3d.js garde la variante par maillage');
+  for (const f of ['cadre', 'freins', 'poste', 'roues', 'transmission']) {
+    const piece = readFileSync(new URL(`../../src/scene/pieces/${f}.js`, import.meta.url), 'utf8');
+    assert.ok(!/o\.variante\(/.test(piece), `${f}.js appelle encore o.variante`);
+  }
 });
 
 // Les textes qui peuvent citer un document du registre : les pages du guide (src/parts, par l'adresse du document) et

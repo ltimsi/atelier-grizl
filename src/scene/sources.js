@@ -140,11 +140,6 @@ export const SOURCES = Object.freeze({
     url: `${SHIMANO_INFO}/lineup/rx820-2x12-di2`,
     type: 'fiche',
   }),
-  'shimano-deore-xt-m8000': Object.freeze({
-    titre: 'Shimano, page de la gamme Deore XT M8000 2x11 Di2 : disque RT-MT800, Center Lock, FREEZA',
-    url: `${SHIMANO_INFO}/lineup/deore-xt-m8000-2x11-di2`,
-    type: 'fiche',
-  }),
 
   // Shimano : Grizl CF 8 Di2, relevé du 23 octobre 2026 (docs/recherche/sources-cf8-di2.md)
   'shimano-dm-gadbr10': Object.freeze({
@@ -156,6 +151,11 @@ export const SOURCES = Object.freeze({
     titre: 'Shimano DM-GADBR01-11, manuel revendeur des freins GRX : étrier BR-RX820, plaquettes (anglais)',
     url: `${SHIMANO_DM}/en/pdfs/dm/GADBR01/DM-GADBR01-11-ENG.pdf`,
     type: 'manuel',
+  }),
+  'shimano-rt-mt800': Object.freeze({
+    titre: 'Shimano, fiche du disque Deore XT RT-MT800 (Center Lock, ICE TECHNOLOGIES FREEZA, diamètres)',
+    url: 'https://bike.shimano.com/products/components/pdp.P-RT-MT800.html',
+    type: 'fiche',
   }),
   'shimano-ev-br-rx820': Object.freeze({
     titre: 'Shimano EV-BR-RX820-5000C, vue éclatée de l’étrier BR-RX820 (plaquettes, disque RT-MT800 et ses bagues)',

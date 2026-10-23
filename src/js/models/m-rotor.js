@@ -15,6 +15,7 @@
    - fentes de la piste : une rangée de fentes à cinq pans, comme sur la vue éclatée EV-BR-RX820-5000C et la photo
      officielle du vélo ; nombre, taille et forme approchés ;
    - couleur des ailettes : claires sur la photo officielle, rendues en gris métal ;
+   - couleur de l'araignée et de ses rivets (spiderMat) : noire comme sur la photo officielle, teinte approchée ;
    - flèche peinte : place et forme approchées ;
    - bague à denture extérieure : forme et nombre d'encoches approchés ;
    - outil TL-FC36 : douille, crans et carré d'entraînement approchés (carré à lire sur l'outil).
@@ -122,7 +123,7 @@
          vue éclatée EV-BR-RX820-5000C et la photo officielle du vélo, comme la pièce de la scène) */
       for (var j = 0; j < 30; j++) track.holes.push(H.path(slot5(j)));
       var trackM = H.mesh(ext(track, 1.8, 0.18, 0, 12), trackMat, rotor);
-      /* ailettes de refroidissement noires (peigne) entre les bras, plaquées sur le bord intérieur de la piste */
+      /* ailettes de refroidissement en peigne (gris métal, voir l'en-tête) entre les bras, plaquées sur le bord intérieur de la piste */
       var finsSh = [];
       for (k = 0; k < 6; k++) {
         var aS = phi(k, rivR) + 0.2, aE = phi(k + 1, rivR) - 0.2, nt = 6, P = [], fw = 1.6, rc = 56.4;
@@ -191,7 +192,7 @@
       /* ---------- Pastilles ---------- */
       function pp(r, a, z) { return [r * Math.cos(a), r * Math.sin(a), z]; }
       var pinsBase = [
-        { obj: trackM, p: pp(76, -2.0, 0.9), text: 'Disque Deore XT MT800, 160 mm : modèle exact à lire sur la pièce' },
+        { obj: trackM, p: pp(76, -2.0, 0.9), text: 'Disque Deore XT MT800 (ou RT-CL800), 160 mm : modèle à lire sur la pièce' },
         { obj: trackM, p: pp(72, -0.35, 0.9), text: 'Piste : hors d’usage à 1,5 mm ou si l’aluminium se voit' },
         { obj: fins, p: pp(57.5, phi(0, rivR) + 0.62, 3.3), text: 'Araignée et ailettes de refroidissement' },
         { obj: arrow, p: [0, -12, 0], text: 'Flèche : dans le sens de rotation de la roue' },

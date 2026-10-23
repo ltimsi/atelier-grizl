@@ -80,7 +80,7 @@
       anodBlack: S(0x2b2d32, 0.75, 0.4), black: S(0x17181a, 0.25, 0.55), lockring: S(0x3b3e44, 0.85, 0.33),
       carbon: P({ color: 0x1c1e22, metalness: 0.2, roughness: 0.42, clearcoat: 1, clearcoatRoughness: 0.08 }),
       paintViolet: P({ color: 0x6c5fa6, metalness: 0.35, roughness: 0.35, clearcoat: 1, clearcoatRoughness: 0.1 }),
-      rubber: S(0x1c1c1e, 0, 0.86), skinwall: S(0x7a5a38, 0, 0.78), ceramic: S(0xefede6, 0, 0.32), pad: S(0x55504a, 0.15, 0.92),
+      rubber: S(0x1c1c1e, 0, 0.86), skinwall: S(0x7a5a38, 0, 0.78), pad: S(0x55504a, 0.15, 0.92),
       gold: S(0xcaa45a, 1, 0.3), brass: S(0xb98d45, 1, 0.35), white: S(0xf2f2f0, 0, 0.5),
       hose: P({ color: 0x111214, roughness: 0.35, clearcoat: 0.6 }),
       tape: S(0x3d5bb5, 0.05, 0.45),
@@ -211,6 +211,9 @@
   Viewer.prototype.setPins = function (pins) {
     var self = this, THREE = window.THREE;
     this.pins = pins.map(function (p, i) { return { obj: p.obj, p: new THREE.Vector3(p.p[0], p.p[1], p.p[2]), text: p.text, n: i + 1 }; });
+    /* La liste change (étape, entonnoir, outil) : la pastille choisie est oubliée, pour qu'aucun numéro ne passe à une
+       autre pièce. */
+    this.sel = -1;
     var leg = this.fig.querySelector('.v3d-legend');
     if (!leg) { leg = document.createElement('ol'); leg.className = 'v3d-legend'; var bar = this.fig.querySelector('.v3d-bar'); bar.insertAdjacentElement('afterend', leg); }
     leg.innerHTML = '';
