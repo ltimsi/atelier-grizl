@@ -31,7 +31,7 @@
 //   3. anciennes ancres de la racine : index.html#freins-plaquettes et #freins-plaquettes arrivent sur
 //      freins/plaquettes/, #freins sur freins/, #freins-pl-2 sur freins/plaquettes/#freins-pl-2, avec la planche à
 //      l'écran sous la barre. La racine ne reste pas derrière Retour : Retour quitte le site ;
-//   4. catégorie freins/ : le filtre « Remplacer » laisse 2 cartes visibles, « Tout » les rend toutes ;
+//   4. catégorie freins/ : le filtre « Remplacer » laisse 1 carte visible, « Tout » les rend toutes ;
 //   5. atelier freins/plaquettes/ : le lien du fil d'Ariane, atteint par Tab, garde son anneau de focus entier (aucun
 //      parent ne le rogne). La pièce 3D (figure.v3d canvas, derrière l'onglet « Pièce en 3D ») est dessinée : la
 //      visionneuse a fait au moins une image, et une image refaite sur le moment couvre au moins 2 % du canevas. Sans
@@ -98,7 +98,7 @@ const MENU_REPLIE = 900;
 const ACCUEIL = '', CATEGORIE = 'freins/', ATELIER = 'freins/plaquettes/', DISQUES = 'freins/disques/';
 const PLEINE_PAGE = [ACCUEIL, CATEGORIE, ATELIER];
 const ETAPES_ATELIER = 10; // les étapes de freins/plaquettes/
-const CARTES_REMPLACER = 2; // les ateliers « Remplacer » de freins/
+const CARTES_REMPLACER = 1; // les ateliers « Remplacer » de freins/ : les plaquettes (la dépose du disque est un entretien)
 // Ancienne adresse de la racine, page d'arrivée.
 const ANCIENNES_ANCRES = [
   ['index.html#freins-plaquettes', 'freins/plaquettes/'],

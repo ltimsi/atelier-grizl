@@ -96,9 +96,11 @@ Formes approchées :
 - Épaisseur du disque : Shimano range ce disque parmi les disques d’épaisseur standard, sans valeur dans les documents cités. Elle est approchée.
 - Bague Center Lock : forme approchée, dessinée à denture extérieure.
 - Étriers à fixation flat mount : Canyon ne donne pas le modèle. Ils sont dessinés sur celui que Shimano associe aux manettes du vélo. Corps, logements des pistons, raccord et vis approchés d’après la photo officielle, qui montre aussi leur place autour du moyeu.
-- Plaquettes : en résine à ailettes, comme les plaquettes standard de cet étrier selon Shimano. Plaque, garniture et ailettes en forme approchée.
+- Plaquettes : en résine à ailettes, comme l’une des plaquettes standard de cet étrier selon Shimano. Plaque, garniture et ailettes en forme approchée.
 - Sortie des plaquettes : sens et course de l’animation approchés. Le chapitre dit seulement de retirer le clip, puis l’axe, puis les plaquettes avec leur ressort. La roue reste en place pour qu’on voie l’étrier.
-- Durites : grosseur et trajet le long de la fourche et de la base gauches approchés. Les photos officielles ne montrent pas ce trajet.
+- Durite avant : elle passe dans le fourreau gauche et en sort par un passage à l’arrière, au-dessus de l’étrier, comme sur la photo officielle de la sacoche de cadre. Seule la partie visible est dessinée : place du passage, grosseur et trajet approchés.
+- Durite arrière : grosseur et trajet de l’étrier jusqu’à la base gauche approchés.
+- Couleurs : la bande d’ailettes du disque, claire sur la photo officielle, et les ailettes des plaquettes, sombres sur la photo, sont rendues en gris métal.
 
 À vérifier à la livraison :
 
@@ -107,7 +109,7 @@ Formes approchées :
 - type de bague Center Lock d'origine, à lire sur la pièce
 - épaisseur neuve du disque, à lire sur la pièce
 - plaquettes d’origine et leur épaisseur neuve, à lire sur la pièce
-- trajet des durites le long de la fourche et de la base, à regarder sur le vélo
+- sortie de la durite avant du fourreau et entrée de la durite arrière dans la base, à regarder sur le vélo
 
 #### Pédalier GRX FC-RX820-1, boîtier BB72, cassette XT CS-M8200, chaîne Shimano XT et dérailleur XT Di2 RD-M8250
 
@@ -135,10 +137,11 @@ Formes approchées :
 
 Formes approchées :
 
-- Point de saisie de la cocotte : Canyon ne le précise pas. Il est pris sur le dessus de la cocotte, au creux où la main se cale contre le pied de la corne.
+- Point de la main : Canyon ne dit pas quel point de la main il prend. La main publiée tombe au-dessus du repose-main, à peu près d’une épaisseur de main, là où la main se pose sur la photo officielle.
 - Cocottes : Shimano ne publie pas leurs cotes. Repose-main et corne en forme approchée d’après la photo officielle du vélo. La cocotte gauche est dessinée comme la droite. Les nervures et le marquage du repose-main ne sont pas dessinés.
 - Leviers : levier de frein et palette plus petite derrière lui, en forme approchée d’après la photo officielle du vélo, des deux côtés. La zone striée du levier n’est pas dessinée.
-- Place des cocottes sur la courbe du cintre et rotation du cintre dans la potence : non publiées. Elles sont calculées pour que la main tombe au point publié par Canyon.
+- Couleur de la palette : plus claire sur la photo officielle, elle est dessinée en noir mat.
+- Place des cocottes sur la courbe du cintre et rotation du cintre dans la potence : non publiées. Elles sont lues sur la photo officielle du vélo.
 - Courbe du cintre : seuls le déport, la descente, l’évasement, l’inclinaison et les largeurs sont publiés. La forme de la courbe et la longueur des drops sont approchées.
 - Inclinaison de la partie haute du cintre : Canyon la donne sans dessin. Elle est dessinée vers le bas, du collier vers les cocottes.
 - Ruban : épaisseur et début du ruban approchés.
@@ -149,6 +152,7 @@ Formes approchées :
 À vérifier à la livraison :
 
 - manette gauche : avec ou sans boutons de vitesses, la fiche ne donne pas sa référence complète, à lire sur la pièce
+- point de la main publié par Canyon : il tombe au-dessus du repose-main, là où se pose la main. La pose des cocottes est lue sur la photo officielle, à regarder sur le vélo
 - sens de montage de la potence, à regarder sur le vélo
 
 #### Géométrie

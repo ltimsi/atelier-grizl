@@ -122,12 +122,13 @@ export function formesSchema(p, geo = GEO) {
   const gDisques = groupe('disques');
   for (const c of [RA, FA]) { cercle(gDisques, c, rDisque, 'h'); cercle(gDisques, c, rDisque - DESSIN.piste, 'h'); }
 
-  // Durites : du fourreau gauche à l'étrier avant, de l'étrier arrière à la base gauche, du cintre au jeu de direction.
+  // Durites : du passage du fourreau gauche à l'étrier avant, de l'étrier arrière à la base gauche, du cintre au jeu de
+  // direction.
   // Trajets repris de freins.js et de poste.js.
   const gDurites = groupe('manettes');
   const u = nrm(sub(CROWN, FA)), lFourreau = Math.hypot(...sub(CROWN, FA)), derriere = [-u[1], u[0]];
   const leFourreau = (t, ecart) => add(add(FA, mul(u, lFourreau * t)), mul(derriere, ecart));
-  chemin(gDurites, [av(10, -38), av(40, -52), leFourreau(0.45, 19), leFourreau(0.75, 20), leFourreau(1, 12)], 'h', false);
+  chemin(gDurites, [av(10, -38), leFourreau(0.33, 16), leFourreau(0.40, 26), leFourreau(0.44, 19)], 'h', false);
   chemin(gDurites, [ar(10, -38), ar(10, -48), add(RA, [125, 5]), add(RA, [170, -1]), add(RA, [200, -10])], 'h', false);
   const pose = poseCintre(p, geo);
   const arrierePivot = [-dHT[1], dHT[0]];

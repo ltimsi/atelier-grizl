@@ -15,6 +15,7 @@ import * as roues from '../../src/scene/pieces/roues.js';
 import * as freins from '../../src/scene/pieces/freins.js';
 import * as transmission from '../../src/scene/pieces/transmission.js';
 import * as poste from '../../src/scene/pieces/poste.js';
+import { CF7 } from './cf7.mjs';
 
 const PIECES = [cadre, roues, freins, transmission, poste];
 
@@ -188,8 +189,6 @@ for (const module of PIECES) {
   });
 }
 
-// Le Grizl CF 7 et ses pièces : fiche, photos, pneus, selle, transmission, manettes et disques d'avant le CF 8 Di2.
-const CF7 = /4553|cf-7|CF 7|continental|terra-adventure|terra adventure|selle royal|\bSRX\b|rx822|m7100|rx610|sm-rt64|rs500/i;
 
 test('aucune pièce ni cote ne cite une source du CF 7, et chaque source citée existe', () => {
   for (const { META, COTES } of PIECES) {
@@ -619,6 +618,26 @@ test('freins : la sortie des plaquettes est signalée comme approchée', () => {
   for (const mot of ['clip', 'axe', 'ressort']) assert.ok(note.includes(mot), `« ${mot} » absent de la note`);
 });
 
+test('freins : la durite avant sort du fourreau gauche au-dessus de l’étrier, comme sur la photo officielle', () => {
+  // Sur la photo de la sacoche de cadre, elle passe dans le fourreau : on ne dessine que sa partie visible.
+  assert.ok(freins.META.sources.includes('canyon-photo-4556-rangement'));
+  assert.ok(!freins.META.approche.some(t => /ne montrent pas ce trajet/.test(t)));
+  const p = points(GEO), { maillages } = construire(freins);
+  const d = [p.CROWN[0] - p.FA[0], p.CROWN[1] - p.FA[1]], l = Math.hypot(...d), u = [d[0] / l, d[1] / l];
+  const le = q => ((q.x - p.FA[0]) * u[0] + (q.y - p.FA[1]) * u[1]) / l; // part du fourreau, depuis l'axe avant
+  const avant = parNom(maillages, 'durite').filter(m => roueDe(m, p) === 'avant');
+  assert.equal(avant.length, 1, 'une durite avant');
+  const v = sommets(avant[0]), haut = Math.max(...v.map(le));
+  assert.ok(haut > 0.3 && haut < 0.55, `la durite avant monte jusqu’à ${haut.toFixed(2)} du fourreau`);
+  const passage = parNom(maillages, 'passage de durite');
+  assert.equal(passage.length, 1, 'un passage à l’arrière du fourreau');
+  // Le passage est au-dessus de l'étrier, et derrière l'axe du fourreau.
+  const c = new THREE.Box3().setFromPoints(sommets(passage[0])).getCenter(new THREE.Vector3());
+  const hautEtrier = Math.max(...parNom(maillages, 'étrier avant').flatMap(sommets).map(le));
+  assert.ok(le(c) > hautEtrier, `passage à ${le(c).toFixed(2)} du fourreau, haut de l’étrier à ${hautEtrier.toFixed(2)}`);
+  assert.ok((c.x - p.FA[0]) * -u[1] + (c.y - p.FA[1]) * u[0] > 0, 'le passage n’est pas à l’arrière du fourreau');
+});
+
 test('freins : le modèle de l’étrier et les plaquettes d’origine restent à lire sur la pièce', () => {
   assert.ok(freins.META.aVerifier.includes('modèle exact de l\'étrier, à lire sur la pièce'));
   assert.ok(freins.META.aVerifier.some(t => /plaquettes d’origine/.test(t) && /à lire sur la pièce/.test(t)));
@@ -668,11 +687,23 @@ test('transmission : ni gaine ni fil, et la batterie est logée dans le déraill
     assert.notEqual(m.userData.role, 'housing', `${m.name} : une gaine`);
     assert.ok(!/gaine|fil/.test(m.name), `${m.name}`);
   }
-  const batterie = parNom(maillages, 'batterie');
+  const batterie = parNom(maillages, 'batterie'), corps = parNom(maillages, 'corps du dérailleur');
   assert.equal(batterie.length, 1, 'une batterie');
-  const corps = new THREE.Box3().setFromPoints(parNom(maillages, 'dérailleur').flatMap(sommets));
-  const b = new THREE.Box3().setFromPoints(sommets(batterie[0]));
-  assert.ok(corps.containsBox(b), 'la batterie dépasse du dérailleur');
+  assert.equal(corps.length, 1, 'un corps de dérailleur');
+  // Dans le corps seul, pas dans la chape ni les galets : en z, entre ses deux faces ; de profil, dans son contour.
+  const vc = sommets(corps[0]), vb = sommets(batterie[0]);
+  const [z0, z1] = [Math.min(...vc.map(q => q.z)), Math.max(...vc.map(q => q.z))];
+  assert.ok(vb.every(q => q.z > z0 && q.z < z1), 'la batterie dépasse des faces du corps');
+  const contour = transmission.CORPS_DERAILLEUR.map(([x, y]) => [x + points(GEO).RA[0], y + points(GEO).RA[1]]);
+  const dedans = (x, y) => {
+    let n = false;
+    for (let i = 0, j = contour.length - 1; i < contour.length; j = i++) {
+      const [xi, yi] = contour[i], [xj, yj] = contour[j];
+      if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) n = !n;
+    }
+    return n;
+  };
+  for (const q of vb) assert.ok(dedans(q.x, q.y), `la batterie sort du contour du corps en ${q.x.toFixed(1)}, ${q.y.toFixed(1)}`);
   assert.ok(transmission.META.sources.includes('shimano-bt-dn320'), 'la batterie a sa source');
 });
 
@@ -744,23 +775,38 @@ test('transmission : plateau, chaîne et manivelles passent à distance du cadre
 
 // ---- Poste de pilotage : jeu de direction, potence, cintre, ruban, cocottes, leviers et durites ----
 
-test('poste : la main tombe sur le dessus de chaque cocotte, au point publié par Canyon', () => {
+test('poste : la main publiée est posée au-dessus du repose-main de chaque cocotte, dans sa longueur', () => {
+  // Canyon publie la position de la main posée sur la cocotte. Sur la photo officielle, elle tombe au-dessus du
+  // repose-main, à peu près d'une épaisseur de main : entre deux et cinq centimètres au-dessus de son dessus.
   const p = points(GEO), { maillages } = construire(poste);
   for (const [nom, main] of [['cocotte droite', p.ancres.mains], ['cocotte gauche', p.ancres.cocotteGauche]]) {
     const ms = parNom(maillages, nom);
     assert.ok(ms.length > 0, `${nom} absente`);
-    // Le point de saisie est un sommet de la cocotte, posé exactement sur la main : en x, en y et en z.
-    // Le dessus est presque plat et porte un sommet tous les cinq ou six millimètres : une tolérance de l'ordre du
-    // millimètre laisserait passer une cocotte décalée d'une section. On exige donc le sommet lui-même.
-    const M = new THREE.Vector3(...main);
-    const pres = Math.min(...ms.flatMap(sommets).map(q => q.distanceTo(M)));
-    assert.ok(pres <= 0.05, `${nom} : sommet le plus proche de la main à ${pres.toFixed(3)} mm`);
-    // Et ce point est bien sur le dessus de la cocotte.
+    const x = ms.flatMap(sommets).map(q => q.x);
+    assert.ok(main[0] > Math.min(...x) && main[0] < Math.max(...x), `${nom} : la main n’est pas au-dessus de la cocotte`);
+    // La main est dans la moitié arrière de la cocotte, sur le repose-main, pas sur la corne.
+    assert.ok(main[0] < (Math.min(...x) + Math.max(...x)) / 2, `${nom} : la main est sur la corne`);
     let dessus = -Infinity;
     for (const m of ms) surFaces(m, 1, q => {
       if (Math.abs(q.x - main[0]) <= 1.5 && Math.abs(q.z - main[2]) <= 1.5) dessus = Math.max(dessus, q.y);
     });
-    assert.ok(Math.abs(dessus - main[1]) <= 2, `${nom} : dessus à ${dessus}, main à ${main[1]}`);
+    const ecart = main[1] - dessus;
+    assert.ok(ecart >= 20 && ecart <= 50, `${nom} : la main est à ${ecart.toFixed(1)} mm au-dessus du repose-main`);
+  }
+});
+
+test('poste : la cocotte est posée comme sur la photo officielle, le cintre à peine tourné', () => {
+  // Pose lue sur la photo : la cocotte sur le coude du cintre, pas sur sa partie haute, presque à plat.
+  const pose = poste.poseCintre(points(GEO), GEO);
+  const tC = pose.local.tC * 180 / Math.PI, angle = pose.angle * 180 / Math.PI;
+  assert.ok(tC > 30 && tC < 60, `cocotte à ${tC.toFixed(1)}° sur la courbe`);
+  assert.ok(angle > 0 && angle < 12, `cocotte inclinée de ${angle.toFixed(1)}°`);
+  // L'axe du cintre ne revient jamais en arrière, sous la cocotte comme ailleurs : deux tronçons qui se suivent vont
+  // dans le même sens.
+  const pts = pose.points;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const u = pts[i].map((v, k) => v - pts[i - 1][k]), w = pts[i + 1].map((v, k) => v - pts[i][k]);
+    assert.ok(u.reduce((s, v, k) => s + v * w[k], 0) > 0, `le cintre revient en arrière au point ${i}`);
   }
 });
 

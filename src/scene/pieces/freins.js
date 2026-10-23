@@ -5,6 +5,9 @@
 // Disques et étriers sont à gauche (z négatif). Leur position vient de GEO et de points() : CF, CR, plans des disques.
 // Le diamètre des disques est dans GEO. Les autres nombres de ce fichier sont des valeurs de dessin : épaisseur, bras,
 // trous, ailettes, bagues, étriers, pistons, plaquettes, trajet des durites. META.approche les liste, sans chiffre.
+// Sur la photo officielle de la sacoche de cadre (canyon-photo-4556-rangement), la durite avant sort du fourreau
+// gauche par un passage à l'arrière, au-dessus de l'étrier, et descend droit dans son raccord : elle passe dans le
+// fourreau. Seule cette partie visible est dessinée.
 // Lu sur la photo officielle de profil (canyon-photo-4556-fv), à travers la roue : la face intérieure du disque avant
 // (fentes, bande d'ailettes claire, araignée noire), l'étrier avant noir derrière le fourreau gauche, son logement de
 // piston rond, la tête de l'axe des plaquettes en haut, le raccord de la durite au bout haut de l'étrier, et les
@@ -32,6 +35,7 @@ export const META = Object.freeze({
     'canyon-4556',
     'canyon-4556-en',
     'canyon-photo-4556-fv',
+    'canyon-photo-4556-rangement',
     'shimano-deore-xt-m8000',
     'shimano-c-461',
     'shimano-st-rx825',
@@ -48,12 +52,16 @@ export const META = Object.freeze({
     'Étriers à fixation flat mount : Canyon ne donne pas le modèle. Ils sont dessinés sur celui que Shimano associe ' +
       'aux manettes du vélo. Corps, logements des pistons, raccord et vis approchés d’après la photo officielle, qui ' +
       'montre aussi leur place autour du moyeu.',
-    'Plaquettes : en résine à ailettes, comme les plaquettes standard de cet étrier selon Shimano. Plaque, garniture ' +
-      'et ailettes en forme approchée.',
+    'Plaquettes : en résine à ailettes, comme l’une des plaquettes standard de cet étrier selon Shimano. Plaque, ' +
+      'garniture et ailettes en forme approchée.',
     'Sortie des plaquettes : sens et course de l’animation approchés. Le chapitre dit seulement de retirer le clip, ' +
       'puis l’axe, puis les plaquettes avec leur ressort. La roue reste en place pour qu’on voie l’étrier.',
-    'Durites : grosseur et trajet le long de la fourche et de la base gauches approchés. Les photos officielles ne ' +
-      'montrent pas ce trajet.',
+    'Durite avant : elle passe dans le fourreau gauche et en sort par un passage à l’arrière, au-dessus de l’étrier, ' +
+      'comme sur la photo officielle de la sacoche de cadre. Seule la partie visible est dessinée : place du passage, ' +
+      'grosseur et trajet approchés.',
+    'Durite arrière : grosseur et trajet de l’étrier jusqu’à la base gauche approchés.',
+    'Couleurs : la bande d’ailettes du disque, claire sur la photo officielle, et les ailettes des plaquettes, sombres ' +
+      'sur la photo, sont rendues en gris métal.',
   ]),
   aVerifier: Object.freeze([
     'modèle exact de l\'étrier, à lire sur la pièce',
@@ -62,13 +70,13 @@ export const META = Object.freeze({
     'type de bague Center Lock d\'origine, à lire sur la pièce',
     'épaisseur neuve du disque, à lire sur la pièce',
     'plaquettes d’origine et leur épaisseur neuve, à lire sur la pièce',
-    'trajet des durites le long de la fourche et de la base, à regarder sur le vélo',
+    'sortie de la durite avant du fourreau et entrée de la durite arrière dans la base, à regarder sur le vélo',
   ]),
 });
 
 // ---- Valeurs de dessin (approchées, voir META.approche) ----
 const D2R = Math.PI / 180;
-const EP = 1.75; // épaisseur du disque, approchée : celle d'un disque Shimano d'épaisseur standard
+const EP = 1.75; // épaisseur du disque : valeur de dessin, approchée
 const BRAS = 6;
 // Disque, lu au mieux sur la photo officielle, où on voit sa face intérieure à travers la roue : piste grise percée
 // d'une rangée de fentes à cinq pans, bande d'ailettes claire entre la piste et l'araignée, araignée noire à six bras.
@@ -80,6 +88,10 @@ const MT800 = {
 const BAGUE = { r: 21, epaisseur: 6, encoches: 16 };
 const PASSAGE = 18.7; // trou central du support : il coiffe les cannelures du moyeu
 const DURITE = 2.6;
+// Passage de la durite avant, lu au mieux sur la photo de la sacoche de cadre : à l'arrière du fourreau gauche dessiné
+// par cadre.js, à cette part de sa longueur depuis l'axe avant, et à l'écart de son axe et en z du fourreau à cette
+// hauteur.
+const PASSAGE_FOURREAU = { t: 0.44, ecart: 22, z: -51.8, rayon: 3.6 };
 // Étrier, dans son repère : radial vers l'extérieur du disque depuis son point, puis le long du disque.
 // Moitiés de part et d'autre du disque, pont au-delà du bord du disque, logements ronds des deux pistons opposés.
 const ETRIER = { moitie: [56, 32, 12], ecartMoitie: 12, pont: [50, 14, 30], piston: { radial: -2, rayon: 11, saillie: 3 } };
@@ -203,8 +215,7 @@ function bague(o, { c, plan }) {
 
 // Étrier flat mount : deux moitiés de part et d'autre du disque, avec le logement rond de leur piston, pont au-delà du
 // bord du disque, axe de plaquettes, raccord de durite au bout `bout` (+1 ou -1 le long du disque), deux plaquettes à
-// ailettes dans des groupes déplaçables. Renvoie le départ de la durite, la direction dans laquelle elle sort et un
-// point qui contourne le bout de l'étrier.
+// ailettes dans des groupes déplaçables. Renvoie le départ de la durite et la direction dans laquelle elle sort.
 function etrier(o, c, deg, plan, nom, bout, enregistrer) {
   const T = o.THREE;
   const n = (m, x = nom) => { m.name = x; return m; };
@@ -241,25 +252,25 @@ function etrier(o, c, deg, plan, nom, bout, enregistrer) {
     for (const [m, x] of morceaux) { m.name = x; g.add(m); }
     if (enregistrer) PLAQUETTES.push({ groupe: g, base: g.position.clone(), dir: new T.Vector3(dehors[0], dehors[1], 0) });
   }
-  return { depart: [...a(10, bout * 38), plan], sens: [le[0] * bout, le[1] * bout], contour: [...a(40, bout * 52), plan - 14] };
+  return { depart: [...a(10, bout * 38), plan], sens: [le[0] * bout, le[1] * bout] };
 }
 
-// Durites, de l'étrier jusqu'à l'entrée dans la fourche ou dans la base gauche dessinées par cadre.js.
+// Durites, de l'étrier jusqu'au passage du fourreau gauche ou jusqu'à la base gauche dessinés par cadre.js.
 function durites(o, p, fixAvant, fixArriere) {
   const { FA, RA, CROWN } = p;
   const pas = (q, s, l) => [q[0] + s[0] * l, q[1] + s[1] * l, q[2]];
-  // Fourreau gauche : de l'axe avant vers la couronne. La durite longe son arête arrière, côté extérieur, sans dépasser
-  // de sa silhouette de profil : sur la photo officielle, aucune durite ne se voit derrière la fourche. Elle entre dans
-  // le fourreau sous la couronne.
+  // Fourreau gauche : de l'axe avant vers la couronne. La durite quitte le raccord vers le haut, longe la face
+  // intérieure du fourreau, passe derrière lui et rentre par son passage. Plus haut, elle est dans le fourreau.
   const d = [CROWN[0] - FA[0], CROWN[1] - FA[1]], l = Math.hypot(...d), u = [d[0] / l, d[1] / l];
   const derriere = [-u[1], u[0]]; // u monte vers la couronne : cette normale pointe vers l'arrière
   const leFourreau = (t, ecart, z) => [FA[0] + u[0] * l * t + derriere[0] * ecart, FA[1] + u[1] * l * t + derriere[1] * ecart, z];
-  // Elle quitte le raccord dans le sens de l'étrier, contourne son bout par l'extérieur, puis remonte.
-  const f = fixAvant.depart, { contour } = fixAvant;
+  const P = PASSAGE_FOURREAU, f = fixAvant.depart;
   o.tubeCourbe([
-    f, pas(f, fixAvant.sens, 12), contour, leFourreau(0.45, 19, -61), leFourreau(0.75, 20, -55), leFourreau(0.95, 20, -49),
-    leFourreau(1, 12, -36),
-  ], DURITE, 'hose', 60).name = 'durite';
+    f, pas(f, fixAvant.sens, 10), leFourreau(P.t - 0.11, 16, -41), leFourreau(P.t - 0.04, P.ecart + 4, P.z + 4),
+    leFourreau(P.t, P.ecart - 3, P.z),
+  ], DURITE, 'hose', 40).name = 'durite';
+  o.tube(leFourreau(P.t, P.ecart - 1, P.z), leFourreau(P.t, P.ecart + 1.5, P.z), P.rayon, P.rayon, 'black', { seg: 16 })
+    .name = 'passage de durite';
   // Base gauche : la durite part de l'avant de l'étrier arrière et rentre dans la base un peu plus loin.
   const r = fixArriere.depart;
   const surBase = (x, y, z) => [RA[0] + x, RA[1] + y, z];

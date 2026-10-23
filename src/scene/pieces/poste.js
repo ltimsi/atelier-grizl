@@ -12,11 +12,12 @@
 // lui, et les durites qui sortent du ruban près de la potence pour plonger dans le capot du jeu de direction, devant le
 // pivot, sous la potence.
 //
-// La main d'abord. Canyon publie la position de la main sur la cocotte droite (ancres.mains : reach et stack
-// efficaces). La cocotte est posée pour que son point de saisie tombe exactement là. Le cintre est ensuite construit
-// en arrière, depuis son collier dans la potence, avec le déport et la descente du marquage officiel. Deux réglages
-// non publiés rattrapent l'écart : la place de la cocotte sur la courbe du cintre et la rotation du cintre dans la
-// potence. Ils sont calculés, pas choisis.
+// La main et la cocotte. Canyon publie la position de la main posée sur la cocotte (ancres.mains : reach et stack
+// efficaces), sans dire quel point de la main il prend. Sur la photo officielle, ce point tombe au-dessus du
+// repose-main, à peu près d'une épaisseur de main : la main est posée sur la cocotte. La cocotte est donc posée comme
+// sur la photo : sa place sur la courbe du cintre et la rotation du cintre dans la potence sont lues sur la photo,
+// pas calculées depuis la main. Le cintre est construit en arrière, depuis son collier dans la potence, avec le déport
+// et la descente du marquage officiel.
 // Zones : cocottes, leviers, palettes et durites en zone 'manettes' ; le reste sans zone. Aucune variante.
 // Aucun import : le module ne reçoit que les outils de construction, les points et GEO.
 
@@ -50,15 +51,16 @@ export const META = Object.freeze({
     'shimano-dm-gadbr10',
   ]),
   approche: Object.freeze([
-    'Point de saisie de la cocotte : Canyon ne le précise pas. Il est pris sur le dessus de la cocotte, au creux où ' +
-      'la main se cale contre le pied de la corne.',
+    'Point de la main : Canyon ne dit pas quel point de la main il prend. La main publiée tombe au-dessus du ' +
+      'repose-main, à peu près d’une épaisseur de main, là où la main se pose sur la photo officielle.',
     'Cocottes : Shimano ne publie pas leurs cotes. Repose-main et corne en forme approchée d’après la photo officielle ' +
       'du vélo. La cocotte gauche est dessinée comme la droite. Les nervures et le marquage du repose-main ne sont pas ' +
       'dessinés.',
     'Leviers : levier de frein et palette plus petite derrière lui, en forme approchée d’après la photo officielle du ' +
       'vélo, des deux côtés. La zone striée du levier n’est pas dessinée.',
-    'Place des cocottes sur la courbe du cintre et rotation du cintre dans la potence : non publiées. Elles sont ' +
-      'calculées pour que la main tombe au point publié par Canyon.',
+    'Couleur de la palette : plus claire sur la photo officielle, elle est dessinée en noir mat.',
+    'Place des cocottes sur la courbe du cintre et rotation du cintre dans la potence : non publiées. Elles sont lues ' +
+      'sur la photo officielle du vélo.',
     'Courbe du cintre : seuls le déport, la descente, l’évasement, l’inclinaison et les largeurs sont publiés. ' +
       'La forme de la courbe et la longueur des drops sont approchées.',
     'Inclinaison de la partie haute du cintre : Canyon la donne sans dessin. Elle est dessinée vers le bas, du ' +
@@ -71,6 +73,8 @@ export const META = Object.freeze({
   ]),
   aVerifier: Object.freeze([
     'manette gauche : avec ou sans boutons de vitesses, la fiche ne donne pas sa référence complète, à lire sur la pièce',
+    'point de la main publié par Canyon : il tombe au-dessus du repose-main, là où se pose la main. La pose des ' +
+      'cocottes est lue sur la photo officielle, à regarder sur le vélo',
     'sens de montage de la potence, à regarder sur le vélo',
   ]),
 });
@@ -83,22 +87,27 @@ const CINTRE = { collier: 47, ruban: 70, finHaut: 140, demiAxeAvant: 50, zCourbe
 // Rayon du cintre sous les cocottes (milieu de la plage du collier Shimano), plus le ruban.
 const RAYON_RUBAN = (COTES.collierCocotteMin.v + COTES.collierCocotteMax.v) / 4 + CINTRE.epRuban;
 // Cocotte : sections le long de la cocotte depuis le collier, sur l'axe du cintre. [x, dessus, dessous, demi-largeur].
-// La main se pose au plat, PRISE. CALAGE : angle entre la cocotte et le cintre à son collier, en degrés.
 // COCOTTE, LEVIER et poseCintre sont exportés pour le schéma 2D (schema2d.js), qui dessine le même poste de profil.
 // ST-RX825, de profil sur la photo : un repose-main bas et long sur le cintre, qui monte vers une haute corne arrondie,
-// puis le levier sous la corne. La main se cale au creux, contre le pied de la corne : c'est le point de saisie.
-const PRISE = [66, 35];
-const CALAGE = 12;
+// puis le levier sous la corne. PRISE : le point du repose-main où la main se pose, sous la main publiée.
+// Pose lue sur la photo officielle : place du collier de la cocotte sur la courbe du cintre (angle t de la courbe) et
+// rotation du cintre dans la potence, en degrés. CALAGE : angle entre la cocotte et le cintre à son collier, en degrés.
+// Les trois repères de la cocotte (arrière du repose-main, sommet de la corne, nez) tombent ainsi à environ quinze
+// millimètres de leur place sur la photo, une fois corrigée la perspective.
+const PRISE = [31, 23];
+const POSE = { surCourbe: 43.5, roulis: 4 };
+const CALAGE = 54;
 export const COCOTTE = [
   [-14, 12, -8, 10],
   [-4, 18, -13, 14],
   [8, 21, -16, 15.5],
-  [22, 22.5, -19, 16],
-  [36, 24, -20, 16.5],
-  [48, 27, -19, 16.5],
-  [58, 32, -17.5, 16],
-  [PRISE[0], PRISE[1], -15.5, 15.5],
-  [73, 41, -13, 14],
+  [20, 22.5, -18.5, 16],
+  [PRISE[0], PRISE[1], -19.5, 16.5],
+  [42, 24.5, -19.5, 16.5],
+  [52, 27.5, -18.5, 16.5],
+  [60, 31, -17, 16],
+  [67, 36, -15, 15.5],
+  [73, 42.5, -13, 14],
   [79, 48.5, -10, 12.5],
   [87, 51, -6.5, 11.5],
   [95, 49, -2, 10.5],
@@ -188,9 +197,9 @@ function directionEtPotence(o, p) {
 /**
  * Pose du cintre et de la cocotte droite. Dans le repère du cintre (origine au centre du collier, x vers l'avant),
  * la courbe avant est une demi-ellipse : son point le plus en avant est au déport, son bas à la descente.
- * On cherche la place de la cocotte sur cette courbe, puis la rotation du cintre, pour que le point de saisie de la
- * cocotte tombe sur ancres.mains. Renvoie les points de l'axe du cintre droit (dans le repère du vélo), l'indice du
- * point du collier de la cocotte, la position et l'angle de la cocotte.
+ * La cocotte est posée sur cette courbe et le cintre tourné dans la potence comme sur la photo officielle (POSE).
+ * La main publiée, ancres.mains, tombe alors au-dessus du repose-main. Renvoie les points de l'axe du cintre droit
+ * (dans le repère du vélo), l'indice du point du collier de la cocotte, la position et l'angle de la cocotte.
  */
 export function poseCintre(p, geo) {
   const D = geo.deportCintre.v, H = geo.descenteCintre.v, zCocotte = geo.largeurCintre.v / 2;
@@ -200,19 +209,7 @@ export function poseCintre(p, geo) {
   const a = CINTRE.demiAxeAvant, b = (H + yDessus) / 2, O = [D - a, yDessus - b];
   const courbe = t => [O[0] + a * Math.cos(t), O[1] + b * Math.sin(t)];
   const cap = t => Math.atan2(-b * Math.cos(t), a * Math.sin(t)); // direction du cintre qui descend
-  const prise = t => add(courbe(t), rot(PRISE, cap(t) + CALAGE * D2R));
-
-  // Place de la cocotte : la distance de la prise au collier doit être celle de la main au collier.
-  const G = p.ancres.mains, vers = sub(G, p.S1), d = Math.hypot(...vers);
-  const ecart = t => Math.hypot(...prise(t)) - d;
-  let t0 = 20 * D2R, t1 = 88 * D2R;
-  if (ecart(t0) * ecart(t1) > 0) throw new Error('poste : la main publiée est hors de portée de la cocotte dessinée');
-  for (let i = 0; i < 60; i++) {
-    const m = (t0 + t1) / 2;
-    if (ecart(t0) * ecart(m) <= 0) t1 = m; else t0 = m;
-  }
-  const tC = (t0 + t1) / 2, C = courbe(tC);
-  const roulis = Math.atan2(vers[1], vers[0]) - Math.atan2(...prise(tC).slice().reverse());
+  const tC = POSE.surCourbe * D2R, C = courbe(tC), roulis = POSE.roulis * D2R;
 
   // Axe du cintre droit : partie haute, avancée vers la courbe, courbe avant, drops. z vaut la demi-largeur publiée
   // au collier de la cocotte, puis s'ouvre de l'évasement sous la cocotte jusqu'à la demi-largeur des drops au bout.
@@ -221,7 +218,9 @@ export function poseCintre(p, geo) {
   for (const z of [CINTRE.ruban, (CINTRE.ruban + CINTRE.finHaut) / 2, CINTRE.finHaut]) pts.push([0, yHaut(z), z]);
   pts.push([O[0] * 0.45, yDessus + 0.4, (CINTRE.finHaut + CINTRE.zCourbe) / 2 + 4]);
   const degC = tC / D2R;
-  const angles = [90, 75, degC, 25, 0, -25, -50, -72, -90].filter(t => t === degC || Math.abs(t - degC) > 6);
+  // Du haut de la courbe vers le bas des drops, dans l'ordre, quelle que soit la place de la cocotte.
+  const angles = [90, 75, degC, 25, 0, -25, -50, -72, -90].filter(t => t === degC || Math.abs(t - degC) > 6)
+    .sort((u, w) => w - u);
   let iCollier = -1;
   for (const deg of angles) {
     const t = deg * D2R, q = courbe(t);

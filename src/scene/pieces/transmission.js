@@ -139,8 +139,8 @@ function enveloppe(cercles) {
  * Ajoute au groupe des outils le pédalier, le boîtier, la cassette, la chaîne et le dérailleur avec sa batterie.
  * Aucun maillage n'a de zone ni de variante, et les outils en ressortent sans zone ni variante.
  * Noms des maillages que vérifient les tests : pignon 9 à pignon 45, plateau, manivelle droite, manivelle gauche,
- * chaîne, galet, boîtier, dérailleur, batterie. Les autres : araignée de cassette, bague du petit pignon, axe de
- * pédalier, capuchon.
+ * chaîne, galet, boîtier, dérailleur, corps du dérailleur, batterie. Les autres : araignée de cassette, bague du petit
+ * pignon, axe de pédalier, capuchon.
  * @param {object} o Les outils de creerOutils.
  * @param {object} p Les points de points(geo).
  * @param {object} geo GEO, ou un objet de même forme.
@@ -339,7 +339,7 @@ function derailleur(o, p, geo, z) {
   const forme = pts => new T.Shape(pts.map(q => new T.Vector2(...q)));
 
   // Corps : le contour de la photo, en épaisseur, du côté extérieur de la patte. L'axe B affleure sur sa face.
-  const corps = rd(o.extr(forme(CORPS_DERAILLEUR.map(versVelo)), CORPS.ep, 'rd', CORPS.biseau));
+  const corps = rd(o.extr(forme(CORPS_DERAILLEUR.map(versVelo)), CORPS.ep, 'rd', CORPS.biseau), 'corps du dérailleur');
   corps.position.z = CORPS.z;
   const face = CORPS.z + CORPS.ep / 2 + CORPS.biseau;
   rd(o.boulon([...versVelo(PIED_DERAILLEUR), face + 0.8], [0, 0, 1], 4.2, 1.6, 'black'));

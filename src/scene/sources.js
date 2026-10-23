@@ -66,6 +66,12 @@ export const SOURCES = Object.freeze({
     url: 'https://dma.canyon.com/image/upload/w_1400,c_fit/f_auto/q_auto/2027_TOP-5_grizl_cf-8-di2_4556_R126_P06_comfort_stzvfz',
     type: 'photo',
   }),
+  'canyon-photo-4556-rangement': Object.freeze({
+    titre: 'Canyon, photo officielle de la fiche du Grizl CF 8 Di2, Floating Violet : sacoche de cadre et fourche, où la ' +
+      'durite avant sort du fourreau gauche',
+    url: 'https://dma.canyon.com/image/upload/w_1400,c_fit/f_auto/q_auto/2027_TOP-2_grizl_cf-8-di2_4556_R126_P06_storage_m34rt0',
+    type: 'photo',
+  }),
   'canyon-photo-4556-degagement': Object.freeze({
     titre: 'Canyon, photo officielle du passage de pneu sur la fiche du Grizl CF 8 Di2, Floating Violet : tête de fourche',
     url: 'https://dma.canyon.com/image/upload/w_1400,c_fit/f_auto/q_auto/2027_TOP-3_grizl_cf-8-di2_4556_R126_P06_tyre-clearance_sa25y3',

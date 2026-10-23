@@ -5,7 +5,7 @@
 // Un faux le remplace.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import * as THREE from '../../vendor/three/three.module.min.js';
 import { GEO, points, approximations } from '../../src/scene/geometrie.js';
 import { SOURCES } from '../../src/scene/sources.js';
@@ -15,6 +15,7 @@ import {
   PIECES, distanceEnsemble, positionVue, reculVue, versPixels, zonesDuGroupe, listerApproximations,
 } from '../../src/scene/scene.js';
 import { formesSchema, cadreVue, versPixelsSchema } from '../../src/scene/schema2d.js';
+import { CF7 } from './cf7.mjs';
 
 const ZONES = JSON.parse(readFileSync(new URL('../../src/scene/zones.json', import.meta.url), 'utf8'));
 const D2R = Math.PI / 180;
@@ -129,6 +130,26 @@ test('scène : la variante de l’étrier est la seule, et aucun maillage ne dé
   assert.ok(!/'disques' montre/.test(code), 'scene.js décrit encore la variante des disques');
 });
 
+// Les textes qui peuvent citer un document du registre : les pages du guide (src/parts, par l'adresse du document) et
+// la recherche (docs/recherche, par son id ou son adresse). La page « Sources » montre tout le registre.
+const textes = dossier => readdirSync(new URL(`../../${dossier}/`, import.meta.url))
+  .filter(f => /\.(html|md)$/.test(f))
+  .map(f => readFileSync(new URL(`../../${dossier}/${f}`, import.meta.url), 'utf8'));
+
+test('registre : chaque document est cité, par une pièce, la géométrie, une page ou la recherche, et aucun n’est du CF 7', () => {
+  const parLaScene = new Set([
+    ...PIECES.flatMap(m => [...m.META.sources, ...Object.values(m.COTES ?? {}).map(c => c.src)]),
+    ...Object.values(GEO).map(e => e.src).filter(Boolean),
+  ]);
+  const pages = textes('src/parts').join('\n'), recherche = textes('docs/recherche').join('\n');
+  for (const [id, s] of Object.entries(SOURCES)) {
+    assert.ok(!CF7.test(id) && !CF7.test(s.titre) && !CF7.test(s.url), `${id} : document du CF 7`);
+    const cite = parLaScene.has(id) || pages.includes(s.url) || recherche.includes(id) || recherche.includes(s.url);
+    assert.ok(cite, `${id} : cité ni par une pièce, ni par la géométrie, ni par une page, ni par la recherche`);
+  }
+  for (const id of parLaScene) assert.ok(SOURCES[id], `source inconnue : ${id}`);
+});
+
 test('scène : une source absente de SOURCES est refusée', () => {
   const meta = { nom: 'Pièce', sources: ['inconnue'], approche: [], aVerifier: [] };
   assert.throws(() => listerApproximations([{ meta, zones: [] }]), /inconnue/);
@@ -175,15 +196,22 @@ test('schéma : étriers à leur place et tournés selon GEO', () => {
   }
 });
 
-test('schéma : la main publiée est sur le dessus de la cocotte dessinée, comme dans la 3D', () => {
+test('schéma : la main publiée est posée au-dessus du repose-main de la cocotte dessinée, comme dans la 3D', () => {
   const cocotte = formes.find(f => f.nom === 'cocotte');
   assert.ok(cocotte, 'cocotte absente');
   assert.equal(cocotte.zone, 'manettes');
   const n = nombres(cocotte.attrs.d), sommets = [];
   for (let i = 0; i < n.length; i += 2) sommets.push([n[i], -n[i + 1]]);
+  // Le contour suit le dessus de l'arrière vers le nez, puis le dessous : le dessus est sa première moitié.
+  const dessus = sommets.slice(0, sommets.length / 2);
   const [mx, my] = p.ancres.mains;
-  const ecart = Math.min(...sommets.map(([x, y]) => Math.hypot(x - mx, y - my)));
-  proche(ecart, 0, 0.1, 'un sommet du dessus de la cocotte sur la main');
+  let y = null;
+  for (let i = 0; i < dessus.length - 1; i++) {
+    const [a, b] = [dessus[i], dessus[i + 1]];
+    if ((a[0] - mx) * (b[0] - mx) <= 0 && a[0] !== b[0]) y = a[1] + (b[1] - a[1]) * (mx - a[0]) / (b[0] - a[0]);
+  }
+  assert.ok(y !== null, 'la main n’est pas au-dessus de la cocotte');
+  assert.ok(my - y >= 20 && my - y <= 50, `main à ${(my - y).toFixed(1)} mm au-dessus du repose-main`);
 });
 
 test('schéma : boîte d’ensemble, des pneus au sol', () => {

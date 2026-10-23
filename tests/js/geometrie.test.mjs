@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { GEO, points, cheminChaine, approximations } from '../../src/scene/geometrie.js';
 import { SOURCES } from '../../src/scene/sources.js';
+import { CF7, NOMS_CF7 } from './cf7.mjs';
 
 const D2R = Math.PI / 180;
 const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
@@ -276,16 +277,13 @@ test('registre des sources : les documents du Grizl CF 8 Di2', () => {
   }
 });
 
-// Le Grizl CF 7 et ses pièces, que le CF 8 Di2 remplace : fiche, photos, pneus, selle, transmission, manettes, disques.
-const CF7 = /4553|cf-7|CF 7|continental|terra-adventure|terra adventure|selle royal|\bSRX\b|rx822|m7100|rx610|sm-rt64|rs500/i;
 
 test('registre des sources : plus aucune source du Grizl CF 7 ni de ses pièces', () => {
   for (const [id, s] of Object.entries(SOURCES)) {
     for (const t of [id, s.titre, s.url]) assert.ok(!CF7.test(t), `${id} : « ${t} »`);
   }
   // Le motif attrape bien les anciennes sources.
-  for (const t of ['canyon-4553', 'grizl-cf-7', 'continental-terra-adventure', 'Selle Royal SRX', 'shimano-rd-rx822-gs',
-    'CS-M7100-12', 'FC-RX610-1', 'shimano-rx610-1x12', 'SM-RT64', 'BB-RS500-PB']) assert.ok(CF7.test(t), t);
+  for (const t of NOMS_CF7) assert.ok(CF7.test(t), t);
   // Les documents du CF 8 Di2 restent, même ceux que seule la recherche cite : la page Sources les montre.
   for (const id of ['canyon-4556-en', 'shimano-sm-bb72-41b', 'shimano-cn-m8100', 'shimano-dm-gadbr10']) {
     assert.ok(SOURCES[id], id);
