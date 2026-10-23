@@ -26,7 +26,7 @@ SLUGS = ["systeme", "disques", "plaquettes", "rodage", "centrage", "controles", 
 CORRESPONDANCE = [
     ("freins-systeme", "manettes", "comprendre", None, None),
     ("freins-disques", "disques", "entretenir", None, None),
-    ("freins-plaquettes", "etrier", "remplacer", "Plaquettes d’origine L05A-RF", "Shimano L05A-RF neuves"),
+    ("freins-plaquettes", "etrier", "remplacer", "Plaquettes d’origine, L05A-RF attendues", "Shimano L05A-RF neuves"),
     ("freins-rodage", "disques", "entretenir", None, None),
     ("freins-centrage", "etrier", "regler", None, None),
     ("freins-controles", "etrier", "comprendre", None, None),

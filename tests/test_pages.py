@@ -137,14 +137,14 @@ class TestPages(Site):
 
         article = un(racine, "article.atelier")
         self.assertEqual([article.get(n) for n in ("id", "data-zone", "data-type", "data-de", "data-vers")],
-                         ["freins-plaquettes", "etrier", "remplacer", "Plaquettes d’origine L05A-RF",
+                         ["freins-plaquettes", "etrier", "remplacer", "Plaquettes d’origine, L05A-RF attendues",
                           "Shimano L05A-RF neuves"])
         tete = un(article, "header.atelier-tete")
         self.assertEqual(un(tete, "p.atelier-num").texte(), "Atelier 2.3 · Zone 2, Étrier et plaquettes")
         self.assertEqual([p.texte() for p in dom.selectionner(tete, "span.pill")],
                          ["Remplacer", "10 étapes", "À démonter : La roue."])
         self.assertEqual(un(tete, "p.de-vers").texte(),
-                         "D’origine Plaquettes d’origine L05A-RF À monter Shimano L05A-RF neuves")
+                         "D’origine Plaquettes d’origine, L05A-RF attendues À monter Shimano L05A-RF neuves")
         # La barre des étapes dans la colonne de gauche, juste avant les étapes.
         barre = un(article, "div.etapes-barre")
         gauche = un(article, "div.atelier-gauche")
@@ -315,7 +315,7 @@ class TestPages(Site):
         # Les faits d'une carte.
         plaquettes = cartes[2]
         faits = [(dt.texte(), dd.texte()) for dt, dd in zip(dom.selectionner(plaquettes, "dt"), dom.selectionner(plaquettes, "dd"))]
-        self.assertEqual(faits, [("Change", "Plaquettes d’origine L05A-RF → Shimano L05A-RF neuves"),
+        self.assertEqual(faits, [("Change", "Plaquettes d’origine, L05A-RF attendues → Shimano L05A-RF neuves"),
                                  ("Démonter", "La roue."), ("Étapes", "10"), ("Couples", "0,5-0,7\u00a0Nm 1-1,5\u00a0Nm")])
         self.assertEqual(un(plaquettes, "h3").texte(), "Changer les plaquettes")
         self.assertEqual(un(plaquettes, "span.zone").texte(), "Zone 2 · Étrier et plaquettes")
@@ -469,7 +469,7 @@ class TestPages(Site):
             self.assertNotIn("L04C", texte)
         article = un(dom.analyser(page), "article.atelier")
         self.assertEqual((article.get("data-de"), article.get("data-vers")),
-                         ("Plaquettes d’origine L05A-RF", "Shimano L05A-RF neuves"))
+                         ("Plaquettes d’origine, L05A-RF attendues", "Shimano L05A-RF neuves"))
         entonnoir = [li for li in dom.selectionner(section, "ol.steps > li")
                      if li.texte().startswith("Monte l'entonnoir sur la manette")]
         (etape,) = entonnoir
@@ -478,6 +478,116 @@ class TestPages(Site):
         self.assertNotIn("par l'avant", section.texte())
         for slug in SLUGS:
             self.assertNotIn("L04C", self.html(f"freins/{slug}/"), slug)
+
+    def test_pistons_collants(self):
+        # 2.6 suit l'entretien des pistons du DM-GADBR01 : entonnoir monté sur la manette avant de repousser les pistons,
+        # sinon la membrane peut s'abîmer, puis plaquettes et cale rouge posées avant d'actionner le levier.
+        source = self.atelier_source("controles").section
+        page = un(self.arbre("freins/controles/"), "main.page")
+        for racine in (source, page):
+            blocs = dom.selectionner(racine, "div.q") + dom.selectionner(racine, "details.q")
+            (bloc,) = [q for q in blocs if q.texte().startswith("Pistons collants")]
+            texte = bloc.texte()
+            for attendu in ("entonnoir", "cale"):
+                self.assertIn(attendu, texte)
+            ordre = ["Dépose la roue", "Monte l'entonnoir", "Nettoie", "Repousse", "Retire l'entonnoir", "cale rouge",
+                     "Actionne le levier", "Retire la cale", "remonte la roue"]
+            places = [texte.find(t) for t in ordre]
+            self.assertNotIn(-1, places, dict(zip(ordre, places)))
+            self.assertEqual(places, sorted(places), dict(zip(ordre, places)))
+            hrefs = [a.get("href") for a in dom.selectionner(bloc, "a")]
+            self.assertIn("https://si.shimano.com/fr/dm/GADBR01/adjust_pistons_when_not_operating", hrefs)
+
+    def test_rt_mt800_sous_reserve(self):
+        # Le disque du vélo est RT-MT800 ou RT-CL800, à lire sur la pièce. Sur 2.2 et 2.6, titres des planches et
+        # descriptions des pièces 3D compris, « RT-MT800 » n'apparaît que dans cette réserve, ou pour dire ce que
+        # dessine la vue éclatée EV-BR-RX820-5000C et ce que serre le DM-TORQUE-03.
+        documents = ("RT-MT800 ou RT-CL800", "il dessine le RT-MT800", "DM-TORQUE-03 donne deux options pour le RT-MT800")
+        for chemin in ("freins/disques/", "freins/controles/"):
+            page = un(self.arbre(chemin), "main.page")
+            textes = [e.texte() for s in ("p", "li", "div.q", "figcaption", "title", "text") for e in dom.selectionner(page, s)]
+            textes += [e.get("aria-label") for e in dom.selectionner(page, "[aria-label]")]
+            phrases = [ph for t in textes for ph in re.split(r"(?<=[.!?])\s+", t) if "RT-MT800" in ph]
+            for phrase in phrases:
+                with self.subTest(chemin=chemin, phrase=phrase[:80]):
+                    self.assertTrue(any(d in phrase for d in documents), phrase)
+        titre = un(self.arbre("freins/disques/"), '[id="freins-pl-1-t"]').texte()
+        self.assertIn("disque Deore XT MT800", titre)
+
+    def test_plaquettes_pieces_d_usure(self):
+        # La liste des composants ne nomme pas les plaquettes, mais l'onglet des pièces d'usure de la fiche anglaise
+        # propose des L05A-RF : plus de « Canyon ne nomme pas les plaquettes », et la réserve reste.
+        systeme = self.atelier_source("systeme").section
+        (para,) = [p for p in dom.selectionner(systeme, "p") if "Shimano L05A-RF Organic Brake Pads" in p.texte()]
+        self.assertIn("La liste des composants de Canyon ne nomme pas les plaquettes", para.texte())
+        self.assertEqual([s.texte() for s in dom.selectionner(para, "span.verif")], ["à lire sur la pièce"])
+        self.assertIn("https://www.canyon.com/en-ch/gravel-bikes/adventure/grizl/cf/grizl-cf-8-di2/4556.html",
+                      [a.get("href") for a in dom.selectionner(para, "a")])
+        for slug in SLUGS:
+            self.assertNotRegex(self.html(f"freins/{slug}/"), r"(?<!composants de )Canyon ne nomme pas les plaquettes", slug)
+
+    def test_bague_40_nm_sans_dt_swiss(self):
+        # 40 Nm : DM-TORQUE-03 et la vue éclatée EV-BR-RX820-5000C. Le manuel DT Swiss parle d'une autre pièce.
+        for chemin in ("freins/systeme/", "freins/", "couples/"):
+            with self.subTest(chemin):
+                (tableau,) = dom.selectionner(self.arbre(chemin), '[data-resume="couples"]')
+                lignes = [dom.selectionner(tr, "td") for tr in dom.selectionner(tableau, "tbody > tr")]
+                (ligne,) = [tds for tds in lignes if tds[0].texte().startswith("Bague Center Lock")]
+                self.assertEqual(ligne[1].texte().replace("\xa0", " "), "40 Nm")
+                self.assertEqual([a.texte() for a in dom.selectionner(ligne[2], "a")],
+                                 ["Shimano DM-TORQUE", "Shimano EV-BR-RX820"])
+        for slug in SLUGS:
+            self.assertNotIn("MAN_WXWXXXXXX1610S", self.html(f"freins/{slug}/"), slug)
+        (etape,) = [li for li in dom.selectionner(self.atelier_source("disques").section, "ol.steps > li")
+                    if li.texte().startswith("Serre la bague à 40")]
+        self.assertEqual([a.texte() for a in dom.selectionner(etape, "a")][:2], ["Shimano DM-TORQUE", "Shimano EV-BR-RX820"])
+
+    def test_valeurs_des_gestes(self):
+        # Les couples et les clés des gestes de 2.2, 2.3 et 2.7, d'après le DM-TORQUE-03, le DM-GADBR01-11 et le
+        # DM-GADBR10 relus, et les renvois entre ateliers.
+        def etape(slug, debut):
+            textes = [li.texte().replace("\xa0", " ")
+                      for li in dom.selectionner(self.atelier_source(slug).section, "ol.steps > li")]
+            (texte,) = [t for t in textes if t.startswith(debut)]
+            return texte
+        attendus = [
+            ("disques", "Serre la bague à 40 Nm", ("40 Nm",)),
+            ("plaquettes", "Sors les anciennes plaquettes", ("pied d'atelier", "parallèle au sol")),
+            ("plaquettes", "Monte l'entonnoir sur la manette", ("clé Allen de 2,5 mm", "parallèle au sol",
+                                                                "par exemple l'angle du cintre")),
+            ("plaquettes", "Nettoie et repousse les pistons", ("alcool isopropylique", "nettoyants pour freins")),
+            ("plaquettes", "Retire l'entonnoir et referme la manette",
+             ("0,5-0,7 Nm", "clé Allen de 2,5 mm", "assez plein pour que l'huile déborde")),
+            ("plaquettes", "Monte l'ensemble et serre l'axe", ("1-1,5 Nm", "clé Allen de 3 mm")),
+            ("plaquettes", "Remonte la roue", ("guide Canyon",)),
+            ("purge", "Monte l'entonnoir", ("clé Allen de 2,5 mm",)),
+            ("purge", "Injecte l'huile par l'étrier", ("demi-tour", "clé Allen de 3 mm")),
+            ("purge", "Serre la vis de purge de l'étrier", ("4-6 Nm", "clé Allen de 3 mm")),
+            ("purge", "Referme la manette", ("0,5-0,7 Nm", "clé Allen de 2,5 mm")),
+            ("purge", "Remonte", ("étapes 5 à 9 de 2.3",)),
+        ]
+        for slug, debut, valeurs in attendus:
+            texte = etape(slug, debut)
+            for v in valeurs:
+                with self.subTest(slug=slug, etape=debut, valeur=v):
+                    self.assertIn(v, texte)
+        self.assertIn("Pied d'atelier PCS-10.3", self.atelier_source("plaquettes").outils)
+        # 2.5 : la clé des vis d'étrier, d'après la fiche BR-RX820.
+        self.assertIn("4 mm pour les vis Shimano, à confirmer sur tes vis",
+                      self.atelier_source("centrage").outils[0].replace("\xa0", " "))
+        self.assertIn("clé Allen de 4 mm pour les vis Shimano", etape("centrage", "Libère l'étrier"))
+
+    def test_reserves_du_chapitre(self):
+        # La première fois que le chapitre dit « tes manettes ST-RX825 », la gauche reste à lire sur la pièce ; plus de
+        # renvoi vers un « chapitre 0 » ; le TL-FC36 sur E-THRU vaut pour les moyeux Shimano, pas pour tes DT Swiss 350.
+        texte = " ".join(a.section.texte() for a in self.chapitres["freins"].ateliers)
+        i = texte.index("tes manettes ST-RX825")
+        self.assertTrue(texte[i:].startswith("tes manettes ST-RX825 (la gauche à lire sur la pièce)"), texte[i:i + 80])
+        self.assertNotIn("chapitre 0", texte.lower())
+        disques = self.atelier_source("disques").section.texte()
+        self.assertNotIn("l'outil que tu as", disques)
+        for attendu in ("moyeux Shimano", "DT Swiss 350"):
+            self.assertIn(attendu, disques)
 
     def test_pieces_3d_cf8(self):
         # Les pièces 3D des ateliers 2.2, 2.3 et 2.7, dans le dépôt et telles que les deux cibles les servent : plus de
@@ -732,7 +842,7 @@ class TestAccueil(unittest.TestCase):
         # 2.2 dépose et repose le disque d'origine : seule la pièce de 2.3 se remplace.
         self.assertEqual(len(lignes), 1)
         self.assertEqual(un(lignes[0], ".vers").texte(), "Shimano L05A-RF neuves")
-        self.assertEqual(un(lignes[0], ".de").texte(), "à la place de : Plaquettes d’origine L05A-RF")
+        self.assertEqual(un(lignes[0], ".de").texte(), "à la place de : Plaquettes d’origine, L05A-RF attendues")
         self.assertEqual(un(lignes[0], "a").get("href"), "freins/plaquettes/")
 
     def test_categories(self):
@@ -869,6 +979,41 @@ class TestComposants(unittest.TestCase):
                 self.assertEqual(len(paragraphe), 1)
                 marques = [s.texte() for s in dom.selectionner(paragraphe[0], "span.verif")]
                 self.assertEqual(marques, ["à lire sur la pièce"])
+
+    def test_pieces_d_usure(self):
+        # Relu le 24 octobre 2026 : l'onglet « Wear parts » de la fiche anglaise propose des plaquettes L05A-RF, la chaîne
+        # CN-M8100 de 138 maillons, son attache SM-CN910 et le boîtier SM-BB72-41B. Les noms sont recopiés tels quels, sans
+        # les prix, dans la fiche et dans le relevé des sources. La réserve « à lire sur la pièce » reste, et l'écart
+        # avec l'ancienne formulation est noté dans les contradictions, comme celui des valves.
+        noms = ["Pirelli Cinturato Gravel H 45-622 Tubeless Tyre", "Shimano GRX RX820 1x 12-Speed Chainring",
+                "Shimano Ultegra RT-CL800 Brake Rotor", "Pirelli Cinturato SmarTUBE 33/45-622 60mm TPU Tube",
+                "Shimano SM-CN910 12-speed Quick-Link Chain Connector",
+                "Shimano L05A-RF Organic Brake Pads for Deore XT, SLX, GRX, Ultegra & 105", "Shimano EC-DN100 Di2 Charger",
+                "Shimano XT M8200 12-speed Cassette", "Shimano Di2 BT-DN320 Battery", "Shimano CN-M8100 12-speed Chain 138 Links",
+                "Shimano SM-BB72-41B II Press-Fit Bottom Bracket"]
+        sources = (RACINE / "docs" / "recherche" / "sources-cf8-di2.md").read_text(encoding="utf-8")
+        contradictions = {li.texte().split(".")[0]: li.texte()
+                          for li in dom.selectionner(un(self.racine, '[id="composants-contradictions"]'), "li")}
+        for nom in noms:
+            self.assertIn(nom, contradictions["Pièces d'usure"])
+            self.assertIn(nom, sources)
+        for texte in (MD, self.racine.texte(), sources):
+            for absent in ("CHF", "supposé", "ne nomme ni les étriers ni les plaquettes", "Canyon ne les nomme pas"):
+                self.assertNotIn(absent, texte)
+        freins = un(self.racine, '[id="composants-freins"]')
+        (plaquettes,) = [p for p in dom.selectionner(freins, "p") if p.texte().startswith("Plaquettes.")]
+        self.assertIn("« Shimano L05A-RF Organic Brake Pads for Deore XT, SLX, GRX, Ultegra & 105 »", plaquettes.texte())
+        self.assertEqual([s.texte() for s in dom.selectionner(plaquettes, "span.verif")], ["à lire sur la pièce"])
+        ecart = contradictions["Plaquettes, chaîne et boîtier"]
+        for attendu in ("23 octobre 2026", "24 octobre 2026", "CN-M8100", "SM-BB72-41B", "L05A-RF", "à lire sur la pièce"):
+            self.assertIn(attendu, ecart)
+        valves = contradictions["Valves tubeless"]
+        for attendu in ("chat Canyon", "« Delivered with tubeless valve »"):
+            self.assertIn(attendu, valves)
+        a_lire = [li.texte() for li in dom.selectionner(un(self.racine, '[id="composants-a-lire"]'), "li")]
+        self.assertIn("La chaîne : référence, nombre de maillons et attache QUICK-LINK. Canyon propose en pièces d'usure la "
+                      "CN-M8100 de 138 maillons et l'attache SM-CN910.", a_lire)
+        self.assertIn("Le boîtier : référence exacte. Canyon propose en pièce d'usure le SM-BB72-41B II.", a_lire)
 
     def test_statut_rt_mt800(self):
         # Contradiction n° 6 de la recherche : RT-MT800 marqué discon dans C-461 et absent de productinfo, mais fiche

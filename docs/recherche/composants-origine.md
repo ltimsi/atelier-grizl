@@ -33,6 +33,8 @@ La liste française ne donne pas la plage de la cassette. La [fiche anglaise du 
 
 L'accumulateur se loge dans le dérailleur arrière. La [fiche Shimano du RD-M8250-GS](https://productinfo.shimano.com/en/product/RD-M8250-GS) (`shimano-rd-m8250-gs`) indique « Built-in battery ». Celle du [BT-DN320](https://productinfo.shimano.com/en/product/BT-DN320) (`shimano-bt-dn320`) donne son chargeur, le « EC-DN100 », livré avec le vélo.
 
+La liste nomme la chaîne « Shimano XT » et le boîtier « Shimano Pressfit BB72 », sans référence complète. L'onglet « Wear parts » de la [fiche anglaise](https://www.canyon.com/en-ch/gravel-bikes/adventure/grizl/cf/grizl-cf-8-di2/4556.html) (`canyon-4556-en`) propose la « Shimano CN-M8100 12-speed Chain 138 Links », l'attache « Shimano SM-CN910 12-speed Quick-Link Chain Connector » et le « Shimano SM-BB72-41B II Press-Fit Bottom Bracket ». Une pièce d'usure proposée ne prouve pas la pièce montée : références à lire sur la pièce.
+
 ## Freins
 
 | Pièce | Référence | Caractéristiques |
@@ -41,11 +43,13 @@ L'accumulateur se loge dans le dérailleur arrière. La [fiche Shimano du RD-M82
 | Levier de frein/dérailleur | Shimano GRX ST-RX825 | 2 pistons ; 390 g |
 | Disque de frein | Shimano Deore XT MT800 | 116 g ; diamètre 160 / 160 |
 
-**Étriers.** La fiche ne nomme ni les étriers ni les plaquettes. Shimano recommande l'étrier BR-RX820 pour la ST-RX825 : « Recommended brake caliper BR-RX820 », sur la [fiche de la ST-RX825-R](https://productinfo.shimano.com/en/product/ST-RX825-R) (`shimano-st-rx825`). Sur la [photo officielle du vélo](https://dma.canyon.com/image/upload/w_2400,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1785934014/2027_FULL_grizl_cf-8-di2_4556_R126_P06_vpvgno) (`canyon-photo-4556-fv`), la référence de l'étrier avant commence par « BR-RX8 » ; la fin est floue. Modèle monté : à lire sur la pièce.
+**Étriers.** La liste des composants ne nomme pas les étriers. Shimano recommande l'étrier BR-RX820 pour la ST-RX825 : « Recommended brake caliper BR-RX820 », sur la [fiche de la ST-RX825-R](https://productinfo.shimano.com/en/product/ST-RX825-R) (`shimano-st-rx825`). Sur la [photo officielle du vélo](https://dma.canyon.com/image/upload/w_2400,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1785934014/2027_FULL_grizl_cf-8-di2_4556_R126_P06_vpvgno) (`canyon-photo-4556-fv`), la référence de l'étrier avant commence par « BR-RX8 » ; la fin est floue. Modèle monté : à lire sur la pièce.
 
 **Manette gauche.** La fiche écrit « Shimano GRX ST-RX825 », sans « Di2 ». Pour la gauche, la [gamme Shimano GRX RX820 1x12 Di2](https://productinfo.shimano.com/en/lineup/rx820-1x12-di2) (`shimano-gamme-rx820-1x12-di2`) propose la ST-RX825-L, avec ses boutons de vitesses, ou le BL-RX825-L, un levier de frein seul. Variante montée : à lire sur la pièce.
 
 **Disques.** La fiche dit « Shimano Deore XT MT800 ». Shimano recommande pourtant le RT-CL800 avec l'étrier qu'il associe à la ST-RX825 (voir les contradictions). Modèle exact, RT-MT800 ou RT-CL800 : à lire sur la pièce.
+
+**Plaquettes.** La liste des composants ne nomme pas les plaquettes. L'onglet « Wear parts » de la [fiche anglaise](https://www.canyon.com/en-ch/gravel-bikes/adventure/grizl/cf/grizl-cf-8-di2/4556.html) (`canyon-4556-en`) propose les « Shimano L05A-RF Organic Brake Pads for Deore XT, SLX, GRX, Ultegra & 105 ». Comme pour le disque, une pièce d'usure proposée ne prouve pas la pièce montée. Plaquettes d'origine : à lire sur la pièce.
 
 ## Roues et pneus
 
@@ -116,6 +120,9 @@ Relevés le 23 octobre 2026. Les documents suivis d'un identifiant entre parenth
 - **Poids.** Dérailleur : 450 g pour Canyon, 446 g sur la [fiche Shimano du RD-M8250-GS](https://productinfo.shimano.com/en/product/RD-M8250-GS) (`shimano-rd-m8250-gs`). Boîtier : 65 g pour Canyon, 69 g sur la [fiche Shimano du SM-BB72-41B](https://productinfo.shimano.com/en/product/SM-BB72-41B) (`shimano-sm-bb72-41b`), le boîtier de la gamme GRX RX820 1x12 Di2. Roues : 735 g et 878 g sur la fiche du vélo, 715 g et 810 g pour la [paire vendue seule](https://www.canyon.com/en-de/gear/bike-parts/tyres-and-tubes/wheels/canyon-gr-30-cf-wheelset/10014610.html) (`canyon-gr30cf`).
 - **Patte de dérailleur.** La liste des composants ne parle pas de patte UDH, la patte universelle de SRAM. Seul l'onglet « Spare parts » de la [fiche anglaise](https://www.canyon.com/en-ch/gravel-bikes/adventure/grizl/cf/grizl-cf-8-di2/4556.html) (`canyon-4556-en`) la liste : « SRAM UDH Derailleur Hanger ». La [fiche Shimano du RD-M8250-GS](https://productinfo.shimano.com/en/product/RD-M8250-GS) (`shimano-rd-m8250-gs`) l'accepte : « UDH standard ». Présence sur le vélo : à lire sur la pièce.
 - **Pédales.** La [photo officielle du vélo](https://dma.canyon.com/image/upload/w_2400,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1785934014/2027_FULL_grizl_cf-8-di2_4556_R126_P06_vpvgno) (`canyon-photo-4556-fv`) montre une pédale automatique Shimano marquée « XT ». La fiche dit « Pédales : Non inclus ».
+- **Pièces d'usure.** Relu le 24 octobre 2026, l'onglet « Spare parts », puis « Wear parts », de la [fiche anglaise](https://www.canyon.com/en-ch/gravel-bikes/adventure/grizl/cf/grizl-cf-8-di2/4556.html) (`canyon-4556-en`) propose : « Pirelli Cinturato Gravel H 45-622 Tubeless Tyre », « Shimano GRX RX820 1x 12-Speed Chainring », « Shimano Ultegra RT-CL800 Brake Rotor », « Pirelli Cinturato SmarTUBE 33/45-622 60mm TPU Tube », « Shimano SM-CN910 12-speed Quick-Link Chain Connector », « Shimano L05A-RF Organic Brake Pads for Deore XT, SLX, GRX, Ultegra & 105 », « Shimano EC-DN100 Di2 Charger », « Shimano XT M8200 12-speed Cassette », « Shimano Di2 BT-DN320 Battery », « Shimano CN-M8100 12-speed Chain 138 Links » et « Shimano SM-BB72-41B II Press-Fit Bottom Bracket ». Une pièce d'usure proposée ne prouve pas la pièce montée.
+- **Plaquettes, chaîne et boîtier.** Le relevé du 23 octobre 2026 disait que Canyon ne nomme pas les plaquettes, et ne tirait la chaîne CN-M8100 et le boîtier SM-BB72-41B que de la [gamme Shimano GRX RX820 1x12 Di2](https://productinfo.shimano.com/en/lineup/rx820-1x12-di2) (`shimano-gamme-rx820-1x12-di2`). Relu le 24 octobre 2026, l'onglet « Wear parts » de la [fiche anglaise](https://www.canyon.com/en-ch/gravel-bikes/adventure/grizl/cf/grizl-cf-8-di2/4556.html) (`canyon-4556-en`) propose des plaquettes L05A-RF, une chaîne CN-M8100 de 138 maillons avec son attache SM-CN910, et un boîtier SM-BB72-41B II. La liste des composants, elle, ne nomme pas les plaquettes et dit seulement « Shimano XT » pour la chaîne et « Shimano Pressfit BB72 » pour le boîtier. Pièces montées : à lire sur la pièce.
+- **Valves tubeless.** Le chat Canyon t'a dit que les valves ne sont pas fournies. La [page de la paire GR 30 CF](https://www.canyon.com/en-de/gear/bike-parts/tyres-and-tubes/wheels/canyon-gr-30-cf-wheelset/10014610.html) (`canyon-gr30cf`), vendue seule, dit « Delivered with tubeless valve ». Valves dans le carton : à vérifier à la livraison.
 
 ## À lire sur le vélo à la livraison
 
@@ -123,14 +130,14 @@ Ce que les documents ne disent pas, ou disent de deux façons. À vérifier piè
 
 - Le modèle gravé sur chaque étrier, BR-RX820 attendu, et le type de vis de purge.
 - La manette gauche : ST-RX825-L, avec boutons, ou BL-RX825-L, levier seul.
-- Les plaquettes d'origine : L05A-RF attendues (K05S-RX ou autre possibles), et leur épaisseur neuve.
+- Les plaquettes d'origine : L05A-RF attendues, celles que Canyon propose en pièces d'usure (K05S-RX ou autre possibles), et leur épaisseur neuve.
 - Les disques : référence exacte (RT-MT800 ou RT-CL800), type de bague (denture intérieure, outil TL-LR15, ou extérieure, outil TL-FC36) et épaisseur neuve.
 - Le corps de roue libre de la roue arrière (Micro Spline, pour le pignon de 9 dents) et la pression maximale imprimée sur la jante.
 - Les valves tubeless : présentes ou non dans le carton.
 - Le pneu : version exacte, gomme et code de sculpture, sur le flanc.
 - La patte de dérailleur UDH : présence et état.
-- La chaîne : référence (CN-M8100 supposée), nombre de maillons et attache QUICK-LINK.
-- Le boîtier : référence exacte (SM-BB72-41B supposée).
+- La chaîne : référence, nombre de maillons et attache QUICK-LINK. Canyon propose en pièces d'usure la CN-M8100 de 138 maillons et l'attache SM-CN910.
+- Le boîtier : référence exacte. Canyon propose en pièce d'usure le SM-BB72-41B II.
 - L'accumulateur BT-DN320, dans le dérailleur : état de charge à la réception. Les piles CR1632 des manettes, que Shimano livre « intended only for test purposes ».
 - La tige : marquage « VCLS 2.1 CF » et « SETBACK 18 / 6 mm », position de la tête FLIP HEAD, couple des vis de tête (non publié) et débattement (non publié pour la 2.1).
 - Les cotes de la cocotte ST-RX825, non publiées, pour la 3D.

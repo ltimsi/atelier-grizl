@@ -112,7 +112,7 @@ Durite : https://si.shimano.com/en/dm/GADBR10/install_brake_hose_RA : « Use the
   - Matières : L03A-RF, L05A-RF, K03S-RX, K05S-RX = « Resin » ; L04C-MF = « Metal ».
 - Fiche BR-RX820, https://productinfo.shimano.com/en/product/BR-RX820 : « Pad Standard 1 K05S-RX Resin (w/o fin) », « Standard 2 L05A-RF Resin (w/ fin) », « Option 1 L04C-MF Metal (w/ fin) ». (La fiche ne cite pas les « 03 » que C-192 classe aussi en Standard.)
 - Vue éclatée EV-BR-RX820-5000C (https://si.shimano.com/en/pdfs/ev/BR-RX820-5000/EV-BR-RX820-5000C.pdf, « Mar.-2025-5000C ») : « L05A-RF Resin pad with fin and spring (pair) » (Y2EM98010 / EBPL05ARFA), « L04C Metal pad with fin and spring (pair) » (Y8N398040 / IBPL04CMFA), « K05S-RX Resin pad and spring (pair) » (Y2GM98030 / EBPK05SRXA).
-- Conclusion : L05A-RF = plaquette d'origine possible (Standard) ; L04C-MF = option métal officielle sur BR-RX820. Les plaquettes réellement montées : **à lire sur la pièce** (Canyon ne les nomme pas).
+- Conclusion : L05A-RF = plaquette d'origine possible (Standard) ; L04C-MF = option métal officielle sur BR-RX820. Les plaquettes réellement montées : **à lire sur la pièce**. La liste des composants du vélo ne les nomme pas ; l'onglet « Wear parts » de la fiche anglaise propose des L05A-RF (§ 8).
 
 ### 2.2 Disque « Deore XT MT800 » 160 mm
 
@@ -163,12 +163,12 @@ Remarque générale : la lineup Shimano GRX « 1x12-speed, Di2 » (https://produ
 
 - Lineup 1x12 Di2 : « Bottom Bracket SM-BB72-41B Press-Fit type ».
 - Fiche, https://productinfo.shimano.com/en/product/SM-BB72-41B : « HOLLOWTECH II bottom bracket ... Press-Fit type ✔ » ; « Press-Fit bottom bracket shell width (mm) 86.5 ✔ » ; « Small ball bearing ✔ » ; « Adapter Material Resin » ; « Average weight (g) 69 ».
-- Canyon : « Shimano Pressfit BB72 ; PF 86,5 ; 65 g ». Référence exacte (SM-BB72-41B ?) non donnée par Canyon : **à lire sur la pièce**. Poids : 65 g (Canyon) contre 69 g (Shimano).
+- Canyon : « Shimano Pressfit BB72 ; PF 86,5 ; 65 g ». La liste des composants ne donne pas la référence exacte. L'onglet « Wear parts » du vélo propose le « Shimano SM-BB72-41B II Press-Fit Bottom Bracket » (§ 8). Une pièce d'usure proposée ne prouve pas la pièce montée : **à lire sur la pièce**. Poids : 65 g (Canyon) contre 69 g (Shimano).
 - DM-GAFC001-06, https://si.shimano.com/en/dm/GAFC001/install_remove_bottom_bracket : « Use a bottom bracket compatible with a shell width of 86.5 mm. » ; « Press-fit until there is no more gap between the bottom bracket and the bottom bracket shell. » ; dépose : « Do not reuse the cups as they can be damaged during removal. » (Pas de couple pour le press-fit.)
 
 ### 3.5 Chaîne CN-M8100
 
-- Canyon dit seulement « Shimano XT ». La lineup 1x12 Di2 cite « CN-M8100 HG 12-speed QUICK-LINK SM-CN910-12 ». Que la chaîne montée soit une CN-M8100 est une **déduction** : **à lire sur la chaîne**.
+- La liste des composants de Canyon dit seulement « Shimano XT ». La lineup 1x12 Di2 cite « CN-M8100 HG 12-speed QUICK-LINK SM-CN910-12 ». L'onglet « Wear parts » du vélo propose la « Shimano CN-M8100 12-speed Chain 138 Links » et l'attache « Shimano SM-CN910 12-speed Quick-Link Chain Connector » (§ 8). Ce n'est donc plus une simple déduction, mais une pièce d'usure proposée ne prouve pas la pièce montée : **à lire sur la chaîne**.
 - Fiche, https://productinfo.shimano.com/en/product/CN-M8100 : « Type HG 12-speed » ; « Pin link plate Gray » ; « Roller link plate Chromizing » ; « Average weight (g) (114 links) 252 » ; « Note QUICK-LINK ».
 - DM : **DM-MACN001-08** « Chain (12-speed) », https://si.shimano.com/en/dm/MACN001 ; PDF https://si.shimano.com/en/pdfs/dm/MACN001/DM-MACN001-08-ENG.pdf. UM : « Chain (0AH0A) », https://si.shimano.com/en/um/0AH0A.
 
@@ -269,6 +269,23 @@ Images du carrousel de la fiche https://www.canyon.com/en-ch/gravel-bikes/advent
 - **Cheminement des durites** (vue complète et TOP-2) : les durites passent sous le ruban, en sortent près du collier de potence et plongent dans le haut de la direction, derrière la potence. Aucune durite visible sur le cadre ni sur le fourreau côté transmission. Étrier avant noir (flat mount) derrière le fourreau gauche, marqué « SHIMANO » et d'une référence qui commence par « BR-RX8 », suivie de « JAPAN ». La fin de la référence est floue : **lecture non certaine**. L'étrier arrière se devine derrière la cassette, sans détail lisible.
 - **Batterie ou jonction visible** : aucune boîte de jonction, aucun fil électrique, aucun port de charge visible sur le cadre, la potence ou le cintre.
 
+## 8. Pièces d'usure de la fiche Canyon (relu le 24/10/2026)
+
+- Fiche du vélo, https://www.canyon.com/en-ch/gravel-bikes/adventure/grizl/cf/grizl-cf-8-di2/4556.html, section « Components », lien « All components », onglet « Spare parts », puis sous-onglet « Wear parts », lu le 24/10/2026. Onze pièces, noms recopiés tels quels, sans les prix :
+  1. « Pirelli Cinturato Gravel H 45-622 Tubeless Tyre »
+  2. « Shimano GRX RX820 1x 12-Speed Chainring »
+  3. « Shimano Ultegra RT-CL800 Brake Rotor »
+  4. « Pirelli Cinturato SmarTUBE 33/45-622 60mm TPU Tube »
+  5. « Shimano SM-CN910 12-speed Quick-Link Chain Connector »
+  6. « Shimano L05A-RF Organic Brake Pads for Deore XT, SLX, GRX, Ultegra & 105 »
+  7. « Shimano EC-DN100 Di2 Charger »
+  8. « Shimano XT M8200 12-speed Cassette »
+  9. « Shimano Di2 BT-DN320 Battery »
+  10. « Shimano CN-M8100 12-speed Chain 138 Links »
+  11. « Shimano SM-BB72-41B II Press-Fit Bottom Bracket »
+- Ce que l'onglet apporte : des plaquettes L05A-RF (que la liste des composants ne nomme pas), la chaîne CN-M8100 de 138 maillons et son attache SM-CN910 (la liste dit seulement « Shimano XT »), le boîtier SM-BB72-41B II (la liste dit « Shimano Pressfit BB72 »). Le disque RT-CL800 et le pneu Pirelli y étaient déjà relevés (§ 2.2, § 5.2).
+- Une pièce d'usure proposée ne prouve pas la pièce montée : plaquettes, chaîne, attache et boîtier restent **à lire sur la pièce**.
+
 ## Contradictions et inconnues
 
 ### Contradictions entre documents
@@ -287,18 +304,20 @@ Images du carrousel de la fiche https://www.canyon.com/en-ch/gravel-bikes/advent
 12. **Groupe** : la fiche Canyon annonce « Shimano GRX Di2 electronic shifting », alors que le dérailleur (RD-M8250-GS) et la cassette (CS-M8200-12) sont des Deore XT VTT. Shimano associe à ST-RX825 le RD-RX827-SGS et la CS-M8200-12 en 10-51T.
 13. **Pédales** : la photo officielle montre une pédale Shimano « XT » ; la liste dit « Pédales : Non inclus ».
 14. **Fizik** : « Argo Terra X5 » (Canyon) contre « TERRA ARGO X5 » (fizik).
+15. **Plaquettes, chaîne et boîtier** : ce relevé disait, le 23/10/2026, que Canyon ne nomme pas les plaquettes, et ne tirait la chaîne CN-M8100 et le boîtier SM-BB72-41B que de la lineup 1x12 Di2. Relu le 24/10/2026, l'onglet « Wear parts » du vélo propose les L05A-RF, la CN-M8100 de 138 maillons, l'attache SM-CN910 et le SM-BB72-41B II (§ 8). La liste des composants ne nomme toujours pas les plaquettes, et dit seulement « Shimano XT » pour la chaîne. La conception du passage au CF 8 Di2 donnait déjà les L05A-RF « d'après Lamine et la liste de pièces Canyon ». Pièces montées : **à lire sur la pièce**.
+16. **Valves tubeless** : la conception dit « valves non fournies d'après le chat Canyon » ; la page de la paire GR 30 CF dit « Delivered with tubeless valve » (§ 5.1). Présence dans le carton : **à vérifier à la livraison**.
 
 ### À lire sur le vélo à la livraison
 
 - Modèle gravé sur chaque **étrier** (photo : « BR-RX8… » flou ; Shimano recommande BR-RX820) et type de **vis de purge** (clé de 3 mm attendue d'après le DM-GADBR10).
 - **Manette gauche** : ST-RX825-L (avec boutons) ou BL-RX825-L (levier seul) ? Canyon écrit « Shimano GRX ST-RX825 » sans « Di2 ».
-- **Plaquettes** d'origine (L05A-RF, K05S-RX ou autre) et leur épaisseur neuve.
+- **Plaquettes** d'origine (L05A-RF, proposées en pièces d'usure par Canyon ; K05S-RX ou autre possibles) et leur épaisseur neuve.
 - **Disques** : référence exacte (RT-MT800 ou RT-CL800), type de bague (denture intérieure, outil TL-LR15, ou extérieure, outil TL-FC36), épaisseur neuve.
 - **Corps de roue libre** de la roue arrière (Micro Spline, compatible 9T) et **pression maximale imprimée sur la jante** (bloc illisible sur la photo).
 - **Pneu** : version exacte sur le flanc (photo : « SCHWALBE G-ONE RX TLR », puis « 45-622 ») ; gomme et code HS.
 - **Patte UDH** : présence et état (Canyon la liste comme pièce de rechange de ce cadre R126-01 2027).
-- **Chaîne** : référence (CN-M8100 supposée) et nombre de maillons ; attache QUICK-LINK.
-- **Boîtier** : référence exacte (SM-BB72-41B supposée).
+- **Chaîne** : référence et nombre de maillons (Canyon propose en pièces d'usure la CN-M8100 de 138 maillons) ; attache QUICK-LINK (SM-CN910 proposée).
+- **Boîtier** : référence exacte (Canyon propose en pièce d'usure le SM-BB72-41B II).
 - **Batterie BT-DN320** dans le dérailleur : état de charge à la réception ; piles CR1632 des manettes (« intended only for test purposes » selon Shimano).
 - **Tige** : marquage « VCLS 2.1 CF » et « SETBACK 18 / 6 mm » ; position de la tête FLIP HEAD montée ; couple des vis de tête (non publié) ; débattement (non publié pour la 2.1).
 - **Cocotte ST-RX825** : dimensions (non publiées) pour la 3D.
