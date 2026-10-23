@@ -378,7 +378,7 @@ class TestPages(Site):
         self.assertEqual(sorted(noms), sorted(set(tous)))
         self.assertEqual(len(noms), len(set(noms)))
         par_nom = dict(zip(noms, lignes))
-        tl_fc36 = [a.get("href") for a in dom.selectionner(par_nom["Outil Center Lock TL-FC36 (denture extérieure)"], "a")]
+        tl_fc36 = [a.get("href") for a in dom.selectionner(par_nom["Outil Center Lock selon ta bague\u00a0: TL-FC36 (denture extérieure)"], "a")]
         self.assertEqual(tl_fc36, ["../freins/disques/"])
         cle_3 = [a.texte() for a in dom.selectionner(par_nom["Clé Allen 3\u00a0mm"], "a")]
         self.assertEqual(cle_3, ["2.3 Changer les plaquettes", "2.7 Purger les freins"])
@@ -575,7 +575,7 @@ class TestRecherche(Site):
         for entree in index:
             self.assertEqual(sorted(entree), ["k", "t", "u"], entree)
         self.assertIn({"k": "Atelier 2.3", "t": "Changer les plaquettes", "u": "freins/plaquettes/"}, index)
-        self.assertIn({"k": "Outil · 2.2", "t": "Outil Center Lock TL-FC36 (denture extérieure)", "u": "freins/disques/"},
+        self.assertIn({"k": "Outil · 2.2", "t": "Outil Center Lock selon ta bague\u00a0: TL-FC36 (denture extérieure)", "u": "freins/disques/"},
                       index)
         self.assertIn({"k": "Étape · 2.3", "t": "Sors les anciennes plaquettes", "u": "freins/plaquettes/"}, index)
         self.assertIn({"k": "Catégorie", "t": "Freins", "u": "freins/"}, index)

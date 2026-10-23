@@ -294,6 +294,21 @@ class Ateliers(unittest.TestCase):
             for cote in self.cols[slug]:
                 self.assertEqual(dom.selectionner(dom.analyser(cote), "[hidden]"), [], slug)
 
+    def test_purge_criteres_dm_gadbr10(self):
+        # Les interdits et les conditions d'arrêt de la purge du DM-GADBR10 : pas de levier pendant le remplissage
+        # (sinon vidange), injecter jusqu'à ne plus voir de bulles, réservoir assez plein pour déborder à la fermeture.
+        corps = {dom.selectionner(li, "p.st-t")[0].texte(): li.texte()
+                 for li in dom.selectionner(self.atelier["purge"].section, "ol.steps > li")}
+        for attendu in ("ne serre pas le levier", "vidange l'huile", "n'ait plus de bulles d'air", "DM-GADBR10"):
+            self.assertIn(attendu, corps["Injecte l'huile par l'étrier"])
+        for attendu in ("sans serrer le levier", "n'ait plus de bulles d'air"):
+            self.assertIn(attendu, corps["Injecte à nouveau"])
+        for attendu in ("déborde quand tu serres la vis de purge", "joint torique vers le bas", "chiffon propre",
+                        "alcool isopropylique"):
+            self.assertIn(attendu, corps["Referme la manette"])
+        self.assertIn("angle du cintre", corps["Incline l'entonnoir à 20°"])
+        self.assertIn("sans les faire tomber", corps["Monte l'entonnoir"])
+
     def test_h3_hors_colonnes(self):
         for slug in SLUGS:
             for cote in self.cols[slug]:
