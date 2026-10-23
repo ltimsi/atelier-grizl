@@ -59,20 +59,20 @@ class Ateliers(unittest.TestCase):
 
         p = self.atelier["plaquettes"]
         self.assertEqual((p.num, p.titre, p.type, p.zone), ("2.3", "Changer les plaquettes", "remplacer", "etrier"))
-        self.assertEqual((p.de, p.vers), ("Plaquettes d’origine", "Shimano L04C-MF"))
+        self.assertEqual((p.de, p.vers), ("Plaquettes d’origine L05A-RF", "Shimano L05A-RF neuves"))
         self.assertEqual(p.demonter, "La roue.")
         self.assertEqual(len(p.outils), 9)
-        self.assertEqual(p.outils[0], "Plaquettes L04C-MF, une paire par frein")
+        self.assertEqual(p.outils[0], "Plaquettes Shimano L05A-RF neuves, une paire par frein")
         self.assertEqual(len(p.etapes), 10)
         self.assertEqual(p.etapes[0].titre, "Sors les anciennes plaquettes")
         self.assertEqual(p.etapes[0].couples, [])
         self.assertEqual(p.etapes[5].titre, "Monte l'ensemble et serre l'axe")
-        self.assertEqual(p.etapes[5].couples, [f"1-1,5{NBSP}Nm", f"0,2-0,4{NBSP}Nm"])
+        self.assertEqual(p.etapes[5].couples, [f"1-1,5{NBSP}Nm"])
         self.assertEqual(p.modeles, ["caliper"])
         self.assertEqual(p.blocs, [])
         self.assertEqual((p.section.get("id"), p.section.parent.get("id")), ("freins-plaquettes", "freins"))
 
-        self.assertEqual(len(self.atelier["purge"].etapes), 11)
+        self.assertEqual(len(self.atelier["purge"].etapes), 15)
         self.assertEqual(self.atelier["purge"].modeles, ["bleed"])
         systeme = self.atelier["systeme"]
         self.assertEqual((systeme.num, systeme.type, systeme.zone), ("2.1", "comprendre", "manettes"))
@@ -130,18 +130,18 @@ class Ateliers(unittest.TestCase):
                 self.assertTrue(corps.texte())
         self.assertEqual(dom.selectionner(g, "p.st-t"), [])
 
-        # Étape 6 : le premier couple sur la ligne du résumé ; le corps garde ses deux couples.
+        # Étape 6 : le couple sur la ligne du résumé, et dans le corps.
         summary, corps = elements(elements(etapes[5])[0])
         self.assertEqual(elements(summary)[1].texte(), "Monte l'ensemble et serre l'axe")
         self.assertEqual(elements(summary)[2].texte(), f"1-1,5{NBSP}Nm")
-        self.assertEqual([nm.texte() for nm in dom.selectionner(corps, "span.nm")], [f"1-1,5{NBSP}Nm", f"0,2-0,4{NBSP}Nm"])
+        self.assertEqual([nm.texte() for nm in dom.selectionner(corps, "span.nm")], [f"1-1,5{NBSP}Nm"])
         self.assertEqual(len(elements(elements(elements(etapes[0])[0])[0])), 2)
 
-        # Purge : ses 11 étapes restent dans le <details> du source, chacune repliée à son tour.
+        # Purge : ses 15 étapes restent dans le <details> du source, chacune repliée à son tour.
         g = self.gauche("purge")
-        (dehors,) = [d for d in dom.selectionner(g, "details") if elements(d)[0].texte() == "Les 11 étapes de la purge Shimano"]
-        self.assertEqual(len(dom.selectionner(dehors, "li.step")), 11)
-        self.assertEqual(len(dom.selectionner(g, "li.step")), 11)
+        (dehors,) = [d for d in dom.selectionner(g, "details") if elements(d)[0].texte() == "La purge du DM-GADBR10, en 15 étapes"]
+        self.assertEqual(len(dom.selectionner(dehors, "li.step")), 15)
+        self.assertEqual(len(dom.selectionner(g, "li.step")), 15)
 
     def test_blocs_comprendre(self):
         # 2.6 : les 7 questions de div.flow, puis un seul bloc, celui de la liste à cocher.
@@ -173,16 +173,16 @@ class Ateliers(unittest.TestCase):
         self.assertEqual([e.texte() for e in elements(g) if e.tag == "h4"], ["Vidéos"])
         self.assertEqual(self.atelier["controles"].blocs, [elements(d)[0].texte() for d in qs] + ["Après un chantier de freins"])
 
-        # 2.1 : cinq blocs, le premier ouvert ; les trois questions de l'étrier sont dans le deuxième.
-        titres = ["Les manettes", "L'étrier, à identifier", "La fixation flat mount", "Les plaquettes",
+        # 2.1 : six blocs, le premier ouvert. L'étrier attendu est le seul BR-RX820 : plus de questions à déplier.
+        titres = ["Les manettes", "L'étrier, à identifier", "La fixation flat mount", "Les disques", "Les plaquettes",
                   "Les couples de tes freins"]
         g = self.gauche("systeme")
         blocs = dom.selectionner(g, "details.bloc")
         self.assertEqual([elements(b)[0].texte() for b in blocs], titres)
-        self.assertEqual([a_attribut(b, "open") for b in blocs], [True, False, False, False, False])
-        self.assertEqual(len(dom.selectionner(blocs[1], "details.q")), 3)
-        self.assertEqual(len(dom.selectionner(blocs[4], '[data-resume="couples"]')), 1)
-        self.assertEqual(len(dom.selectionner(blocs[4], '[data-resume="ordre"]')), 1)
+        self.assertEqual([a_attribut(b, "open") for b in blocs], [True, False, False, False, False, False])
+        self.assertEqual(dom.selectionner(g, "details.q"), [])
+        self.assertEqual(len(dom.selectionner(blocs[5], '[data-resume="couples"]')), 1)
+        self.assertEqual(len(dom.selectionner(blocs[5], '[data-resume="ordre"]')), 1)
         self.assertEqual(self.atelier["systeme"].blocs, titres)
         intro = elements(g)[0]
         self.assertEqual(intro.tag, "p")
@@ -234,7 +234,7 @@ class Ateliers(unittest.TestCase):
         self.assertTrue(lignes[0].texte().startswith("Étape 4 · Retire l'entonnoir et referme la manette"))
         self.assertTrue(lignes[1].texte().startswith("Étape 6 · Monte l'ensemble et serre l'axe"))
         self.assertEqual([[nm.texte() for nm in dom.selectionner(l, "span.nm")] for l in lignes],
-                         [[f"0,5-0,7{NBSP}Nm"], [f"1-1,5{NBSP}Nm", f"0,2-0,4{NBSP}Nm"]])
+                         [[f"0,5-0,7{NBSP}Nm"], [f"1-1,5{NBSP}Nm"]])
 
         self.assertEqual(titre_video.texte(), "Vidéo")
         self.assertEqual(len(dom.selectionner(video, "li")), 1)
@@ -256,7 +256,8 @@ class Ateliers(unittest.TestCase):
         # Ids uniques sur tout le site : ceux des cases du kit portent l'id de leur atelier.
         ids = [e.get("id") for s in SLUGS for cote in self.cols[s] for e in dom.selectionner(dom.analyser(cote), "[id]")]
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertIn("ck-freins-disques-kit-10", ids)
+        self.assertIn("ck-freins-disques-kit-9", ids)
+        self.assertNotIn("ck-freins-disques-kit-10", ids)
         self.assertIn("ck-freins-apres-1", ids)
 
     def test_figures_inegales(self):

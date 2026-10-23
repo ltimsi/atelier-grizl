@@ -132,17 +132,19 @@ class TestPages(Site):
         precsuiv = un(racine, "nav.precsuiv")
         self.assertEqual([(a.get("class"), a.get("href")) for a in dom.selectionner(precsuiv, "a")],
                          [("prec", "../disques/"), ("suiv", "../rodage/")])
-        self.assertIn("2.2 Remplacer les disques par des XT", precsuiv.texte())
+        self.assertIn("2.2 Déposer et reposer un disque", precsuiv.texte())
         self.assertIn("2.4 Roder les freins", precsuiv.texte())
 
         article = un(racine, "article.atelier")
         self.assertEqual([article.get(n) for n in ("id", "data-zone", "data-type", "data-de", "data-vers")],
-                         ["freins-plaquettes", "etrier", "remplacer", "Plaquettes d’origine", "Shimano L04C-MF"])
+                         ["freins-plaquettes", "etrier", "remplacer", "Plaquettes d’origine L05A-RF",
+                          "Shimano L05A-RF neuves"])
         tete = un(article, "header.atelier-tete")
         self.assertEqual(un(tete, "p.atelier-num").texte(), "Atelier 2.3 · Zone 2, Étrier et plaquettes")
         self.assertEqual([p.texte() for p in dom.selectionner(tete, "span.pill")],
                          ["Remplacer", "10 étapes", "À démonter : La roue."])
-        self.assertEqual(un(tete, "p.de-vers").texte(), "D’origine Plaquettes d’origine À monter Shimano L04C-MF")
+        self.assertEqual(un(tete, "p.de-vers").texte(),
+                         "D’origine Plaquettes d’origine L05A-RF À monter Shimano L05A-RF neuves")
         # La barre des étapes dans la colonne de gauche, juste avant les étapes.
         barre = un(article, "div.etapes-barre")
         gauche = un(article, "div.atelier-gauche")
@@ -288,7 +290,7 @@ class TestPages(Site):
         self.assertEqual([un(c, "span.num").texte() for c in cartes], [f"2.{n}" for n in range(1, 9)])
         self.assertEqual([c.get("href") for c in cartes], [f"{s}/" for s in SLUGS])
         remplacer = [un(c, "span.num").texte() for c in cartes if c.get("data-type") == "remplacer"]
-        self.assertEqual(remplacer, ["2.2", "2.3"])
+        self.assertEqual(remplacer, ["2.3"])
         self.assertEqual(len(dom.selectionner(racine, '[data-resume="couples"]')), 1)
         self.assertEqual(len(dom.selectionner(racine, '[data-resume="ordre"]')), 1)
         filtres = un(racine, "div.filtres")
@@ -313,13 +315,13 @@ class TestPages(Site):
         # Les faits d'une carte.
         plaquettes = cartes[2]
         faits = [(dt.texte(), dd.texte()) for dt, dd in zip(dom.selectionner(plaquettes, "dt"), dom.selectionner(plaquettes, "dd"))]
-        self.assertEqual(faits, [("Change", "Plaquettes d’origine → Shimano L04C-MF"), ("Démonter", "La roue."),
-                                 ("Étapes", "10"), ("Couples", "0,5-0,7\u00a0Nm 1-1,5\u00a0Nm 0,2-0,4\u00a0Nm")])
+        self.assertEqual(faits, [("Change", "Plaquettes d’origine L05A-RF → Shimano L05A-RF neuves"),
+                                 ("Démonter", "La roue."), ("Étapes", "10"), ("Couples", "0,5-0,7\u00a0Nm 1-1,5\u00a0Nm")])
         self.assertEqual(un(plaquettes, "h3").texte(), "Changer les plaquettes")
         self.assertEqual(un(plaquettes, "span.zone").texte(), "Zone 2 · Étrier et plaquettes")
         self.assertEqual(un(plaquettes, "span.pill").texte(), "Remplacer")
         faits = [(dt.texte(), dd.texte()) for dt, dd in zip(dom.selectionner(cartes[0], "dt"), dom.selectionner(cartes[0], "dd"))]
-        self.assertEqual(faits, [("Fiche", "5 blocs à lire")])
+        self.assertEqual(faits, [("Fiche", "6 blocs à lire")])
         rodage = cartes[3]
         self.assertEqual([dt.texte() for dt in dom.selectionner(rodage, "dt")], ["Démonter", "Étapes"])
         self.assertIn("<title>Freins · Atelier Grizl</title>", html)
@@ -344,15 +346,15 @@ class TestPages(Site):
                 self.assertEqual(textes_perdus(a.section, self.html(f"freins/{a.slug}/")), [])
 
     def test_conservation_voit_un_texte_nu_perdu(self):
-        # Le contrôle doit voir la perte d'un texte nu : sans le corps d'une des trois options d'étrier de 2.1 (un
-        # div.q-b, sans p ni li), il le signale.
-        systeme = self.chapitres["freins"].ateliers[0]
-        html = self.html("freins/systeme/")
+        # Le contrôle doit voir la perte d'un texte nu : sans le corps d'une des questions de 2.6 (un div.q-b, sans p
+        # ni li), il le signale.
+        controles = self.chapitres["freins"].ateliers[5]
+        html = self.html("freins/controles/")
         racine = dom.analyser(html)
         dom.selectionner(racine, "div.q-b")[1].retirer()
-        perdus = textes_perdus(systeme.section, racine.html())
+        perdus = textes_perdus(controles.section, racine.html())
         self.assertEqual(len(perdus), 1, perdus)
-        self.assertTrue(perdus[0].startswith("div.q : BR-RX820"), perdus)
+        self.assertTrue(perdus[0].startswith("div.q : Grincement"), perdus)
 
     def test_sans_tiret_ni_doublon(self):
         for cible in ("site", "artifact"):
@@ -376,8 +378,10 @@ class TestPages(Site):
         self.assertEqual(sorted(noms), sorted(set(tous)))
         self.assertEqual(len(noms), len(set(noms)))
         par_nom = dict(zip(noms, lignes))
-        tl_fc36 = [a.get("href") for a in dom.selectionner(par_nom["Outil Center Lock TL-FC36"], "a")]
+        tl_fc36 = [a.get("href") for a in dom.selectionner(par_nom["Outil Center Lock TL-FC36 (denture extérieure)"], "a")]
         self.assertEqual(tl_fc36, ["../freins/disques/"])
+        cle_3 = [a.texte() for a in dom.selectionner(par_nom["Clé Allen 3\u00a0mm"], "a")]
+        self.assertEqual(cle_3, ["2.3 Changer les plaquettes", "2.7 Purger les freins"])
         faible = [a.texte() for a in dom.selectionner(par_nom["Clé dynamométrique faible plage"], "a")]
         self.assertEqual(faible, ["2.3 Changer les plaquettes", "2.7 Purger les freins"])
 
@@ -389,6 +393,80 @@ class TestPages(Site):
         self.assertEqual(tableau.html(), self.chapitres["freins"].resumes["couples"][0].html())
         # Le renvoi vers l'atelier d'où vient le tableau.
         self.assertEqual(dom.selectionner(un(section, "p.origine"), "a")[0].get("href"), "../freins/systeme/")
+
+    def atelier_source(self, slug):
+        return next(a for a in self.chapitres["freins"].ateliers if a.slug == slug)
+
+    def test_purge_st_rx825(self):
+        # 2.7 suit la purge du DM-GADBR10, celle des manettes ST-RX825 : repose-main retourné par l'arrière, entonnoir
+        # à 20°, levier actionné environ 10 fois, vis de purge de l'étrier à 4-6 Nm, mise en garde Di2 sur le fil
+        # électrique. Rien de la purge du DM-GADBR01 là où elle diffère : ni « par l'avant », ni « 45° », ni l'étape
+        # « 0,5 seconde », ni le purgeur des autres étriers GRX.
+        source = self.atelier_source("purge").section.texte()
+        page = un(self.arbre("freins/purge/"), "main.page").texte()
+        for texte in (source, page):
+            for attendu in ("par l'arrière", "20°", "4-6", "environ 10 fois", "fil électrique", "DM-GADBR10"):
+                self.assertIn(attendu, texte)
+            for absent in ("par l'avant", "par l’avant", "45°", "45 °", "0,5 seconde", "purgeur", "RX400", "RX610"):
+                self.assertNotIn(absent, texte)
+
+    def test_couples_cf8(self):
+        # La vis de purge de l'étrier : 4-6 Nm d'après le DM-GADBR10, le même couple dans l'atelier 2.1, dans la page
+        # Freins et dans Couples de serrage. Plus de « non publié » pour cette ligne, plus de ligne BR-RX400 ou RX810.
+        for chemin in ("freins/systeme/", "freins/", "couples/"):
+            with self.subTest(chemin):
+                (tableau,) = dom.selectionner(self.arbre(chemin), '[data-resume="couples"]')
+                lignes = [dom.selectionner(tr, "td") for tr in dom.selectionner(tableau, "tbody > tr")]
+                elements_ = [tds[0].texte() for tds in lignes]
+                (ligne,) = [tds for tds in lignes if tds[0].texte().startswith("Vis de purge de l'étrier")]
+                element, couple, source = ligne
+                self.assertEqual(couple.texte(), "4-6 Nm")
+                self.assertIn("clé de 3 mm", element.texte())
+                self.assertEqual([a.texte() for a in dom.selectionner(source, "a")], ["Shimano DM-GADBR10"])
+                self.assertNotIn("non publié", element.texte() + couple.texte() + source.texte())
+                self.assertFalse([e for e in elements_ if "RX400" in e or "RX810" in e or "RX410" in e], elements_)
+
+    def test_atelier_disques(self):
+        # 2.2 devient « Déposer et reposer un disque », en entretenir, sans pièce d'origine ni pièce à monter. Son
+        # adresse ne change pas, et l'ancienne ancre #freins-disques mène toujours à sa page.
+        racine = self.arbre("freins/disques/")
+        self.assertEqual(un(racine, "h1").texte(), "Déposer et reposer un disque")
+        article = un(racine, "article.atelier")
+        self.assertEqual([article.get(n) for n in ("id", "data-zone", "data-type")],
+                         ["freins-disques", "disques", "entretenir"])
+        self.assertEqual([n for n, _ in article.attrs if n in ("data-de", "data-vers")], [])
+        tete = un(article, "header.atelier-tete")
+        self.assertEqual(dom.selectionner(tete, "p.de-vers"), [])
+        self.assertNotIn("D’origine", tete.texte())
+        self.assertEqual(dom.selectionner(tete, "span.pill")[0].texte(), "Entretenir")
+        bloc = re.search(r'<script type="application/json" id="liens-data">(.*?)</script>', self.html(""), re.S).group(1)
+        self.assertEqual(json.loads(bloc)["freins-disques"], "freins/disques/")
+        # Ni achat de disques neufs, ni disque du CF 7 : le type de bague d'origine est à lire sur la pièce.
+        texte = un(racine, "main.page").texte()
+        for absent in ("SM-RT64", "à la place des", "2 disques RT-MT800", "à vérifier à l'achat"):
+            self.assertNotIn(absent, texte)
+        for attendu in ("TL-FC36", "TL-LR15", "Type de bague d'origine : à lire sur la pièce"):
+            self.assertIn(attendu, texte)
+
+    def test_plaquettes_cf8(self):
+        # 2.3 : des L05A-RF d'origine aux L05A-RF neuves. Les plaquettes métalliques L04C-MF disparaissent du chapitre.
+        # L'entonnoir se monte comme le veut le DM-GADBR10 pour la ST-RX825 : repose-main retourné par l'arrière.
+        section = self.atelier_source("plaquettes").section
+        page = self.html("freins/plaquettes/")
+        for texte in (section.html(), page):
+            self.assertIn("L05A-RF", texte)
+            self.assertNotIn("L04C", texte)
+        article = un(dom.analyser(page), "article.atelier")
+        self.assertEqual((article.get("data-de"), article.get("data-vers")),
+                         ("Plaquettes d’origine L05A-RF", "Shimano L05A-RF neuves"))
+        entonnoir = [li for li in dom.selectionner(section, "ol.steps > li")
+                     if li.texte().startswith("Monte l'entonnoir sur la manette")]
+        (etape,) = entonnoir
+        self.assertIn("Retourne le repose-main par l'arrière", etape.texte())
+        self.assertIn("DM-GADBR10", etape.texte())
+        self.assertNotIn("par l'avant", section.texte())
+        for slug in SLUGS:
+            self.assertNotIn("L04C", self.html(f"freins/{slug}/"), slug)
 
     def test_approche_et_sources(self):
         for chemin, ident in (("approche/", "approche-page"), ("sources/", "sources-page")):
@@ -441,7 +519,7 @@ class TestPages(Site):
             self.assertEqual(dom.selectionner(page, absent), [], absent)
         self.assertEqual([un(b, "h2").texte() for b in (elements(grille)[1], blocs[2], blocs[4])],
                          ["Où intervenir", "D’origine, puis à monter", "Toutes les catégories"])
-        self.assertEqual(len(dom.selectionner(blocs[2], "ul.a-remplacer > li")), 2)
+        self.assertEqual(len(dom.selectionner(blocs[2], "ul.a-remplacer > li")), 1)
         self.assertEqual(len(dom.selectionner(blocs[4], "div.cats > a.cat")), 1 + len(A_VENIR))
         # L'introduction garde son texte : les caractéristiques, le jour de la livraison et la règle des sources.
         intro = blocs[3]
@@ -497,7 +575,8 @@ class TestRecherche(Site):
         for entree in index:
             self.assertEqual(sorted(entree), ["k", "t", "u"], entree)
         self.assertIn({"k": "Atelier 2.3", "t": "Changer les plaquettes", "u": "freins/plaquettes/"}, index)
-        self.assertIn({"k": "Outil · 2.2", "t": "Outil Center Lock TL-FC36", "u": "freins/disques/"}, index)
+        self.assertIn({"k": "Outil · 2.2", "t": "Outil Center Lock TL-FC36 (denture extérieure)", "u": "freins/disques/"},
+                      index)
         self.assertIn({"k": "Étape · 2.3", "t": "Sors les anciennes plaquettes", "u": "freins/plaquettes/"}, index)
         self.assertIn({"k": "Catégorie", "t": "Freins", "u": "freins/"}, index)
         self.assertIn({"k": "Lot 4 · à venir", "t": "Transmission", "u": "transmission/"}, index)
@@ -508,7 +587,7 @@ class TestRecherche(Site):
         fiche = dom.analyser(COMPOSANTS)
         lignes = len(dom.selectionner(fiche, "tbody > tr")) + len(dom.selectionner(fiche, "ul.accessoires > li"))
         self.assertEqual(len(pieces), lignes)
-        self.assertEqual(len([e for e in index if e["k"].startswith("Étape · ")]), 41)
+        self.assertEqual(len([e for e in index if e["k"].startswith("Étape · ")]), 45)
         # Les ateliers passent en premier, avant les étapes et les outils.
         genres = [e["k"].split(" ")[0] for e in index]
         self.assertLess(genres.index("Atelier"), genres.index("Étape"))
@@ -551,17 +630,16 @@ class TestAccueil(unittest.TestCase):
                 self.assertRegex(a.get("href"), r"^freins/[a-z]+/$")
         disques = dom.selectionner(cartes[0], "a")[0]
         self.assertEqual(disques.get("href"), "freins/disques/")
-        self.assertEqual([s.texte() for s in elements(disques)], ["2.2", "Remplacer les disques par des XT", "Remplacer"])
+        self.assertEqual([s.texte() for s in elements(disques)], ["2.2", "Déposer et reposer un disque", "Entretenir"])
 
     def test_a_remplacer(self):
         racine = dom.analyser(pages.pieces_a_remplacer(self.chapitres))
         lignes = dom.selectionner(racine, "ul.a-remplacer > li")
-        self.assertEqual(len(lignes), 2)
-        self.assertEqual(un(lignes[0], ".vers").texte(), "Shimano Deore XT RT-MT800")
-        self.assertEqual(un(lignes[0], ".de").texte(), "à la place de : Shimano SM-RT64")
-        self.assertEqual(un(lignes[0], "a").get("href"), "freins/disques/")
-        self.assertEqual(un(lignes[1], ".vers").texte(), "Shimano L04C-MF")
-        self.assertEqual(un(lignes[1], "a").get("href"), "freins/plaquettes/")
+        # 2.2 dépose et repose le disque d'origine : seule la pièce de 2.3 se remplace.
+        self.assertEqual(len(lignes), 1)
+        self.assertEqual(un(lignes[0], ".vers").texte(), "Shimano L05A-RF neuves")
+        self.assertEqual(un(lignes[0], ".de").texte(), "à la place de : Plaquettes d’origine L05A-RF")
+        self.assertEqual(un(lignes[0], "a").get("href"), "freins/plaquettes/")
 
     def test_categories(self):
         racine = dom.analyser(pages.cartes_des_categories(CONFIG, self.chapitres))

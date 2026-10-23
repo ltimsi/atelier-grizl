@@ -106,7 +106,7 @@ class Selection(unittest.TestCase):
     def test_selection(self):
         r = dom.analyser(FREINS)
         self.assertEqual(len(dom.selectionner(r, "section.atelier")), 8)
-        self.assertEqual(len(dom.selectionner(r, "ol.steps > li")), 41)
+        self.assertEqual(len(dom.selectionner(r, "ol.steps > li")), 45)
 
     def test_formes_acceptees(self):
         r = dom.analyser(

@@ -25,8 +25,8 @@ SLUGS = ["systeme", "disques", "plaquettes", "rodage", "centrage", "controles", 
 # Les ateliers du chapitre Freins, dans l'ordre du document : id, data-zone, data-type, data-de, data-vers.
 CORRESPONDANCE = [
     ("freins-systeme", "manettes", "comprendre", None, None),
-    ("freins-disques", "disques", "remplacer", "Shimano SM-RT64", "Shimano Deore XT RT-MT800"),
-    ("freins-plaquettes", "etrier", "remplacer", "Plaquettes d’origine", "Shimano L04C-MF"),
+    ("freins-disques", "disques", "entretenir", None, None),
+    ("freins-plaquettes", "etrier", "remplacer", "Plaquettes d’origine L05A-RF", "Shimano L05A-RF neuves"),
     ("freins-rodage", "disques", "entretenir", None, None),
     ("freins-centrage", "etrier", "regler", None, None),
     ("freins-controles", "etrier", "comprendre", None, None),
