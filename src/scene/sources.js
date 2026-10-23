@@ -145,11 +145,6 @@ export const SOURCES = Object.freeze({
     url: `${SHIMANO_INFO}/lineup/deore-xt-m8000-2x11-di2`,
     type: 'fiche',
   }),
-  'shimano-l04c-mf': Object.freeze({
-    titre: 'Shimano, page des plaquettes L04C-MF',
-    url: 'https://bike.shimano.com/en-NA/products/service-and-upgrade-parts/pdp.P-BP-L04C-MF.html',
-    type: 'fiche',
-  }),
 
   // Shimano : Grizl CF 8 Di2, relevé du 23 octobre 2026 (docs/recherche/sources-cf8-di2.md)
   'shimano-dm-gadbr10': Object.freeze({

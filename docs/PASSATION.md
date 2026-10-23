@@ -162,11 +162,11 @@ Unités en millimètres. Moins de 120 000 triangles. Les textes des pastilles su
   - calculs de charge et de pression fondés sur le poids de Lamine, à valider avec lui avant toute publication.
 - **Lot 4** :
   - charge de la batterie BT-DN320, dans le dérailleur, à la réception, et piles CR1632 des manettes ;
-  - patte de dérailleur UDH : présence et état ;
+  - patte de dérailleur UDH, la patte universelle de SRAM : présence et état ;
   - chaîne : référence (CN-M8100 supposée), nombre de maillons et attache QUICK-LINK ;
   - boîtier : référence exacte (SM-BB72-41B supposée) ;
   - corps de roue libre de la roue arrière (Micro Spline, pour le pignon de 9 dents).
-- **Lot 5** : la liste Tailfin du 23/10/2026 (porte-bagages et son adaptateur UDH, sacoches, garde-boue, support d'éclairage), dont les documents restent à relever. Lamine n'a pas encore dit s'il garde les garde-boue Canyon DEFEND, l'éclairage et la sonnette Knog, les porte-bidons et le support d'antivol : sans réponse, ils sont retirés du lot.
+- **Lot 5** : la liste Tailfin (porte-bagages et son adaptateur UDH, sacoches, garde-boue, support d'éclairage), dont les documents restent à relever. Lamine n'a pas encore dit s'il garde les garde-boue Canyon DEFEND, l'éclairage et la sonnette Knog, les porte-bidons et le support d'antivol : sans réponse, ils sont retirés du lot.
 - **Lot 6** : l'aide-mémoire ne reprend que les valeurs des lots validés.
 
 ## Déploiement

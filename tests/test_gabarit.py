@@ -68,9 +68,10 @@ class TestLots(unittest.TestCase):
             "Chaîne : usure, nettoyage, lubrification.",
             "Charger la batterie Di2 BT-DN320.",
             "Régler le dérailleur Di2."])
-        # Lot 5 : la liste Tailfin seule.
+        # Lot 5 : la liste Tailfin seule. UDH est développé à sa première apparition, comme dans le relevé.
         self.assertEqual(self.lot(5)["prevu"], [
-            "Porte-bagages Tailfin, son adaptateur UDH et son axe traversant.",
+            "Porte-bagages Tailfin, son adaptateur UDH (patte de dérailleur universelle de SRAM) et son axe "
+            "traversant.",
             "Sacoches Tailfin et leur sangle.",
             "Garde-boue du porte-bagages Tailfin.",
             "Support d’éclairage Tailfin."])

@@ -561,10 +561,21 @@ class TestPages(Site):
         # limite de disque : Canyon n'en publie pas pour ce vélo.
         self.assertEqual(specs["Limites Canyon"], "120 kg au total (toi, le vélo et les bagages)")
         self.assertEqual(specs["Prévu dès la livraison"], "Pédales PD-ME700 et cales SPD, tubeless")
-        for attendu in ("Di2", "RD-M8250-GS", "ST-RX825", "9-45", "40 dents"):
+        for attendu in ("Di2", "RD-M8250-GS", "9-45", "40 dents"):
             self.assertIn(attendu, specs["Transmission"])
-        for attendu in ("Deore XT MT800", "160 mm", "L05A-RF"):
+        for attendu in ("Deore XT MT800", "160 mm"):
             self.assertIn(attendu, specs["Freins"])
+        # Ce que le relevé laisse à lire sur la pièce l'est aussi dans le résumé, comme en 2.1 et sur Composants : la
+        # manette gauche (ST-RX825-L ou BL-RX825-L), les étriers et les plaquettes d'origine.
+        self.assertIn("manette droite GRX ST-RX825, manette gauche à lire sur la pièce (ST-RX825-L ou BL-RX825-L)",
+                      specs["Transmission"])
+        self.assertNotIn("manettes", specs["Transmission"])
+        self.assertIn("étriers à lire sur la pièce (BR-RX820 attendu)", specs["Freins"])
+        self.assertIn("plaquettes d'origine à lire sur la pièce (L05A-RF en résine attendues)", specs["Freins"])
+        verif = {un(d, "dt").texte(): [s.texte() for s in dom.selectionner(d, "span.verif")]
+                 for d in dom.selectionner(intro, "dl.specs > div")}
+        self.assertEqual(verif["Transmission"], ["à lire sur la pièce"])
+        self.assertEqual(verif["Freins"], ["à lire sur la pièce"] * 2)
         for attendu in ("GR 30 CF", "27 mm", "G-One RX", "45 mm"):
             self.assertIn(attendu, specs["Roues et pneus"])
         self.assertIn("SP100 VCLS 2.1", specs["Poste de pilotage"])
@@ -605,17 +616,26 @@ class TestPages(Site):
         # Le site ne parle plus que du Grizl CF 8 Di2. Aucun fichier servi par les deux cibles, hors de three.js, ne
         # garde le CF 7, sa fiche ou ses pièces : ni les 20 pages, ni l'index de la recherche, ni les pièces 3D des
         # ateliers, ni les modules de la scène. Le menu, la description de chaque page et l'accueil nomment le CF 8 Di2.
+        # « CF 7 » est cherché sans casse, avec ou sans espace (même insécable), tiret ou soulignement : « cf 7 »,
+        # « CF7 », « grizl-cf-7 ». Les autres noms aussi, sans casse. Une couleur comme « #cf7a3b » n'est pas une trace.
         self.maxDiff = None
-        absents = ("CF 7", "4553", "SM-RT64", "RX822", "RX610", "M7100", "Continental", "Terra Adventure",
-                   "Selle Royal")
+        absents = re.compile(r"(?<![0-9a-z#])CF[\s_-]*7(?![0-9])|" + "|".join(re.escape(a) for a in (
+            "4553", "SM-RT64", "RX822", "RX610", "M7100", "Continental", "Terra Adventure", "Selle Royal")), re.I)
+        for exemple in ("CF 7", "cf\u00a07", "CF7", "grizl-cf-7", "selle royal", "CONTINENTAL"):
+            self.assertTrue(absents.search(exemple.replace("\u00a0", " ")), exemple)
+        for permis in ("CF 8 Di2", "CF 70", "grizl-cf-8-di2", "#cf7a3b", "0xcf7a3b"):
+            self.assertIsNone(absents.search(permis), permis)
         for cible in ("site", "artifact"):
             rendues, fichiers = self.sorties[cible]
             servis = sorted(f for f in fichiers if not f.startswith("vendor/"))
             for attendu in ["js/recherche.js", "js/m-rotor.js", "js/m-caliper.js", "js/m-bleed.js",
                             "js/scene/sources.js"] + [f"{c}index.html" for c in CHEMINS]:
                 self.assertIn(attendu, servis, cible)
-            traces = [f"{nom} : {absent}" for nom in servis
-                      for absent in absents if absent in (self.dossier / cible / nom).read_text(encoding="utf-8")]
+            traces = []
+            for nom in servis:
+                texte = (self.dossier / cible / nom).read_text(encoding="utf-8")
+                texte = texte.replace("\u00a0", " ").replace("\u202f", " ")
+                traces += sorted({f"{nom} : {m.group()}" for m in absents.finditer(texte)})
             self.assertEqual(traces, [], cible)
             for chemin, html in rendues.items():
                 marque = '<div class="label">Grizl CF 8 Di2 · M · Floating Violet</div>'
