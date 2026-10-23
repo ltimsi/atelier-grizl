@@ -1,73 +1,87 @@
-# Grizl CF 7 : composants d'origine et géométrie de la taille M
+# Grizl CF 8 Di2 : composants d'origine et géométrie de la taille M
 
-Relevé le 20 octobre 2026 sur la fiche officielle Canyon suisse, coloris Floating Violet (code R126_P06), sections « Tous les composants » et « Géométrie et dimensions ». Texte recopié tel quel, y compris les fautes de la fiche.
+Relevé le 23 octobre 2026 sur la fiche officielle Canyon suisse du Grizl CF 8 Di2 (réf. 4556), coloris Floating Violet (code R126_P06) : liste des composants et géométrie. Valeurs recopiées telles quelles, y compris les fautes de la fiche.
 
-Source : https://www.canyon.com/fr-ch/velos-de-gravel/adventure/grizl/cf/grizl-cf-7/4553.html?dwvar_4553_pv_rahmenfarbe=R126_P06
+Source : https://www.canyon.com/fr-ch/velos-de-gravel/adventure/grizl/cf/grizl-cf-8-di2/4556.html?dwvar_4556_pv_rahmenfarbe=R126_P06
 
-Photo officielle du coloris : https://dma.canyon.com/image/upload/w_1600,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1785934004/2027_FULL_grizl_cf-7_4553_R126_P06_talwxt
+Photo officielle du coloris : https://dma.canyon.com/image/upload/w_2400,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1785934014/2027_FULL_grizl_cf-8-di2_4556_R126_P06_vpvgno
 
-« Tous les composants sont basés sur la taille M. »
+« Tous les composants sont basés sur la taille M. » Poids annoncé : 9,14 kg en taille M.
 
 ## Cadre
 
 | Pièce | Référence | Caractéristiques |
 |---|---|---|
-| Cadre | Canyon Grizl CF | Axe 12x142 mm ; espace pour les pneus 54MM ; carbone (CF) ; 1116 g |
-| Fourche | FK0143 | Axe 12x100 mm ; tube de direction 1 1/8" ; espace pour les pneus 54MM ; carbone (CF) ; 560 g |
+| Cadre | Canyon Grizl CF | Axe 12x142 mm ; espace pneus 54MM ; Carbone (CF) ; 1116 g |
+| Fourche | FK0143 | Axe 12x100 mm ; tube de direction 1 1/8" ; espace pneus 54MM ; Carbone (CF) ; 560 g |
 | Serrage de tige de selle | Canyon GP0596-01 | |
+
+Classement de la fiche : poids total autorisé de 120 kg, cycliste, bagages et vélo compris.
 
 ## Transmission
 
 | Pièce | Référence | Caractéristiques |
 |---|---|---|
-| Dérailleur arrière | Shimano GRX RD-RX822 12s | Longueur de cage : Court ; 295 g |
-| Cassette | Shimano SLX CS-M7100 | 12 pignons ; plage 10-45 |
-| Pédalier | Shimano GRX FC-RX610 | 1 plateau ; manivelles 165,0 mm en 2XS à M, 170,0 mm en L à 2XL ; plateau de 40 |
-| Boîtier de pédalier | Shimano Pressfit BB-RS500 | Standard PF 86 ; 81 g |
-| Chaîne | Shimano CN-M7100 12s | |
+| Dérailleur arrière | Shimano Deore XT Di2 RD-M8250-GS 12s | Longueur de Cage Medium ; 450 g |
+| Cassette | Shimano Deore XT CS-M8200-12 | 12 pignons ; plage 9-45, donnée par la fiche anglaise |
+| Pédalier | Shimano RX820 | 1 plateau ; manivelles 160,0 (2XS-XS), 165,0 (S-M), 170,0 (L-2XL) ; plateau 40 |
+| Boîtier de pédalier | Shimano Pressfit BB72 | PF 86,5 ; 65 g |
+| Chaîne | Shimano XT | |
+| Accumulateur | Shimano BT-DN320 | |
+
+La liste française ne donne pas la plage de la cassette. La [fiche anglaise du même vélo](https://www.canyon.com/en-ch/gravel-bikes/adventure/grizl/cf/grizl-cf-8-di2/4556.html) (`canyon-4556-en`) dit « Range 9-45 ».
+
+L'accumulateur se loge dans le dérailleur arrière. La [fiche Shimano du RD-M8250-GS](https://productinfo.shimano.com/en/product/RD-M8250-GS) (`shimano-rd-m8250-gs`) indique « Built-in battery ». Celle du [BT-DN320](https://productinfo.shimano.com/en/product/BT-DN320) (`shimano-bt-dn320`) donne son chargeur, le « EC-DN100 », livré avec le vélo.
 
 ## Freins
 
 | Pièce | Référence | Caractéristiques |
 |---|---|---|
-| Levier de frein/ dérailleur | Shimano GRX ST-RX610 | 2 pistons ; 331 g |
-| Levier de frein/ dérailleur | Shimano GRX 610 | 2 pistons ; 246 g |
-| Disque de frein | Shimano SM-RT64 | 140 g ; diamètre 160 / 160 |
+| Levier de frein/dérailleur | Shimano GRX Di2 Dual Control ST-RX825 | 2 pistons ; 389 g |
+| Levier de frein/dérailleur | Shimano GRX ST-RX825 | 2 pistons ; 390 g |
+| Disque de frein | Shimano Deore XT MT800 | 116 g ; diamètre 160 / 160 |
 
-La fiche ne donne pas de référence d'étrier. Le modèle exact reste à lire sur la pièce à la livraison.
+**Étriers.** La fiche ne nomme ni les étriers ni les plaquettes. Shimano recommande l'étrier BR-RX820 pour la ST-RX825 : « Recommended brake caliper BR-RX820 », sur la [fiche de la ST-RX825-R](https://productinfo.shimano.com/en/product/ST-RX825-R) (`shimano-st-rx825`). Sur la [photo officielle du vélo](https://dma.canyon.com/image/upload/w_2400,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1785934014/2027_FULL_grizl_cf-8-di2_4556_R126_P06_vpvgno) (`canyon-photo-4556-fv`), la référence de l'étrier avant commence par « BR-RX8 » ; la fin est floue. Modèle monté : à lire sur la pièce.
+
+**Manette gauche.** La fiche écrit « Shimano GRX ST-RX825 », sans « Di2 ». Pour la gauche, la [gamme Shimano GRX RX820 1x12 Di2](https://productinfo.shimano.com/en/lineup/rx820-1x12-di2) (`shimano-gamme-rx820-1x12-di2`) propose la ST-RX825-L, avec ses boutons de vitesses, ou le BL-RX825-L, un levier de frein seul. Variante montée : à lire sur la pièce.
+
+**Disques.** La fiche dit « Shimano Deore XT MT800 ». Shimano recommande pourtant le RT-CL800 avec l'étrier qu'il associe à la ST-RX825 (voir les contradictions). Modèle exact, RT-MT800 ou RT-CL800 : à lire sur la pièce.
 
 ## Roues et pneus
 
 | Pièce | Référence | Caractéristiques |
 |---|---|---|
-| Roue avant | DT Swiss Gravel LN | Axe 12x100 mm ; Center Lock ; jante de 26 mm de haut, 24 mm de largeur interne, aluminium ; 871 g |
-| Roue arrière | DT Swiss Gravel LN | Axe 12x142 mm ; Center Lock ; jante de 26 mm de haut, 24 mm de largeur interne, aluminium ; 1062 g |
-| Taille de roue | 28" | |
-| Pneu | « Contintental Terra Adventure Trail Grip » | Largeur 45 mm ; 522 g |
-| Axe traversant avant | Canyon Through Axle | 12x100 mm ; aluminium (AL) |
-| Axe traversant arrière | DT Swiss Through Axle | 12x142 mm ; aluminium (AL) |
+| Roue avant | Canyon GR 30 CF | Axe 12x100 ; Center Lock ; jante 30 mm ; largeur interne 27 mm ; Carbone ; 735 g |
+| Roue arrière | Canyon GR 30 CF | Axe 12x142 ; Center Lock ; jante 30 mm ; largeur interne 27 mm ; Carbone ; 878 g |
+| Taille de roue | 28" | « Hauteur de la jantee en mm 30 » |
+| Pneu | Schwalbe G-One RX Performance, 45mm | 45 mm ; 608 g |
+| Axe traversant avant | Canyon Through Axle | 12x100 ; aluminium (AL) |
+| Axe traversant arrière | DT Swiss Through Axle | 12x142 ; aluminium (AL) |
 
-La fiche ne donne pas le nombre de rayons.
+La fiche du vélo ne donne ni le type de jante ni le nombre de rayons. La [page Canyon de la paire GR 30 CF](https://www.canyon.com/en-de/gear/bike-parts/tyres-and-tubes/wheels/canyon-gr-30-cf-wheelset/10014610.html) (`canyon-gr30cf`), vendue seule, annonce des « tubeless-ready hookless rims », c'est-à-dire des jantes sans crochet, prêtes pour le tubeless. Elle donne aussi les moyeux, « DT Swiss 350 Spline with Ratchet 36 SL », et 24 rayons à chaque roue : « 24 front and rear ». On en compte bien 24 à chaque roue sur la photo officielle du vélo (`canyon-photo-4556-fv`).
 
 ## Poste de pilotage et selle
 
 | Pièce | Référence | Caractéristiques |
 |---|---|---|
-| Potence | Canyon ST0046 | Aluminium ; tube de direction 1 1/8" ; collier 31,8 mm ; 60 mm en S à L |
-| Cintre | Canyon HB0067 | Aluminium, « drops évasés » ; collier 31,8 mm ; 440 mm en M à 2XL |
-| Ruban de cintre | Canyon Ergospeed Gel | Noir |
-| Selle | Selle Royal SRX | Largeur 148 mm ; unisexe ; 296 g |
-| Tige de selle | Canyon SP100 | Carbone (CF) ; collier 27,2 mm ; 238 g ; longueur 350 mm ; insertion de 110 à 210 mm |
+| Potence | Canyon ST0046 | 1 1/8" ; collier 31,8 ; aluminium (AL) ; 50 (2XS-XS), 60 (S-L), 70 (XL-2XL) |
+| Guidon | Canyon HB0067 | Collier 31,8 ; 420 (2XS-S), 440 (M-2XL) |
+| Ruban | Canyon Ergospeed Gel | Noir |
+| Selle | Fizik Argo Terra X5 | 150 mm ; Unisexe ; 273 g |
+| Tige de selle | Canyon SP100 | 27,2 mm ; Carbone (CF) ; 238 g ; 350 mm ; insertion max 210, min 110 |
+
+**Tige de selle.** C'est la [Canyon SP100 VCLS 2.1 CF 27.2](https://www.canyon.com/en-ch/gear/bike-parts/posts-and-clamps/canyon-sp100-vcls-2.1-cf-27.2-seatpost/10016374.html) (`canyon-sp100`), réf. 10016374, que le chat Canyon t'a confirmée. Sa [photo officielle](https://dma.canyon.com/image/upload/w_1400,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1778505931/2026_ALT-1_ACC_SP-C000002655-P0100-01-P01-350_10016374_BK_Full_qgacz3) (`canyon-photo-sp100-marquage`) montre le marquage « SP100 », « VCLS 2.1 CF », « SETBACK 18 / 6 mm » (le recul), « DIAMETER 27,2 mm » et « CATEGORY 2 ». Sur la [photo de la fiche du vélo](https://dma.canyon.com/image/upload/w_1400,c_fit/f_auto/q_auto/2027_TOP-5_grizl_cf-8-di2_4556_R126_P06_comfort_stzvfz) (`canyon-photo-4556-confort`), la tige est faite de deux lames, réunies dans une tête marquée « FLIP HEAD ».
 
 ## Accessoires livrés
 
-- Canyon FIX Minitool 6+1 : clés Allen 2,5 / 3 / 4 / 5 (extension 8) / 6, TX25 (Torx) ; acier S2 ; 62 g.
+- Canyon FIX Minitool 6+1 : clés Allen 2,5 / 3 / 4 / 5 (extension 8) / 6, TX25 (Torx) ; acier S2 ; 55x29x6,9 mm ; 62 g.
+- Battery Charger Shimano EC-DN100, le chargeur de l'accumulateur.
 - Lot de réflecteurs, boîte à outils Canyon, Canyon Assembly Paste, Canyon Torque Wrench, Canyon 1CX Bike Category Manual, Canyon Smallbox, QSG R126.
 - Pédales : « Non inclus ».
 
 ## Géométrie de la taille M
 
-Colonne M de la fiche :
+Colonne M de la fiche (178-184 cm) :
 
 | Repère | Cote | Valeur |
 |---|---|---|
@@ -83,22 +97,42 @@ Colonne M de la fiche :
 | j | Reach | 404 mm |
 | k | Hauteur du cadre | 826 mm |
 | l | Différence axe boîtier/axe moyeu | 75 mm |
-| o | Stack efficace, « distance verticale entre le pédalier et la position de la main » | 683 mm |
-| p | Reach efficace, « distance horizontale entre le pédalier et la position de la main » | 544 mm |
+| o | Stack efficace | 690 mm |
+| p | Reach efficace | 531 mm |
 
-Remarques :
-
-- Le repère e, nommé « Inclinaison du cintre », est très probablement l'angle de direction. À confirmer avec le schéma de la fiche.
-- Les repères o et p situent la position des mains par rapport au boîtier. Ils permettent de vérifier le placement des cocottes dans le modèle 3D, si la fiche précise où se trouve « la position de la main ».
+Remarque : le repère e, nommé « Inclinaison du cintre », est très probablement l'angle de direction. À confirmer avec le schéma de la fiche.
 
 ## Contradictions et compléments relevés
 
-Relevés le 20 octobre 2026, pendant la construction du vélo en 3D. Chaque document cité est enregistré dans `src/scene/sources.js`, sous l'identifiant donné entre parenthèses.
+Relevés le 23 octobre 2026. Chaque document cité est enregistré dans `src/scene/sources.js`, sous l'identifiant donné entre parenthèses.
 
-- **Tige de selle.** Le texte « Points forts » de la fiche parle d'une « tige de selle S15 VCLS 2.0 ». La liste des composants de la même fiche dit « Canyon SP100 ». Vu le 20 octobre 2026 sur la [fiche suisse du Grizl CF 7](https://www.canyon.com/fr-ch/velos-de-gravel/adventure/grizl/cf/grizl-cf-7/4553.html?dwvar_4553_pv_rahmenfarbe=R126_P06) (`canyon-4553`). Le modèle exact reste à lire sur la tige.
-- **Déport du cintre HB0067.** La [page du cintre](https://www.canyon.com/fr-ch/accessoires-velo/composants/cintres-cockpits-potences/canyon-hb0067-al-gravel-dropbar/9102480.html) annonce « Reach: 75mm » (`canyon-hb0067`). Le marquage du cintre de 420 sur sa [photo officielle](https://dma.canyon.com/image/upload/v1772197873/2026_full_S-PARTS_HB-CAYN-HB0067-01-AL-31-8-420-bk-gy_10016269_BK_GY_full_bf3ph4) indique « REACH 70 mm » (`canyon-photo-hb0067-marquage`). La 3D retient 70 : à lire sur le cintre.
-- **Rayons.** La fiche ne donne pas leur nombre. On en compte 24 à chaque roue sur la [photo officielle du coloris](https://dma.canyon.com/image/upload/w_1600,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1785934004/2027_FULL_grizl_cf-7_4553_R126_P06_talwxt) (`canyon-photo-4553-fv`).
-- **Ligne de chaîne et galets.** La [fiche technique du pédalier FC-RX610-1](https://productinfo.shimano.com/en/product/FC-RX610-1) donne une ligne de chaîne de 49,7 mm, « Chain line (mm) 49.7 » (`shimano-fc-rx610-1`). La [fiche technique du dérailleur RD-RX822-GS](https://productinfo.shimano.com/en/product/RD-RX822-GS) donne des galets de 13 dents, « Pulley / Teeth 13T » (`shimano-rd-rx822-gs`).
-- **Potence et cintre.** La [photo officielle de la potence ST0046 de 60](https://dma.canyon.com/image/upload/v1778490570/2026_full_S-PARTS_ST-ST0046-01-60-31-8-1-1-8_9102474_BK_full_xjukzl) porte le marquage « ANGLE 6° » (`canyon-photo-st0046`). Celle du cintre HB0067 de 420 porte « DROP 128 mm » (`canyon-photo-hb0067-marquage`). Ton cintre fait 440 : la descente est à lire sur le cintre.
-- **Disque RT-MT800.** Probablement abandonné, d'après le [tableau de compatibilité Shimano C-461](https://productinfo.shimano.com/en/compatibility/C-461) (`shimano-c-461`, relevé le 20 octobre 2026, revu le 21 octobre 2026). La base de ce « probablement » : dans le code de la page, le nom RT-MT800 est dans un élément de classe `discon`, sans lien vers une fiche produit, alors que d'autres disques du tableau, comme le RT-CL800, ont un lien vers leur fiche produit. La page n'a aucune légende qui dise ce que veut dire `discon`. Le chapitre Freins le propose pour remplacer les disques d'origine : sa disponibilité est à vérifier avant l'achat.
-- **Pédales.** La photo officielle du coloris montre une pédale au bout de la manivelle droite (`canyon-photo-4553-fv`). La fiche dit « Pédales : Non inclus ». La 3D suit la fiche : pas de pédale.
+- **Tige de selle.** La liste des composants dit « Canyon SP100 ». La présentation de la [fiche suisse](https://www.canyon.com/fr-ch/velos-de-gravel/adventure/grizl/cf/grizl-cf-8-di2/4556.html?dwvar_4556_pv_rahmenfarbe=R126_P06) (`canyon-4556`) parle de « la tige de selle S15 VCLS 2.0 ». Celle de la [fiche anglaise](https://www.canyon.com/en-ch/gravel-bikes/adventure/grizl/cf/grizl-cf-8-di2/4556.html) (`canyon-4556-en`) parle de « the SP100 VCLS 2.0 seatpost », et son onglet « Spare parts » propose à la fois la « Canyon S15 VCLS 2.0 27.2mm CF Seatpost » et la « Canyon SP100 VCLS 2.1 CF 27.2 Seatpost ». Retenu : la SP100 VCLS 2.1, confirmée par le chat Canyon, et dont le marquage se lit sur la photo officielle de la tige (`canyon-photo-sp100-marquage`).
+- **Disques.** La [fiche suisse](https://www.canyon.com/fr-ch/velos-de-gravel/adventure/grizl/cf/grizl-cf-8-di2/4556.html?dwvar_4556_pv_rahmenfarbe=R126_P06) (`canyon-4556`) liste un « Shimano Deore XT MT800 » de 160 mm, 116 g. L'onglet « Wear parts » de la [fiche anglaise](https://www.canyon.com/en-ch/gravel-bikes/adventure/grizl/cf/grizl-cf-8-di2/4556.html) (`canyon-4556-en`) propose le « Shimano Ultegra RT-CL800 Brake Rotor ». Shimano recommande le RT-CL800 avec l'étrier BR-RX820 sur la [fiche de l'étrier](https://productinfo.shimano.com/en/product/BR-RX820) (`shimano-br-rx820`) : « Recommended disc brake rotor w/ metal and resin pad RT-CL800 ». Il dessine pourtant un RT-MT800 dans la [vue éclatée EV-BR-RX820-5000C](https://si.shimano.com/en/pdfs/ev/BR-RX820-5000/EV-BR-RX820-5000C.pdf) (`shimano-ev-br-rx820`). Modèle exact : à lire sur la pièce.
+- **Cassette et corps de roue libre.** La [page de la paire GR 30 CF](https://www.canyon.com/en-de/gear/bike-parts/tyres-and-tubes/wheels/canyon-gr-30-cf-wheelset/10014610.html) (`canyon-gr30cf`) annonce un « Microspline freehub body » pour les cassettes Shimano « with a 10T smallest sprocket », soit 10 dents au plus petit pignon. Le vélo est livré avec une CS-M8200-12 en 9-45, dont le plus petit pignon a 9 dents : « 9-11-13-15-17-19-21-24-28-33-39-45T » sur la [fiche Shimano de la cassette](https://productinfo.shimano.com/en/product/CS-M8200-12) (`shimano-cs-m8200-12`). Corps monté sur la roue arrière : à lire sur la pièce.
+- **Pression maximale.** La [page de la paire GR 30 CF](https://www.canyon.com/en-de/gear/bike-parts/tyres-and-tubes/wheels/canyon-gr-30-cf-wheelset/10014610.html) (`canyon-gr30cf`) dit « Maximum pressure: 4 bars ». Le [manuel Canyon des roues](https://www.canyon.com/on/demandware.static/-/Library-Sites-canyon-shared/default/dw22ff8457/documents/customer-service/gravel-bikes/canyon-wheelset-manual-2025.pdf) (`canyon-manuel-roues`) limite un pneu de 45 à 54 mm sur jante hookless à « 3.0 » bar. La [page Schwalbe du pneu](https://www.schwalbe.com/en/G-One-RX-11654623) (`schwalbe-g-one-rx`) donne « max. Bar: 4 Bar ». Le manuel demande de ne jamais dépasser la plus basse des deux pressions maximales, « never exceed the lower maximum pressure of the two » : ici, 3,0 bar. Pression imprimée sur la jante : à lire sur la pièce.
+- **Pneu.** La fiche dit « G-One RX Performance », 608 g. Schwalbe n'emploie pas le mot « Performance ». En 45-622, sa [page du pneu](https://www.schwalbe.com/en/G-One-RX-11654623) (`schwalbe-g-one-rx`) donne 595 g pour la version « RACE, RaceGuard » et 570 g pour la version PRO. Version montée : à lire sur la pièce, sur le flanc.
+- **Groupe.** La [fiche anglaise](https://www.canyon.com/en-ch/gravel-bikes/adventure/grizl/cf/grizl-cf-8-di2/4556.html) (`canyon-4556-en`) annonce « Shimano GRX Di2 electronic shifting ». Le dérailleur RD-M8250-GS et la cassette CS-M8200-12 sont pourtant des Deore XT, une gamme de vélo tout-terrain (VTT). Shimano associe la ST-RX825 au RD-RX827-SGS et à la CS-M8200-12 en 10-51T, sur la [page de sa gamme GRX RX820 1x12 Di2](https://productinfo.shimano.com/en/lineup/rx820-1x12-di2) (`shimano-gamme-rx820-1x12-di2`). C'est un montage choisi par Canyon, pas une erreur à corriger.
+- **Selle.** La fiche dit « Fizik Argo Terra X5 », 273 g. La [page Fizik de la selle](https://www.fizik.com/en-us/products/saddles-terra-argo-x5-black-targox5fa1) (`fizik-argo-terra-x5`) écrit « TERRA ARGO X5 » et donne « Weight 271 g » en 150 mm.
+- **Poids.** Dérailleur : 450 g pour Canyon, 446 g sur la [fiche Shimano du RD-M8250-GS](https://productinfo.shimano.com/en/product/RD-M8250-GS) (`shimano-rd-m8250-gs`). Boîtier : 65 g pour Canyon, 69 g sur la [fiche Shimano du SM-BB72-41B](https://productinfo.shimano.com/en/product/SM-BB72-41B) (`shimano-sm-bb72-41b`), le boîtier de la gamme GRX RX820 1x12 Di2. Roues : 735 g et 878 g sur la fiche du vélo, 715 g et 810 g pour la [paire vendue seule](https://www.canyon.com/en-de/gear/bike-parts/tyres-and-tubes/wheels/canyon-gr-30-cf-wheelset/10014610.html) (`canyon-gr30cf`).
+- **Patte de dérailleur.** La liste des composants ne parle pas de patte UDH, la patte universelle de SRAM. Seul l'onglet « Spare parts » de la [fiche anglaise](https://www.canyon.com/en-ch/gravel-bikes/adventure/grizl/cf/grizl-cf-8-di2/4556.html) (`canyon-4556-en`) la liste : « SRAM UDH Derailleur Hanger ». La [fiche Shimano du RD-M8250-GS](https://productinfo.shimano.com/en/product/RD-M8250-GS) (`shimano-rd-m8250-gs`) l'accepte : « UDH standard ». Présence sur le vélo : à lire sur la pièce.
+- **Pédales.** La [photo officielle du vélo](https://dma.canyon.com/image/upload/w_2400,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1785934014/2027_FULL_grizl_cf-8-di2_4556_R126_P06_vpvgno) (`canyon-photo-4556-fv`) montre une pédale automatique Shimano marquée « XT ». La fiche dit « Pédales : Non inclus ».
+
+## À lire sur le vélo à la livraison
+
+Ce que les documents ne disent pas, ou disent de deux façons. À vérifier pièce en main :
+
+- Le modèle gravé sur chaque étrier, BR-RX820 attendu, et le type de vis de purge.
+- La manette gauche : ST-RX825-L, avec boutons, ou BL-RX825-L, levier seul.
+- Les plaquettes d'origine : L05A-RF attendues (K05S-RX ou autre possibles), et leur épaisseur neuve.
+- Les disques : référence exacte (RT-MT800 ou RT-CL800), type de bague (denture intérieure, outil TL-LR15, ou extérieure, outil TL-FC36) et épaisseur neuve.
+- Le corps de roue libre de la roue arrière (Micro Spline, pour le pignon de 9 dents) et la pression maximale imprimée sur la jante.
+- Les valves tubeless : présentes ou non dans le carton.
+- Le pneu : version exacte, gomme et code de sculpture, sur le flanc.
+- La patte de dérailleur UDH : présence et état.
+- La chaîne : référence (CN-M8100 supposée), nombre de maillons et attache QUICK-LINK.
+- Le boîtier : référence exacte (SM-BB72-41B supposée).
+- L'accumulateur BT-DN320, dans le dérailleur : état de charge à la réception. Les piles CR1632 des manettes, que Shimano livre « intended only for test purposes ».
+- La tige : marquage « VCLS 2.1 CF » et « SETBACK 18 / 6 mm », position de la tête FLIP HEAD, couple des vis de tête (non publié) et débattement (non publié pour la 2.1).
+- Les cotes de la cocotte ST-RX825, non publiées, pour la 3D.
+- La selle : ce que mesure la « Length 270 mm » de Fizik, la selle ou le rail.
+- Les couples non publiés dans les documents lus : vis de tête de la tige, serrage de la patte UDH, axes traversants (à lire dans le guide Canyon livré).

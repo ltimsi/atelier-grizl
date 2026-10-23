@@ -205,6 +205,36 @@ test('registre des sources : forme, types et documents attendus', () => {
   assert.ok(!Object.values(SOURCES).some(s => /parktool|bikeradar|youtube/i.test(s.url)), 'source non officielle');
 });
 
+test('registre des sources : les documents du Grizl CF 8 Di2', () => {
+  const ids = [
+    'canyon-4556', 'canyon-4556-en', 'canyon-photo-4556-fv', 'canyon-photo-4556-confort',
+    'canyon-photo-4556-degagement', 'canyon-gr30cf', 'canyon-manuel-roues',
+    'shimano-dm-gadbr10', 'shimano-dm-gadbr01-11', 'shimano-gamme-rx820-1x12-di2', 'shimano-st-rx825',
+    'shimano-br-rx820', 'shimano-ev-br-rx820', 'shimano-rd-m8250-gs', 'shimano-cs-m8200-12', 'shimano-fc-rx820-1',
+    'shimano-sm-bb72-41b', 'shimano-cn-m8100', 'shimano-bt-dn320',
+    'schwalbe-g-one-rx', 'fizik-argo-terra-x5',
+  ];
+  for (const id of ids) {
+    assert.ok(SOURCES[id], `source absente : ${id}`);
+    assert.match(SOURCES[id].url, /^https:\/\//, `${id} : url`);
+  }
+  assert.equal(SOURCES['canyon-4556'].url,
+    'https://www.canyon.com/fr-ch/velos-de-gravel/adventure/grizl/cf/grizl-cf-8-di2/4556.html?dwvar_4556_pv_rahmenfarbe=R126_P06');
+  assert.equal(SOURCES['canyon-4556-en'].url,
+    'https://www.canyon.com/en-ch/gravel-bikes/adventure/grizl/cf/grizl-cf-8-di2/4556.html');
+  assert.equal(SOURCES['canyon-photo-4556-fv'].type, 'photo');
+  assert.equal(SOURCES['canyon-photo-4556-fv'].url,
+    'https://dma.canyon.com/image/upload/w_2400,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1785934014/2027_FULL_grizl_cf-8-di2_4556_R126_P06_vpvgno');
+  assert.equal(SOURCES['shimano-dm-gadbr10'].type, 'manuel');
+  assert.match(SOURCES['shimano-dm-gadbr10'].url, /DM-GADBR10-04-/);
+  assert.match(SOURCES['shimano-dm-gadbr01-11'].url, /DM-GADBR01-11-/);
+  // Les photos viennent du carrousel de la fiche et montrent ce vélo : sa 2e image, un Grizl CF 6, n'y est pas.
+  for (const id of ['canyon-photo-4556-fv', 'canyon-photo-4556-confort', 'canyon-photo-4556-degagement']) {
+    assert.equal(SOURCES[id].type, 'photo', id);
+    assert.match(SOURCES[id].url, /grizl_cf-8-di2_4556_R126_P06/, id);
+  }
+});
+
 test('modules purs : ni import, ni DOM, ni three.js', () => {
   for (const f of ['geometrie.js', 'sources.js']) {
     const code = readFileSync(new URL(`../../src/scene/${f}`, import.meta.url), 'utf8');

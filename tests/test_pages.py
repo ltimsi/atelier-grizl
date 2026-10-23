@@ -472,6 +472,24 @@ class TestPages(Site):
         self.assertEqual(un(racine, "nav.crumbs").texte(), "Références/Composants d'origine")
         self.assertIn(COMPOSANTS.strip(), self.html("composants/"))
 
+    def test_composants_cf8(self):
+        # Le contenu de la page (main.page) décrit le Grizl CF 8 Di2 et ne garde rien du CF 7. Le menu et l'en-tête
+        # du site changent à part, avec les autres textes du site.
+        for cible in ("site", "artifact"):
+            html = self.html("composants/", cible)
+            contenu = html[html.index('<main class="page"'):html.index("</main>")]
+            for attendu in ("Grizl CF 8 Di2", "RD-M8250-GS", "ST-RX825", "CS-M8200-12", "9-45", "GR 30 CF", "G-One RX",
+                            "Argo Terra X5", "SP100 VCLS 2.1", "PF 86,5", "690", "531"):
+                self.assertIn(attendu, contenu, f"{cible} : {attendu}")
+            for absent in ("CF 7", "RX822", "SM-RT64"):
+                self.assertNotIn(absent, contenu, f"{cible} : {absent}")
+            geometrie = un(un(dom.analyser(contenu), '[id="composants-geometrie"]'), "tbody")
+            lignes = {tds[0].texte(): tds[2].texte() for tds in
+                      (dom.selectionner(tr, "td") for tr in dom.selectionner(geometrie, "tr"))}
+            self.assertEqual((lignes["o"], lignes["p"]), ("690 mm", "531 mm"), cible)
+            self.assertIn('href="https://www.canyon.com/fr-ch/velos-de-gravel/adventure/grizl/cf/grizl-cf-8-di2/4556.html'
+                          '?dwvar_4556_pv_rahmenfarbe=R126_P06"', contenu, cible)
+
 
 class TestRecherche(Site):
     def test_recherche(self):
@@ -484,7 +502,7 @@ class TestRecherche(Site):
         self.assertIn({"k": "Catégorie", "t": "Freins", "u": "freins/"}, index)
         self.assertIn({"k": "Lot 4 · à venir", "t": "Transmission", "u": "transmission/"}, index)
         pieces = [e for e in index if e["k"] == "Pièce d’origine"]
-        self.assertTrue(any("RD-RX822" in e["t"] for e in pieces))
+        self.assertTrue(any("RD-M8250" in e["t"] for e in pieces))
         self.assertTrue(all(e["u"].startswith("composants/") for e in pieces))
         # Une entrée par ligne des tableaux de composants.html, et une par accessoire livré.
         fiche = dom.analyser(COMPOSANTS)
@@ -628,7 +646,8 @@ class TestComposants(unittest.TestCase):
         titres = [self.nettoyer(l[3:]) for l in MD.splitlines() if l.startswith("## ")]
         self.assertEqual([h.texte() for h in dom.selectionner(self.racine, "h2")], titres)
         self.assertEqual(titres, ["Cadre", "Transmission", "Freins", "Roues et pneus", "Poste de pilotage et selle",
-                                  "Accessoires livrés", "Géométrie de la taille M", "Contradictions et compléments relevés"])
+                                  "Accessoires livrés", "Géométrie de la taille M", "Contradictions et compléments relevés",
+                                  "À lire sur le vélo à la livraison"])
         self.assertEqual(un(self.racine, "h1").texte(), MD.splitlines()[0][2:])
 
     def test_textes(self):
@@ -646,14 +665,14 @@ class TestComposants(unittest.TestCase):
                 else:
                     self.assertIn(self.nettoyer(ligne), texte)
         self.assertNotIn("sources.js", COMPOSANTS)
-        self.assertIn("« Contintental Terra Adventure Trail Grip »", texte)
+        self.assertIn("« Hauteur de la jantee en mm 30 »", texte)
 
     def test_liens(self):
         adresses = re.findall(r"\]\((https://[^)]+)\)", MD) + re.findall(r"^(?:Source|Photo officielle du coloris) : (\S+)$", MD, re.M)
         hrefs = [a.get("href") for a in dom.selectionner(self.racine, "a")]
         self.assertEqual(set(hrefs), set(adresses))
-        self.assertIn("https://www.canyon.com/fr-ch/velos-de-gravel/adventure/grizl/cf/grizl-cf-7/4553.html"
-                      "?dwvar_4553_pv_rahmenfarbe=R126_P06", hrefs)
+        self.assertIn("https://www.canyon.com/fr-ch/velos-de-gravel/adventure/grizl/cf/grizl-cf-8-di2/4556.html"
+                      "?dwvar_4556_pv_rahmenfarbe=R126_P06", hrefs)
         for a in dom.selectionner(self.racine, "a"):
             self.assertEqual((a.get("target"), a.get("rel")), ("_blank", "noopener"), a.get("href"))
 
@@ -661,16 +680,37 @@ class TestComposants(unittest.TestCase):
         # Les identifiants ne sont pas dans le texte (certaines adresses de Canyon contiennent le même mot).
         texte = self.racine.texte()
         idents = re.findall(r"`([a-z0-9]+(?:-[a-z0-9]+)+)`", MD)
-        self.assertEqual(len(set(idents)), 8)
+        self.assertEqual(len(set(idents)), 18)
         for ident in idents:
             self.assertNotIn(ident, texte)
         self.assertNotIn("(`", COMPOSANTS)
         self.assertNotIn("()", texte)
 
+    def test_a_lire_sur_la_piece(self):
+        # L'étrier, la variante de la manette gauche et le modèle des disques sont à lire sur le vélo : chacun a son
+        # paragraphe sous le tableau des freins, marqué par span.verif.
+        freins = un(self.racine, '[id="composants-freins"]')
+        for indice in ("BR-RX820", "BL-RX825-L", "RT-CL800"):
+            with self.subTest(indice):
+                paragraphe = [p for p in dom.selectionner(freins, "p") if indice in p.texte()]
+                self.assertEqual(len(paragraphe), 1)
+                marques = [s.texte() for s in dom.selectionner(paragraphe[0], "span.verif")]
+                self.assertEqual(marques, ["à lire sur la pièce"])
+
     def test_regles(self):
         self.assertIsNone(re.search("[\u2014\u2013]", COMPOSANTS))
         for prive in ("claude.ai", "docs.google.com", "Lamine"):
             self.assertNotIn(prive, COMPOSANTS)
+
+    def test_releves_du_depot(self):
+        # Les deux relevés versés au dépôt : sans tiret cadratin ni demi-cadratin, sans chemin de travail local.
+        sources = (RACINE / "docs" / "recherche" / "sources-cf8-di2.md").read_text(encoding="utf-8")
+        for nom, texte in (("composants-origine.md", MD), ("sources-cf8-di2.md", sources)):
+            with self.subTest(nom):
+                self.assertIsNone(re.search("[\u2014\u2013]", texte))
+                for local in ("/private/", "/tmp/", "scratchpad", "releve-composants.txt", "pdf/"):
+                    self.assertNotIn(local, texte)
+        self.assertTrue(sources.startswith("# Grizl CF 8 Di2 (4556, taille M, Floating Violet R126_P06)"))
 
 
 class TestLiensCasses(unittest.TestCase):
