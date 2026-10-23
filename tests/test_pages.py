@@ -653,7 +653,8 @@ class TestComposants(unittest.TestCase):
     def test_textes(self):
         # Chaque paragraphe et chaque puce de la fiche, nettoyés du Markdown, sont dans la page. Seule la phrase qui
         # annonce les identifiants internes (retirés) n'y est pas.
-        annonce = " Chaque document cité est enregistré dans `src/scene/sources.js`, sous l'identifiant donné entre parenthèses."
+        annonce = (" Les documents suivis d'un identifiant entre parenthèses sont enregistrés dans `src/scene/sources.js`,"
+                   " sous cet identifiant.")
         texte = self.racine.texte()
         puces = [li.texte() for li in dom.selectionner(self.racine, "li")]
         for ligne in MD.replace(annonce, "").splitlines():
@@ -680,7 +681,7 @@ class TestComposants(unittest.TestCase):
         # Les identifiants ne sont pas dans le texte (certaines adresses de Canyon contiennent le même mot).
         texte = self.racine.texte()
         idents = re.findall(r"`([a-z0-9]+(?:-[a-z0-9]+)+)`", MD)
-        self.assertEqual(len(set(idents)), 18)
+        self.assertEqual(len(set(idents)), 19)
         for ident in idents:
             self.assertNotIn(ident, texte)
         self.assertNotIn("(`", COMPOSANTS)
@@ -696,6 +697,31 @@ class TestComposants(unittest.TestCase):
                 self.assertEqual(len(paragraphe), 1)
                 marques = [s.texte() for s in dom.selectionner(paragraphe[0], "span.verif")]
                 self.assertEqual(marques, ["à lire sur la pièce"])
+
+    def test_statut_rt_mt800(self):
+        # Contradiction n° 6 de la recherche : RT-MT800 marqué discon dans C-461 et absent de productinfo, mais fiche
+        # bike.shimano.com en ligne et absent de la liste des produits abandonnés. Ses quatre documents sont liés.
+        disques = [li for li in dom.selectionner(un(self.racine, '[id="composants-contradictions"]'), "li")
+                   if li.texte().startswith("Disques.")]
+        self.assertEqual(len(disques), 1)
+        texte = disques[0].texte()
+        for attendu in ("discon", "« No results »", "23 octobre 2026", "non tranché"):
+            self.assertIn(attendu, texte)
+        hrefs = [a.get("href") for a in dom.selectionner(disques[0], "a")]
+        for adresse in ("https://productinfo.shimano.com/en/compatibility/C-461",
+                        "https://productinfo.shimano.com/en/product/RT-MT800",
+                        "https://bike.shimano.com/products/components/pdp.P-RT-MT800.html",
+                        "https://bike.shimano.com/products/discontinued.html"):
+            self.assertIn(adresse, hrefs)
+
+    def test_jante_gr30cf(self):
+        # Largeur extérieure et désignation ETRTO de la jante : publiées par la page Canyon de la paire GR 30 CF.
+        roues = un(self.racine, '[id="composants-roues"]')
+        for tr in dom.selectionner(roues, "tbody > tr")[:2]:
+            self.assertIn("largeur externe 33 mm", tr.texte())
+        self.assertIn("« External width: 33mm, ETRTO 622x27TSS »", roues.texte())
+        self.assertIn("https://www.canyon.com/en-de/gear/bike-parts/tyres-and-tubes/wheels/canyon-gr-30-cf-wheelset/"
+                      "10014610.html", [a.get("href") for a in dom.selectionner(roues, "a")])
 
     def test_regles(self):
         self.assertIsNone(re.search("[\u2014\u2013]", COMPOSANTS))
