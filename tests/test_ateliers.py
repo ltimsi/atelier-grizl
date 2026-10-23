@@ -61,7 +61,7 @@ class Ateliers(unittest.TestCase):
         self.assertEqual((p.num, p.titre, p.type, p.zone), ("2.3", "Changer les plaquettes", "remplacer", "etrier"))
         self.assertEqual((p.de, p.vers), ("Plaquettes d’origine L05A-RF", "Shimano L05A-RF neuves"))
         self.assertEqual(p.demonter, "La roue.")
-        self.assertEqual(len(p.outils), 9)
+        self.assertEqual(len(p.outils), 10)
         self.assertEqual(p.outils[0], "Plaquettes Shimano L05A-RF neuves, une paire par frein")
         self.assertEqual(len(p.etapes), 10)
         self.assertEqual(p.etapes[0].titre, "Sors les anciennes plaquettes")
@@ -226,7 +226,7 @@ class Ateliers(unittest.TestCase):
             case, libelle = elements(label)
             self.assertEqual((label.tag, case.tag, case.get("type"), libelle.tag), ("label", "input", "checkbox", "span"))
             self.assertEqual(case.get("id"), f"ck-freins-plaquettes-kit-{n}")
-        self.assertEqual(len(cases), 9)
+        self.assertEqual(len(cases), 10)
 
         self.assertEqual(elements(couples)[0].texte(), "Couples de l’atelier")
         lignes = dom.selectionner(couples, "li")
