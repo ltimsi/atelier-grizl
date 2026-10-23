@@ -1,70 +1,82 @@
-// Pièce 3D : roues DT Swiss Gravel LN, pneus Continental Terra Adventure, valves et axes traversants.
+// Pièce 3D : roues Canyon GR 30 CF (jantes carbone sans crochets, moyeux DT Swiss 350 Spline), pneus Schwalbe
+// G-One RX, valves et axes traversants.
 //
 // Repère de geometrie.js, en millimètres : x vers l'avant, y vers le haut, z vers la droite du cycliste.
 // Les cotes viennent de GEO, de points() et de COTES, chacune avec son document dans SOURCES.
 // Les autres nombres de ce fichier sont des valeurs de dessin : profil de la jante hors hauteur et largeur intérieure,
 // section du pneu, crampons, moyeux, rayonnage, valve et têtes d'axe. META.approche les liste, sans chiffre.
-// Lu sur la photo officielle de profil (canyon-photo-4553-fv) : vingt-quatre rayons par roue, l'angle de leur trou de
-// jante, leur croisement au plus juste, la valve en haut entre deux rayons.
+// Lu sur la photo officielle de profil (canyon-photo-4556-fv) : jantes, rayons et écrous de rayon noirs, vingt-quatre
+// rayons par roue, l'angle de leur trou de jante, leur croisement au plus juste, la valve en haut entre deux rayons, la
+// hauteur du pneu au-dessus de la jante, les crampons d'épaule groupés par deux. Sur la photo du passage de pneu
+// (canyon-photo-4556-degagement) : petits crampons serrés au centre, plus gros sur les épaules.
 // Aucun import : le module ne reçoit que les outils de construction, les points et GEO.
 
-const FICHE = 'canyon-4553';
+const FICHE = 'canyon-4556';
 const cote = (v, src) => Object.freeze({ v, src });
 
 // Cotes publiées propres à ces pièces.
 export const COTES = Object.freeze({
-  largeurPneu: cote(45, FICHE), // « Largeur 45 mm »
-  hauteurJante: cote(26, FICHE), // « Hauteur de la jante 26 mm »
-  largeurInterneJante: cote(24, FICHE), // « Largeur interne 24 mm »
-  axeAvant: cote(100, FICHE), // « Dimension de l'Axe 12x100 mm »
-  axeArriere: cote(142, FICHE), // « Dimension de l'Axe 12x142 mm »
+  largeurPneu: cote(45, 'schwalbe-g-one-rx'), // « ETRTO: 45-622 »
+  hauteurJante: cote(30, FICHE), // « jante 30 mm », et « Hauteur de la jantee en mm 30 »
+  largeurInterneJante: cote(27, FICHE), // « largeur interne 27 mm »
+  axeAvant: cote(100, FICHE), // roue avant et axe traversant, « 12x100 »
+  axeArriere: cote(142, FICHE), // roue arrière et axe traversant, « 12x142 »
   diametreAxe: cote(12, FICHE), // le « 12 » de 12x100 et de 12x142
 });
 
 export const META = Object.freeze({
   id: 'roues',
-  nom: 'Roues DT Swiss Gravel LN, pneus Continental Terra Adventure et axes traversants',
+  nom: 'Roues Canyon GR 30 CF, pneus Schwalbe G-One RX et axes traversants',
   zone: null, // l'atelier tubeless n'est pas dans cette livraison
   sources: Object.freeze([
     FICHE,
-    'canyon-photo-4553-fv',
-    'continental-terra-adventure',
-    'continental-photo-terra-adventure-centre',
-    'continental-photo-terra-adventure-epaules',
-    'dtswiss-manuel-roues',
+    'canyon-photo-4556-fv',
+    'canyon-photo-4556-degagement',
+    'canyon-gr30cf',
+    'schwalbe-g-one-rx',
   ]),
   approche: Object.freeze([
-    'Profil de la jante : seules sa hauteur et sa largeur intérieure sont publiées. Flancs, crochets et creux central ' +
-      'sont approchés.',
-    'Section du pneu : ronde, à la largeur publiée. Le rayon extérieur du pneu monté n’est pas publié, il est approché.',
-    'Crampons : Continental décrit des rangées de trois, trois puis quatre crampons au centre, et des crampons ' +
-      'd’épaule inclinés. Taille, hauteur et nombre de rangées sont approchés d’après les photos officielles.',
-    'Moyeux : Canyon ne nomme pas leur modèle. Corps, flasques et position des flasques sont approchés.',
-    'Rayons : leur nombre se compte sur la photo officielle. Croisement, rayon des flasques et grosseur des rayons ' +
-      'sont approchés d’après cette photo.',
+    'Profil de la jante : hauteur et largeur intérieure publiées, et Canyon annonce des jantes sans crochets. ' +
+      'Largeur extérieure, flancs, siège du talon et creux central sont approchés.',
+    'Section du pneu : ronde, à la largeur publiée. Le rayon extérieur du pneu monté n’est pas publié, il est approché ' +
+      'd’après la photo officielle.',
+    'Crampons : Schwalbe décrit des crampons extérieurs appariés, sans cote. Petits crampons serrés au centre, ' +
+      'crampons d’épaule plus gros et groupés par deux : taille, hauteur, inclinaison et nombre sont approchés ' +
+      'd’après les photos officielles.',
+    'Moyeux : Canyon nomme des moyeux DT Swiss à rayons droits. Corps, flasques et position des flasques sont approchés.',
+    'Rayons : leur nombre est publié. Profil plat, croisement, rayon des flasques et grosseur des rayons sont ' +
+      'approchés d’après la photo officielle.',
     'Cannelures Center Lock et corps de roue libre : formes approchées.',
-    'Valve : type et longueur non publiés, forme approchée. Sa place suit la photo officielle.',
+    'Valve : type et longueur non publiés, forme approchée. Sa place suit la photo officielle, sa tête dorée n’est pas ' +
+      'rendue.',
+    'Inscriptions des jantes et des flancs des pneus : non dessinées.',
     'Axes traversants : seuls leur diamètre et l’écartement des pattes sont publiés. Têtes et embouts sont approchés.',
   ]),
   aVerifier: Object.freeze([
-    'jante à crochets ou sans crochets : à lire sur le marquage de la jante',
-    'modèle des moyeux : à lire sur les moyeux',
-    'nombre de rayons, à compter sur la roue',
+    'pression maximale imprimée sur la jante : à lire sur la jante',
+    'corps de roue libre de la roue arrière, Micro Spline attendu : à lire sur le moyeu',
+    'version du pneu, gomme et code de sculpture : à lire sur le flanc',
+    'valves tubeless : présentes ou non dans le carton',
   ]),
 });
 
 // ---- Valeurs de dessin (approchées, voir META.approche) ----
-const CROCHET = 5.5; // hauteur des crochets au-dessus du siège du talon
-const PAROI = 2; // épaisseur des flancs de la jante
-const CRAMPON = 3; // hauteur des crampons
-const RANGEES = 264; // rangées de crampons sur un tour, lues au mieux sur la photo de profil
-const MOTIF = [ // positions latérales des crampons centraux, en mm le long de la section, et leur largeur
-  { s: [-8.5, 0, 8.5], l: 6.5 },
-  { s: [-8.5, 0, 8.5], l: 6.5 },
-  { s: [-11.25, -3.75, 3.75, 11.25], l: 5 },
-];
-const EPAULE = { s: 17.5, longueur: 6, largeur: 5.5, hauteur: 3.2, angle: 0.32 };
+const FLANC = 4.5; // hauteur du flanc de la jante au-dessus du siège du talon : une jante sans crochets s'arrête là
+// Largeur extérieure de la jante : la valeur du plan du passage au CF 8 Di2. Le relevé des sources ne la cite pas,
+// elle est donc approchée.
+const LARGEUR_EXTERIEURE = 33;
+const CRAMPON = 2.6; // hauteur des crampons du centre, les plus hauts : leur dessus fait le rayon extérieur du pneu
+// Sculpture : un motif se répète MOTIFS fois sur le tour. Au centre, quatre rangées de petits crampons, de trois puis
+// de deux. Sur chaque épaule, une paire : un crampon incliné vers le centre, puis un crampon long au bord. Les deux
+// épaules sont décalées d'un demi-motif. s : place le long de la section, depuis le sommet ; t : place dans le motif.
+const MOTIFS = 84;
+const CENTRE = Object.freeze({ longueur: 3.6, largeur: 4, rangees: [[-8, 0, 8], [-4, 4], [-8, 0, 8], [-4, 4]] });
+const EPAULE = Object.freeze([
+  { s: 15, t: 0, longueur: 4.5, largeur: 8.5, hauteur: 3.4, angle: 0.5 },
+  { s: 20, t: 0.42, longueur: 10, largeur: 6.5, hauteur: 3.4, angle: 0 },
+]);
 const RAYON_FLASQUE = 22.5; // cercle des trous de rayons sur les flasques
+const RAYON_PLAT = { mince: 0.65, large: 1.25 }; // demi-épaisseurs d'un rayon plat, le long du tour et le long de l'axe
 const CROISEMENT = 2; // rayons croisés deux fois
 const ANGLE_PREMIER_RAYON = 7.5; // en degrés depuis l'avant, lu sur la photo, comme la valve à quatre-vingt-dix degrés
 const ANGLE_VALVE = 90;
@@ -110,22 +122,25 @@ function roue(o, { c, flasques }, geo) {
   const siege = geo.diametreSiegeJante.v / 2;
   const nom = n => m => { m.name = n; return m; };
 
-  // Jante : profil fermé, crochets en haut des flancs, creux central. Sens de parcours : la matière à gauche.
-  const demi = COTES.largeurInterneJante.v / 2, ext = demi + PAROI;
-  const haut = siege + CROCHET, bas = haut - COTES.hauteurJante.v;
-  const demiProfil = [ // de z = +demi en haut du crochet, vers l'extérieur puis le fond de jante
-    [haut, demi], [haut, ext], [haut - 3.5, ext], [siege - 11, ext - 0.4], [bas + 3.5, ext - 2.5], [bas + 0.7, 6], [bas, 0],
+  // Jante sans crochets : flancs droits arrondis en haut, siège du talon et son bourrelet, creux central, puis le dessous
+  // en U jusqu'au fond, où entrent les rayons. Sens de parcours : la matière à gauche.
+  const demi = COTES.largeurInterneJante.v / 2, ext = LARGEUR_EXTERIEURE / 2;
+  const haut = siege + FLANC, bas = haut - COTES.hauteurJante.v;
+  const demiProfil = [ // de z = +demi en haut du flanc, vers l'extérieur puis le fond de jante
+    [haut, demi + 0.6], [haut, ext - 0.9], [haut - 0.35, ext - 0.3], [haut - 1, ext], [haut - 7, ext],
+    [siege - 12, ext - 0.6], [bas + 9, ext - 2.5], [bas + 4, ext - 5.5], [bas + 1.2, 7], [bas, 0],
   ];
-  const fond = [ // du siège du talon côté z négatif au siège côté z positif, par le creux central
-    [siege, -demi], [siege, -(demi - 2.5)], [siege - 1.5, -(demi - 3.5)], [siege - 4, -5], [siege - 5.5, -4],
-    [siege - 5.5, 4], [siege - 4, 5], [siege - 1.5, demi - 3.5], [siege, demi - 2.5], [siege, demi],
+  const fond = [ // du siège du talon côté z négatif au siège côté z positif, par le bourrelet et le creux central
+    [siege, -demi], [siege, -(demi - 2.2)], [siege + 0.8, -(demi - 3)], [siege - 0.4, -(demi - 4)], [siege - 3.5, -5.5],
+    [siege - 4.5, -4], [siege - 4.5, 4], [siege - 3.5, 5.5], [siege - 0.4, demi - 4], [siege + 0.8, demi - 3],
+    [siege, demi - 2.2], [siege, demi],
   ];
   const profilJante = [
     ...demiProfil,
     ...demiProfil.slice(0, -1).reverse().map(([r, z]) => [r, -z]),
-    [haut - 1.5, -(demi - 0.7)], [siege + 2.5, -demi],
+    [haut - 0.6, -demi],
     ...fond,
-    [siege + 2.5, demi], [haut - 1.5, demi - 0.7], [haut, demi],
+    [haut - 0.6, demi], [haut, demi + 0.6],
   ];
   nom('jante')(o.lathe(profilJante, 180, 'rim')).position.set(c[0], c[1], 0);
 
@@ -151,12 +166,17 @@ function roue(o, { c, flasques }, geo) {
   nom('pneu')(o.lathe(profilPneu, 160, 'rubber')).position.set(c[0], c[1], 0);
   nom('pneu')(crampons(o, c, centre, R));
 
-  // Rayons et écrous de rayon : InstancedMesh, un trou de jante tous les quinze degrés pour vingt-quatre rayons.
+  // Rayons plats et écrous de rayon noirs : InstancedMesh, un trou de jante tous les quinze degrés pour vingt-quatre
+  // rayons. Un rayon plat est large le long de l'axe de la roue et mince le long du tour : de profil, on voit sa tranche.
   const T = o.THREE, n = geo.nombreRayons.v;
   const rayons = nom('rayons')(o.inst(new T.CylinderGeometry(1, 1, 1, 6, 1), 'spoke', n));
-  const ecrous = nom('écrous de rayon')(o.inst(new T.CylinderGeometry(2, 2, 1, 8, 1), 'steel', n));
-  const Y = new T.Vector3(0, 1, 0), A = new T.Vector3(), B = new T.Vector3(), D = new T.Vector3();
-  const q = new T.Quaternion(), mtx = new T.Matrix4(), un = new T.Vector3(1, 1, 1);
+  const ecrous = nom('écrous de rayon')(o.inst(new T.CylinderGeometry(2, 2, 1, 8, 1), 'black', n));
+  const A = new T.Vector3(), B = new T.Vector3(), D = new T.Vector3(), X = new T.Vector3(), Z = new T.Vector3();
+  const mtx = new T.Matrix4(), echelle = new T.Matrix4();
+  const pose = (m, i, centre, l, mince, large) => {
+    mtx.makeBasis(X, D, Z).multiply(echelle.makeScale(mince, l, large)).setPosition(centre);
+    m.setMatrixAt(i, mtx);
+  };
   const decalage = 720 * CROISEMENT / n; // angle entre le trou de flasque et le trou de jante d'un même rayon
   for (let i = 0; i < n; i++) {
     const a = ANGLE_PREMIER_RAYON + i * 360 / n;
@@ -166,11 +186,11 @@ function roue(o, { c, flasques }, geo) {
     B.set(j[0], j[1], 0);
     D.copy(B).sub(A);
     const l = D.length();
-    q.setFromUnitVectors(Y, D.normalize());
-    mtx.compose(A.clone().add(B).multiplyScalar(0.5), q, un.clone().setY(l));
-    rayons.setMatrixAt(i, mtx);
-    mtx.compose(B.clone().addScaledVector(D, -4), q, un.clone().setY(12));
-    ecrous.setMatrixAt(i, mtx);
+    D.normalize();
+    Z.set(0, 0, 1).addScaledVector(D, -D.z).normalize(); // l'axe de la roue, ramené en travers du rayon
+    X.crossVectors(D, Z);
+    pose(rayons, i, A.clone().add(B).multiplyScalar(0.5), l, RAYON_PLAT.mince, RAYON_PLAT.large);
+    pose(ecrous, i, B.clone().addScaledVector(D, -4), 12, 1, 1);
   }
 
   // Valve : tige qui sort du fond de jante vers le moyeu, écrou contre la jante, obus au bout.
@@ -181,6 +201,7 @@ function roue(o, { c, flasques }, geo) {
 }
 
 // Crampons d'un pneu, dans une seule InstancedMesh : pavés à flancs inclinés, plantés dans la carcasse.
+// Chaque motif : les rangées du centre, puis la paire d'épaule de chaque côté, la gauche décalée d'un demi-motif.
 function crampons(o, c, centre, R) {
   const T = o.THREE;
   const g = new T.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
@@ -189,17 +210,18 @@ function crampons(o, c, centre, R) {
   g.computeVertexNormals();
 
   const pose = [];
-  const pas = 360 / RANGEES;
-  for (let r = 0; r < RANGEES; r++) {
-    const rang = MOTIF[r % MOTIF.length];
-    for (const s of rang.s) pose.push({ a: r * pas, s, longueur: 5.4, largeur: rang.l, hauteur: CRAMPON, angle: 0 });
-  }
-  // Épaules : deux crampons par motif de chaque côté, décalés d'un côté à l'autre.
-  for (let m = 0; m < RANGEES / MOTIF.length; m++) {
-    const a0 = m * MOTIF.length * pas;
-    for (const [cote, rangs] of [[1, [0.25, 1.75]], [-1, [1, 2.5]]]) for (const k of rangs) {
-      pose.push({ a: a0 + k * pas, s: cote * EPAULE.s, longueur: EPAULE.longueur, largeur: EPAULE.largeur,
-        hauteur: EPAULE.hauteur, angle: cote * EPAULE.angle });
+  const pas = 360 / MOTIFS;
+  for (let m = 0; m < MOTIFS; m++) {
+    const a0 = m * pas;
+    CENTRE.rangees.forEach((rang, k) => {
+      for (const s of rang) {
+        pose.push({ a: a0 + k * pas / CENTRE.rangees.length, s, longueur: CENTRE.longueur, largeur: CENTRE.largeur,
+          hauteur: CRAMPON, angle: 0 });
+      }
+    });
+    for (const [cote, demiMotif] of [[1, 0], [-1, 0.5]]) for (const e of EPAULE) {
+      pose.push({ a: a0 + (e.t + demiMotif) * pas, s: cote * e.s, longueur: e.longueur, largeur: e.largeur,
+        hauteur: e.hauteur, angle: cote * e.angle });
     }
   }
 

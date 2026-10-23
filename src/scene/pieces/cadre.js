@@ -1,38 +1,48 @@
-// Pièce 3D : cadre Canyon Grizl CF, fourche FK0143, collier GP0596-01, tige de selle SP100 et selle Selle Royal SRX.
+// Pièce 3D : cadre Canyon Grizl CF, fourche FK0143, collier GP0596-01, tige de selle Canyon SP100 VCLS 2.1 CF 27.2
+// et selle Fizik Argo Terra X5.
 //
 // Repère de geometrie.js, en millimètres : x vers l'avant, y vers le haut, z vers la droite du cycliste.
 // Les cotes viennent de GEO, de points() et de COTES, chacune avec son document dans SOURCES.
 // Tous les autres nombres de ce fichier sont des valeurs de dessin : largeurs des tubes, raccords, positions des
-// inserts, lues au mieux sur la photo officielle de profil (canyon-photo-4553-fv), calée sur les pneus.
-// Ces formes ne sont pas publiées. META.approche les liste, sans chiffre.
+// inserts, lues au mieux sur la photo officielle de profil (canyon-photo-4556-fv), calée sur les pneus ; lames et tête
+// de la tige, contour et galbe de la selle, lus sur cette photo et sur celle de la tige et de la selle
+// (canyon-photo-4556-confort). Ces formes ne sont pas publiées. META.approche les liste, sans chiffre.
 // Aucun import : le module ne reçoit que les outils de construction, les points et GEO.
 
-const FICHE = 'canyon-4553';
+const FICHE = 'canyon-4556';
+const MARQUAGE = 'canyon-photo-sp100-marquage'; // la photo officielle de la tige, avec ses cotes imprimées
+const FIZIK = 'fizik-argo-terra-x5';
 const cote = (v, src) => Object.freeze({ v, src });
 
 // Cotes publiées propres à ces pièces.
 export const COTES = Object.freeze({
   axeArriere: cote(142, FICHE), // cadre, « Axe 12x142 mm »
   axeAvant: cote(100, FICHE), // fourche FK0143, « Axe 12x100 mm »
-  degagementPneu: cote(54, FICHE), // cadre et fourche, « Espace pour les pneus 54MM »
-  diametreTige: cote(27.2, FICHE), // tige SP100, « Diamètre Du Collier 27,2 mm »
-  longueurTige: cote(350, FICHE), // tige SP100, « Longueur de tige de selle en mm 350 »
-  largeurSelle: cote(148, FICHE), // selle SRX, « Largeur 148 mm »
-  reculTete: cote(18, 'canyon-photo-sp100-marquage'), // imprimé sur la tige : « SETBACK 18 / 6 mm », selon le sens de la tête
+  degagementPneu: cote(54, FICHE), // cadre et fourche, « espace pneus 54MM »
+  diametreTige: cote(27.2, MARQUAGE), // « DIAMETER 27,2 mm », comme les « 27,2 mm » de la fiche
+  longueurTige: cote(350, MARQUAGE), // « LENGHT 350 mm » (sic), comme les « 350 mm » de la fiche
+  reculTete: cote(18, MARQUAGE), // « SETBACK 18 / 6 mm », selon le sens de la tête
+  largeurSelle: cote(150, FIZIK), // « Width 150 mm », comme les « 150 mm » de la fiche
+  longueurSelle: cote(270, FIZIK), // « Length 270 mm »
+  largeurRepere: cote(75, FIZIK), // le « 75mm » des deux cotes suivantes : la selle a cette largeur au repère
+  repereDepuisBec: cote(113, FIZIK), // « Length from nose at 75mm 113 mm »
+  hauteurRepere: cote(51, FIZIK), // « Height at 75mm 51 mm », prise ici depuis l'axe des rails
+  rail: cote(7, FIZIK), // « Rail Dimension 7x7 »
 });
 
 export const META = Object.freeze({
   id: 'cadre',
-  nom: 'Cadre, fourche, tige de selle et selle',
+  nom: 'Cadre, fourche, tige de selle SP100 VCLS 2.1 et selle Fizik Argo Terra X5',
   zone: null, // aucun atelier du cadre ni de la selle dans cette livraison
   sources: Object.freeze([
     FICHE,
-    'canyon-photo-4553-fv',
-    'canyon-photo-4553-confort',
-    'canyon-photo-4553-degagement',
+    'canyon-photo-4556-fv',
+    'canyon-photo-4556-confort',
+    'canyon-photo-4556-degagement',
     'canyon-sp100',
     'canyon-photo-sp100',
-    'canyon-photo-sp100-marquage',
+    MARQUAGE,
+    FIZIK,
   ]),
   approche: Object.freeze([
     'Profils et diamètres des tubes du cadre : non publiés, formes approchées d’après la photo officielle de profil.',
@@ -44,17 +54,55 @@ export const META = Object.freeze({
     'Pattes du cadre, de la fourche et patte de dérailleur : formes approchées. Seul l’écartement des axes est publié.',
     'Jeu laissé autour du pneu le plus large : non publié, approché.',
     'Protections noires et inserts de fixation : forme et position approchées d’après la photo officielle.',
-    'Boîte de pédalier : largeur approchée d’après le standard nommé par la fiche.',
+    'Boîte de pédalier : largeur publiée par la fiche, diamètre approché.',
     'Collier de selle : forme approchée.',
-    'Tige de selle : forme des lames et de la tête approchée d’après les photos officielles de Canyon.',
-    'Selle et rails : longueur, galbe et position sur les rails non publiés, formes approchées. ' +
-      'Seule la largeur de la selle est publiée.',
+    'Tige de selle : deux lames séparées par une fente sur leur longueur, qui s’écartent puis se rejoignent dans la ' +
+      'tête, comme sur les photos officielles de Canyon. Épaisseur et courbe des lames, place de la fente, yeux des ' +
+      'vis et forme de la tête sont approchés.',
+    'Selle : largeur, longueur, largeur à un repère mesuré depuis le bec et hauteur à ce repère publiées par Fizik. ' +
+      'Fizik ne dit pas d’où il prend cette hauteur : elle part ici de l’axe des rails, ce qui s’accorde avec la photo ' +
+      'officielle. Contour, galbe, bec court plongeant, place sur les rails et courbe des rails sont approchés ' +
+      'd’après les photos officielles.',
+    'Inscriptions de la tige, de la tête et de la selle : non dessinées.',
   ]),
   aVerifier: Object.freeze([
     'type de patte de dérailleur',
     'sens de la tête de la tige de selle à la livraison, donc son recul',
-    'modèle exact de la tige de selle : la liste des composants et le texte de la fiche ne la nomment pas de la même façon',
+    'marquage de la tige de selle : la fiche la nomme de plusieurs façons, à lire sur la tige',
+    'ce que mesure la longueur publiée par Fizik, la selle ou ses rails',
   ]),
+});
+
+// ---- Tige de selle et selle : valeurs de dessin (approchées, voir META.approche) ----
+// Lues au mieux sur les photos officielles du CF 8 Di2 (canyon-photo-4556-fv et canyon-photo-4556-confort), à l'échelle
+// des cotes publiées. s : le long de la tige depuis son bas ; n : en travers, vers l'avant.
+const TIGE = Object.freeze({
+  jonction: 30, // les deux lames se rejoignent au bas de la tige, dans le tube de selle
+  fente: 275, // au-dessus, elles s'écartent vers les vis de la tête
+  jeu: 0.6, // demi-largeur de la fente entre les deux lames
+  lame: 6.5, // demi-épaisseur des lames au-dessus de la fente, dans le plan du vélo
+  oeil: 8, // rayon des yeux des lames, autour des vis
+  vis: Object.freeze([[15, -10.5], [-15, -13]]), // vis de la tête, depuis l'axe des rails : devant, puis derrière
+  // Tête, de profil : le bloc entre les yeux, puis les plaques qui serrent les rails dessous et dessus.
+  // [x et y du centre depuis l'axe des rails, longueur, hauteur].
+  tete: Object.freeze([[0, -6, 26, 16], [0, -5.5, 38, 4], [0, 5, 44, 7]]),
+});
+const SELLE = Object.freeze({
+  recul: 143, // de l'axe des rails dans la tête jusqu'à l'arrière de la selle
+  demiBec: 19, // demi-largeur du bec
+  retrecit: 0.3, // part de la longueur, depuis l'arrière, où la selle commence à se rétrécir vers le bec
+  arrondis: Object.freeze([0.06, 0.08]), // parts de la longueur arrondies à l'arrière et au bec
+  // Hauteur du dessus, en millimètres, le long de la selle (part de la longueur depuis l'arrière) : le bec plonge.
+  dessus: Object.freeze([[0, 3], [0.085, 4], [0.31, 2], [0.53, 0], [0.715, -3], [0.88, -6.5], [1, -12]]),
+  epaisseur: 7.5, // demi-épaisseur de la coque, au milieu de la section
+  tombe: Object.freeze([3, 19, 4]), // descente des bords sous le milieu : à l'arrière, au centre, au bec
+  carre: 4, // exposant de la section : plus il est grand, plus elle est carrée
+  // Rails : attaches sous la coque (part de la longueur, écart au plan du vélo) et tronçon droit serré dans la tête.
+  rails: Object.freeze({
+    arriere: Object.freeze([0.2, 36]), avant: Object.freeze([0.79, 10]), droit: Object.freeze([-55, 50]), ecart: 20,
+  }),
+  sections: 44, // sections de la coque le long de la selle
+  tour: 36, // points sur le tour d'une section
 });
 
 // Vecteurs du plan [x, y].
@@ -88,7 +136,8 @@ function fuseau(o, a, b, [la, ea], [lb, eb], role, seg = 32) {
 /**
  * Ajoute au groupe des outils le cadre, la fourche, le collier, la tige de selle et la selle.
  * Aucun maillage n'a de zone ni de variante, et les outils en ressortent sans zone ni variante.
- * Les maillages dont un test vérifie la cote portent un nom : patte arrière, patte avant, tige de selle, selle.
+ * Les maillages dont un test vérifie la cote portent un nom : patte arrière, patte avant, boîte de pédalier,
+ * tige de selle, rail de selle, selle.
  * @param {object} o Les outils de creerOutils.
  * @param {object} p Les points de points(geo).
  * @param {object} geo GEO, ou un objet de même forme.
@@ -97,13 +146,13 @@ function fuseau(o, a, b, [la, ea], [lb, eb], role, seg = 32) {
 export function construire(o, p, geo) {
   o.zone(null);
   o.variante(null);
-  cadre(o, p);
+  cadre(o, p, geo);
   fourche(o, p);
   tigeEtSelle(o, p, geo);
 }
 
 // Le cadre : tubes, raccords, bases, haubans, pattes, protections noires et inserts.
-function cadre(o, p) {
+function cadre(o, p, geo) {
   const { BB, RA, HTt, HTb, STt, dHT, dST } = p;
   const avantST = normale(dST); // vers l'avant, perpendiculaire au tube de selle
 
@@ -120,8 +169,8 @@ function cadre(o, p) {
   const ttA = add(STt, mul(dST, -26)), ttB = add(HTt, mul(dHT, -30));
   const dTT = nrm(sub(ttB, ttA)), dessousTT = normale(dTT), demiTT = [14, 17.5];
   o.tube(v(ttA), v(ttB), ...demiTT, 'paint', { sz: 1.1, seg: 36 });
-  const demiBoite = 43; // largeur approchée d'après le standard PF 86 nommé par la fiche
-  o.tubeZ(BB, -demiBoite, demiBoite, 26.5, 'paint', 44);
+  const demiBoite = geo.largeurBoite.v / 2; // PF 86,5 : la moitié de chaque côté du plan du vélo
+  o.tubeZ(BB, -demiBoite, demiBoite, 26.5, 'paint', 44).name = 'boîte de pédalier';
 
   // Raccords
   o.ell(v(add(add(HTb, mul(dHT, 40)), [-12, -6])), [30, 52, 26], 'paint', angle(dHT) - Math.PI / 2);
@@ -199,14 +248,209 @@ function fourche(o, p) {
   }
 }
 
-// Le collier GP0596-01, la tige SP100 et la selle SRX.
+
+// ---- Tige de selle et selle ----
+
+// Valeur lissée d'une table [[u, valeur], ...] rangée par u croissant : passe par chaque point, sans cassure.
+function lisse(table, u) {
+  const n = table.length;
+  let i = 0;
+  while (i < n - 2 && u > table[i + 1][0]) i++;
+  const [u1, y1] = table[i], [u2, y2] = table[i + 1];
+  const [u0, y0] = i > 0 ? table[i - 1] : [2 * u1 - u2, 2 * y1 - y2];
+  const [u3, y3] = i + 2 < n ? table[i + 2] : [2 * u2 - u1, 2 * y2 - y1];
+  const t = (u - u1) / (u2 - u1), h = u2 - u1;
+  const m1 = (y2 - y0) / (u2 - u0) * h, m2 = (y3 - y1) / (u3 - u1) * h;
+  return (2 * t ** 3 - 3 * t ** 2 + 1) * y1 + (t ** 3 - 2 * t ** 2 + t) * m1 + (3 * t ** 2 - 2 * t ** 3) * y2 + (t ** 3 - t ** 2) * m2;
+}
+
+// La selle le long de sa longueur (u, de l'arrière au bec) : demi-largeur vue de dessus, arrondi des deux bouts,
+// hauteur du dessus et descente des bords. La largeur suit les cotes de Fizik : pleine largeur à l'arrière, puis un
+// rétrécissement qui passe par la largeur publiée au repère, à la distance publiée du bec, et finit sur le bec court.
+function profilSelle() {
+  const L = COTES.longueurSelle.v, demi = COTES.largeurSelle.v / 2;
+  const demiRepere = COTES.largeurRepere.v / 2, uRepere = 1 - COTES.repereDepuisBec.v / L;
+  const rampe = t => (1 - Math.cos(Math.PI * Math.min(1, Math.max(0, t)))) / 2;
+  const tRepere = Math.acos(1 - 2 * (demi - demiRepere) / (demi - SELLE.demiBec)) / Math.PI;
+  const fin = SELLE.retrecit + (uRepere - SELLE.retrecit) / tRepere;
+  const [ra, rb] = SELLE.arrondis, [ta, tm, tb] = SELLE.tombe;
+  return {
+    L,
+    largeur: u => demi - (demi - SELLE.demiBec) * rampe((u - SELLE.retrecit) / (fin - SELLE.retrecit)),
+    bout: u => {
+      if (u < ra) return Math.cbrt(1 - (1 - u / ra) ** 3);
+      if (u > 1 - rb) return Math.sqrt(Math.max(0, 1 - ((u - 1 + rb) / rb) ** 2));
+      return 1;
+    },
+    dessus: u => lisse(SELLE.dessus, u),
+    tombe: u => {
+      const bout = u < 0.5 ? ta : tb;
+      return bout + (tm - bout) * Math.sqrt(Math.sin(Math.PI * u));
+    },
+  };
+}
+
+// Section de la selle en u : un carré aux coins très arrondis, dont les bords tombent sous le milieu.
+// phi part du dessus et tourne vers la droite du cycliste. y0 : hauteur de référence du dessus.
+function pointSelle(f, u, phi, x0, y0) {
+  const e = f.bout(u), W = f.largeur(u) * e, H = SELLE.epaisseur * e, D = f.tombe(u) * e, k = 2 / SELLE.carre;
+  const s = Math.sin(phi), c = Math.cos(phi);
+  const zs = Math.sign(s) * Math.abs(s) ** k, ys = Math.sign(c) * Math.abs(c) ** k;
+  return [x0 + u * f.L, y0 + f.dessus(u) - H * (1 - ys) - D * zs ** 4, W * zs];
+}
+
+// Hauteur du dessous de la coque en u, à la distance z du plan du vélo : là où les rails entrent dans la selle.
+function dessousSelle(f, u, z, y0) {
+  const e = f.bout(u), W = f.largeur(u) * e, zs = Math.min(1, Math.abs(z) / W);
+  const c = Math.sqrt(1 - zs ** SELLE.carre);
+  return y0 + f.dessus(u) - SELLE.epaisseur * e * (1 + c ** (2 / SELLE.carre)) - f.tombe(u) * e * zs ** 4;
+}
+
+// Chemin lissé passant par une suite de points du plan (Catmull-Rom), n points par intervalle, le dernier compris.
+function courbe(points, n) {
+  const o = [], P = i => points[Math.max(0, Math.min(points.length - 1, i))];
+  for (let i = 0; i < points.length - 1; i++) for (let k = 0; k < n; k++) {
+    const t = k / n, [p0, p1, p2, p3] = [P(i - 1), P(i), P(i + 1), P(i + 2)];
+    o.push([0, 1].map(c => 0.5 * (2 * p1[c] + (p2[c] - p0[c]) * t + (2 * p0[c] - 5 * p1[c] + 4 * p2[c] - p3[c]) * t * t +
+      (3 * p1[c] - p0[c] - 3 * p2[c] + p3[c]) * t ** 3)));
+  }
+  o.push(points[points.length - 1]);
+  return o;
+}
+
+// Les deux lames en trois dimensions, en sections : de la jonction à la fente, un demi-disque dont le plat borde la
+// fente ; au-dessus, la section s'arrondit en une lame plate, qui garde la largeur de la tige en z, jusqu'à l'œil de sa
+// vis. Chaque section fait le tour de la lame ; sens vaut un pour la lame avant, moins un pour la lame arrière.
+function lamesEnSections(surTige, lames, mi) {
+  const r = COTES.diametreTige.v / 2, th = Math.acos(TIGE.jeu / r);
+  const demiDisque = []; // [a, b] : a vers l'extérieur de la lame depuis son milieu, b en travers du vélo
+  for (let k = 0; k <= 16; k++) {
+    const psi = th - 2 * th * k / 16;
+    demiDisque.push([r * Math.cos(psi) - mi, r * Math.sin(psi)]);
+  }
+  for (let k = 1; k < 6; k++) demiDisque.push([TIGE.jeu - mi, -r * Math.sin(th) * (1 - 2 * k / 6)]);
+  const plate = demiDisque.map(([a, b]) => {
+    const phi = Math.atan2(b / r, a / TIGE.lame);
+    return [TIGE.lame * Math.cos(phi), r * Math.sin(phi)];
+  });
+  return lames.map((haut, i) => {
+    const sens = i === 0 ? 1 : -1, chemin = [];
+    for (let s = TIGE.jonction; s < TIGE.fente - 4; s += 25) chemin.push(surTige(s, sens * mi));
+    const debut = chemin.length; // la fente : la section commence à s'arrondir
+    chemin.push(...courbe(haut, 6));
+    let parcouru = 0;
+    return chemin.map((q, k) => {
+      if (k > debut) parcouru += Math.hypot(...sub(q, chemin[k - 1]));
+      const avantK = chemin[Math.min(chemin.length - 1, k + 1)], arriereK = chemin[Math.max(0, k - 1)];
+      const nu = mul(normale(nrm(sub(avantK, arriereK))), sens);
+      const t = Math.min(1, parcouru / 30), w = t * t * (3 - 2 * t);
+      return demiDisque.map(([a, b], j) => {
+        const [ae, be] = plate[j], aa = a + (ae - a) * w, bb = b + (be - b) * w;
+        return [q[0] + nu[0] * aa, q[1] + nu[1] * aa, -sens * bb];
+      });
+    });
+  });
+}
+
+/**
+ * La tige et la selle, sans three.js : la 3D (tigeEtSelle) et le schéma 2D (schema2d.js) les dessinent à l'identique.
+ * La tête serre les rails au haut de la tige (SPt, sur l'axe), reculée du recul marqué sur la tige. Le dessus de la
+ * selle passe par la hauteur de selle, sur l'axe du tube de selle.
+ * @param {object} p Les points de points(geo).
+ * @param {object} geo GEO, ou un objet de même forme.
+ * @returns {{surTige: Function, jonction: number[], fente: number[], pince: number[], vis: number[][],
+ *   tete: {centre: number[], longueur: number, hauteur: number}[], lames: number[][][], lames3D: number[][][][],
+ *   rayonLame: number, rayonOeil: number, sections: number[][][], rails: number[][][], rayonRail: number}}
+ *   surTige(s, n) : point de la tige, à s du bas le long de son axe et à n en travers, vers l'avant ; pince : axe des
+ *   rails dans la tête ; vis : vis de la tête, devant puis derrière ; tete : ses trois blocs de profil ; lames : chemins
+ *   des deux lames de la fente aux vis, dans le plan du vélo ; lames3D : les deux lames en sections, de la jonction aux
+ *   vis ; sections : sections de la coque, de l'arrière au bec ; rails : les deux rails, droite puis gauche. Sections et
+ *   rails sont en trois dimensions.
+ */
+export function poseSelle(p, geo) {
+  const { BB, SPt, dST } = p;
+  const avant = normale(dST);
+  const bas = add(SPt, mul(dST, -COTES.longueurTige.v));
+  const surTige = (s, n = 0) => add(add(bas, mul(dST, s)), mul(avant, n));
+  const sn = q => { const d = sub(q, bas); return [d[0] * dST[0] + d[1] * dST[1], d[0] * avant[0] + d[1] * avant[1]]; };
+
+  // Tête et lames, dans le plan du vélo
+  const pince = add(SPt, mul(avant, -COTES.reculTete.v));
+  const vis = TIGE.vis.map(d => add(pince, d));
+  const mi = (COTES.diametreTige.v / 2 + TIGE.jeu) / 2, f0 = TIGE.fente;
+  const [[sv, nv], [sw, nw]] = vis.map(sn);
+  const tete = TIGE.tete.map(([x, y, longueur, hauteur]) => ({ centre: add(pince, [x, y]), longueur, hauteur }));
+  const lames = [
+    [surTige(f0 - 4, mi), surTige(f0 + 18, mi - 0.5), surTige((f0 + sv) / 2 + 8, (mi + nv) / 2), surTige(sv - 10, nv + 1.5),
+      vis[0]],
+    [surTige(f0 - 4, -mi), surTige(f0 + 12, -mi - 3.5), surTige(f0 + 32, -mi - 14), surTige(sw - 12, nw + 4), vis[1]],
+  ];
+
+  // Coque : sections resserrées vers les bouts, où la forme tourne vite
+  const f = profilSelle();
+  const dessusAxe = add(BB, mul(dST, geo.hauteurSelle.v));
+  const x0 = pince[0] - SELLE.recul;
+  const y0 = dessusAxe[1] - f.dessus((dessusAxe[0] - x0) / f.L);
+  const sections = [];
+  for (let i = 0; i < SELLE.sections; i++) {
+    const u = (1 - Math.cos(Math.PI * i / (SELLE.sections - 1))) / 2;
+    const tour = [];
+    for (let j = 0; j < SELLE.tour; j++) tour.push(pointSelle(f, u, 2 * Math.PI * j / SELLE.tour, x0, y0));
+    sections.push(tour);
+  }
+
+  // Rails : de l'attache arrière, une courbe jusqu'au tronçon droit serré dans la tête, puis une courbe jusqu'au bec
+  const R = SELLE.rails;
+  const attache = ([u, z]) => [x0 + u * f.L, dessousSelle(f, u, z, y0) + 1.5, z]; // le bout entre dans la coque
+  const bezier = (a, b, c, d, n, premier) => {
+    const o = [];
+    for (let i = premier ? 0 : 1; i <= n; i++) {
+      const t = i / n, w = [(1 - t) ** 3, 3 * t * (1 - t) ** 2, 3 * t * t * (1 - t), t ** 3];
+      o.push([0, 1, 2].map(k => w[0] * a[k] + w[1] * b[k] + w[2] * c[k] + w[3] * d[k]));
+    }
+    return o;
+  };
+  const A = attache(R.arriere), N = attache(R.avant);
+  const B = [pince[0] + R.droit[0], pince[1], R.ecart], C = [pince[0] + R.droit[1], pince[1], R.ecart];
+  const unRail = [
+    ...bezier(A, [A[0] + 12, A[1] - 10, A[2]], [B[0] - 22, B[1], B[2]], B, 8, true),
+    lerp3(B, C, 1 / 3), lerp3(B, C, 2 / 3),
+    ...bezier(C, [C[0] + 22, C[1], C[2]], [N[0] - 10, N[1] - 10, N[2]], N, 8, true),
+  ];
+  const rails = [1, -1].map(s => unRail.map(([x, y, z]) => [x, y, s * z]));
+
+  return {
+    surTige, jonction: surTige(TIGE.jonction), fente: surTige(f0), pince, vis, tete, lames,
+    lames3D: lamesEnSections(surTige, lames, mi), rayonLame: TIGE.lame, rayonOeil: TIGE.oeil, sections, rails,
+    rayonRail: COTES.rail.v / 2,
+  };
+}
+
+// Un maillage tiré d'une suite de sections de même nombre de points, chacune faisant le tour de la pièce. Sections
+// et tours sont parcourus dans le sens qui tourne les faces vers l'extérieur. Les bouts restent ouverts : une section
+// réduite à un point les ferme.
+function parSections(o, sections, role) {
+  const T = o.THREE, nu = sections.length, nt = sections[0].length;
+  const positions = new Float32Array(nu * nt * 3);
+  sections.forEach((tour, i) => tour.forEach((q, j) => positions.set(q, (i * nt + j) * 3)));
+  const index = [];
+  for (let i = 0; i < nu - 1; i++) for (let j = 0; j < nt; j++) {
+    const a = i * nt + j, b = i * nt + (j + 1) % nt;
+    index.push(a, b, a + nt, b, b + nt, a + nt);
+  }
+  const g = new T.BufferGeometry();
+  g.setAttribute('position', new T.BufferAttribute(positions, 3));
+  g.setIndex(index);
+  g.computeVertexNormals();
+  return o.mesh(g, role);
+}
+
+// Le collier GP0596-01, la tige SP100 VCLS 2.1 et la selle Fizik Argo Terra X5.
 function tigeEtSelle(o, p, geo) {
-  const { BB, STt, SPt, dST } = p;
+  const { STt, dST } = p;
   const avant = normale(dST), arriere = mul(avant, -1);
   const rTige = COTES.diametreTige.v / 2;
-  // Repère de la tige : s le long de l'axe depuis le bas de la tige, n vers l'avant.
-  const bas = add(SPt, mul(dST, -COTES.longueurTige.v));
-  const T = (s, n = 0) => add(add(bas, mul(dST, s)), mul(avant, n));
+  const pose = poseSelle(p, geo);
 
   // Collier : une bague sur le haut du tube de selle, et sa patte de serrage à l'arrière
   o.tube(v(add(STt, mul(dST, -8))), v(add(STt, mul(dST, 12))), rTige + 5, rTige + 5, 'black', { seg: 36 });
@@ -214,53 +458,27 @@ function tigeEtSelle(o, p, geo) {
   o.rbox(v(patte), [12, 14, 16], angle(dST) - Math.PI / 2, 'black', 3);
   o.boulon(v(patte), [0, 0, 1], 2.6, 18, 'steel');
 
-  // Tige SP100 : un fût rond, puis deux lames de carbone qui s'écartent jusqu'à la tête, reculée vers l'arrière.
+  // Tige : un fût rond au bas, dans le tube de selle, puis deux lames séparées par une fente. Au-dessus de la fente, les
+  // lames s'écartent jusqu'aux yeux des deux vis de la tête. Elles gardent la largeur de la tige en z.
   const nommer = m => { m.name = 'tige de selle'; return m; };
-  const fente = 250;
-  nommer(o.tube(v(T(0)), v(T(fente)), rTige, rTige, 'carbon', { seg: 32 }));
-  const tete = add(add(SPt, mul(dST, -18)), mul(arriere, COTES.reculTete.v));
-  const boulons = [add(tete, [16, 0]), add(tete, [-16, 0])]; // avant, arrière
-  const lames = [
-    [T(fente, rTige / 2), T(fente + 45, rTige / 2 - 2), boulons[0]],
-    [T(fente, -rTige / 2), T(fente + 40, -rTige / 2 - 8), boulons[1]],
-  ];
-  for (const [a, k, c] of lames) {
-    nommer(o.tube(v(a), v(k), rTige / 2, rTige / 2, 'carbon', { sx: 1, sz: 2, seg: 24 }));
-    nommer(o.tube(v(k), v(c), rTige / 2, rTige / 2, 'carbon', { sx: 1, sz: 2, seg: 24 }));
-    nommer(o.ell(v(k), [rTige / 2, rTige / 2, rTige], 'carbon'));
-  }
-  nommer(o.rbox(v(tete), [46, 18, 2 * rTige], -.08, 'black', 4));
-  for (const c of boulons) for (const s of [-1, 1]) o.boulon([c[0], c[1], s * (rTige + 1)], [0, 0, 1], 4.5, 2, 'steel');
-
-  // Rails : sous la coque, serrés sur la tête
-  const dessus = add(BB, mul(dST, geo.hauteurSelle.v)); // dessus de la selle, sur l'axe du tube de selle
-  const rail = tete[1] + 12;
-  for (const s of [-1, 1]) {
-    o.tubeCourbe([
-      [tete[0] - 105, dessus[1] - 12, s * 36], [tete[0] - 70, rail, s * 22], [tete[0] + 40, rail, s * 20],
-      [tete[0] + 115, dessus[1] - 10, s * 10],
-    ], 3.5, 'black', 30);
+  nommer(o.tube(v(pose.surTige(0)), v(pose.jonction), rTige, rTige, 'carbon', { seg: 32 }));
+  for (const lame of pose.lames3D) nommer(parSections(o, lame, 'carbon'));
+  for (const c of pose.vis) {
+    nommer(o.tubeZ(c, -rTige, rTige, pose.rayonOeil, 'carbon', 28));
+    for (const s of [-1, 1]) o.boulon([c[0], c[1], s * (rTige + 1)], [0, 0, 1], 4, 2, 'black');
   }
 
-  // Selle SRX : une sphère déformée en coque, sur le patron de la maquette, puis ramenée à la largeur publiée.
-  // La sphère vient de l'outil ell, à l'échelle un : on déplace ses sommets.
-  const selle = o.ell([tete[0] + 4, dessus[1] - 16, 0], [1, 1, 1], 'saddle');
-  const pos = selle.geometry.attributes.position;
-  const demiLargeur = COTES.largeurSelle.v / 2;
-  let zMax = 0;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i), u = (x + 1) / 2;
-    const r = Math.sqrt(Math.max(1e-6, 1 - x * x)), zs = z / r, ys = y / r;
-    const e = x < 0 ? Math.pow(1 - Math.pow(-x, 6), 1 / 6) : Math.sqrt(1 - x * x) * .55 + .45 * Math.pow(1 - Math.pow(x, 6), 1 / 6);
-    const Z = zs * e * (demiLargeur - 56 * Math.pow(u, 1.3));
-    let Y = (ys > 0 ? ys * 14 : ys * 6) * e + 11 * (1 - u) * (1 - u);
-    if (ys > 0) Y -= 3.5 * Math.exp(-(Z * Z) / 90) * Math.sin(Math.min(1, u * 1.4) * Math.PI);
-    pos.setXYZ(i, -126 + u * 262, Y, Z);
-    zMax = Math.max(zMax, Math.abs(Z));
-  }
-  const k = demiLargeur / zMax;
-  for (let i = 0; i < pos.count; i++) pos.setZ(i, pos.getZ(i) * k);
-  pos.needsUpdate = true;
-  selle.geometry.computeVertexNormals();
-  selle.name = 'selle';
+  // Tête : le bloc entre les yeux, aussi large que la tige, puis les deux plaques qui serrent les rails par-dessous et
+  // par-dessus, aussi larges que l'écart des rails
+  const largeurs = [2 * rTige - 4, 2 * (SELLE.rails.ecart + pose.rayonRail + 1.5)];
+  pose.tete.forEach(({ centre, longueur, hauteur }, i) => {
+    const l = largeurs[Math.min(i, 1)];
+    o.rbox(v(centre), [longueur, hauteur, l], 0, 'black', Math.min(3, hauteur / 2 - 0.5)).name = 'tête de tige';
+  });
+
+  // Rails de la selle
+  for (const rail of pose.rails) o.tubeCourbe(rail, pose.rayonRail, 'black', 48).name = 'rail de selle';
+
+  // Coque de la selle : les sections de poseSelle, fermées aux deux bouts, où elles se réduisent à un point
+  parSections(o, pose.sections, 'saddle').name = 'selle';
 }

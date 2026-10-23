@@ -66,6 +66,10 @@ test('tige de selle : l’insertion reste dans la plage publiée', () => {
   assert.ok(sorti >= 140 && sorti <= 240, `longueur sortie ${sorti}`);
   proche(dist(p.BB, p.SPt) + GEO.retraitSelle.v, GEO.hauteurSelle.v, 0.01, 'hauteur de selle');
   assert.ok(GEO.hauteurSelle.v >= 710 && GEO.hauteurSelle.v <= 810, 'dans la plage de la fiche');
+  // L'écart entre le haut de la tige et le dessus de la selle reste approché : Fizik publie une hauteur de selle
+  // au-dessus des rails, pas cet écart.
+  assert.equal(GEO.retraitSelle.approche, true);
+  assert.match(GEO.retraitSelle.note, /Fizik/);
 });
 
 test('poste de pilotage : la main est devant le coude du cintre, au-dessus de la potence', () => {
@@ -133,12 +137,25 @@ test('transmission et poste : cotes officielles Shimano et Canyon', () => {
   assert.ok(p.S1[0] > p.S0[0] && p.S1[1] > p.S0[1], 'la potence monte vers l’avant');
 });
 
-test('rayons : la fiche ne les compte pas, la photo officielle en montre vingt-quatre par roue', () => {
+test('rayons : vingt-quatre par roue, publiés par Canyon pour les GR 30 CF', () => {
+  // « 24 front and rear » sur la page de la paire de roues, et vingt-quatre comptés sur la photo officielle du vélo.
   assert.equal(GEO.nombreRayons.v, 24);
-  assert.equal(GEO.nombreRayons.src, 'canyon-photo-4553-fv');
+  assert.equal(GEO.nombreRayons.src, 'canyon-gr30cf');
   assert.ok(!GEO.nombreRayons.approche);
-  // Un des rayons est déduit de l'écart entre les autres : le nombre reste à compter sur la roue.
-  assert.equal(GEO.nombreRayons.aVerifier, 'nombre de rayons, à compter sur la roue');
+  assert.equal(GEO.nombreRayons.aVerifier, undefined, 'le nombre n’est plus à compter');
+});
+
+test('siège de jante : 622, l’ETRTO 45-622 du pneu Schwalbe', () => {
+  assert.equal(GEO.diametreSiegeJante.v, 622);
+  assert.equal(GEO.diametreSiegeJante.src, 'schwalbe-g-one-rx');
+  assert.ok(!GEO.diametreSiegeJante.approche);
+});
+
+test('boîte de pédalier : PF 86,5 d’après la fiche du CF 8 Di2, soit 43,25 de chaque côté', () => {
+  assert.equal(GEO.largeurBoite.v, 86.5);
+  assert.equal(GEO.largeurBoite.src, 'canyon-4556');
+  assert.ok(!GEO.largeurBoite.approche);
+  assert.equal(GEO.largeurBoite.v / 2, 43.25);
 });
 
 test('étriers : position approchée d’après la photo officielle, l’avant au-dessus de l’axe et derrière lui', () => {

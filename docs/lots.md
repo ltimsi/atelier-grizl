@@ -41,7 +41,7 @@ La commande réécrit le bloc entre les deux marqueurs ci-dessous. Sans `--lots`
 
 <!-- début de la liste générée par tools/approximations-md.mjs -->
 
-#### Cadre, fourche, tige de selle et selle
+#### Cadre, fourche, tige de selle SP100 VCLS 2.1 et selle Fizik Argo Terra X5
 
 Formes approchées :
 
@@ -53,35 +53,39 @@ Formes approchées :
 - Pattes du cadre, de la fourche et patte de dérailleur : formes approchées. Seul l’écartement des axes est publié.
 - Jeu laissé autour du pneu le plus large : non publié, approché.
 - Protections noires et inserts de fixation : forme et position approchées d’après la photo officielle.
-- Boîte de pédalier : largeur approchée d’après le standard nommé par la fiche.
+- Boîte de pédalier : largeur publiée par la fiche, diamètre approché.
 - Collier de selle : forme approchée.
-- Tige de selle : forme des lames et de la tête approchée d’après les photos officielles de Canyon.
-- Selle et rails : longueur, galbe et position sur les rails non publiés, formes approchées. Seule la largeur de la selle est publiée.
+- Tige de selle : deux lames séparées par une fente sur leur longueur, qui s’écartent puis se rejoignent dans la tête, comme sur les photos officielles de Canyon. Épaisseur et courbe des lames, place de la fente, yeux des vis et forme de la tête sont approchés.
+- Selle : largeur, longueur, largeur à un repère mesuré depuis le bec et hauteur à ce repère publiées par Fizik. Fizik ne dit pas d’où il prend cette hauteur : elle part ici de l’axe des rails, ce qui s’accorde avec la photo officielle. Contour, galbe, bec court plongeant, place sur les rails et courbe des rails sont approchés d’après les photos officielles.
+- Inscriptions de la tige, de la tête et de la selle : non dessinées.
 
 À vérifier à la livraison :
 
 - type de patte de dérailleur
 - sens de la tête de la tige de selle à la livraison, donc son recul
-- modèle exact de la tige de selle : la liste des composants et le texte de la fiche ne la nomment pas de la même façon
+- marquage de la tige de selle : la fiche la nomme de plusieurs façons, à lire sur la tige
+- ce que mesure la longueur publiée par Fizik, la selle ou ses rails
 
-#### Roues DT Swiss Gravel LN, pneus Continental Terra Adventure et axes traversants
+#### Roues Canyon GR 30 CF, pneus Schwalbe G-One RX et axes traversants
 
 Formes approchées :
 
-- Profil de la jante : seules sa hauteur et sa largeur intérieure sont publiées. Flancs, crochets et creux central sont approchés.
-- Section du pneu : ronde, à la largeur publiée. Le rayon extérieur du pneu monté n’est pas publié, il est approché.
-- Crampons : Continental décrit des rangées de trois, trois puis quatre crampons au centre, et des crampons d’épaule inclinés. Taille, hauteur et nombre de rangées sont approchés d’après les photos officielles.
-- Moyeux : Canyon ne nomme pas leur modèle. Corps, flasques et position des flasques sont approchés.
-- Rayons : leur nombre se compte sur la photo officielle. Croisement, rayon des flasques et grosseur des rayons sont approchés d’après cette photo.
+- Profil de la jante : hauteur et largeur intérieure publiées, et Canyon annonce des jantes sans crochets. Largeur extérieure, flancs, siège du talon et creux central sont approchés.
+- Section du pneu : ronde, à la largeur publiée. Le rayon extérieur du pneu monté n’est pas publié, il est approché d’après la photo officielle.
+- Crampons : Schwalbe décrit des crampons extérieurs appariés, sans cote. Petits crampons serrés au centre, crampons d’épaule plus gros et groupés par deux : taille, hauteur, inclinaison et nombre sont approchés d’après les photos officielles.
+- Moyeux : Canyon nomme des moyeux DT Swiss à rayons droits. Corps, flasques et position des flasques sont approchés.
+- Rayons : leur nombre est publié. Profil plat, croisement, rayon des flasques et grosseur des rayons sont approchés d’après la photo officielle.
 - Cannelures Center Lock et corps de roue libre : formes approchées.
-- Valve : type et longueur non publiés, forme approchée. Sa place suit la photo officielle.
+- Valve : type et longueur non publiés, forme approchée. Sa place suit la photo officielle, sa tête dorée n’est pas rendue.
+- Inscriptions des jantes et des flancs des pneus : non dessinées.
 - Axes traversants : seuls leur diamètre et l’écartement des pattes sont publiés. Têtes et embouts sont approchés.
 
 À vérifier à la livraison :
 
-- jante à crochets ou sans crochets : à lire sur le marquage de la jante
-- modèle des moyeux : à lire sur les moyeux
-- nombre de rayons, à compter sur la roue
+- pression maximale imprimée sur la jante : à lire sur la jante
+- corps de roue libre de la roue arrière, Micro Spline attendu : à lire sur le moyeu
+- version du pneu, gomme et code de sculpture : à lire sur le flanc
+- valves tubeless : présentes ou non dans le carton
 
 #### Disques SM-RT64 et XT RT-MT800, étriers GRX, plaquettes et durites
 
@@ -146,7 +150,7 @@ Formes approchées :
 
 - Le rayon extérieur du pneu monté n’est pas publié. Il est approché.
 - La fiche donne une plage de hauteurs de selle, pas une valeur. La selle est posée vers le milieu de cette plage.
-- La forme de la tête de tige et des rails de selle n’est pas publiée. L’écart entre le haut de la tige et le dessus de la selle est approché.
+- La forme de la tête de tige n’est pas publiée. L’écart entre le haut de la tige et le dessus de la selle est approché d’après la hauteur de selle au-dessus des rails que publie Fizik.
 - La forme de la fourche n’est pas publiée. La position de la couronne sous la douille est approchée.
 - La position latérale du disque avant n’est pas publiée. Elle est approchée.
 - La position latérale du disque arrière n’est pas publiée. Elle est approchée.
@@ -168,7 +172,6 @@ Formes approchées :
 
 - La fiche nomme cette cote « inclinaison du cintre ». C’est très probablement l’angle de direction. À confirmer avec le schéma de la fiche.
 - Canyon définit la position de la main par un lien « En savoir plus » de la fiche. Sa page d’explication de la géométrie dit que ces valeurs sont calculées avec la main posée sur les cocottes, au point où tu saisis la cocotte, en tenant compte de la potence, de la forme du cockpit et des entretoises montées à la livraison. Elle ne précise pas ce point sur la cocotte : à vérifier.
-- nombre de rayons, à compter sur la roue
 - Canyon ne dit pas dans quel sens la potence est montée à la livraison. Elle est dessinée vers le bas, comme sur la photo officielle du vélo. À regarder sur le vélo.
 - La page du cintre annonce un déport plus long que le marquage de sa photo officielle. Le cintre photographié est le plus étroit des deux. À lire sur le cintre.
 - Lue sur le marquage du cintre photographié, le plus étroit des deux. À lire sur le cintre.

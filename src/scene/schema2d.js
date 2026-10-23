@@ -1,6 +1,7 @@
 // Schéma 2D du vélo, vu côté transmission : la vue à plat du guide, et le secours quand la 3D ne se charge pas.
 // Porté de build2d() de la maquette, mais dessiné depuis points(), GEO, les cotes des pièces (COTES) et la pose du
-// poste de pilotage (poste.js) : étriers à leurs angles, tube de selle, selle et cocottes là où les met la 3D.
+// poste de pilotage (poste.js) et de la selle (cadre.js) : étriers à leurs angles, tube de selle, selle et cocottes
+// là où les met la 3D.
 //
 // Repère du dessin : x vers l'avant en millimètres, y du SVG vers le bas. Le haut du vélo est donc en y négatif et le
 // sol en y = 0. Les pièces du côté gauche (disques, étriers, durites, manivelle gauche) sont en pointillés.
@@ -12,7 +13,7 @@
 // Chaque zone a un ou plusieurs groupes <g data-zone="id"> ; surligner(id) leur donne la classe on.
 // Aucun import nu. Le DOM ne sert que dans dessinerSchema : le reste se calcule et se teste sous Node.
 import { GEO, cheminChaine } from './geometrie.js';
-import { COTES as COTES_CADRE } from './pieces/cadre.js';
+import { COTES as COTES_CADRE, poseSelle } from './pieces/cadre.js';
 import { COTES as COTES_ROUES } from './pieces/roues.js';
 import { COTES as COTES_TRANSMISSION, DENTS_CASSETTE } from './pieces/transmission.js';
 import { poseCintre, COCOTTE, LEVIER } from './pieces/poste.js';
@@ -104,7 +105,7 @@ export function formesSchema(p, geo = GEO) {
     ajouter(g, 'path', { d: un(r1) + un(r2), class: cls, 'fill-rule': 'evenodd' });
   };
 
-  const { RA, FA, BB, HTt, HTb, STt, SPt, S0, S1, PR, PL, CF, CR, CROWN, dHT, dST, rayons } = p;
+  const { RA, FA, BB, HTt, HTb, STt, S0, S1, PR, PL, CF, CR, CROWN, dHT, dST, rayons } = p;
   const { poulieHaute, poulieBasse } = p;
   const rDisque = geo.diametreDisque.v / 2, pas = geo.pasChaine.v;
   const siege = geo.diametreSiegeJante.v / 2;
@@ -183,24 +184,21 @@ export function formesSchema(p, geo = GEO) {
   chemin(gChaine, chaine, 'ch');
   chemin(gChaine, chaine, 'ch2');
 
-  // ---- Collier, tige et selle, avec les valeurs de dessin de cadre.js ----
+  // ---- Collier, tige et selle, posés comme dans la 3D (poseSelle de cadre.js) ----
   const gSelle = groupe();
-  const rTige = COTES_CADRE.diametreTige.v / 2, arriereST = mul(avantST, -1);
-  const tete = add(add(SPt, mul(dST, -18)), mul(arriereST, COTES_CADRE.reculTete.v));
+  const rTige = COTES_CADRE.diametreTige.v / 2, selle = poseSelle(p, geo);
   capsule(gSelle, add(STt, mul(dST, -8)), add(STt, mul(dST, 12)), rTige + 5, rTige + 5, 'k'); // collier
-  capsule(gSelle, add(STt, mul(dST, 12)), add(SPt, mul(dST, -18)), rTige, rTige, 'k'); // tige
-  boite(gSelle, tete, 46, 18, -0.08 / D2R, 'k'); // tête de tige
-  // Selle : patron de la maquette, son dessus au milieu posé sur la hauteur de selle, au-dessus de la tête de tige.
-  const dessus = add(BB, mul(dST, geo.hauteurSelle.v));
-  const rail = tete[1] + 12; // rails serrés sur la tête, comme cadre.js
-  const rails = [
-    [tete[0] - 105, dessus[1] - 12], [tete[0] - 70, rail], [tete[0] + 40, rail], [tete[0] + 115, dessus[1] - 10],
-  ];
-  chemin(gSelle, rails, 'n', false);
-  const origine = [tete[0] + 4, dessus[1] - 13];
-  const patron = [[-125, 12], [-108, 20], [-60, 17], [0, 13], [80, 9], [132, 6], [136, 0], [128, -6], [60, -6], [0, -7],
-    [-90, -6], [-122, -2]];
-  chemin(gSelle, patron.map(q => add(origine, q)), 'k');
+  capsule(gSelle, add(STt, mul(dST, 12)), selle.fente, rTige, rTige, 'k'); // tige, ses deux lames serrées
+  for (const lame of selle.lames) {
+    lame.slice(1).forEach((q, i) => capsule(gSelle, lame[i], q, selle.rayonLame, selle.rayonLame, 'k'));
+  }
+  for (const c of selle.vis) cercle(gSelle, c, selle.rayonOeil, 'k');
+  for (const { centre, longueur, hauteur } of selle.tete) boite(gSelle, centre, longueur, hauteur, 0, 'k'); // tête
+  chemin(gSelle, selle.rails[0].map(q => [q[0], q[1]]), 'n', false);
+  // Selle : sa silhouette de profil, le dessus de l'arrière au bec, puis le dessous du bec à l'arrière.
+  const hauts = selle.sections.map(t => [t[0][0], Math.max(...t.map(q => q[1]))]);
+  const bas = selle.sections.map(t => [t[0][0], Math.min(...t.map(q => q[1]))]).reverse();
+  chemin(gSelle, [...hauts, ...bas], 'k');
 
   // ---- Jeu de direction, potence et cintre ----
   const gPoste = groupe();

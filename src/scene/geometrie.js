@@ -43,22 +43,27 @@ export const GEO = Object.freeze({
   longueurTubeSuperieur: pub(581), // (c) horizontale, de l'axe du tube de selle à la douille
   stackEfficace: pub(683, FICHE, { aVerifier: DEFINITION_MAIN }), // (o)
   reachEfficace: pub(544, FICHE, { aVerifier: DEFINITION_MAIN }), // (p)
+  // Boîte de pédalier : « Shimano Pressfit BB72 ; PF 86,5 » sur la fiche du CF 8 Di2, donc 86,5 de large.
+  // Le cadre (cadre.js) la dessine à moitié de chaque côté du plan du vélo.
+  largeurBoite: pub(86.5, 'canyon-4556'),
 
   // ---- Cadre : cotes non publiées ----
   rayonPneu: apr(356, 'Le rayon extérieur du pneu monté n’est pas publié. Il est approché.'),
   hauteurSelle: apr(760,
     'La fiche donne une plage de hauteurs de selle, pas une valeur. La selle est posée vers le milieu de cette plage.'),
-  retraitSelle: apr(30,
-    'La forme de la tête de tige et des rails de selle n’est pas publiée. ' +
-    'L’écart entre le haut de la tige et le dessus de la selle est approché.'),
+  // Le haut de la tige est pris à la hauteur de l'axe des rails, dans la tête. Fizik publie la hauteur du dessus de la
+  // selle au-dessus des rails (« Height at 75mm 51 mm ») ; avec le recul de la tête, l'écart en découle, arrondi.
+  retraitSelle: apr(48,
+    'La forme de la tête de tige n’est pas publiée. L’écart entre le haut de la tige et le dessus de la selle est ' +
+    'approché d’après la hauteur de selle au-dessus des rails que publie Fizik.'),
   ecartCouronne: apr(16,
     'La forme de la fourche n’est pas publiée. La position de la couronne sous la douille est approchée.'),
 
   // ---- Roues et freins ----
-  diametreSiegeJante: pub(622, 'continental-terra-adventure'), // norme ETRTO des roues de 28 pouces, cotée par Continental
-  // La fiche ne le donne pas : compté sur la photo officielle, à chaque roue. Un rayon caché y est déduit de l'écart
-  // entre les autres, d'où la vérification sur la roue.
-  nombreRayons: pub(24, 'canyon-photo-4553-fv', { aVerifier: 'nombre de rayons, à compter sur la roue' }),
+  diametreSiegeJante: pub(622, 'schwalbe-g-one-rx'), // « ETRTO: 45-622 » du pneu monté
+  // « 24 front and rear » sur la page des roues GR 30 CF. On en compte aussi vingt-quatre à chaque roue sur la photo
+  // officielle du vélo (canyon-photo-4556-fv).
+  nombreRayons: pub(24, 'canyon-gr30cf'),
   diametreDisque: pub(160), // avant et arrière
   decalageDisqueAvant: apr(40, 'La position latérale du disque avant n’est pas publiée. Elle est approchée.'),
   decalageDisqueArriere: apr(57, 'La position latérale du disque arrière n’est pas publiée. Elle est approchée.'),

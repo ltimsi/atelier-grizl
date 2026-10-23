@@ -250,11 +250,98 @@ test('cadre : la tige de selle de 350 mm reste insérée entre 110 et 210 mm', (
   assert.ok(haut - bas <= 350 + 0.5, `tige de ${haut - bas} mm le long du tube`);
 });
 
-test('cadre : la selle SRX fait 148 mm de large', () => {
+test('cadre : le META cite la selle Fizik et la photo de la tige du CF 8 Di2, et nomme les deux pièces', () => {
+  for (const id of ['fizik-argo-terra-x5', 'canyon-photo-4556-confort', 'canyon-photo-sp100-marquage']) {
+    assert.ok(cadre.META.sources.includes(id), `${id} absent`);
+  }
+  assert.match(cadre.META.nom, /Fizik Argo Terra X5/);
+  assert.match(cadre.META.nom, /SP100 VCLS 2\.1/);
+  // Plus rien du CF 7 : ni sa fiche, ni ses photos, ni sa selle.
+  for (const id of cadre.META.sources) assert.ok(!/4553/.test(id), `source du CF 7 : ${id}`);
+  for (const t of textesDeMeta(cadre.META)) assert.ok(!/SRX|Selle Royal/.test(t), `ancienne selle dans « ${t} »`);
+});
+
+test('cadre : la selle Fizik fait 150 mm de large et 270 mm de long, 75 mm de large à 113 mm du bec', () => {
   const selle = parNom(construire(cadre).maillages, 'selle');
   assert.equal(selle.length, 1);
-  const z = sommets(selle[0]).map(v => v.z);
-  assert.ok(Math.abs(Math.max(...z) - Math.min(...z) - 148) < 0.5, `largeur de ${Math.max(...z) - Math.min(...z)} mm`);
+  assert.equal(cadre.COTES.largeurSelle.v, 150);
+  // « Width 150 mm », « Length 270 mm », « Length from nose at 75mm 113 mm », « Height at 75mm 51 mm »,
+  // « Rail Dimension 7x7 » : la colonne « 150 » de la page Fizik.
+  const fizik = { largeurSelle: 150, longueurSelle: 270, largeurRepere: 75, repereDepuisBec: 113, hauteurRepere: 51, rail: 7 };
+  for (const [c, val] of Object.entries(fizik)) {
+    assert.equal(cadre.COTES[c].v, val, c);
+    assert.equal(cadre.COTES[c].src, 'fizik-argo-terra-x5', c);
+  }
+  const v = sommets(selle[0]);
+  const z = v.map(q => q.z), x = v.map(q => q.x);
+  assert.ok(Math.abs(Math.max(...z) - Math.min(...z) - 150) < 0.5, `largeur de ${Math.max(...z) - Math.min(...z)} mm`);
+  assert.ok(Math.abs(Math.max(...x) - Math.min(...x) - 270) < 0.5, `longueur de ${Math.max(...x) - Math.min(...x)} mm`);
+  // Largeur à 113 mm du bec, interpolée entre les deux sections de la coque qui encadrent ce point.
+  const xc = Math.max(...x) - cadre.COTES.repereDepuisBec.v;
+  const parSection = new Map();
+  for (const q of v) {
+    const k = q.x.toFixed(6);
+    const s = parSection.get(k) ?? { x: q.x, z0: Infinity, z1: -Infinity };
+    s.z0 = Math.min(s.z0, q.z);
+    s.z1 = Math.max(s.z1, q.z);
+    parSection.set(k, s);
+  }
+  const sections = [...parSection.values()].sort((a, b) => a.x - b.x);
+  const i = sections.findIndex(s => s.x >= xc);
+  assert.ok(i > 0, 'aucune section autour du point');
+  const [a, b] = [sections[i - 1], sections[i]];
+  assert.ok(b.x - a.x < 12, `sections trop espacées : ${b.x - a.x} mm`);
+  const t = (xc - a.x) / (b.x - a.x);
+  const largeur = (a.z1 - a.z0) + ((b.z1 - b.z0) - (a.z1 - a.z0)) * t;
+  assert.ok(Math.abs(largeur - 75) < 1, `largeur de ${largeur} mm à 113 mm du bec`);
+});
+
+test('cadre : le dessus de la selle est à 51 mm au-dessus de l’axe des rails, là où elle fait 75 mm de large', () => {
+  const { maillages } = construire(cadre);
+  const v = sommets(parNom(maillages, 'selle')[0]);
+  const rails = parNom(maillages, 'rail de selle');
+  assert.equal(rails.length, 2, 'un rail de chaque côté');
+  const xc = Math.max(...v.map(q => q.x)) - cadre.COTES.repereDepuisBec.v;
+  const dessus = Math.max(...v.filter(q => Math.abs(q.x - xc) < 6).map(q => q.y));
+  // Sous la tête de tige, les rails sont droits : leur axe est à un rayon au-dessus de leur point le plus bas.
+  const axeRail = Math.min(...rails.flatMap(sommets).map(q => q.y)) + cadre.COTES.rail.v / 2;
+  const hauteur = dessus - axeRail;
+  assert.ok(Math.abs(hauteur - cadre.COTES.hauteurRepere.v) < 1.5, `dessus à ${hauteur} mm de l’axe des rails`);
+});
+
+test('cadre : la tige VCLS a deux lames, séparées par une fente au-dessus du collier', () => {
+  const p = points(GEO), tige = parNom(construire(cadre).maillages, 'tige de selle');
+  const axe = Math.hypot(...p.dST), d = [p.dST[0] / axe, p.dST[1] / axe], avant = [d[1], -d[0]];
+  const haut = Math.hypot(p.STt[0] - p.BB[0], p.STt[1] - p.BB[1]) + 12; // dessus du collier, le long du tube
+  const ecarts = [];
+  for (const m of tige) surFaces(m, 2, q => {
+    const rx = q.x - p.BB[0], ry = q.y - p.BB[1];
+    const s = rx * d[0] + ry * d[1];
+    if (s > haut + 10 && s < haut + 60) ecarts.push(rx * avant[0] + ry * avant[1]);
+  });
+  assert.ok(ecarts.length > 0, 'pas de tige au-dessus du collier');
+  assert.ok(ecarts.some(n => n > 10) && ecarts.some(n => n < -10), 'une lame devant, une lame derrière');
+  const pres = ecarts.reduce((m, n) => Math.min(m, Math.abs(n)), Infinity);
+  const loin = ecarts.reduce((m, n) => Math.max(m, Math.abs(n)), 0);
+  assert.ok(pres >= 0.5, `de la matière à ${pres.toFixed(2)} mm de l’axe : pas de fente`);
+  assert.ok(loin <= cadre.COTES.diametreTige.v / 2 + 0.05, `la tige s’étend à ${loin} mm de son axe`);
+});
+
+test('cadre : recul de 18 mm et diamètre de 27,2 mm, lus sur le marquage de la tige', () => {
+  assert.equal(cadre.COTES.reculTete.v, 18);
+  assert.equal(cadre.COTES.diametreTige.v, 27.2);
+  assert.equal(cadre.COTES.longueurTige.v, 350);
+  for (const c of ['reculTete', 'diametreTige', 'longueurTige']) {
+    assert.equal(cadre.COTES[c].src, 'canyon-photo-sp100-marquage', c);
+  }
+});
+
+test('cadre : boîte de pédalier PF 86,5, 43,25 mm de chaque côté du plan du vélo', () => {
+  const boite = parNom(construire(cadre).maillages, 'boîte de pédalier');
+  assert.equal(boite.length, 1);
+  const z = sommets(boite[0]).map(v => v.z);
+  assert.ok(Math.abs(Math.min(...z) + 43.25) < 0.01 && Math.abs(Math.max(...z) - 43.25) < 0.01,
+    `boîte de ${Math.min(...z)} à ${Math.max(...z)}`);
 });
 
 // ---- Roues : pneus, jantes, moyeux, rayons, valves et axes ----
@@ -302,18 +389,80 @@ test('roues : pneus de 45 mm de large, au rayon de la roue, assis sur le siège 
   }
 });
 
-test('roues : jantes de 26 mm de haut et 24 mm de large à l’intérieur, siège à 622', () => {
+test('roues : jantes GR 30 CF de 30 mm de haut, 27 mm à l’intérieur, 33 mm à l’extérieur, siège à 622', () => {
   const p = points(GEO), { maillages } = construire(roues), siege = GEO.diametreSiegeJante.v / 2;
   const jantes = parNom(maillages, 'jante');
   assert.equal(jantes.length, 2);
+  assert.equal(roues.COTES.hauteurJante.v, 30);
+  assert.equal(roues.COTES.largeurInterneJante.v, 27);
   for (const m of jantes) {
     const axe = roueDe(m, p) === 'avant' ? p.FA : p.RA;
     const v = sommets(m), r = v.map(q => auMoyeu(q, axe));
-    assert.ok(Math.abs(Math.max(...r) - Math.min(...r) - 26) < 0.05, `hauteur de ${Math.max(...r) - Math.min(...r)} mm`);
-    // Au siège du talon, la face intérieure des flancs est à 12 mm de chaque côté du plan de la roue.
+    assert.ok(Math.abs(Math.max(...r) - Math.min(...r) - 30) < 0.05, `hauteur de ${Math.max(...r) - Math.min(...r)} mm`);
+    // Au siège du talon, la face intérieure des flancs est à 13,5 mm de chaque côté du plan de la roue.
     const auSiege = v.filter((q, i) => Math.abs(r[i] - siege) < 0.05).map(q => q.z);
-    for (const s of [-1, 1]) assert.ok(auSiege.some(z => Math.abs(z - s * 12) < 0.05), `pas de face intérieure en z ${s * 12}`);
+    for (const s of [-1, 1]) {
+      assert.ok(auSiege.some(z => Math.abs(z - s * 13.5) < 0.05), `pas de face intérieure en z ${s * 13.5}`);
+    }
+    const [z0, z1] = etendueZ([m]);
+    assert.ok(Math.abs(z1 - z0 - 33) < 0.05, `largeur extérieure de ${z1 - z0} mm`);
+    // Sans crochets : en haut des flancs, rien de la jante ne revient vers le plan de la roue. Le bourrelet du siège,
+    // qui retient le talon, reste tout près du siège.
+    const surLeTalon = v.filter((q, i) => r[i] > siege + 2 && Math.abs(q.z) < 13.5 - 0.05);
+    assert.equal(surLeTalon.length, 0, 'un crochet dépasse au-dessus du siège');
   }
+});
+
+test('roues : le META cite la page des GR 30 CF et celle du G-One RX, plus aucune source Continental ni du CF 7', () => {
+  for (const id of ['canyon-gr30cf', 'schwalbe-g-one-rx', 'canyon-4556', 'canyon-photo-4556-fv']) {
+    assert.ok(roues.META.sources.includes(id), `${id} absent`);
+  }
+  for (const id of roues.META.sources) {
+    assert.ok(!/continental|4553/i.test(id) && !/Continental/.test(SOURCES[id].titre), `source à retirer : ${id}`);
+  }
+  assert.match(roues.META.nom, /GR 30 CF/);
+  assert.match(roues.META.nom, /G-One RX/);
+  for (const t of textesDeMeta(roues.META)) assert.ok(!/Continental|Gravel LN|Terra/.test(t), `ancienne pièce dans « ${t} »`);
+  // Les cotes des pneus et des jantes viennent de documents du CF 8 Di2.
+  assert.equal(roues.COTES.largeurPneu.src, 'schwalbe-g-one-rx');
+  for (const c of ['hauteurJante', 'largeurInterneJante', 'axeAvant', 'axeArriere', 'diametreAxe']) {
+    assert.equal(roues.COTES[c].src, 'canyon-4556', c);
+  }
+});
+
+test('roues : vingt-quatre rayons à chaque roue, et leur nombre n’est plus à compter', () => {
+  const rayons = construire(roues).maillages.filter(m => m.name === 'rayons');
+  assert.equal(rayons.length, 2);
+  for (const m of rayons) assert.equal(m.count, 24);
+  for (const t of roues.META.aVerifier) assert.ok(!/nombre de rayons/.test(t), `« ${t} »`);
+  assert.ok(!roues.META.aVerifier.some(t => /crochet/.test(t)), 'la jante est sans crochets, publiée');
+});
+
+test('roues : sculpture du G-One RX, petits crampons serrés au centre, crampons d’épaule plus gros et par paires', () => {
+  const p = points(GEO);
+  const crampons = construire(roues).maillages.filter(m => m.name === 'pneu' && m.isInstancedMesh && roueDe(m, p) === 'avant');
+  assert.equal(crampons.length, 1, 'les crampons du pneu avant, en une InstancedMesh');
+  const m = crampons[0], mi = new THREE.Matrix4(), pos = new THREE.Vector3(), q = new THREE.Quaternion();
+  const ech = new THREE.Vector3();
+  const centre = [], epaule = [];
+  for (let k = 0; k < m.count; k++) {
+    m.getMatrixAt(k, mi);
+    mi.decompose(pos, q, ech);
+    const surface = ech.x * ech.z; // empreinte au sol du crampon
+    const angle = Math.atan2(pos.y - p.FA[1], pos.x - p.FA[0]);
+    (Math.abs(pos.z) < 12 ? centre : epaule).push({ surface, angle, z: pos.z });
+  }
+  assert.ok(centre.length > 0 && epaule.length > 0);
+  const maxCentre = Math.max(...centre.map(c => c.surface)), minEpaule = Math.min(...epaule.map(c => c.surface));
+  assert.ok(maxCentre < minEpaule, `crampon central de ${maxCentre} mm², crampon d’épaule de ${minEpaule} mm²`);
+  // D'un côté, les crampons d'épaule vont par deux : entre deux paires, l'écart est plus grand que dans une paire.
+  // Les écarts se suivent donc petit, grand, petit, grand, quel que soit le crampon où commence le tour.
+  const cote = epaule.filter(c => c.z > 0).map(c => c.angle).sort((a, b) => a - b);
+  assert.ok(cote.length % 2 === 0 && cote.length >= 40, `${cote.length} crampons d’épaule d’un côté`);
+  const ecarts = cote.map((a, i) => (i + 1 < cote.length ? cote[i + 1] : cote[0] + 2 * Math.PI) - a);
+  const [pairs, impairs] = [0, 1].map(r => ecarts.filter((e, i) => i % 2 === r));
+  const alternent = Math.max(...pairs) < Math.min(...impairs) || Math.max(...impairs) < Math.min(...pairs);
+  assert.ok(alternent, 'les crampons d’épaule ne vont pas par paires');
 });
 
 test('roues : les moyeux tiennent entre les pattes du cadre, les axes les traversent', () => {
@@ -391,10 +540,6 @@ test('freins : PLAQUETTES décrit les deux plaquettes de l’étrier avant', () 
   const [a, b] = freins.PLAQUETTES.map(x => x.base.z);
   const plan = -GEO.decalageDisqueAvant.v;
   assert.ok((a - plan) * (b - plan) < 0, 'une plaquette de chaque côté du disque avant');
-});
-
-test('roues : le nombre de rayons reste à compter sur la roue', () => {
-  assert.ok(roues.META.aVerifier.includes('nombre de rayons, à compter sur la roue'));
 });
 
 test('freins : la sortie des plaquettes est signalée comme approchée', () => {
