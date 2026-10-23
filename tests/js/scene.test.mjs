@@ -138,22 +138,27 @@ test('scène : la variante de l’étrier est la seule, et plus aucun maillage n
   }
 });
 
-// Les textes qui peuvent citer un document du registre : les pages du guide (src/parts, par l'adresse du document) et
-// la recherche (docs/recherche, par son id ou son adresse). La page « Sources » montre tout le registre.
-const textes = dossier => readdirSync(new URL(`../../${dossier}/`, import.meta.url))
-  .filter(f => /\.(html|md)$/.test(f))
+// Les textes qui peuvent citer un document du registre : les pages servies et les pièces 3D des ateliers (src/parts et
+// src/js/models, par l'adresse du document), et les deux relevés du CF 8 Di2 (par son id ou son adresse). Les notes
+// brutes du 20 octobre 2026 (docs/recherche/freins.md et les autres), écrites pour le premier vélo, ne comptent pas. La
+// page « Sources » montre tout le registre.
+const textes = (dossier, motif) => readdirSync(new URL(`../../${dossier}/`, import.meta.url))
+  .filter(f => motif.test(f))
   .map(f => readFileSync(new URL(`../../${dossier}/${f}`, import.meta.url), 'utf8'));
+const RELEVES_CF8 = /^(composants-origine|sources-cf8-di2)\.md$/;
 
-test('registre : chaque document est cité, par une pièce, la géométrie, une page ou la recherche, et aucun n’est du CF 7', () => {
+test('registre : chaque document est cité, par une pièce, la géométrie, une page ou un relevé du CF 8, et aucun n’est du CF 7', () => {
   const parLaScene = new Set([
     ...PIECES.flatMap(m => [...m.META.sources, ...Object.values(m.COTES ?? {}).map(c => c.src)]),
     ...Object.values(GEO).map(e => e.src).filter(Boolean),
   ]);
-  const pages = textes('src/parts').join('\n'), recherche = textes('docs/recherche').join('\n');
+  const pages = [...textes('src/parts', /\.html$/), ...textes('src/js/models', /\.js$/)].join('\n');
+  const recherche = textes('docs/recherche', RELEVES_CF8).join('\n');
+  assert.equal(textes('docs/recherche', RELEVES_CF8).length, 2, 'les deux relevés du CF 8 Di2');
   for (const [id, s] of Object.entries(SOURCES)) {
     assert.ok(!CF7.test(id) && !CF7.test(s.titre) && !CF7.test(s.url), `${id} : document du CF 7`);
     const cite = parLaScene.has(id) || pages.includes(s.url) || recherche.includes(id) || recherche.includes(s.url);
-    assert.ok(cite, `${id} : cité ni par une pièce, ni par la géométrie, ni par une page, ni par la recherche`);
+    assert.ok(cite, `${id} : cité ni par une pièce, ni par la géométrie, ni par une page, ni par un relevé du CF 8`);
   }
   for (const id of parLaScene) assert.ok(SOURCES[id], `source inconnue : ${id}`);
 });

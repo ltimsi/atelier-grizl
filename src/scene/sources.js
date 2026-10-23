@@ -89,14 +89,6 @@ export const SOURCES = Object.freeze({
     type: 'manuel',
   }),
 
-
-  // DT Swiss
-  'dtswiss-manuel-roues': Object.freeze({
-    titre: 'DT Swiss, manuel d’utilisation des roues (WHEELS User Manual V2026.07), cité dans le chapitre Freins',
-    url: 'https://d2a13k6araex7u.cloudfront.net/pmt/00/00/00/00/00/00/00/10/00/00/00/85/8/MAN_WXWXXXXXX1610S_WEB_ZZ_001.pdf?v=57647',
-    type: 'manuel',
-  }),
-
   // Shimano : manuels revendeur (DM), cités dans src/parts/20-freins.html
   'shimano-dm-gadbr01': Object.freeze({
     titre: 'Shimano DM-GADBR01, manuel revendeur des freins GRX (français)',
@@ -134,11 +126,6 @@ export const SOURCES = Object.freeze({
     titre: 'Shimano C-612, tableau de compatibilité',
     url: `${SHIMANO_INFO}/compatibility/C-612`,
     type: 'tableau',
-  }),
-  'shimano-rx820-2x12-di2': Object.freeze({
-    titre: 'Shimano, page de la gamme GRX RX820 2x12 Di2',
-    url: `${SHIMANO_INFO}/lineup/rx820-2x12-di2`,
-    type: 'fiche',
   }),
 
   // Shimano : Grizl CF 8 Di2, relevé du 23 octobre 2026 (docs/recherche/sources-cf8-di2.md)
