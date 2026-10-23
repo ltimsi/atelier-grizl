@@ -258,7 +258,7 @@ class TestPages(Site):
         for cible in ("site", "artifact"):
             plan = un(self.arbre("", cible), "ol.plan")
             self.assertEqual([(a.get("href"), a.texte()) for a in dom.selectionner(plan, "a")],
-                             [("montage/", "Chapitre 1"), ("freins/", "Chapitre 2"), ("tubeless/", "Chapitre 3"),
+                             [("montage/", "Chapitre 1"), ("tubeless/", "Chapitre 3"),
                               ("freins/rodage/", "Chapitre 2")], cible)
             gris = dom.selectionner(plan, "span.muted")
             self.assertEqual([s.texte() for s in gris], ["Chapitre 1"], cible)
@@ -447,6 +447,17 @@ class TestPages(Site):
             self.assertNotIn(absent, texte)
         for attendu in ("TL-FC36", "TL-LR15", "Type de bague d'origine : à lire sur la pièce"):
             self.assertIn(attendu, texte)
+        # La pièce 3D de l'atelier : le disque nommé comme Canyon le liste, la bague dessinée à denture extérieure mais
+        # à lire sur la pièce, et l'outil qui dépend de la bague. Ni sa légende ni sa description ne donnent le
+        # RT-MT800 pour certain.
+        figure = un(racine, 'figure[data-model="rotor"]')
+        legende = un(figure, "figcaption").texte()
+        description = un(figure, "div.v3d-stage").get("aria-label")
+        for decrit in (legende, description):
+            for attendu in ("Deore XT MT800", "TL-FC36", "TL-LR15"):
+                self.assertIn(attendu, decrit)
+            self.assertNotIn("RT-MT800", decrit)
+        self.assertIn("Type de bague : à lire sur la pièce", legende)
 
     def test_plaquettes_cf8(self):
         # 2.3 : des L05A-RF d'origine aux L05A-RF neuves. Les plaquettes métalliques L04C-MF disparaissent du chapitre.
@@ -522,7 +533,8 @@ class TestPages(Site):
         self.assertEqual([(e.tag, e.classes()) for e in blocs],
                          [("header", ["page-h"]), ("section", ["accueil-grille"]), ("section", ["accueil-bloc"]),
                           ("div", ["intro"]), ("section", ["accueil-bloc"])])
-        self.assertEqual(un(blocs[0], "h1").texte(), "Ton Grizl CF 7, tel qu’il sort du carton")
+        self.assertEqual(un(blocs[0], "p.eyebrow").texte(), "Canyon Grizl CF 8 Di2 · taille M · Floating Violet")
+        self.assertEqual(un(blocs[0], "h1").texte(), "Ton Grizl CF 8 Di2, tel qu’il sort du carton")
         # Sans « à droite » : sous 1100 px, « Où intervenir » est sous la scène.
         self.assertEqual(un(blocs[0], "p.lead").texte(), "Fais tourner le vélo, touche une pastille, ou choisis une "
                          "zone pour ouvrir ses ateliers.")
@@ -542,8 +554,28 @@ class TestPages(Site):
         self.assertEqual(len(dom.selectionner(blocs[4], "div.cats > a.cat")), 1 + len(A_VENIR))
         # L'introduction garde son texte : les caractéristiques, le jour de la livraison et la règle des sources.
         intro = blocs[3]
-        self.assertEqual(len(dom.selectionner(intro, "dl.specs > div")), 6)
-        self.assertEqual(len(dom.selectionner(intro, "ol.plan > li")), 5)
+        specs = {un(d, "dt").texte(): un(d, "dd").texte() for d in dom.selectionner(intro, "dl.specs > div")}
+        self.assertEqual(list(specs), ["Transmission", "Freins", "Roues et pneus", "Poste de pilotage",
+                                       "Limites Canyon", "Prévu dès la livraison"])
+        # Les limites que le relevé du CF 8 Di2 soutient : les 120 kg de la fiche Canyon. Ni charge du porte-bagages ni
+        # limite de disque : Canyon n'en publie pas pour ce vélo.
+        self.assertEqual(specs["Limites Canyon"], "120 kg au total (toi, le vélo et les bagages)")
+        self.assertEqual(specs["Prévu dès la livraison"], "Pédales PD-ME700 et cales SPD, tubeless")
+        for attendu in ("Di2", "RD-M8250-GS", "ST-RX825", "9-45", "40 dents"):
+            self.assertIn(attendu, specs["Transmission"])
+        for attendu in ("Deore XT MT800", "160 mm", "L05A-RF"):
+            self.assertIn(attendu, specs["Freins"])
+        for attendu in ("GR 30 CF", "27 mm", "G-One RX", "45 mm"):
+            self.assertIn(attendu, specs["Roues et pneus"])
+        self.assertIn("SP100 VCLS 2.1", specs["Poste de pilotage"])
+        # Le jour de la livraison : les disques XT et les plaquettes sont d'origine, on n'y touche plus.
+        # Chaque point garde son renvoi ; celui de la position, vers un id qui n'est encore sur aucune page, reste gris.
+        plan = [(un(li, "b").texte(), elements(li)[-1].texte(), elements(li)[-1].get("href"))
+                for li in dom.selectionner(intro, "ol.plan > li")]
+        self.assertEqual(plan, [("Monter le vélo", "Chapitre 1", "montage/"),
+                                ("Passer en tubeless", "Chapitre 3", "tubeless/"),
+                                ("Reporter ta position", "Chapitre 1", None),
+                                ("Roder les freins et rouler", "Chapitre 2", "freins/rodage/")])
         self.assertEqual(un(intro, "aside.note.info > p.note-t").texte(), "Règle des sources")
 
     def test_accueil_sans_javascript(self):
@@ -568,6 +600,29 @@ class TestPages(Site):
         racine = self.arbre("composants/")
         self.assertEqual(un(racine, "nav.crumbs").texte(), "Références/Composants d'origine")
         self.assertIn(COMPOSANTS.strip(), self.html("composants/"))
+
+    def test_plus_de_cf7(self):
+        # Le site ne parle plus que du Grizl CF 8 Di2. Aucun fichier servi par les deux cibles, hors de three.js, ne
+        # garde le CF 7, sa fiche ou ses pièces : ni les 20 pages, ni l'index de la recherche, ni les pièces 3D des
+        # ateliers, ni les modules de la scène. Le menu, la description de chaque page et l'accueil nomment le CF 8 Di2.
+        self.maxDiff = None
+        absents = ("CF 7", "4553", "SM-RT64", "RX822", "RX610", "M7100", "Continental", "Terra Adventure",
+                   "Selle Royal")
+        for cible in ("site", "artifact"):
+            rendues, fichiers = self.sorties[cible]
+            servis = sorted(f for f in fichiers if not f.startswith("vendor/"))
+            for attendu in ["js/recherche.js", "js/m-rotor.js", "js/m-caliper.js", "js/m-bleed.js",
+                            "js/scene/sources.js"] + [f"{c}index.html" for c in CHEMINS]:
+                self.assertIn(attendu, servis, cible)
+            traces = [f"{nom} : {absent}" for nom in servis
+                      for absent in absents if absent in (self.dossier / cible / nom).read_text(encoding="utf-8")]
+            self.assertEqual(traces, [], cible)
+            for chemin, html in rendues.items():
+                marque = '<div class="label">Grizl CF 8 Di2 · M · Floating Violet</div>'
+                self.assertIn(marque, html, f"{cible} {chemin}")
+                self.assertIn('<meta name="description" content="Guide d\'atelier pour monter, régler et réparer '
+                              'soi-même le Canyon Grizl CF 8 Di2.">', html, f"{cible} {chemin}")
+            self.assertIn("Grizl CF 8 Di2", un(dom.analyser(rendues[""]), "main.page").texte(), cible)
 
     def test_composants_cf8(self):
         # Le contenu de la page (main.page) décrit le Grizl CF 8 Di2 et ne garde rien du CF 7. Le menu et l'en-tête
@@ -703,7 +758,7 @@ class TestComposants(unittest.TestCase):
 
     @staticmethod
     def nettoyer(ligne):
-        ligne = re.sub(r" \(`[^`]+`\)", "", ligne)  # « (`canyon-4553`) »
+        ligne = re.sub(r" \(`[^`]+`\)", "", ligne)  # « (`canyon-4556`) »
         ligne = re.sub(r"\(`[^`]+`, ", "(", ligne)  # « (`shimano-c-461`, relevé le ...) »
         ligne = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", ligne)
         return ligne.replace("**", "").replace("`", "").strip()

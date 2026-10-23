@@ -4,7 +4,9 @@ Ce document permet à une nouvelle session de reprendre le projet sans rien perd
 
 ## Le projet en bref
 
-Atelier Grizl est un guide d'atelier personnel, en français, pour monter, régler et réparer un Canyon Grizl CF 7 (taille M, version suisse). C'est un site statique en plusieurs pages, pensé d'abord pour l'ordinateur, dont Lamine se sert le plus, et lisible au téléphone : procédures pas à pas, couples de serrage, planches techniques en SVG et pièces en 3D que l'on fait tourner. La page d'accueil « Mon vélo » montre le vélo de Lamine en 3D réaliste ; ses pastilles et la colonne « Où intervenir » mènent aux ateliers, chacun sur sa page. La 3D utilise three.js 0.160.0 en modules ES. Il est servi par nginx dans Docker sur le serveur Hetzner de Lamine. La refonte en plusieurs pages suit [superpowers/specs/2026-10-21-site-multipage-design.md](superpowers/specs/2026-10-21-site-multipage-design.md) et la maquette que Lamine a validée le 21 octobre 2026.
+Atelier Grizl est un guide d'atelier personnel, en français, pour monter, régler et réparer un Canyon Grizl CF 8 Di2 (réf. 4556, taille M, Floating Violet, version suisse). C'est un site statique en plusieurs pages, pensé d'abord pour l'ordinateur, dont Lamine se sert le plus, et lisible au téléphone : procédures pas à pas, couples de serrage, planches techniques en SVG et pièces en 3D que l'on fait tourner. La page d'accueil « Mon vélo » montre le vélo de Lamine en 3D réaliste ; ses pastilles et la colonne « Où intervenir » mènent aux ateliers, chacun sur sa page. La 3D utilise three.js 0.160.0 en modules ES. Il est servi par nginx dans Docker sur le serveur Hetzner de Lamine. La refonte en plusieurs pages suit [superpowers/specs/2026-10-21-site-multipage-design.md](superpowers/specs/2026-10-21-site-multipage-design.md) et la maquette que Lamine a validée le 21 octobre 2026.
+
+Le 23 octobre 2026, Lamine a changé de vélo. Le site, écrit d'abord pour un autre Grizl, est passé au CF 8 Di2 d'après [superpowers/specs/2026-10-23-grizl-cf8-di2-design.md](superpowers/specs/2026-10-23-grizl-cf8-di2-design.md), sur la branche `cf8-di2`. Le relevé du vélo est dans [recherche/composants-origine.md](recherche/composants-origine.md) et ses sources dans [recherche/sources-cf8-di2.md](recherche/sources-cf8-di2.md). Ce sont les deux seules références pour les pièces du CF 8 Di2.
 
 ## Décisions de Lamine, à respecter
 
@@ -17,19 +19,19 @@ Atelier Grizl est un guide d'atelier personnel, en français, pour monter, régl
 7. **Serveur.** Avant de modifier quoi que ce soit sur le serveur, expliquer ce qui va changer et pourquoi, et attendre son accord.
 8. **Style.** Français, tutoiement, phrases courtes. Jamais de tiret cadratin ni de demi-cadratin. Chaque abréviation est développée à sa première apparition dans un chapitre. Un conseil sans source va dans un encadré « Proposition ».
 
-## État au 21 octobre 2026
+## État au 23 octobre 2026
 
 | Lot | Contenu | Pièces 3D | État |
 |---|---|---|---|
 | 0 | Le vélo en 3D sur la page d'accueil, ses zones d'atelier et la liste « Ce qui est approché », et le site en plusieurs pages | `src/scene/pieces/` : cadre, roues, freins, transmission, poste de pilotage | en relecture par Lamine |
-| 1 | Freins, découpés en huit ateliers, une page chacun | `rotor` (disque Center Lock + bague + TL-FC36), `caliper` (étrier flat mount + plaquettes L04C + curseur d'usure), `bleed` (kit de purge animé) | en relecture par Lamine |
+| 1 | Freins, découpés en huit ateliers, une page chacun | `rotor` (disque Deore XT MT800 + bague, dessinée à denture extérieure, + TL-FC36), `caliper` (étrier BR-RX820 + plaquettes L05A-RF + curseur d'usure), `bleed` (kit de purge du DM-GADBR10, animé) | en relecture par Lamine |
 | 2 | Avant de commencer, montage à la livraison | `torque`, `cockpit`, `axle`, `pedal` | brouillon hors dépôt |
 | 3 | Tubeless et crevaisons | `rim`, `plug` | brouillon hors dépôt |
 | 4 | Transmission | `chain`, `cassette`, `derailleur`, `crank` | brouillon hors dépôt |
 | 5 | Entretien, accessoires, dépannage | `rack` | brouillon hors dépôt |
 | 6 | Aide-mémoire des couples, sources | | brouillon hors dépôt |
 
-Les brouillons des lots 2 à 6 ont été écrits puis relus par des agents, mais ils datent d'avant la règle des sources stricte. Ils contiennent encore des liens de revendeurs et de magazines, des valeurs du guide Canyon lues sur une copie non officielle, et des données personnelles. Les modèles 3D `cockpit`, `axle`, `pedal`, `torque`, `plug` et `crank` ont été écrits par des agents interrompus avant la fin : ils sont à tester et à finir.
+Les brouillons des lots 2 à 6 ont été écrits puis relus par des agents, mais ils datent d'avant la règle des sources stricte et d'avant le changement de vélo : leurs références de pièces sont à reprendre d'après le relevé du CF 8 Di2. Ils contiennent encore des liens de revendeurs et de magazines, des valeurs du guide Canyon lues sur une copie non officielle, et des données personnelles. Les modèles 3D `cockpit`, `axle`, `pedal`, `torque`, `plug` et `crank` ont été écrits par des agents interrompus avant la fin : ils sont à tester et à finir.
 
 ## Les pages du site
 
@@ -104,9 +106,9 @@ docs/                    règle des sources, suivi des lots, conception (superpo
 - Contrôle dans le navigateur : `cd tools && npm ci` (Playwright 1.56.0, figé par `package-lock.json`), puis `npx playwright install chromium` la première fois. Chromium sans écran rend le WebGL avec `--use-gl=angle --use-angle=swiftshader` : les options sont déjà dans les scripts. Les captures vont dans `tools/shots*/`, ignoré par Git. Regarde les captures.
   - Tout le site : `node scene-check.js ../dist/site shots-1440 1440 900 clair`. Arguments : le dossier du site, le dossier des captures, la largeur, la hauteur, `clair` ou `sombre`, puis au choix `--disable-webgl`, `--mouvement` (sans réduire les animations) et `--sans-js`. Le script sert le dossier lui-même sur 127.0.0.1, comme nginx (`freins/` sert `freins/index.html`), avec la politique de contenu lue dans `deploy/nginx.conf` (une violation devient une erreur de console), puis :
     - ouvre chacune des 20 pages : aucune erreur dans la console ni requête en échec (seule la racine qui renvoie une ancienne ancre ailleurs a le droit d'abandonner des requêtes), pas de défilement horizontal, une capture par page (et la page entière pour l'accueil, `freins/` et `freins/plaquettes/`) ; sous 900 px, le menu est hors de l'écran tant que « Menu » n'est pas cliqué, le bouton l'ouvre et rend la page inerte (sur `freins/plaquettes/`, Tab ne sort pas du menu), Échap le referme ; chaque pièce 3D (2.2, 2.3, 2.7) est ouverte par son onglet et doit se dessiner, ou sans WebGL afficher son message ; enfin la page est tout dépliée (chaque `<details>` ouvert, les deux figures montrées) et ne doit toujours pas défiler en largeur ;
-    - accueil : la scène est dessinée ; la pastille 2 rend active la carte « Étrier et plaquettes » de « Où intervenir » ; sur une colonne, une pastille ne fait pas défiler la page et le bouton d'une carte ramène l'image à l'écran ; variantes (disque XT en vue d'ensemble pour le budget de 500 000 triangles, plaquettes sorties), schéma 2D, fenêtre « Ce qui est approché » ;
+    - accueil : la scène est dessinée ; la pastille 2 rend active la carte « Étrier et plaquettes » de « Où intervenir » ; sur une colonne, une pastille ne fait pas défiler la page et le bouton d'une carte ramène l'image à l'écran ; zone des disques sans variante, puis vue d'ensemble pour le budget de 500 000 triangles, variante des plaquettes sorties, schéma 2D, fenêtre « Ce qui est approché » ;
     - anciennes ancres : `index.html#freins-plaquettes` arrive sur `freins/plaquettes/`, de même `#freins` et `#freins-pl-2`, et Retour quitte le site ;
-    - `freins/` : le filtre « Remplacer » laisse 2 cartes ;
+    - `freins/` : le filtre « Remplacer » laisse 1 carte, les plaquettes (la dépose du disque est un entretien) ;
     - `freins/plaquettes/` : l'anneau de focus du lien du fil d'Ariane n'est pas rogné, la pièce 3D est dessinée, « Tout déplier » ouvre les 10 étapes, le pas à pas passe de « 1 / 10 » à « 2 / 10 » par la flèche droite et se ferme par Échap ; sur une page neuve, le premier Tab montre « Aller au contenu », Entrée mène au contenu et le Tab suivant y reste ;
     - recherche : « TL-FC36 » mène à `freins/disques/` ;
     - trois modules de la scène servis en 404 (`scene.js`, `pieces/roues.js`, `app.js`) : la page le dit et garde ses liens vers les ateliers ;
@@ -142,27 +144,29 @@ Unités en millimètres. Moins de 120 000 triangles. Les textes des pastilles su
 ## Points ouverts par lot
 
 - **Lot 0** : les points « à vérifier à la livraison » et les contradictions relevées dans les documents sont listés dans [lots.md](lots.md) et dans [recherche/composants-origine.md](recherche/composants-origine.md).
-- **Lot 1** :
-  - modèle exact de l'étrier (BR-RX410, BR-RX820 ou BR-RX400), à lire sur la pièce ;
-  - référence de la version à denture extérieure du RT-MT800 (fiche Shimano en maintenance pendant la rédaction) ;
-  - couple du purgeur d'étrier GRX, non publié par Shimano ;
+- **Lot 1**, à lire sur la pièce à la livraison :
+  - modèle exact de l'étrier, BR-RX820 attendu ;
+  - modèle exact des disques, RT-MT800 ou RT-CL800, et type de leur bague Center Lock : denture intérieure (outil TL-LR15) ou extérieure (outil TL-FC36) ;
+  - plaquettes d'origine, L05A-RF attendues, et leur épaisseur neuve ;
+  - manette gauche, ST-RX825-L ou BL-RX825-L ;
   - couple de l'axe avant, à prendre dans le guide du carton.
 - **Lot 2** :
-  - tous les couples du guide Canyon, sur photos ;
-  - longueur réelle des manivelles (165 mm sur la fiche suisse, 170 mm et plus ailleurs) ;
-  - type d'axe arrière ;
+  - tous les couples du guide Canyon, sur photos, dont ceux des axes traversants ;
+  - longueur des manivelles : 165 mm en M sur la fiche, à lire sur la manivelle ;
   - plage de la clé dynamométrique Canyon ;
   - outil à faible plage pour les couples de 0,2 à 2 Nm.
 - **Lot 3** :
-  - longueur de valve pour une jante de 26 mm ;
-  - pression maximale du flanc du pneu ;
+  - valves tubeless : présentes ou non dans le carton ;
+  - pression maximale imprimée sur la jante, à lire ; le manuel Canyon des roues limite déjà un pneu de 45 mm sur jante sans crochet à 3,0 bar ;
+  - version exacte du pneu, sur le flanc ;
   - calculs de charge et de pression fondés sur le poids de Lamine, à valider avec lui avant toute publication.
 - **Lot 4** :
-  - +4 ou +5 maillons pour le RD-RX822 (figure page 14 du DM-GARD010-02) ;
-  - patte UDH ou classique ;
-  - boîtier PF86 ;
-  - référence de la manette droite.
-- **Lot 5** : couples Ortlieb, publiés seulement dans les figures de la notice ; compatibilité du garde-boue DEFEND avec le Quick-Rack.
+  - charge de la batterie BT-DN320, dans le dérailleur, à la réception, et piles CR1632 des manettes ;
+  - patte de dérailleur UDH : présence et état ;
+  - chaîne : référence (CN-M8100 supposée), nombre de maillons et attache QUICK-LINK ;
+  - boîtier : référence exacte (SM-BB72-41B supposée) ;
+  - corps de roue libre de la roue arrière (Micro Spline, pour le pignon de 9 dents).
+- **Lot 5** : la liste Tailfin du 23/10/2026 (porte-bagages et son adaptateur UDH, sacoches, garde-boue, support d'éclairage), dont les documents restent à relever. Lamine n'a pas encore dit s'il garde les garde-boue Canyon DEFEND, l'éclairage et la sonnette Knog, les porte-bidons et le support d'antivol : sans réponse, ils sont retirés du lot.
 - **Lot 6** : l'aide-mémoire ne reprend que les valeurs des lots validés.
 
 ## Déploiement
@@ -178,22 +182,26 @@ La procédure complète est dans [../deploy/DEPLOIEMENT.md](../deploy/DEPLOIEMEN
 
 ### Vélo (Canyon, officiel)
 
-- Fiche suisse du Grizl CF 7 : https://www.canyon.com/de-ch/gravel-bikes/adventure/grizl/cf/grizl-cf-7/4553.html
+- Fiche suisse du Grizl CF 8 Di2 : https://www.canyon.com/fr-ch/velos-de-gravel/adventure/grizl/cf/grizl-cf-8-di2/4556.html?dwvar_4556_pv_rahmenfarbe=R126_P06
+- La même en anglais, avec les onglets des pièces de rechange et d'usure : https://www.canyon.com/en-ch/gravel-bikes/adventure/grizl/cf/grizl-cf-8-di2/4556.html
+- Photo officielle du coloris : https://dma.canyon.com/image/upload/w_2400,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1785934014/2027_FULL_grizl_cf-8-di2_4556_R126_P06_vpvgno
+- Manuel Canyon des roues : https://www.canyon.com/on/demandware.static/-/Library-Sites-canyon-shared/default/dw22ff8457/documents/customer-service/gravel-bikes/canyon-wheelset-manual-2025.pdf
 - Page support Grizl CF (vidéos officielles : montage, chargement, porte-bagages, garde-boue, ruban, rodage) : https://www.canyon.com/en-us/customer-service/gravel/grizl/grizl-cf/
 
 ### Freins (lot 1)
 
-- Shimano DM-GADBR01-10, freins et manettes GRX, en français : https://si.shimano.com/fr/pdfs/dm/GADBR01/DM-GADBR01-10-FRE.pdf
-- Le même en anglais : https://si.shimano.com/en/pdfs/dm/GADBR01/DM-GADBR01-10-ENG.pdf
+- Shimano DM-GADBR10-04, manettes ST-RX825 et leur purge, en français : https://si.shimano.com/fr/pdfs/dm/GADBR10/DM-GADBR10-04-FRE.pdf
+- Shimano DM-GADBR01-11, étriers, plaquettes et pistons GRX, en anglais : https://si.shimano.com/en/pdfs/dm/GADBR01/DM-GADBR01-11-ENG.pdf
+- Sa version 10 en français, que citent les phrases gardées du chapitre : https://si.shimano.com/fr/pdfs/dm/GADBR01/DM-GADBR01-10-FRE.pdf
 - Shimano DM-TORQUE-03, couples de serrage : https://si.shimano.com/en/pdfs/dm/TORQUE/DM-TORQUE-03-ENG.pdf
 - Shimano DM-HB0002-14, moyeux et disques Center Lock : https://si.shimano.com/en/pdfs/dm/HB0002/DM-HB0002-14-ENG.pdf
 - Shimano DM-RAWH010-02, roues : https://si.shimano.com/en/pdfs/dm/RAWH010/DM-RAWH010-02-ENG.pdf
-- Vue éclatée BR-RX400 : https://si.shimano.com/en/pdfs/ev/BR-RX400-4574/EV-BR-RX400-4574C.pdf
+- Vue éclatée BR-RX820 : https://si.shimano.com/en/pdfs/ev/BR-RX820-5000/EV-BR-RX820-5000C.pdf
+- Fiches de la manette ST-RX825-R et de l'étrier BR-RX820 : https://productinfo.shimano.com/en/product/ST-RX825-R et https://productinfo.shimano.com/en/product/BR-RX820
 - Compatibilité des plaquettes (C-192) : https://productinfo.shimano.com/en/compatibility/C-192
 - Compatibilité des disques (C-461) : https://productinfo.shimano.com/en/compatibility/C-461
 - Types de bague Center Lock (C-612) : https://productinfo.shimano.com/en/compatibility/C-612
-- Gammes GRX RX610 et RX820 : https://productinfo.shimano.com/en/lineup/rx610-2x12 et https://productinfo.shimano.com/en/lineup/rx820-2x12-di2
-- Fiche des plaquettes L04C-MF (site en maintenance en octobre 2026) : https://bike.shimano.com/en-NA/products/service-and-upgrade-parts/pdp.P-BP-L04C-MF.html
+- Gamme GRX RX820 1x12 Di2 : https://productinfo.shimano.com/en/lineup/rx820-1x12-di2
 - DT Swiss, manuel des roues : https://d2a13k6araex7u.cloudfront.net/pmt/00/00/00/00/00/00/00/10/00/00/00/85/8/MAN_WXWXXXXXX1610S_WEB_ZZ_001.pdf?v=57647
 - Park Tool, gestes :
   - disques : https://www.parktool.com/en-us/blog/repair-help/disc-brake-rotor-removal-installation
@@ -204,18 +212,19 @@ La procédure complète est dans [../deploy/DEPLOIEMENT.md](../deploy/DEPLOIEMEN
 
 ### Lots suivants
 
-Les liens des lots 2 à 6 se trouvent dans les notes de recherche (`docs/recherche/*.md`). Ces notes mélangent sources officielles et sources exclues : chaque lien doit être vérifié contre la règle des sources avant d'être cité.
+Pour les pièces du CF 8 Di2, les liens sont dans [recherche/sources-cf8-di2.md](recherche/sources-cf8-di2.md). Les autres notes de recherche (`docs/recherche/freins.md`, `montage.md`, `transmission.md`, `tubeless.md`) datent du 20 octobre 2026 et portent sur le premier vélo : leurs références de pièces ne valent pas pour le CF 8 Di2, seules les méthodes et les sources générales peuvent servir de piste. Ces notes mélangent sources officielles et sources exclues : chaque lien doit être vérifié contre la règle des sources avant d'être cité.
 
 Documents officiels principaux :
 
 - Transmission :
-  - dérailleur RD-RX822, DM-GARD010-02 : https://si.shimano.com/en/pdfs/dm/GARD010/DM-GARD010-02-ENG.pdf
+  - dérailleur Di2 RD-M8250, sa batterie BT-DN320 et son chargeur EC-DN100, DM-MARD011-07 : https://si.shimano.com/en/pdfs/dm/MARD011/DM-MARD011-07-ENG.pdf
+  - charge de la batterie, UM-7KZ0A : https://si.shimano.com/en/um/7KZ0A/UM-7KZ0A_charg_ing_method-merge
   - chaîne, DM-MACN001-08 : https://si.shimano.com/en/pdfs/dm/MACN001/DM-MACN001-08-ENG.pdf
-  - cassette, DM-MACS001-05 : https://si.shimano.com/en/pdfs/dm/MACS001/DM-MACS001-05-ENG.pdf
-  - pédalier, DM-GAFC001-06 : https://si.shimano.com/en/pdfs/dm/GAFC001/DM-GAFC001-06-ENG.pdf
-  - compatibilités C-454 : https://productinfo.shimano.com/en/compatibility/C-454
+  - cassette CS-M8200-12, DM-MACS010-02 : https://si.shimano.com/en/pdfs/dm/MACS010/DM-MACS010-02-ENG.pdf
+  - pédalier et boîtier, DM-GAFC001-06 : https://si.shimano.com/en/pdfs/dm/GAFC001/DM-GAFC001-06-ENG.pdf
 - Pédales, DM-MAPD001-07 : https://si.shimano.com/en/pdfs/dm/MAPD001/DM-MAPD001-07-ENG.pdf
 - Tubeless :
-  - ruban et valve DT Swiss : https://d2a13k6araex7u.cloudfront.net/pmt/00/00/00/00/00/00/00/10/00/00/05/96/9/MAN_TDXXXXXX05969S_WEB_ZZ_001.pdf?v=331
-  - Continental : https://www.continental-tires.com/tire-knowledge/tubeless-ready/
-- Ortlieb Quick-Rack L : https://downloads.ortlieb.com/datasheet/en/quick_rack_l.pdf et https://downloads.ortlieb.com/instructions/quick_rack.pdf
+  - page Canyon de la paire GR 30 CF : https://www.canyon.com/en-de/gear/bike-parts/tyres-and-tubes/wheels/canyon-gr-30-cf-wheelset/10014610.html
+  - manuel Canyon des roues : son lien est plus haut, avec ceux du vélo
+  - Schwalbe G-One RX : https://www.schwalbe.com/en/G-One-RX-11654623
+- Accessoires (lot 5) : les documents Tailfin restent à relever.

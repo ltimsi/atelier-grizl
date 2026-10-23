@@ -48,8 +48,8 @@
       "categorie": {"id": "transmission", "menu": "Transmission"},
       "prevu": [
         "Chaîne : usure, nettoyage, lubrification.",
-        "Réglage du dérailleur.",
-        "Kit montée : plateau GRX de 38 dents, cassette SLX 10-51, dérailleur RD-RX822-SGS, chaîne CN-M7100."
+        "Charger la batterie Di2 BT-DN320.",
+        "Régler le dérailleur Di2."
       ],
       "parts": ["40-transmission"],
       "modeles": ["chain", "cassette", "derailleur", "crank"]
@@ -60,10 +60,10 @@
       "statut": "à faire",
       "categorie": {"id": "accessoires", "menu": "Accessoires des trajets"},
       "prevu": [
-        "Porte-bagages Ortlieb Quick-Rack L.",
-        "Garde-boue Canyon DEFEND.",
-        "Éclairage Knog Blinder et sonnette Knog Oi Luxe.",
-        "Porte-bidons et support d'antivol."
+        "Porte-bagages Tailfin, son adaptateur UDH et son axe traversant.",
+        "Sacoches Tailfin et leur sangle.",
+        "Garde-boue du porte-bagages Tailfin.",
+        "Support d’éclairage Tailfin."
       ],
       "parts": ["50-entretien", "60-accessoires", "70-depannage"],
       "modeles": ["rack"]

@@ -312,7 +312,7 @@ def _application(page, config, chapitres):
         f'<a class="evitement" href="#{CONTENU}">Aller au contenu</a>',
         '<aside class="side" id="side" aria-label="Menu">',
         '<div class="brand">',
-        '  <div class="label">Grizl CF 7 · M · Floating Violet</div>',
+        '  <div class="label">Grizl CF 8 Di2 · M · Floating Violet</div>',
         f'  <div class="name">{NOM}</div>',
         "</div>",
         menu(config, chapitres, page),

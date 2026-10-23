@@ -1,6 +1,6 @@
 # Atelier Grizl
 
-Guide d'atelier personnel pour monter, régler et réparer un Canyon Grizl CF 7 (taille M, Floating Violet) : procédures pas à pas, couples de serrage, planches techniques en SVG et pièces en 3D à faire tourner. Site statique en plusieurs pages, pensé d'abord pour l'ordinateur et lisible au téléphone, servi par nginx sur le serveur Hetzner derrière le reverse proxy.
+Guide d'atelier personnel pour monter, régler et réparer un Canyon Grizl CF 8 Di2 (réf. 4556, taille M, Floating Violet) : procédures pas à pas, couples de serrage, planches techniques en SVG et pièces en 3D à faire tourner. Site statique en plusieurs pages, pensé d'abord pour l'ordinateur et lisible au téléphone, servi par nginx sur le serveur Hetzner derrière le reverse proxy.
 
 La page d'accueil « Mon vélo » montre le vélo en 3D réaliste, avec ses pièces d'origine. Ses pastilles et la colonne « Où intervenir » mènent aux ateliers : disques, étrier et plaquettes, manettes et durites pour l'instant. Chaque atelier a sa page : ses étapes, ou les blocs d'une fiche « comprendre », se déplient d'un clic, un mode pas à pas montre les étapes une à une, et à droite viennent, selon l'atelier, la planche ou la pièce 3D, ce qu'il faut démonter, les outils et les couples. Sans WebGL, un schéma 2D prend le relais. Ce qui n'est pas publié par les fabricants est dessiné au mieux et listé sous « Ce qui est approché ». La 3D utilise three.js 0.160.0 en modules ES : en local depuis `vendor/three/` pour le site, depuis jsDelivr pour l'aperçu.
 

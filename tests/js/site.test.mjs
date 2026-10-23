@@ -17,7 +17,8 @@ const INDEX = [
   { k: 'Atelier 2.5', t: 'Centrer l’étrier', u: 'freins/centrage/' },
   { k: 'Étape · 2.5', t: 'Libère l’étrier', u: 'freins/centrage/' },
   { k: 'Outil · 2.2', t: 'Outil Center Lock TL-FC36', u: 'freins/disques/' },
-  { k: 'Pièce d’origine', t: 'Disques · Shimano SM-RT64', u: 'composants/#composants-freins' },
+  { k: 'Pièce d’origine', t: 'Disque de frein · Shimano Deore XT MT800 · 116 g ; diamètre 160 / 160',
+    u: 'composants/#composants-freins' },
 ];
 
 test('normaliser : minuscules, sans accents', () => {

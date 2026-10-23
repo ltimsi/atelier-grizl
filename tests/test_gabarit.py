@@ -62,15 +62,18 @@ class TestLots(unittest.TestCase):
         self.assertEqual(self.lot(3)["prevu"], [
             "Passer les pneus en tubeless : valves, liquide, pompe à réservoir.",
             "Crevaisons."])
+        # Lot 4 : les ateliers Di2 du Grizl CF 8 Di2 rejoignent la transmission. Le réglage du dérailleur devient celui
+        # du dérailleur Di2, et le kit de transmission mécanique de l'ancien vélo disparaît.
         self.assertEqual(self.lot(4)["prevu"], [
             "Chaîne : usure, nettoyage, lubrification.",
-            "Réglage du dérailleur.",
-            "Kit montée : plateau GRX de 38 dents, cassette SLX 10-51, dérailleur RD-RX822-SGS, chaîne CN-M7100."])
+            "Charger la batterie Di2 BT-DN320.",
+            "Régler le dérailleur Di2."])
+        # Lot 5 : la liste Tailfin seule.
         self.assertEqual(self.lot(5)["prevu"], [
-            "Porte-bagages Ortlieb Quick-Rack L.",
-            "Garde-boue Canyon DEFEND.",
-            "Éclairage Knog Blinder et sonnette Knog Oi Luxe.",
-            "Porte-bidons et support d'antivol."])
+            "Porte-bagages Tailfin, son adaptateur UDH et son axe traversant.",
+            "Sacoches Tailfin et leur sangle.",
+            "Garde-boue du porte-bagages Tailfin.",
+            "Support d’éclairage Tailfin."])
         self.assertEqual(self.lot(6)["prevu"], [
             "Ma révision : ce qu'il faut contrôler et quand, avec uniquement des intervalles publiés.",
             "Aide-mémoire des couples des lots validés."])
