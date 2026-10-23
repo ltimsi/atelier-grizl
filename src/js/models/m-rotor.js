@@ -1,4 +1,23 @@
-/* Atelier Grizl : disque Shimano RT-MT800 160 mm Center Lock sur moyeu DT Swiss, bague à denture extérieure, outil TL-FC36.
+/* Atelier Grizl : disque Center Lock de 160 mm du Grizl CF 8 Di2 sur le moyeu avant DT Swiss 350 (axe 12x100), sa
+   bague et l'outil de serrage, en vue éclatée.
+   Canyon liste un disque « Shimano Deore XT MT800 » de 160 mm (fiche suisse) ; l'onglet des pièces d'usure de sa fiche
+   anglaise propose un RT-CL800. Modèle exact, RT-MT800 ou RT-CL800 : à lire sur la pièce. Le disque est dessiné en
+   disque XT : piste, araignée à six bras, ailettes de refroidissement (ICE TECHNOLOGIES FREEZA sur la fiche Shimano).
+   Bague Center Lock : Shimano dessine le RT-MT800 avec deux bagues, l'une à serrer au TL-LR15, l'autre « external
+   spline type » au TL-FC36, toutes deux à 40 Nm (EV-BR-RX820-5000C). Type de bague d'origine : à lire sur la pièce.
+   Ici, la bague est dessinée à denture extérieure, l'un des deux types possibles, avec son outil TL-FC36 ; une bague
+   à denture intérieure se serre au TL-LR15 avec une clé de 24 mm (DM-RAWH010).
+   Pièces : moyeu et ses cannelures, piste, ailettes, araignée et rivets, flèche de rotation, bague, outil.
+   Formes approchées (aucune cote publiée dans les documents cités) :
+   - moyeu, flasques, trous de rayons, cannelures et embouts : forme approchée ;
+   - piste, pattes de rivetage, araignée, rivets et ailettes : forme approchée ; épaisseur de la piste approchée,
+     épaisseur neuve à lire sur la pièce ;
+   - fentes de la piste : une rangée de fentes à cinq pans, comme sur la vue éclatée EV-BR-RX820-5000C et la photo
+     officielle du vélo ; nombre, taille et forme approchés ;
+   - couleur des ailettes : claires sur la photo officielle, rendues en gris métal ;
+   - flèche peinte : place et forme approchées ;
+   - bague à denture extérieure : forme et nombre d'encoches approchés ;
+   - outil TL-FC36 : douille, crans et carré d'entraînement approchés (carré à lire sur l'outil).
    Plan du disque : XY. Axe de roue : z (côté extérieur du vélo vers +z). Unités : mm. */
 (function () {
   'use strict';
@@ -28,14 +47,11 @@
         var g = b > 0 ? H.extrude(sh, T - 2 * b, { bevel: b, curve: curve || 24 }) : H.extrude(sh, T, { curve: curve || 24 });
         if (zc) g.translate(0, 0, zc); return g;
       }
-      function pill(cx, cy, len, wid, ang, n) {
-        var p = [], r = wid / 2, h = len / 2 - r, ca = Math.cos(ang), sa = Math.sin(ang);
-        n = n || 6;
-        for (var s = 0; s < 2; s++) for (var i = 0; i <= n; i++) {
-          var t = -Math.PI / 2 + i / n * Math.PI + s * Math.PI, ex = (s ? -h : h) + r * Math.cos(t), ey = r * Math.sin(t);
-          p.push(H.V2(cx + ex * ca - ey * sa, cy + ex * sa + ey * ca));
-        }
-        return p;
+      /* Fente à cinq pans n° j sur 30, centrée à 69,5 mm du centre : 8,5 de haut, 6,8 de large (valeurs de dessin). */
+      function slot5(j) {
+        var a = (j + 0.5) / 30 * TAU, ca = Math.cos(a), sa = Math.sin(a), h = 4.25, w = 3.4, rf = 69.5;
+        function q(r, t) { return H.V2(ca * r - sa * t, sa * r + ca * t); }
+        return [q(rf + h, -w), q(rf + h, w), q(rf - h / 3, w), q(rf - h, 0), q(rf - h / 3, -w)].reverse();
       }
 
       /* ---------- Matériaux propres au modèle ---------- */
@@ -51,13 +67,14 @@
       var trackMat = new THREE.MeshStandardMaterial({ color: 0xdfe2e6, metalness: 1, roughness: 1, roughnessMap: rough });
       var hubMat = new THREE.MeshStandardMaterial({ color: 0xa9aeb4, metalness: 0.92, roughness: 0.36 });
       var spiderMat = new THREE.MeshStandardMaterial({ color: 0x050506, metalness: 0.4, roughness: 0.42, envMapIntensity: 0.9 });
-      var finMat = new THREE.MeshStandardMaterial({ color: 0x030304, metalness: 0.4, roughness: 0.46, envMapIntensity: 0.8 });
+      /* ailettes : claires sur la photo officielle du vélo, rendues en gris métal (couleur approchée) */
+      var finMat = new THREE.MeshStandardMaterial({ color: 0xaeb3b9, metalness: 0.9, roughness: 0.4, envMapIntensity: 0.8 });
       var holeMat = new THREE.MeshStandardMaterial({ color: 0x020202, metalness: 0.2, roughness: 0.9 });
       var capMat = new THREE.MeshStandardMaterial({ color: 0x060607, metalness: 0.45, roughness: 0.38 });
       var paint = new THREE.MeshStandardMaterial({ color: 0xf4f4f0, metalness: 0, roughness: 0.55, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
       var toolMat = new THREE.MeshStandardMaterial({ color: 0x1a1c1f, metalness: 0.85, roughness: 0.36, transparent: true, opacity: 1 });
 
-      /* ---------- Moyeu DT Swiss (avant 12 x 100) ---------- */
+      /* ---------- Moyeu avant DT Swiss 350 (axe 12x100), forme approchée ---------- */
       var hub = new THREE.Group(); root.add(hub);
       H.mesh(lath([[11.2, -84], [13, -84], [16, -82.5], [17, -72], [22, -71.2], [27.4, -70.6], [28, -70], [28, -67], [27.4, -66.4], [19, -65.4],
         [16, -62], [14.3, -50], [14, -40], [14.3, -30], [16, -20], [19, -16.6], [27.4, -15.6], [28, -15], [28, -12], [27.4, -11.4], [22, -10.8],
@@ -101,13 +118,9 @@
         inner.push(H.pol(rIn, a));
       }
       track.holes.push(H.path(inner));
-      for (var row = 0; row < 2; row++) {
-        var rr2 = row ? 68.9 : 75, n = 36;
-        for (var j = 0; j < n; j++) {
-          var aa = (j + row * 0.5) / n * TAU, c = H.pol(rr2, aa);
-          track.holes.push(H.path(pill(c.x, c.y, row ? 4.4 : 5.4, 2.5, aa + Math.PI / 2 + (row ? -0.6 : 0.6), 4)));
-        }
-      }
+      /* une rangée de 30 fentes à cinq pans, bord extérieur droit, pointe vers le moyeu (forme approchée d'après la
+         vue éclatée EV-BR-RX820-5000C et la photo officielle du vélo, comme la pièce de la scène) */
+      for (var j = 0; j < 30; j++) track.holes.push(H.path(slot5(j)));
       var trackM = H.mesh(ext(track, 1.8, 0.18, 0, 12), trackMat, rotor);
       /* ailettes de refroidissement noires (peigne) entre les bras, plaquées sur le bord intérieur de la piste */
       var finsSh = [];
@@ -154,7 +167,7 @@
       var arrow = H.mesh(new THREE.ShapeGeometry(arr), paint, rotor, [rA * Math.cos(aA), rA * Math.sin(aA), 3.93]);
       arrow.rotation.z = aA + Math.PI / 2;
 
-      /* ---------- Bague à denture extérieure (16 encoches) ---------- */
+      /* ---------- Bague Center Lock dessinée à denture extérieure, l'un des deux types possibles (forme approchée) ---------- */
       var lock = new THREE.Group(); root.add(lock);
       var lr = H.shape(H.gearPts(16, 20.7, 22.5, { tip: 0.6, flank: 0.05 }));
       lr.holes.push(H.path(H.circlePts(15.5, 64)));
@@ -162,7 +175,8 @@
       H.mesh(lath([[15.5, -1.9], [16.8, -1.9], [16.8, 4.62], [15.5, 4.62], [15.5, -1.9]], 64), M.lockring, lock);
       for (i = 0; i < 6; i++) H.mesh(new THREE.TorusGeometry(16.8, 0.28, 6, 48), M.lockring, lock, [0, 0, -1.2 + i * 0.95]);
 
-      /* ---------- Outil Shimano TL-FC36 : douille à 16 crans, carré d'entraînement ---------- */
+      /* ---------- Outil Shimano TL-FC36, celui de la bague à denture extérieure : douille à crans, carré d'entraînement
+         (forme approchée) ---------- */
       var tool = new THREE.Group(); root.add(tool);
       var tl = H.shape(H.circlePts(26, 96));
       tl.holes.push(H.path(H.gearPts(16, 23, 20.95, { tip: 0.22, flank: 0.03, phase: -TAU / 32 })));
@@ -177,14 +191,15 @@
       /* ---------- Pastilles ---------- */
       function pp(r, a, z) { return [r * Math.cos(a), r * Math.sin(a), z]; }
       var pinsBase = [
-        { obj: trackM, p: pp(72, -0.35, 0.9), text: 'Piste en acier : épaisseur minimale 1,5 mm' },
-        { obj: fins, p: pp(57.5, phi(0, rivR) + 0.62, 3.3), text: 'Araignée alu et ailettes de refroidissement' },
-        { obj: arrow, p: [0, -12, 0], text: 'Flèche : dans le sens de rotation de la roue' },
-        { obj: splines, p: pp(18.3, -1.2, 4.6), text: 'Cannelures Center Lock : propres, sans graisse' },
-        { obj: lockM, p: pp(22.2, 1.75, 1.75), text: 'Bague à denture extérieure : 40 Nm' },
-        { obj: cap, p: [0, 0, 14], text: 'Moyeu DT Swiss, embout d’axe 12 mm' }
+        { obj: trackM, p: pp(76, -2.0, 0.9), text: 'Disque Deore XT MT800, 160 mm : modèle exact à lire sur la pièce' },
+        { obj: trackM, p: pp(72, -0.35, 0.9), text: 'Piste : hors d’usage à 1,5 mm ou si l’aluminium se voit' },
+        { obj: fins, p: pp(57.5, phi(0, rivR) + 0.62, 3.3), text: 'Araignée et ailettes de refroidissement' },
+        { obj: arrow, p: [0, -12, 0], text: 'Flèche : dans le sens de rotation de la roue' },
+        { obj: splines, p: pp(18.3, -1.2, 4.6), text: 'Cannelures Center Lock : propres, sans graisse' },
+        { obj: lockM, p: pp(22.2, 1.75, 1.75), text: 'Bague, ici à denture extérieure (type à lire) : 40 Nm' },
+        { obj: cap, p: [0, 0, 14], text: 'Moyeu DT Swiss 350, axe traversant de 12 mm' }
       ];
-      var pinTool = { obj: tool, p: pp(26, 0.3, 14), text: 'Outil TL-FC36 : avec des gants, le disque coupe' };
+      var pinTool = { obj: tool, p: pp(26, 0.3, 14), text: 'Outil TL-FC36, avec des gants (bague à denture intérieure : TL-LR15)' };
       var toolShown = false;
 
       return {

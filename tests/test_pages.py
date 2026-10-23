@@ -468,6 +468,25 @@ class TestPages(Site):
         for slug in SLUGS:
             self.assertNotIn("L04C", self.html(f"freins/{slug}/"), slug)
 
+    def test_pieces_3d_cf8(self):
+        # Les pièces 3D des ateliers 2.2, 2.3 et 2.7, dans le dépôt et telles que les deux cibles les servent : plus de
+        # plaquettes L04C, ni de couple RX400, ni de manette à 45°, ni de repose-main « vers l'avant », ni de disque
+        # SM-RT64 du CF 7. Elles montrent le disque XT et ses deux bagues possibles, l'étrier BR-RX820 et ses L05A-RF,
+        # et la purge du DM-GADBR10, avec les couples du chapitre.
+        attendus = {"m-rotor.js": ("Deore XT MT800", "TL-LR15", "40\xa0Nm"),
+                    "m-caliper.js": ("BR-RX820", "L05A-RF", "1-1,5\xa0Nm", "6-8\xa0Nm", "5-7\xa0Nm"),
+                    "m-bleed.js": ("DM-GADBR10", "par l’arrière", "Entonnoir à 20°", "0,5-0,7\xa0Nm", "4-6\xa0Nm",
+                                   "environ 10 fois")}
+        for nom, presents in attendus.items():
+            textes = {"src": (RACINE / "src" / "js" / "models" / nom).read_text(encoding="utf-8")}
+            for cible in ("site", "artifact"):
+                textes[cible] = (self.dossier / cible / "js" / nom).read_text(encoding="utf-8")
+            for ou, texte in textes.items():
+                for absent in ("L04C", "RX400", "45°", "45 °", "45\xa0°", "vers l'avant", "vers l’avant", "SM-RT64"):
+                    self.assertNotIn(absent, texte, f"{ou} {nom} : {absent}")
+                for present in presents:
+                    self.assertIn(present, texte, f"{ou} {nom} : {present}")
+
     def test_approche_et_sources(self):
         for chemin, ident in (("approche/", "approche-page"), ("sources/", "sources-page")):
             racine = self.arbre(chemin)

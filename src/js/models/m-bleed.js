@@ -1,8 +1,31 @@
-/* Atelier Grizl : purge d'un frein Shimano GRX (DM-GADBR01-10, pages 50 à 66).
-   En haut, manette BL-RX820 sur un bout de cintre : capuchon rabattu vers l'avant, vis de purge retirée,
-   entonnoir TL-BR002 vissé à sa place. La durite descend vers un étrier flat mount simplifié (roue et plaquettes
-   déposées, cale de purge jaune entre les pistons). Sur le purgeur : seringue TL-BR001 (Injecter) ou sachet (Gravité).
-   Repère : x vers l'arrière du vélo (le bec de la cocotte pointe vers -x), y vers le haut, z vers l'extérieur
+/* Atelier Grizl : purge d'un frein du Grizl CF 8 Di2, manette Shimano GRX ST-RX825, d'après la purge du DM-GADBR10-04
+   (« Replacing SHIMANO hydraulic mineral oil », si.shimano.com, en anglais et en français).
+   En haut, la manette sur un bout de cintre : repose-main retourné par l'arrière, roulé jusqu'au bec comme sur la
+   figure du DM-GADBR10 ; vis de purge et joint torique retirés à la clé Allen de 2,5 mm, entonnoir TL-BR002 vissé à
+   leur place (vis remontée ensuite à 0,5-0,7 Nm). La durite descend vers un étrier flat mount simplifié, dessiné sur le
+   BR-RX820 que Shimano recommande avec la ST-RX825 (modèle monté à lire sur la pièce) : roue et plaquettes déposées,
+   cale de purge jaune tenue par l'axe et le clip, caches du raccord et de la vis de purge retirés, clé Allen de 3 mm
+   dans la vis de purge (desserrée d'un demi-tour, serrée à la fin à 4-6 Nm). Sur le raccord de purge : seringue
+   TL-BR001 (Injecter) ou sachet (Gravité).
+   Bascule « Entonnoir à 20° » : le DM-GADBR10 fait placer la manette pour que le dessus de l'entonnoir fasse 20° avec le
+   sol, en tournant le cintre, « comme l'indique l'illustration ». Sa figure montre le vélo vu de côté, l'avant à gauche :
+   cintre et manette tournés pour que le bec descende, l'entonnoir penché côté avant du vélo. C'est le sens dessiné
+   ici. Le reste du temps, le dessus de la vis de purge, puis de l'entonnoir, est parallèle au sol.
+   Pièces : cintre et guidoline, manette, repose-main, levier, entonnoir et son huile, durite, étrier, cale de purge,
+   axe et clip, raccord de purge, vis de purge et leurs caches, clé Allen, seringue et son tube, sachet et son tube,
+   billes d'huile et bulles.
+   Formes approchées (aucune cote publiée ; celles de la manette ST-RX825 ne le sont pas, d'après
+   docs/recherche/composants-origine.md) :
+   - manette, repose-main roulé et levier : forme approchée d'après les figures du DM-GADBR10 ;
+   - place de la vis de purge de la manette et de l'entonnoir, sur le dessus près du collier : approchée d'après les
+     mêmes figures ;
+   - cintre, guidoline, durite et son trajet : approchés ; le point de pivot du cintre aussi ;
+   - étrier simplifié : corps, cale de purge, axe et clip en forme approchée ;
+   - raccord de purge, vis de purge et leurs caches : place et forme approchées d'après les figures du DM-GADBR10 et de
+     la vue éclatée EV-BR-RX820-5000C ;
+   - clé Allen : forme en L approchée, seule sa taille de 3 mm vient du DM-GADBR10 ;
+   - entonnoir, seringue, tubes et sachet : forme approchée ; niveau d'huile et circulation des billes : schéma.
+   Repère : x vers l'arrière du vélo (le bec de la manette pointe vers -x), y vers le haut, z vers l'extérieur
    de la manette. Unités : mm. */
 (function () {
   'use strict';
@@ -88,7 +111,7 @@
       var mTick = new THREE.MeshBasicMaterial({ color: 0x1e2024, map: tickTex, transparent: true, depthWrite: false, alphaTest: 0.25 });
 
       /* =====================================================================
-         Manette et bout de cintre, dans un groupe qui pivote pour « Cocotte à 45° »
+         Manette et bout de cintre, dans un groupe qui pivote pour « Entonnoir à 20° » (cintre tourné)
          ===================================================================== */
       var PIV = [0, -40];
       var lev = new THREE.Group(); lev.position.set(PIV[0], PIV[1], 0); root.add(lev);
@@ -114,14 +137,15 @@
       var plugDisc = new THREE.CircleGeometry(10.2, 24); plugDisc.rotateY(Math.PI / 2); H.mesh(plugDisc, S(0x050505, 0, 1), L, [54.5, 0, 0]);
       H.mesh(H.orient(H.lathe([[0, 0], [14.4, 0], [14.6, 1.2], [14.2, 2.6], [12, 3.4], [0, 3.8]], 36), 'x'), mBlackPl, L, [39.2, -120, 0]);
 
-      /* Corps de la cocotte (profil latéral extrudé). */
+      /* Corps de la manette (profil latéral extrudé). */
       var bodyCtl = [[14, 16], [4, 19.5], [-8, 23.5], [-20, 26.5], [-32, 28.5], [-44, 31.5], [-55, 37], [-64, 45], [-71, 54], [-77, 60], [-83, 62], [-89, 59.5], [-94, 52],
         [-96.5, 41], [-95.5, 29], [-91, 18], [-84, 9], [-75, 3], [-65, -1], [-54, -5], [-46, -10], [-39, -16], [-30, -13.5], [-18, -9], [-6, -5], [6, -2.5], [14, 2]];
       var bodyPts = smoothPts(bodyCtl, 170);
       H.mesh(ext(H.shape(bodyPts), 28, 3.5, 12), mBody, L);
 
-      /* Capuchon caoutchouc rabattu vers l'avant : il ne couvre plus que le bec, avec un bourrelet roulé. */
-      (function () {
+      /* Repose-main retourné par l'arrière (DM-GADBR10) : roulé jusqu'au bec, il ne couvre plus que lui, avec un
+         bourrelet roulé ; le dessus de la manette, près du collier, est dégagé. */
+      var cover = (function () {
         var n = bodyPts.length, area = 0, off = [], k;
         for (k = 0; k < n; k++) { var q = bodyPts[(k + 1) % n]; area += bodyPts[k].x * q.y - q.x * bodyPts[k].y; }
         var sg = area > 0 ? 1 : -1;
@@ -132,15 +156,16 @@
         var XC = -52, st = 0, run = [];
         for (k = 0; k < n; k++) if (off[k].x <= XC && off[(k - 1 + n) % n].x > XC) { st = k; break; }
         for (k = 0; k < n; k++) { var p = off[(st + k) % n]; if (p.x > XC) break; run.push(p); }
-        H.mesh(ext(H.shape(run), 34, 4.5, 12), mCover, L);
+        var hood = H.mesh(ext(H.shape(run), 34, 4.5, 12), mCover, L);
         var lip = [[-52, -11.5, 9], [-52.3, -9, 17], [-52.6, 6, 18.8], [-52.6, 24, 18.8], [-52.4, 34.5, 15.5], [-52.2, 40, 8], [-52, 41.5, 0],
           [-52.2, 40, -8], [-52.4, 34.5, -15.5], [-52.6, 24, -18.8], [-52.6, 6, -18.8], [-52.3, -9, -17], [-52, -11.5, -9]];
         var lipG = new THREE.TubeGeometry(crv(lip), 90, 4.2, 14, false); lipG.translate(52, 0, 0); lipG.scale(1.7, 1, 1); lipG.translate(-52.5, 0, 0);
         H.mesh(lipG, mCover, L);
+        return hood;
       })();
 
       /* Levier de frein. */
-      (function () {
+      var blade = (function () {
         var bl = crv([[-82, 10], [-90, -12], [-96, -36], [-98, -62], [-94, -88], [-84, -110], [-69, -128]]);
         var wid = [24, 21, 18.5, 17, 16, 15, 14], NB = 44, left = [], right = [], k;
         function wAt(u) { var f = u * (wid.length - 1), j = Math.min(wid.length - 2, Math.floor(f)); return wid[j] + (wid[j + 1] - wid[j]) * (f - j); }
@@ -150,10 +175,11 @@
         }
         var ce = bl.getPointAt(1), te = bl.getTangentAt(1), we = wid[wid.length - 1] / 2, a0 = Math.atan2(te.y, te.x), tip = [];
         for (k = 1; k < 8; k++) { var aa = a0 + Math.PI / 2 - k / 8 * Math.PI; tip.push(V2(ce.x + we * Math.cos(aa), ce.y + we * Math.sin(aa))); }
-        H.mesh(ext(H.shape(left.concat(tip, right.reverse())), 12, 2.4, 8), mBlade, L);
+        return H.mesh(ext(H.shape(left.concat(tip, right.reverse())), 12, 2.4, 8), mBlade, L);
       })();
 
-      /* Bossage du trou de purge, embase noire et entonnoir TL-BR002 avec l'huile. */
+      /* Bossage du trou de la vis de purge (vis et joint torique retirés), embase noire et entonnoir TL-BR002 avec
+         l'huile. */
       var LEVEL = 64.5;
       var fun = new THREE.Group(); fun.position.set(-25, 0, 0); L.add(fun);
       H.cyl(6.6, 6.5, 'y', mBody, fun, [0, 27.25, 0], 32);
@@ -199,28 +225,48 @@
         for (k = n; k >= 0; k--) o.push(H.pol(1.3, -Math.PI / 2 + ga + (TAU - 2 * ga) * k / n));
         H.mesh(H.extrude(H.shape(o), 0.7, { curve: 4 }), M.steel, cal, [0, 12.5, 22.4]);
       })();
-      /* purgeur (6 pans de 7 mm) sur la moitié extérieure, capuchon retiré */
-      var nip = new THREE.Group(); nip.position.set(22, 16, 14); cal.add(nip);
-      H.cyl(5.4, 1.2, 'y', mCal, nip, [0, 0.2, 0], 28);
-      var nipHex = H.mesh(prism(H.shape(hexPts(4.04)), 3.4, 0.3, 'y'), M.steelDark, nip, [0, 2.4, 0]);
-      H.cyl(2.3, 4.6, 'y', M.steelDark, nip, [0, 6.4, 0], 18);
-      H.cyl(2.3, 1.8, 'y', M.steelDark, nip, [0, 9.6, 0], 18, 1.6);
+      /* Raccord de purge (bleed boss) et vis de purge (bleed screw) sur la face extérieure de la moitié z+, caches
+         retirés. Place et forme approchées d'après les figures du DM-GADBR10. */
+      var FACE = 21.9;
+      var boss = new THREE.Group(); boss.position.set(-20, -7, FACE); cal.add(boss);
+      H.cyl(4.2, 2, 'z', mCal, boss, [0, 0, 1], 28);
+      var bossTip = H.cyl(2.6, 4, 'z', M.steelDark, boss, [0, 0, 4], 20);
+      H.mesh(new THREE.CircleGeometry(1.1, 16), S(0x050505, 0, 1), boss, [0, 0, 6.02]);
+      var screw = new THREE.Group(); screw.position.set(20, 6, FACE); cal.add(screw);
+      H.cyl(3.8, 1.2, 'z', mCal, screw, [0, 0, 0.6], 28);
+      var screwHead = H.cyl(2.5, 1.8, 'z', M.steelDark, screw, [0, 0, 2.1], 24);
+      /* clé Allen de 3 mm (3 mm sur plats), engagée dans la vis de purge */
+      var key = new THREE.Group(); screw.add(key);
+      var hexKey = function (len) { return prism(H.shape(hexPts(1.732, Math.PI / 6)), len, 0.15, null); };
+      H.mesh(hexKey(13), M.steelDark, key, [0, 0, 8.5]);
+      H.mesh(new THREE.SphereGeometry(1.732, 12, 8), M.steelDark, key, [0, 0, 15]);
+      H.mesh(hexKey(30).rotateY(Math.PI / 2), M.steelDark, key, [15, 0, 15]);
+      /* caches retirés, posés à côté de leur pièce */
+      var capBoss = new THREE.Group(); capBoss.position.set(-30, -19, FACE + 10); cal.add(capBoss);
+      H.cyl(3.4, 1.2, 'z', M.rubber, capBoss, [0, 0, 0], 24);
+      H.cyl(2.5, 3, 'z', M.rubber, capBoss, [0, 0, -2], 20);
+      var capScrew = new THREE.Group(); capScrew.position.set(24, 28, FACE + 8); cal.add(capScrew);
+      H.cyl(3.0, 1.0, 'z', M.rubber, capScrew, [0, 0, 0], 24);
+      H.cyl(2.3, 1.6, 'z', M.rubber, capScrew, [0, 0, -1.2], 20);
       /* raccord de durite à l'avant de l'étrier */
       var fit = new THREE.Group(); fit.position.set(-29, 7, 14); cal.add(fit);
       H.cyl(5, 4, 'x', mCal, fit, [-1.5, 0, 0], 28);
       H.mesh(prism(H.shape(hexPts(4.62, Math.PI / 6)), 5.5, 0.35, 'x'), M.steelDark, fit, [-6.2, 0, 0]);
       H.cyl(2.7, 3.2, 'x', M.rubber, fit, [-10.5, 0, 0], 24, 3.1);
-      var FIT = V3(118 - 41, -101 + 7, 14), NIP = V3(118 + 22, -101 + 16 + 6, 14);
+      var FIT = V3(118 - 41, -101 + 7, 14), NIP = V3(118 - 20, -101 - 7, FACE + 6);
 
       /* =====================================================================
-         Durite (reconstruite quand la cocotte pivote)
+         Durite (reconstruite quand le cintre et la manette pivotent)
          ===================================================================== */
       var Mlev = new THREE.Matrix4(), tilt = 0, tiltT = 0;
       var hoseMesh = H.mesh(new THREE.BufferGeometry(), M.hose, root), hoseCurve = null;
       var hoseMid = new THREE.Object3D(); root.add(hoseMid);
-      var tailFlat = [V3(62, -60, 7), V3(63, -84, 12), V3(69, -93.3, 14)], tailTilt = [V3(56, -86, 9), V3(60, -92, 12), V3(68, -94.3, 14)];
+      /* TILT : cintre et manette tournés de 20°, le bec vers le bas, soit +20° autour de z vu de l'extérieur, d'où
+         tilt = -20° avec lev.rotation.z = -tilt. */
+      var TILT = -20 * Math.PI / 180;
+      var tailFlat = [V3(62, -60, 7), V3(63, -84, 12), V3(69, -93.3, 14)], tailTilt = [V3(64, -56, 8), V3(65, -84, 12.5), V3(70, -93.3, 14)];
       function buildHose() {
-        var k = tilt / (Math.PI / 4), E = V3(55.5, -12.6, 0).applyMatrix4(Mlev), d = V3(0.55, -0.835, 0).transformDirection(Mlev);
+        var k = tilt / TILT, E = V3(55.5, -12.6, 0).applyMatrix4(Mlev), d = V3(0.55, -0.835, 0).transformDirection(Mlev);
         var pts = [E, E.clone().addScaledVector(d, 9), E.clone().addScaledVector(d, 20)];
         for (var j = 0; j < 3; j++) pts.push(tailFlat[j].clone().lerp(tailTilt[j], k));
         pts.push(FIT.clone());
@@ -238,7 +284,7 @@
       }
 
       /* =====================================================================
-         Seringue TL-BR001 et son tuyau (Injecter)
+         Seringue TL-BR001 et son tube (Injecter)
          ===================================================================== */
       var SX = 172, SY = -88;
       var syr = new THREE.Group(); syr.position.set(SX, SY, 3); root.add(syr);
@@ -254,13 +300,13 @@
       H.cyl(10.5, 2.4, 'y', mWhite, plunger, [0, 87.2, 0], 32);
       function setPlunger(y) { plunger.position.y = y; col.scale.y = Math.max(0.5, y - 13.8); }
       setPlunger(50);
-      var stubeCurve = crv([NIP, V3(140, -70, 14), V3(145, -64, 13), V3(152, -66, 11), V3(155, -78, 8), V3(157, -94, 6), V3(163, -102, 4.5), V3(SX - 2, -102, 3.5), V3(SX, -96, 3), V3(SX, SY + 2.5, 3)]);
+      var stubeCurve = crv([NIP, V3(98, -108.5, 33), V3(104, -117, 35), V3(118, -124, 30), V3(140, -124, 20), V3(158, -116, 10), V3(167, -106, 5), V3(SX - 1, -100, 3.5), V3(SX, -95, 3), V3(SX, SY + 2.5, 3)]);
       var stube = new THREE.Group(); root.add(stube);
       H.mesh(new THREE.TubeGeometry(stubeCurve, 110, 3, 12, false), mClear, stube).renderOrder = 3;
       H.mesh(new THREE.TubeGeometry(stubeCurve, 110, 1.9, 8, false), mOilCore, stube).renderOrder = 2;
 
       /* =====================================================================
-         Sachet de récupération et son tuyau (Gravité)
+         Sachet de récupération et son tube (Gravité)
          ===================================================================== */
       function pouch(sc, tMax, cap) {
         var nt = 30, nr = 40, pos = [], idx = [], a, b;
@@ -301,7 +347,7 @@
       glass(pouch(1, 1, false), P({ color: 0xe9eef2, metalness: 0, roughness: 0.3, transparent: true, opacity: 0.48, depthWrite: false, clearcoat: 1, clearcoatRoughness: 0.1 }), bag);
       var pool = H.mesh(pouch(0.9, 0.24, true), mOil, bag); pool.renderOrder = 2;
       var band = new THREE.TorusGeometry(4.9, 1.1, 8, 24); band.rotateX(Math.PI / 2); H.mesh(band, M.rubber, bag, [0, 26.9, 0]);
-      var btubeCurve = crv([NIP, V3(140, -70, 14), V3(143, -62, 13), V3(152, -57, 10.5), V3(163, -60, 7), V3(170, -66, 5), V3(172, -73, 4), V3(172, -84, 4)]);
+      var btubeCurve = crv([NIP, V3(98, -108.5, 33), V3(100, -98, 38), V3(112, -80, 34), V3(135, -68, 24), V3(155, -62, 13), V3(167, -64, 6), V3(172, -71, 4), V3(172, -84, 4)]);
       var btube = new THREE.Group(); root.add(btube);
       H.mesh(new THREE.TubeGeometry(btubeCurve, 100, 3, 12, false), mClear, btube).renderOrder = 3;
       H.mesh(new THREE.TubeGeometry(btubeCurve, 100, 1.9, 8, false), mOilCore, btube).renderOrder = 2;
@@ -315,7 +361,7 @@
       }
       function rev(s) { return seg(s.pts.slice().reverse(), s.frame, s.key); }
       var segLev = seg(crv([[-25, 77], [-25, 40.5], [-25, 34], [-25, 27], [-22.5, 19], [-15, 11], [-5, 3], [7, -6], [20, -10.2], [40, -10.8], [55.5, -12.6]]).getSpacedPoints(170), 'lev', 'lev');
-      var segCal = seg(crv([FIT, V3(86, -94, 14), V3(100, -95.5, 12.5), V3(118, -95, 12), V3(134, -91, 13.5), V3(140, -86, 14), NIP]).getSpacedPoints(60), 'root', 'cal');
+      var segCal = seg(crv([FIT, V3(86, -96, 15), V3(93, -104, 20), NIP]).getSpacedPoints(60), 'root', 'cal');
       var segST = seg(stubeCurve.getSpacedPoints(100), 'root', 'stube');
       var segSyr = seg([V3(SX, SY + 2, 3), V3(SX, SY + 13, 3), V3(SX, SY + 24, 3)], 'root', 'syr');
       var segBT = seg(btubeCurve.getSpacedPoints(100), 'root', 'btube');
@@ -367,7 +413,7 @@
         });
       }
 
-      /* ---------- Pivot de la cocotte ---------- */
+      /* ---------- Pivot du cintre et de la manette ---------- */
       function applyTilt() {
         lev.rotation.z = -tilt; lev.updateMatrix(); L.updateMatrix(); Mlev.multiplyMatrices(lev.matrix, L.matrix);
         buildHose(); updateOil(); buildTrack();
@@ -375,15 +421,20 @@
 
       /* ---------- Pastilles ---------- */
       var pinCommon = [
-        { obj: adapter, p: [0, 0, 6.2], text: 'Vis de purge de la manette : 0,5 à 0,7 Nm' },
+        { obj: cover, p: [-74, 58, 17.2], text: 'Repose-main retourné par l’arrière' },
+        { obj: adapter, p: [0, 0, 6.2], text: 'Vis de purge de la manette, clé de 2,5 mm : 0,5-0,7 Nm' },
         { obj: fun, p: [12, 81.5, 7.5], text: 'Entonnoir TL-BR002, vissé à la place de la vis de purge' },
-        { obj: block, p: [-12, 17.3, 2], text: 'Cale de purge jaune, tenue par l’axe et le clip' }
+        { obj: blade, p: [-97, -62, 6.2], text: 'Levier : actionne-le environ 10 fois après l’injection' },
+        { obj: block, p: [-12, 17.3, 2], text: 'Cale de purge jaune, tenue par l’axe et le clip' },
+        { obj: screwHead, p: [0, 0, 0.9], text: 'Vis de purge de l’étrier, clé de 3 mm : un demi-tour, puis 4-6 Nm' },
+        { obj: capBoss, p: [0, 0, 0.6], text: 'Caches du raccord et de la vis de purge : retirés' }
       ];
-      var pinNip = { obj: nipHex, p: [0, 0, 4.1], text: 'Étrier : desserrer 1/2 tour (RX820, RX410), 1/8 (RX400, RX810)' };
-      var pinTap = { obj: hoseMid, p: [0, 0, 0], text: 'Tapoter durite, cocotte et étrier pour décoller les bulles' };
+      var pinTilt = { obj: fun, p: [-13, 81.5, 0], text: 'Dessus de l’entonnoir à 20° du sol : change l’angle du cintre' };
+      var pinBoss = { obj: bossTip, p: [0, 2.6, 0], text: 'Raccord de purge : tube de la seringue, puis du sachet' };
+      var pinTap = { obj: hoseMid, p: [0, 0, 0], text: 'Bulles : secoue la durite, tape doucement sur la manette ou l’étrier' };
       var pinSyr = { obj: syr, p: [0, 42, 10.3], text: 'Seringue TL-BR001 : huile minérale Shimano uniquement' };
       var pinBag = { obj: bag, p: [-9, 10, 4.5], text: 'Sachet de récupération : l’huile y descend par gravité' };
-      function pinsFor() { return pinCommon.concat([mode === 'inj' ? pinSyr : pinBag, pinNip, pinTap]); }
+      function pinsFor() { return pinCommon.concat(tiltT ? [pinTilt] : [], [pinBoss, mode === 'inj' ? pinSyr : pinBag, pinTap]); }
 
       function setMode(v) {
         mode = v;
@@ -401,7 +452,7 @@
         controls: [
           { type: 'segmented', label: 'Étape', value: 'inj', options: [{ value: 'inj', label: 'Injecter' }, { value: 'grav', label: 'Gravité' }],
             onChange: function (v) { if (v === mode) return; setMode(v); api.setPins(pinsFor()); api.dirty(); } },
-          { type: 'toggle', label: 'Cocotte à 45°', value: false, onChange: function (v) { tiltT = v ? Math.PI / 4 : 0; api.dirty(); } }
+          { type: 'toggle', label: 'Entonnoir à 20°', value: false, onChange: function (v) { tiltT = v ? TILT : 0; api.setPins(pinsFor()); api.dirty(); } }
         ],
         onFrame: function (dt) {
           dt = Math.min(dt || 0, 0.05);
