@@ -15,7 +15,7 @@ Le 23 octobre 2026, Lamine a changé de vélo. Le site, écrit d'abord pour un a
 3. **De la 3D dans chaque lot.** C'est une attente forte.
 4. **Guide de démarrage Canyon.** Ses couples ne seront ajoutés qu'à partir des photos des pages du guide imprimé livré dans le carton, que Lamine prendra à la livraison.
 5. **Site public pour l'instant**, en HTTPS derrière le reverse proxy du serveur. Accès par VPN WireGuard plus tard.
-6. **Dépôt public : aucune donnée personnelle.** Pas de poids, pas de cotes d'étude posturale, pas de nom de fitter, pas d'adresse, pas d'e-mail. Les commits utilisent l'adresse `183486+ltimsi@users.noreply.github.com`. Avant d'ajouter un lot, demander à Lamine ce qu'il accepte de rendre public.
+6. **Dépôt public : aucune donnée personnelle.** Pas de poids, pas de cotes d'étude posturale, pas de nom de fitter, pas d'adresse, pas d'e-mail. Depuis le passage au CF 8 Di2, pas non plus de prix payé, de numéro de commande, de hauteur de selle conseillée d'après l'entrejambe, ni de commande chez un revendeur. Les commits utilisent l'adresse `183486+ltimsi@users.noreply.github.com`. Avant d'ajouter un lot, demander à Lamine ce qu'il accepte de rendre public.
 7. **Serveur.** Avant de modifier quoi que ce soit sur le serveur, expliquer ce qui va changer et pourquoi, et attendre son accord.
 8. **Style.** Français, tutoiement, phrases courtes. Jamais de tiret cadratin ni de demi-cadratin. Chaque abréviation est développée à sa première apparition dans un chapitre. Un conseil sans source va dans un encadré « Proposition ».
 
@@ -154,7 +154,7 @@ Unités en millimètres. Moins de 120 000 triangles. Les textes des pastilles su
   - tous les couples du guide Canyon, sur photos, dont ceux des axes traversants ;
   - longueur des manivelles : 165 mm en M sur la fiche, à lire sur la manivelle ;
   - plage de la clé dynamométrique Canyon ;
-  - outil à faible plage pour les couples de 0,2 à 2 Nm.
+  - outil à faible plage pour les couples sous 4 Nm : le plus petit couple publié pour le CF 8 Di2 est celui du couvercle des piles des manettes, 0,16-0,24 Nm (DM-GADBR10) ; pour les freins, c'est la vis de purge de la manette, 0,5-0,7 Nm.
 - **Lot 3** :
   - valves tubeless : présentes ou non dans le carton ;
   - pression maximale imprimée sur la jante, à lire ; le manuel Canyon des roues limite déjà un pneu de 45 mm sur jante sans crochet à 3,0 bar ;
@@ -163,8 +163,8 @@ Unités en millimètres. Moins de 120 000 triangles. Les textes des pastilles su
 - **Lot 4** :
   - charge de la batterie BT-DN320, dans le dérailleur, à la réception, et piles CR1632 des manettes ;
   - patte de dérailleur UDH, la patte universelle de SRAM : présence et état ;
-  - chaîne : référence (CN-M8100 supposée), nombre de maillons et attache QUICK-LINK ;
-  - boîtier : référence exacte (SM-BB72-41B supposée) ;
+  - chaîne : référence, nombre de maillons et attache QUICK-LINK ; Canyon propose en pièces d'usure la CN-M8100 de 138 maillons et l'attache SM-CN910 ;
+  - boîtier : référence exacte ; Canyon propose en pièce d'usure le SM-BB72-41B II ;
   - corps de roue libre de la roue arrière (Micro Spline, pour le pignon de 9 dents).
 - **Lot 5** : la liste Tailfin (porte-bagages et son adaptateur UDH, sacoches, garde-boue, support d'éclairage), dont les documents restent à relever. Lamine n'a pas encore dit s'il garde les garde-boue Canyon DEFEND, l'éclairage et la sonnette Knog, les porte-bidons et le support d'antivol : sans réponse, ils sont retirés du lot.
 - **Lot 6** : l'aide-mémoire ne reprend que les valeurs des lots validés.
@@ -196,13 +196,12 @@ La procédure complète est dans [../deploy/DEPLOIEMENT.md](../deploy/DEPLOIEMEN
 - Shimano DM-TORQUE-03, couples de serrage : https://si.shimano.com/en/pdfs/dm/TORQUE/DM-TORQUE-03-ENG.pdf
 - Shimano DM-HB0002-14, moyeux et disques Center Lock : https://si.shimano.com/en/pdfs/dm/HB0002/DM-HB0002-14-ENG.pdf
 - Shimano DM-RAWH010-02, roues : https://si.shimano.com/en/pdfs/dm/RAWH010/DM-RAWH010-02-ENG.pdf
-- Vue éclatée BR-RX820 : https://si.shimano.com/en/pdfs/ev/BR-RX820-5000/EV-BR-RX820-5000C.pdf
+- Vue éclatée BR-RX820, avec les deux bagues du RT-MT800 à 40 Nm : https://si.shimano.com/en/pdfs/ev/BR-RX820-5000/EV-BR-RX820-5000C.pdf
 - Fiches de la manette ST-RX825-R et de l'étrier BR-RX820 : https://productinfo.shimano.com/en/product/ST-RX825-R et https://productinfo.shimano.com/en/product/BR-RX820
 - Compatibilité des plaquettes (C-192) : https://productinfo.shimano.com/en/compatibility/C-192
 - Compatibilité des disques (C-461) : https://productinfo.shimano.com/en/compatibility/C-461
 - Types de bague Center Lock (C-612) : https://productinfo.shimano.com/en/compatibility/C-612
 - Gamme GRX RX820 1x12 Di2 : https://productinfo.shimano.com/en/lineup/rx820-1x12-di2
-- DT Swiss, manuel des roues : https://d2a13k6araex7u.cloudfront.net/pmt/00/00/00/00/00/00/00/10/00/00/00/85/8/MAN_WXWXXXXXX1610S_WEB_ZZ_001.pdf?v=57647
 - Park Tool, gestes :
   - disques : https://www.parktool.com/en-us/blog/repair-help/disc-brake-rotor-removal-installation
   - plaquettes : https://www.parktool.com/en-int/blog/repair-help/disc-brake-pad-removal-installation
