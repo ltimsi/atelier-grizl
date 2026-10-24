@@ -76,7 +76,9 @@ class Ateliers(HTMLParser):
 
 
 def atelier(ident, zone, type_, blocs, attributs=""):
-    return (f'<section class="sub atelier" id="{ident}" data-zone="{zone}" data-type="{type_}" {attributs}>'
+    # Sans zone (None), la section n'a pas d'attribut data-zone du tout.
+    attribut_zone = "" if zone is None else f' data-zone="{zone}"'
+    return (f'<section class="sub atelier" id="{ident}"{attribut_zone} data-type="{type_}" {attributs}>'
             f"<h3>{ident}</h3>{blocs}</section>")
 
 
@@ -279,6 +281,58 @@ class TestControleAteliers(unittest.TestCase):
     def test_zone_sans_atelier(self):
         err = self.controler(self.page(zones=ZONES[:-1]))
         self.assertIn(f"zone « {ZONES[-1]} » sans atelier publié", err)
+
+    # Un atelier « comprendre » peut n'avoir aucune zone (ceux du chapitre Montage : 1.1, 1.2 et 1.9). Tout autre type
+    # garde le contrôle strict, et une zone écrite doit toujours exister dans zones.json.
+
+    def fragment_sans_zone(self, *ateliers):
+        # Un atelier « comprendre » sans data-zone, puis ce qu'il faut pour que la zone « disques » ait son atelier.
+        comprendre = atelier("montage-avant", None, "comprendre", '<p class="a-video">Pas de vidéo.</p>')
+        regler = atelier("montage-selle", "disques", "regler", COMPLET)
+        return "<main>" + comprendre + regler + "".join(ateliers) + "</main>"
+
+    def test_atelier_sans_zone_comprendre_accepte(self):
+        self.assertEqual(assemble.controle_ateliers(self.fragment_sans_zone(), ["disques"]), [])
+
+    def test_atelier_sans_zone_regler_refuse(self):
+        for type_, attributs in (("regler", ""), ("entretenir", ""), ("remplacer", 'data-de="A" data-vers="B"')):
+            with self.subTest(type=type_):
+                sans_zone = atelier("montage-x", None, type_, COMPLET, attributs)
+                err = assemble.controle_ateliers(self.fragment_sans_zone(sans_zone), ["disques"])
+                self.assertIn("atelier montage-x : data-zone «  » absente de src/scene/zones.json", err)
+                self.assertEqual(len(err), 1, err)
+
+    def test_atelier_sans_zone_type_inconnu_refuse(self):
+        # Sans type valide, l'absence de zone n'est pas excusée.
+        err = assemble.controle_ateliers(self.fragment_sans_zone(atelier("montage-x", None, "reparer", COMPLET)),
+                                         ["disques"])
+        self.assertTrue(any("montage-x : data-zone" in e for e in err), err)
+        self.assertTrue(any("montage-x : data-type « reparer » inconnu" in e for e in err), err)
+
+    def test_atelier_comprendre_zone_vide_accepte(self):
+        # data-zone="" vaut pas de zone, comme dans ateliers.py.
+        vide = '<section class="sub atelier" id="montage-y" data-zone="" data-type="comprendre"><h3>y</h3><p class="a-video">V</p></section>'
+        self.assertEqual(assemble.controle_ateliers(self.fragment_sans_zone(vide), ["disques"]), [])
+
+    def test_atelier_comprendre_zone_inconnue_refuse(self):
+        # Une zone écrite mais absente de zones.json reste refusée, même pour « comprendre ».
+        inconnue = atelier("montage-y", "selle", "comprendre", '<p class="a-video">V</p>')
+        err = assemble.controle_ateliers(self.fragment_sans_zone(inconnue), ["disques"])
+        self.assertEqual(err, ["atelier montage-y : data-zone « selle » absente de src/scene/zones.json"])
+
+    def test_atelier_sans_zone_garde_les_autres_controles(self):
+        # Sans zone, un « comprendre » reste soumis aux blocs de son type et à la vidéo.
+        avec_gestes = atelier("montage-y", None, "comprendre", COMPLET)
+        sans_video = atelier("montage-z", None, "comprendre", "")
+        err = assemble.controle_ateliers(self.fragment_sans_zone(avec_gestes, sans_video), ["disques"])
+        self.assertIn("atelier montage-y : ol.steps en trop (type comprendre)", err)
+        self.assertIn("atelier montage-z : ni ul.media ni p.a-video", err)
+
+    def test_atelier_sans_zone_ne_remplace_pas_une_zone(self):
+        # Un atelier sans zone ne compte pour aucune zone : la zone sans atelier reste signalée.
+        seul = "<main>" + atelier("montage-avant", None, "comprendre", '<p class="a-video">V</p>') + "</main>"
+        err = assemble.controle_ateliers(seul, ["disques"])
+        self.assertEqual(err, ["zone « disques » sans atelier publié"])
 
 
 class TestControlesDePage(unittest.TestCase):

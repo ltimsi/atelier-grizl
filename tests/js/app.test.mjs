@@ -221,3 +221,40 @@ test('pastilles et boutons de carte : défilement selon une ou deux colonnes', a
   boutons[2].cliquer();
   assert.deepEqual(stage.defilements, [{ block: 'start', behavior: 'smooth' }]);
 });
+
+// ---- Une page d'atelier sans zone ----
+
+test('page d’un atelier sans data-zone : ni scène ni zones-data, app.js démarre et lance la visionneuse', async t => {
+  // Les fiches « comprendre » du Montage n'ont pas de zone. app.js ne lit data-zone que sur les cartes de l'accueil
+  // (div.zone-carte et button.zone-btn) : jamais sur un article.atelier. Une page d'atelier, avec ou sans zone, n'a ni
+  // #scene ni #zones-data, et passe par le démarrage « page sans scène ».
+  const article = new Faux({ type: 'comprendre' }); // son dataset n'a pas de zone
+  let visionneuses = 0;
+  const demandes = [];
+  const globaux = {
+    document: {
+      documentElement: { dataset: {} },
+      querySelector: s => { demandes.push(s); return s === 'article.atelier' ? article : null; },
+      querySelectorAll: s => { demandes.push(s); return []; },
+      getElementById: () => null,
+      createElement: () => new Faux(),
+    },
+    window: globalThis,
+    AtelierViewer: { start: () => { visionneuses += 1; } },
+  };
+  const avant = Object.fromEntries(Object.keys(globaux).map(k => [k, Object.getOwnPropertyDescriptor(globalThis, k)]));
+  t.after(() => {
+    for (const [k, d] of Object.entries(avant)) {
+      if (d) Object.defineProperty(globalThis, k, d);
+      else delete globalThis[k];
+    }
+  });
+  Object.assign(globalThis, globaux);
+  await import(`../../src/scene/app.js?atelier-sans-zone-${++copies}`);
+  for (let i = 0; i < 300 && visionneuses === 0; i++) await new Promise(r => setTimeout(r, 10));
+  assert.equal(globaux.document.documentElement.dataset.app, 'demarre');
+  assert.equal(visionneuses, 1, 'la visionneuse n’a pas démarré');
+  assert.equal(article.dataset.zone, undefined);
+  // app.js n'a cherché que ses deux marques de page à scène, jamais l'atelier ni sa zone.
+  assert.deepEqual([...demandes].sort(), ['#scene', '#zones-data']);
+});

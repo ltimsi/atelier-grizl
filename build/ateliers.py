@@ -33,7 +33,7 @@ class Atelier:
     num: str  # « 2.3 »
     titre: str  # « Changer les plaquettes »
     type: str
-    zone: str
+    zone: str | None  # data-zone ; None quand la section n'en a pas (permis pour un atelier « comprendre »)
     de: str | None
     vers: str | None
     demonter: str | None  # texte du p de .a-dem
@@ -90,7 +90,7 @@ def _relever_atelier(section, chapitre):
         num=num,
         titre=titre,
         type=type_,
-        zone=section.get("data-zone"),
+        zone=section.get("data-zone") or None,
         de=section.get("data-de"),
         vers=section.get("data-vers"),
         demonter=demonter.texte() if demonter is not None else None,

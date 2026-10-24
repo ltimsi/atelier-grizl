@@ -3,6 +3,7 @@ ateliers conservé, l'index de la recherche, la page Composants d'origine recopi
 les blocs qu'elle reçoit (Où intervenir, D'origine puis à monter, Toutes les catégories).
 
 Le site est construit une seule fois, dans un dossier temporaire, pour les deux cibles."""
+import copy
 import dataclasses
 import json
 import re
@@ -16,6 +17,7 @@ RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE / "build"))
 
 import assemble  # noqa: E402
+import ateliers  # noqa: E402
 import dom  # noqa: E402
 import gabarit  # noqa: E402
 import pages  # noqa: E402
@@ -1137,6 +1139,171 @@ class TestAncres(unittest.TestCase):
         b = gabarit.Page(chemin="freins/", titre="Freins", contenu='<div id="freins"><figure id="pl-2"></figure></div>')
         self.assertEqual(pages.ancres([a, b]), {"freins-plaquettes": "freins/plaquettes/", "pl-2": "freins/plaquettes/",
                                                 "freins": "freins/"})
+
+
+# Un chapitre de test comme celui du Montage : deux ateliers « comprendre » sans data-zone (1.1 et 1.2) et un atelier
+# « regler » dans la zone « disques » (1.4). Les zones viennent de src/scene/zones.json.
+CHAPITRE_SANS_ZONE = (
+    '<section class="chapter" id="montage"><header class="ch-head"><h2>Montage à la livraison</h2></header>'
+    '<section class="sub atelier" id="montage-avant" data-type="comprendre"><h3>1.1 Avant de commencer</h3>'
+    '<h4>Ce qu’il faut savoir</h4><p>Lis le guide du carton.</p>'
+    '<h4>Vidéo</h4><p class="a-video">Pas de vidéo.</p></section>'
+    '<section class="sub atelier" id="montage-deballer" data-type="comprendre"><h3>1.2 Déballer sans rien abîmer</h3>'
+    '<h4>Le carton</h4><p>Sors les pièces une à une.</p>'
+    '<h4>Vidéo</h4><p class="a-video">Pas de vidéo.</p></section>'
+    '<section class="sub atelier" id="montage-selle" data-zone="disques" data-type="regler"><h3>1.4 Monter la selle</h3>'
+    '<div class="a-dem"><h4>À démonter avant</h4><p>Rien.</p></div>'
+    '<div class="kit"><h4>Il te faut</h4><ul class="chips"><li>Clé de 4 mm</li></ul></div>'
+    '<ol class="steps"><li><p class="st-t">Serre le collier</p><p>À <span class="nm">6\xa0Nm</span>.</p></li></ol>'
+    '<h4>Vidéo</h4><p class="a-video">Pas de vidéo.</p></section></section>'
+)
+
+
+def config_sans_zone():
+    """La configuration réelle, avec le lot du Montage publié : son chapitre est CHAPITRE_SANS_ZONE."""
+    config = copy.deepcopy(CONFIG)
+    lot = next(l for l in config["lots"] if l.get("categorie", {}).get("id") == "montage")
+    lot["statut"], lot["parts"] = "en relecture", ["11-test-sans-zone"]
+    return config
+
+
+class TestAtelierSansZone(unittest.TestCase):
+    """Un atelier « comprendre » peut n'avoir aucune zone : pas de « Zone N », pas de data-zone, pas de carte dans
+    « Où intervenir ». Les pièces de page, une à une, sur le chapitre de test."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.chapitre = ateliers.relever_chapitre(CHAPITRE_SANS_ZONE)
+
+    def test_zone_absente_du_releve(self):
+        self.assertEqual([a.zone for a in self.chapitre.ateliers], [None, None, "disques"])
+        self.assertEqual([a.type for a in self.chapitre.ateliers], ["comprendre", "comprendre", "regler"])
+
+    def test_zone_vide_vaut_pas_de_zone(self):
+        texte = CHAPITRE_SANS_ZONE.replace('id="montage-avant" data-type', 'id="montage-avant" data-zone="" data-type')
+        self.assertIn('data-zone=""', texte)
+        self.assertIsNone(ateliers.relever_chapitre(texte).ateliers[0].zone)
+
+    def test_page_atelier_sans_zone(self):
+        for i in (0, 1):
+            with self.subTest(atelier=i):
+                contenu = pages.page_atelier(self.chapitre, i).contenu
+                self.assertNotIn("Zone ", contenu)
+                self.assertNotIn("data-zone", contenu)
+                article = un(dom.analyser(contenu), "article.atelier")
+                self.assertIsNone(article.get("data-zone"))
+                self.assertEqual([article.get(n) for n in ("id", "data-type")],
+                                 [self.chapitre.ateliers[i].id, "comprendre"])
+
+    def test_entete_sans_zone(self):
+        racine = dom.analyser(pages.page_atelier(self.chapitre, 0).contenu)
+        self.assertEqual(un(racine, "p.atelier-num").texte(), "Atelier 1.1")
+        self.assertEqual(un(racine, "h1").texte(), "Avant de commencer")
+
+    def test_page_atelier_avec_zone_inchangee(self):
+        racine = dom.analyser(pages.page_atelier(self.chapitre, 2).contenu)
+        self.assertEqual(un(racine, "p.atelier-num").texte(), "Atelier 1.4 · Zone 1, Disques de frein")
+        self.assertEqual(un(racine, "article.atelier").get("data-zone"), "disques")
+
+    def test_precedent_et_suivant_traversent_les_ateliers_sans_zone(self):
+        racine = dom.analyser(pages.page_atelier(self.chapitre, 1).contenu)
+        liens = dom.selectionner(un(racine, "nav.precsuiv"), "a")
+        self.assertEqual([(a.get("class"), a.get("href")) for a in liens],
+                         [("prec", "../avant/"), ("suiv", "../selle/")])
+
+    def test_carte_sans_zone(self):
+        cartes = [pages._carte(self.chapitre, a) for a in self.chapitre.ateliers]
+        for carte in cartes[:2]:
+            racine = dom.analyser(carte)
+            self.assertEqual(dom.selectionner(racine, "span.zone"), [])
+            self.assertNotIn("Zone ", carte)
+            self.assertEqual(un(racine, "a.carte").get("data-type"), "comprendre")
+        self.assertEqual(un(dom.analyser(cartes[2]), "span.zone").texte(), "Zone 1 · Disques de frein")
+
+    def test_cartes_des_zones_ignorent_sans_zone(self):
+        html = pages.cartes_des_zones({"montage": self.chapitre}, ZONES)
+        self.assertNotIn("montage/avant/", html)
+        self.assertNotIn("montage/deballer/", html)
+        # L'atelier avec une zone y est, lui.
+        self.assertIn('href="montage/selle/"', html)
+        racine = dom.analyser(html)
+        self.assertEqual([len(dom.selectionner(c, "a")) for c in dom.selectionner(racine, "div.zone-carte")], [1, 0, 0])
+
+    def test_page_categorie(self):
+        lot = next(l for l in config_sans_zone()["lots"] if l.get("categorie", {}).get("id") == "montage")
+        racine = dom.analyser(pages.page_categorie(lot, self.chapitre).contenu)
+        cartes = dom.selectionner(racine, "a.carte")
+        self.assertEqual([un(c, "span.num").texte() for c in cartes], ["1.1", "1.2", "1.4"])
+        self.assertEqual([len(dom.selectionner(c, "span.zone")) for c in cartes], [0, 0, 1])
+
+
+class TestSiteAvecAtelierSansZone(unittest.TestCase):
+    """Le site entier, avec le lot du Montage publié sur CHAPITRE_SANS_ZONE : les ateliers sans zone ont leur page,
+    leur ligne de menu, leur carte de catégorie et leurs entrées de recherche, et « Où intervenir » les ignore."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.config = config_sans_zone()
+        lire = gabarit.lire
+        with mock.patch.object(pages, "lire", side_effect=lambda nom: CHAPITRE_SANS_ZONE
+                               if nom == "11-test-sans-zone" else lire(nom)):
+            cls.chapitres = pages.chapitres_publies(cls.config)
+            cls.pages = pages.toutes_les_pages(cls.config)
+            cls._tmp = tempfile.TemporaryDirectory()
+            cls.sortie = assemble.ecrire("site", Path(cls._tmp.name), cls.config, cls.pages, cls.chapitres)
+        cls.rendues = cls.sortie[0]
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._tmp.cleanup()
+
+    def test_recherche(self):
+        index = pages.index_recherche(self.config, self.chapitres)
+        self.assertIn({"k": "Atelier 1.1", "t": "Avant de commencer", "u": "montage/avant/"}, index)
+        self.assertIn({"k": "Atelier 1.2", "t": "Déballer sans rien abîmer", "u": "montage/deballer/"}, index)
+        texte = (Path(self._tmp.name) / "js" / "recherche.js").read_text(encoding="utf-8")
+        self.assertIn('"u": "montage/avant/"', texte)
+        self.assertIn('"u": "montage/deballer/"', texte)
+
+    def test_pages_du_site(self):
+        chemins = [p.chemin for p in self.pages]
+        for chemin in ("montage/", "montage/avant/", "montage/deballer/", "montage/selle/"):
+            self.assertEqual(chemins.count(chemin), 1, chemin)
+        self.assertEqual(assemble.liens_casses(*self.sortie), [])
+        for chemin, texte in self.rendues.items():
+            self.assertEqual(assemble.controles(texte), [], chemin)
+
+    def test_documents_sans_zone(self):
+        for chemin in ("montage/avant/", "montage/deballer/"):
+            texte = self.rendues[chemin]
+            self.assertNotIn("Zone ", texte, chemin)
+            self.assertNotIn("data-zone", texte, chemin)
+
+    def test_accueil_n_a_pas_de_carte_sans_zone(self):
+        # « Où intervenir » (les div.zone-carte) liste l'atelier à zone du Montage et aucun des deux autres. L'ancre
+        # « montage-avant » du bloc des anciennes adresses mène, elle, à sa page.
+        racine = dom.analyser(self.rendues[""])
+        hrefs = [a.get("href") for carte in dom.selectionner(racine, "div.zone-carte") for a in dom.selectionner(carte, "a")]
+        self.assertEqual([h for h in hrefs if h.startswith("montage/")], ["montage/selle/"])
+        self.assertEqual(len([h for h in hrefs if h.startswith("freins/")]), 8)
+
+    def test_atelier_sans_zone_sans_scene(self):
+        # app.js ne cherche l'atelier d'une page nulle part : sans #scene ni #zones-data, il ne lance que la visionneuse.
+        for chemin in ("montage/avant/", "montage/deballer/"):
+            racine = dom.analyser(self.rendues[chemin])
+            self.assertEqual(dom.selectionner(racine, '[id="scene"]'), [], chemin)
+            self.assertEqual(dom.selectionner(racine, '[id="zones-data"]'), [], chemin)
+
+    def test_menu_et_categorie_listent_les_ateliers_sans_zone(self):
+        attendu = {"montage/": ["avant/", "deballer/", "selle/"],  # depuis la catégorie
+                   "montage/avant/": ["./", "../deballer/", "../selle/"],  # depuis l'atelier 1.1 : lui-même en « ./ »
+                   "montage/deballer/": ["../avant/", "./", "../selle/"]}
+        for chemin, liens in attendu.items():
+            nav = un(dom.analyser(self.rendues[chemin]), "nav.nav")
+            hrefs = [a.get("href") for a in dom.selectionner(un(nav, "div.sub-nav"), "a")]
+            self.assertEqual(hrefs, liens, chemin)
+        cartes = dom.selectionner(dom.analyser(self.rendues["montage/"]), "a.carte")
+        self.assertEqual([c.get("href") for c in cartes], ["avant/", "deballer/", "selle/"])
 
 
 if __name__ == "__main__":

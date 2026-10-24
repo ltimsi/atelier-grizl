@@ -15,8 +15,8 @@ Dans les deux, les scripts sont aux mêmes chemins : js/recherche.js (l'index de
 js/references.js, js/viewer.js, js/m-<modèle>.js et js/scene/.
 
 Contrôles, qui font sortir le script en 1 :
-  - chaque atelier des chapitres sources a les blocs de son type et une zone de zones.json, et chaque zone a au moins
-    un atelier publié ;
+  - chaque atelier des chapitres sources a les blocs de son type et une zone de zones.json (un atelier « comprendre »
+    peut n'en avoir aucune), et chaque zone a au moins un atelier publié ;
   - chaque page est sans tiret cadratin ni demi-cadratin et sans id en double ;
   - chaque lien, script et fichier qu'une page appelle existe, ancre comprise.
 
@@ -90,15 +90,18 @@ def relever_ateliers(texte):
 
 
 def controle_ateliers(texte, zones):
-    """Chaque atelier a les blocs de son type et une zone de zones.json ; chaque zone a au moins un atelier publié."""
+    """Chaque atelier a les blocs de son type et une zone de zones.json ; chaque zone a au moins un atelier publié.
+
+    Seul un atelier « comprendre » peut n'avoir aucune zone (pas de data-zone, ou data-zone vide) : une fiche à lire
+    ne vise aucune pièce du vélo. Une zone écrite doit exister dans zones.json, quel que soit le type."""
     erreurs = []
     ateliers = relever_ateliers(texte)
     for s in ateliers:
         nom = f'atelier {s.get("id") or "sans id"}'
-        zone, type_, blocs = s.get("data-zone"), s.get("data-type"), s["blocs"]
+        zone, type_, blocs = s.get("data-zone") or None, s.get("data-type"), s["blocs"]
         if not s.get("id"):
             erreurs.append(f"{nom} : app.js ne peut pas l'ouvrir")
-        if zone not in zones:
+        if zone not in zones and not (zone is None and type_ == "comprendre"):
             erreurs.append(f"{nom} : data-zone « {zone or ''} » absente de src/scene/zones.json")
         if type_ not in TYPES_ATELIER:
             erreurs.append(f"{nom} : data-type « {type_ or ''} » inconnu (comprendre, entretenir, regler ou remplacer)")

@@ -102,6 +102,11 @@ def _zone(ident):
     raise ValueError(f"zone « {ident} » absente de src/scene/zones.json")
 
 
+def _zone_de(a):
+    """Le numéro et le nom de la zone d'un atelier, ou None s'il n'en a pas (une fiche « comprendre » du Montage)."""
+    return _zone(a.zone) if a.zone is not None else None
+
+
 def _type(a):
     if a.type not in TYPES:
         raise ValueError(f"atelier {a.id} : type « {a.type} » inconnu")
@@ -148,7 +153,7 @@ def badge(lot):
 
 def cartes_des_zones(chapitres: dict[str, Chapitre], zones: list[dict]) -> str:
     """« Où intervenir » : une carte par zone du vélo, avec son numéro, son bouton et ses ateliers publiés en liens
-    (numéro, titre, type). Les liens partent de la racine."""
+    (numéro, titre, type). Les liens partent de la racine. Un atelier sans zone n'est dans aucune carte."""
     cartes = []
     for n, zone in enumerate(zones, 1):
         ident = _attr(zone["id"])
@@ -244,12 +249,12 @@ def _tete_de_categorie(tete):
 
 
 def _carte(chapitre, a):
-    n, zone = _zone(a.zone)
+    zone = _zone_de(a)
     return "\n".join([
         f'<a class="carte" data-type="{_attr(a.type)}" href="{relatif(chapitre.id + "/", _chemin(chapitre, a))}">',
         f'<span class="carte-h"><span class="num">{_e(a.num)}</span>{_pastille(a)}</span>',
         f"<h3>{_e(a.titre)}</h3>",
-        f'<span class="zone">Zone {n} · {_e(zone)}</span>',
+        *([f'<span class="zone">Zone {zone[0]} · {_e(zone[1])}</span>'] if zone else []),
         _faits(a),
         "</a>",
     ])
@@ -301,16 +306,17 @@ def page_atelier(chapitre: Chapitre, i: int, nom: str | None = None) -> Page:
     """La page du i-ème atelier du chapitre. `nom` est le libellé de la catégorie dans le fil d'Ariane (par défaut,
     le titre du chapitre).
 
-    Un article.atelier porte l'id et les data- de la section source. Dedans : l'en-tête (numéro et zone, h1,
-    pastilles du type, du nombre d'étapes et de ce qu'il faut démonter, pièce d'origine et pièce à monter), puis les
-    colonnes de `colonnes()`, avec la barre des étapes juste au-dessus des étapes de la colonne de gauche s'il y en a.
+    Un article.atelier porte l'id et les data- de la section source. Dedans : l'en-tête (numéro et, si l'atelier en a
+    une, zone ; h1, pastilles du type, du nombre d'étapes et de ce qu'il faut démonter, pièce d'origine et pièce à
+    monter), puis les colonnes de `colonnes()`, avec la barre des étapes juste au-dessus des étapes de la colonne de
+    gauche s'il y en a. Un atelier sans zone n'a ni « Zone N » ni data-zone.
     Sans rien à droite, une seule colonne. Après l'article : l'atelier précédent et le suivant. Une pièce 3D charge
     three.js, la visionneuse et son modèle, et le garde-fou de 99-foot : si js/scene/app.js ne démarre pas, il lance
     la visionneuse, qui dit dans la boîte de la pièce que la 3D n'a pas pu se charger."""
     a = chapitre.ateliers[i]
     chemin = _chemin(chapitre, a)
     gauche, droite = colonnes(a)
-    n, zone = _zone(a.zone)
+    zone = _zone_de(a)
 
     pastilles = [_pastille(a)]
     if a.etapes:
@@ -319,7 +325,8 @@ def page_atelier(chapitre: Chapitre, i: int, nom: str | None = None) -> Page:
         pastilles.append(f'<span class="pill">{_nombre(len(a.blocs), "bloc")} à lire</span>')
     if a.demonter:
         pastilles.append(f'<span class="pill">À démonter : {_e(a.demonter)}</span>')
-    tete = ['<header class="atelier-tete">', f'<p class="atelier-num">Atelier {_e(a.num)} · Zone {n}, {_e(zone)}</p>',
+    numero = f"Atelier {_e(a.num)}" + (f" · Zone {zone[0]}, {_e(zone[1])}" if zone else "")
+    tete = ['<header class="atelier-tete">', f'<p class="atelier-num">{numero}</p>',
             f"<h1>{_e(a.titre)}</h1>", '<div class="pills">' + "".join(pastilles) + "</div>"]
     if a.de and a.vers:
         tete.append(f'<p class="de-vers"><span class="k">D’origine</span> <span class="v">{_e(a.de)}</span> '
