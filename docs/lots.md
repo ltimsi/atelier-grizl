@@ -62,7 +62,7 @@ Formes approchées :
 - Selle : largeur, longueur, largeur à un repère mesuré depuis le bec et hauteur à ce repère publiées par Fizik. Fizik ne dit pas d’où il prend cette hauteur : elle part ici de l’axe des rails, ce qui s’accorde avec la photo officielle. Contour, galbe, bec court plongeant, place sur les rails et courbe des rails sont approchés d’après les photos officielles.
 - Inscriptions de la tige, de la tête et de la selle : non dessinées.
 - Peinture : plus rose et marbrée ici. Sur la photo officielle, elle est lie-de-vin, avec un motif en traits. Sa teinte change aussi avec l’éclairage du studio.
-- Marquages du cadre et de la fourche : « CANYON » sur le tube oblique et la fourche, « GRIZL » sur le tube de selle et le cadre de repère imprimé sur la fourche, visibles sur la photo officielle, ne sont pas dessinés.
+- Marquages du cadre et de la fourche : « CANYON » en grand sur le tube oblique, « GRIZL » sur le haut du tube de selle, et sur la fourche un cadre imprimé dont le texte est illisible sur la photo officielle. Ils ne sont pas dessinés.
 
 À vérifier à la livraison :
 

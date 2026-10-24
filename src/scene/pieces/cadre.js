@@ -67,8 +67,9 @@ export const META = Object.freeze({
     'Inscriptions de la tige, de la tête et de la selle : non dessinées.',
     'Peinture : plus rose et marbrée ici. Sur la photo officielle, elle est lie-de-vin, avec un motif en ' +
       'traits. Sa teinte change aussi avec l’éclairage du studio.',
-    'Marquages du cadre et de la fourche : « CANYON » sur le tube oblique et la fourche, « GRIZL » sur le tube de ' +
-      'selle et le cadre de repère imprimé sur la fourche, visibles sur la photo officielle, ne sont pas dessinés.',
+    'Marquages du cadre et de la fourche : « CANYON » en grand sur le tube oblique, « GRIZL » sur le haut du ' +
+      'tube de selle, et sur la fourche un cadre imprimé dont le texte est illisible sur la photo officielle. Ils ' +
+      'ne sont pas dessinés.',
   ]),
   aVerifier: Object.freeze([
     'type de patte de dérailleur',
