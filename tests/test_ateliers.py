@@ -338,6 +338,7 @@ class Ateliers(unittest.TestCase):
 
 MONTAGE = RACINE / "src" / "parts" / "11-montage.html"
 GESTES = (".a-dem", ".kit", "ol.steps")
+JETONS = RACINE / "brouillons" / "jetons-personnels.txt"  # hors du dépôt : brouillons/ est ignoré par git
 QSG = "canyon-grizl-quick-start-guide-2025-2.pdf"
 # Les couples qu'aucun outil de Lamine ne couvre : 2 Nm, 2,5 N·m, 7 Nm (pas 12 Nm, 0,2 Nm ni 2,5 mm).
 HORS_OUTILS = re.compile(r"(?<![\d,.])(?:2|7|2,5)[ \u00a0](?:Nm|N·m)\b")
@@ -452,7 +453,7 @@ class TestMontage(unittest.TestCase):
                               "pictogramme", "guide imprimé", "18\xa0Nm", "75\xa0mm"),
             "montage-roues": ("10-15\xa0Nm", "6\xa0mm", "non publié", "3,0\xa0bar", "RIGID FORK", "12 x 100",
                               "12 x 142"),
-            "montage-pedales": ("35-55\xa0N·m", "15\xa0mm", "2,5\xa0N·m", "5-6\xa0N·m", "3\xa0mm", "à gauche",
+            "montage-pedales": ("35-55\xa0Nm", "15\xa0mm", "2,5\xa0Nm", "5-6\xa0Nm", "3\xa0mm", "à gauche",
                                 "4\xa0mm", "GREASE NOT INCLUDED", "20\xa0mm"),
             "montage-di2": ("BT-DN320", "EC-DN100", "une heure", "CR1632", "E-TUBE PROJECT", "test purposes",
                             "orange", "0,5\xa0s", "51-100\xa0%"),
@@ -556,17 +557,29 @@ class TestMontage(unittest.TestCase):
             self.assertNotIn(absent, pedales, absent)
 
     def test_aucune_donnee_personnelle(self):
-        texte, html = self.texte_complet(), self.source
-        for absent in ("CHF", "€", "/Users/", "ltimsi", "file:"):
+        # Les jetons personnels de Lamine (cotes, pressions, étude de position) ne sont jamais écrits dans un fichier
+        # suivi par git : ils sont lus dans brouillons/jetons-personnels.txt, hors du dépôt, quand il existe.
+        texte = self.texte_complet().replace("\u00a0", " ")
+        html = self.source.replace("\u00a0", " ")
+        for absent in ("CHF", "\u20ac", "/Users/", "ltimsi", "file:"):
             self.assertNotIn(absent, texte, absent)
             self.assertNotIn(absent, html, absent)
+        if JETONS.exists():
+            jetons = [l.strip() for l in JETONS.read_text(encoding="utf-8").splitlines()
+                      if l.strip() and not l.lstrip().startswith("#")]
+            self.assertTrue(jetons)
+            for n, absent in enumerate(jetons, 1):
+                # Le message ne répète pas le jeton : seul son rang dans le fichier.
+                self.assertFalse(absent in texte or absent in html, f"jeton personnel n°{n} de {JETONS.name}")
         # Ni commande ni prix : « recommande » reste permis.
         self.assertIsNone(re.search(r"\b(?:commandes?|prix)\b", texte, re.I))
+        # Aucune pression hors des maximums des documents : 3,0 bar (Canyon), 4 bar (paire GR 30 CF, Schwalbe).
+        self.assertLessEqual(set(re.findall(r"(\d+(?:,\d+)?) bar\b", texte)), {"3,0", "4"})
         # 1.8 donne la méthode seulement : aucune cote hors de celles des documents, aucun angle.
         position = texte_de(self.par_id["montage-position"].section)
         self.assertIn("ailleurs que sur ce site", position)
-        self.assertNotIn("°", position)
-        cotes = set(re.findall(r"(\d+(?:,\d+)?)\xa0mm", position))
+        self.assertNotIn("\u00b0", position)
+        cotes = set(re.findall(r"(\d+(?:,\d+)?)\u00a0mm", position))
         self.assertLessEqual(cotes, {"3", "4", "5", "6", "7", "18", "60", "75", "110", "210", "440", "710", "810"})
 
     def test_contradictions(self):
@@ -640,6 +653,103 @@ class TestMontage(unittest.TestCase):
         motif = r".{0,40}\d (?:Nm|N·m|mm|bar|kg|PSI|V|A|s|%)(?![\w·])"
         self.assertIsNone(re.search(motif, texte), re.search(motif, texte))
         self.assertNotIn("&nbsp;", self.source)
+        # Une seule notation des couples, celle de la légende du site et du chapitre 2 : Nm, jamais N·m.
+        self.assertNotIn("N\u00b7m", self.source)
+
+    def test_potence_realigner_ou_hauteur(self):
+        # 1.3 : une seule liste d'étapes. Réaligner la potence (sans toucher aux entretoises) et changer la hauteur
+        # du cintre sont deux suites distinctes, avec les gestes du manuel route 2021 ; le capuchon à 2 Nm et le pivot
+        # à 6 Nm sont dans des étapes, donc dans la boîte « Couples de l'atelier ».
+        a = self.par_id["montage-cintre"]
+        self.assertEqual(dom.selectionner(a.section, "ol"), dom.selectionner(a.section, "ol.steps"))
+        titres = [e.titre for e in a.etapes]
+        realigner = [i for i, e in enumerate(a.etapes) if e.titre.startswith("Réaligner")]
+        hauteur = [i for i, e in enumerate(a.etapes) if e.titre.startswith("Hauteur")]
+        self.assertGreaterEqual(len(realigner), 4, titres)
+        self.assertGreaterEqual(len(hauteur), 6, titres)
+        self.assertLess(max(realigner), min(hauteur))
+        for groupe in (realigner, hauteur):
+            couples = [c for i in groupe for c in a.etapes[i].couples]
+            self.assertIn("2\u00a0Nm", couples)
+            self.assertIn("6\u00a0Nm", couples)
+            # La vis du capuchon (2 Nm) passe avant les vis du pivot (6 Nm).
+            premier = {c: min(i for i in groupe if c in a.etapes[i].couples) for c in ("2\u00a0Nm", "6\u00a0Nm")}
+            self.assertLess(premier["2\u00a0Nm"], premier["6\u00a0Nm"])
+        texte = texte_de(a.section)
+        for mot in ("Ne retire ni le capuchon ni les entretoises", "Keep hold of the fork", "Remount the stem entirely",
+                    "carbon assembly paste", "irreversible", "entre tes genoux", "cuvette du haut", "trop serré",
+                    "Centre the handlebars accurately", "drops", "This is a job for experts only", "encoche"):
+            self.assertIn(mot, texte, mot)
+
+    def test_corrections_de_la_relecture(self):
+        par_id, texte = self.par_id, self.texte_complet()
+        # Cale de transport et calages de carton retirés en étapes à part ; le vélo retourné sur la selle et le cintre.
+        roues = texte_de(par_id["montage-roues"].section)
+        for mot in ("Retire la cale de transport de l'étrier", "Retire le calage de carton de la fourche",
+                    "Retire le calage de carton des pattes arrière", "sur la selle et le cintre", "cadenas"):
+            self.assertIn(mot, roues, mot)
+        for absent in ("cale orange", "posé sur son calage", "repose sur son calage"):
+            self.assertNotIn(absent, texte, absent)
+        # Le levier de l'encadré « Shimano » est à lire sur la pièce.
+        (levier,) = [li for li in dom.selectionner(par_id["montage-roues"].section, "ol.steps > li") if "cadenas" in li.texte()]
+        self.assertTrue(dom.selectionner(levier, "span.verif"))
+        # 1.9 cite la page 60 pour la liste d'avant la première sortie.
+        self.assertIn("QSG V02 p.60", texte_de(dom.selectionner(par_id["montage-controles"].section, "ul.check > li")[0]))
+        # Les pages des manuels Canyon sont les pages imprimées, avec la page du PDF.
+        vus = 0
+        for lien in dom.selectionner(self.section, "a.src"):
+            if "Canyon%20RR" in lien.get("href") or "wheelset-manual" in lien.get("href"):
+                vus += 1
+                self.assertRegex(lien.texte(), r"p\.\d+(-\d+)? imprimées? \(PDF p\.\d+\)$", lien.texte())
+        self.assertGreaterEqual(vus, 40)
+        # Une étape à 2, 2,5 ou 7 Nm nomme la clé Canyon dès son titre, que reprend la boîte des couples.
+        for a in self.ch.ateliers:
+            for e in a.etapes:
+                if any(HORS_OUTILS.search(c) for c in e.couples):
+                    self.assertIn("clé Canyon", e.titre, e.titre)
+        # Si la clé Canyon ne couvre pas ces couples : une proposition sans valeur, et le service client Canyon.
+        (secours,) = [n for n in dom.selectionner(par_id["montage-avant"].section, "aside.note.prop")
+                      if "service client Canyon" in n.texte()]
+        self.assertIn("comme à la livraison", texte_de(secours))
+        self.assertEqual(dom.selectionner(secours, "span.nm"), [])
+        # Deux petites inexactitudes de la première version.
+        self.assertEqual(par_id["montage-cintre"].demonter, "Rien. Le capot de la potence se dépose aux étapes 1 et 2.")
+        self.assertNotIn("1.2 à 1.9 suivent", texte_de(par_id["montage-avant"].section))
+        # Le sens de la pédale gauche renvoie à la flèche de l'étape 8.2 du guide.
+        (gauche,) = [li for li in dom.selectionner(par_id["montage-pedales"].section, "ol.steps > li")
+                     if "Left-hand thread" in li.texte()]
+        self.assertIn("8.2", texte_de(gauche))
+        self.assertIn("QSG V02 p.20", texte_de(gauche))
+
+    def test_abreviations_par_page(self):
+        # Chaque atelier devient sa propre page : une abréviation y est développée avant ou juste après sa première
+        # apparition, liens compris.
+        developpements = {"QSG": "guide de démarrage Canyon", "RWS": "système d'axe à levier de DT Swiss",
+                          "PDF": "Portable Document Format", "ASTM": "American Society for Testing and Materials",
+                          "SPD": "système de cales Shimano", "DM": "Dealer's Manual", "UM": "User's Manual"}
+        vues = set()
+        for a in self.ch.ateliers:
+            texte = texte_de(a.section)
+            for abr, dev in developpements.items():
+                m = re.search(r"\b" + abr + r"\b", texte)
+                if m:
+                    vues.add(abr)
+                    i = texte.find(dev)
+                    self.assertTrue(0 <= i <= m.start() + 40, f"{a.id} : {abr}")
+        self.assertEqual(vues, set(developpements))
+
+    def test_texte_conserve(self):
+        # Comme pour Freins : les deux colonnes de chaque page gardent tout le texte du source.
+        for a in self.ch.ateliers:
+            with self.subTest(a.id):
+                gauche, droite = ateliers.colonnes(a)
+                sortie = dom.analyser(gauche + droite)
+                for ajout in dom.selectionner(sortie, "summary > span.st-n") + dom.selectionner(sortie, "summary > span.nm"):
+                    ajout.retirer()
+                texte = sortie.texte()
+                for selecteur in ("p", "li", "h4", "td", "b", "summary", "figcaption"):
+                    for e in dom.selectionner(a.section, selecteur):
+                        self.assertIn(e.texte(), texte, f"{selecteur} : {e.texte()[:60]}")
 
 
 if __name__ == "__main__":

@@ -17,6 +17,11 @@ Téléchargés pour lecture, gardés hors du dépôt (dossier de travail de la s
 
 Les trois PDF Canyon sont les seuls « Manuals » de la page support Grizl CF, en anglais (https://www.canyon.com/en-ch/customer-service/gravel/grizl/grizl-cf/ : « Grizl Quick Start Guide » 22,69 mb, « Canyon Wheelset manual » 15,33 mb, « Canyon road bike manual » 13,45 mb) comme en français (https://www.canyon.com/fr-ch/service-client/gravel/grizl/grizl-cf/ : « Guide de démarrage rapide Grizl », « Manuel - roues Canyon », « Manuel du vélo de route Canyon », mêmes liens). L'adresse fr-ch donnée dans la consigne (`/fr-ch/customer-service/...`) répond 404.
 
+**Numéros de page des deux manuels Canyon** (vérifiés le 24/10/2026 sur les PDF retéléchargés, texte extrait page par page). Le relevé cite les numéros **imprimés**, que la visionneuse PDF n'affiche pas :
+- manuel route 2021 : deux pages imprimées par page PDF, la page PDF vaut la page imprimée paire divisée par 2, plus 2 (imprimées 12-13 = PDF p.8 ; 36-37 = PDF p.20 ; 100-101 = PDF p.52 ; 116-117 = PDF p.60). Les 23 citations du relevé ont été retrouvées sur la page PDF ainsi calculée ;
+- manuel des roues 2025 : la page PDF vaut la page imprimée plus 1 (imprimée 2 = PDF p.3 ; 3 = PDF p.4 ; 4 = PDF p.5 ; 8 = PDF p.9) ;
+- QSG V02 : page imprimée et page PDF identiques.
+
 Manuels Shimano lus en HTML sur si.shimano.com, dans le navigateur intégré (le serveur refuse la ligne de commande, « Access Denied ») : DM-MAPD001-07, DM-MARD011-07, DM-GADBR10-04, UM-3K70A-007, UM-7KZ0A-001, UM-0RM0B-007. Fiche productinfo PD-ME700.
 
 **Règle 5 des sources.** Les couples du QSG relevés ici viennent du PDF officiel V02 publié par Canyon, et non plus du miroir manualslib.de (V01) des brouillons. La règle 5 demande de les ajouter à partir des photos du guide imprimé du carton : ils restent donc à comparer au guide papier à la livraison (version au dos, p.72).
@@ -70,6 +75,10 @@ Lecture : le capot se ferme **sans écart en haut**, l'écart reste **en bas** ;
 
 Photo officielle de la ST0046 (https://dma.canyon.com/image/upload/w_1400,c_fit/b_rgb:F2F2F2/f_auto/q_auto/v1778490570/2026_full_S-PARTS_ST-ST0046-01-60-31-8-1-1-8_9102474_BK_full_xjukzl) : marquage « ST0046 », « LENGTH 60 mm », « ANGLE 6° », « STEERER 1 1/8" », « CATEGORY 1 ». Pas de couple lisible sur la face photographiée. Inscription « ZERO GAP 6 Nm » : à lire sur la pièce.
 
+Placer le cintre dans le capot, manuel route Canyon 2021 (ajouté le 24/10/2026 après relecture). Le QSG ne le dit pas en mots :
+- p.38-39 imprimées (PDF p.21), procédure des potences « AHEADSET® », retournement de la potence : « Centre the handlebars accurately in the stem clamp. » ;
+- p.40-41 imprimées (PDF p.22), même geste dans la procédure I-Lock : « Continue by aligning the handlebars in the stem clamp, i.e. the drops should be in horizontal position or, at the most, slant slightly downwards towards the rear. »
+
 ### 2.2 Hauteur du cintre et entretoises, pages 56 et 57 (« HANDLEBAR HEIGHT ADJUSTMENT (HB0067 & ST 0046) »)
 
 À faire seulement si tu changes la hauteur du cintre ou si la potence n'est pas alignée à la livraison. Ce n'est pas une étape du montage numéroté du QSG.
@@ -77,8 +86,8 @@ Photo officielle de la ST0046 (https://dma.canyon.com/image/upload/w_1400,c_fit/
 | Étape | Ce que montre la page | Couple | Clé | Texte ou pictogramme | Certitude |
 |---|---|---|---|---|---|
 | 1 | Desserrer les 2 vis de pivot de la potence | | « 5 mm » | Pictogramme | |
-| 2 | Retirer la vis du capuchon, le capuchon, puis monter la potence | | « 3 mm » | Pictogramme | |
-| 3 | Déplacer les entretoises ; loupe sur l'alignement d'un repère de l'entretoise. Encadré : 3 entretoises passées de sous la potence à au-dessus | | | Dessin | |
+| 2 | Retirer la vis du capuchon, le capuchon, puis monter la potence (flèches vers le haut sur le capuchon et sur la potence) | | « 3 mm » | Pictogramme | |
+| 3 | Déplacer les entretoises ; flèches vers le bas sur la potence et les entretoises. Loupe : une ligne pointillée relie de petites encoches, une sur chaque entretoise, une sur le capot de direction en dessous et une sur la potence, toutes alignées à l'avant (dessin agrandi, revu le 24/10/2026). Encadré : 3 entretoises passées de sous la potence à au-dessus | | | Dessin | |
 | 4 | Revisser la vis du capuchon | « 2 Nm » | « 3 mm » | Pictogramme | Forte : seule la vis du capuchon est montrée à cette étape |
 | p.57, encadré | Potence alignée sur la roue avant, vue de dessus | | | Dessin | |
 | 5 | Serrer les 2 vis de pivot | « 6 Nm » | « 5 mm » | Pictogramme | Forte |
@@ -88,6 +97,17 @@ Photo officielle de la ST0046 (https://dma.canyon.com/image/upload/w_1400,c_fit/
 - Entretoises : « 1x Canyon EP1835-01 Spacer », « 1x Canyon EP1832-01 Transition Cap 1 1/8 » (https://www.canyon.com/en-ch/gear/bike-parts/spare-wear-parts/canyon-gp7438-01-spacer/10013730.html).
 - **Nombre maximal d'entretoises au-dessus de la potence : non publié.** Le QSG dessine 3 entretoises déplacées, sans règle écrite.
 - Ordre : précharge au capuchon (étape 4) avant le serrage du pivot (étape 5).
+
+**Gestes du manuel route Canyon 2021 pour la potence et le jeu de direction** (ajoutés le 24/10/2026 après relecture ; PDF retéléchargé, 14 106 052 octets, texte extrait page par page). Le QSG p.56-57 ne donne que les dessins ci-dessus. La ST0046 est une potence à serrage externe sur pivot sans filetage, avec vis de capuchon sur le dessus (QSG p.56) : c'est le système que le manuel appelle « AHEADSET® ». Les citations sous « I-Lock » sont écrites pour un autre système de potence Canyon ; le relevé les donne pour ce qu'elles sont.
+
+- Potences « AHEADSET® », p.36-37 imprimées (PDF p.20) : « On bikes with an Aheadset®, the stem also serves to adjust the headset bearing pressure. If you change the position of the stem, you have to readjust the bearings (see the chapter “The Headset”). » ; « Release the bolt at the top of the fork steerer tube which serves to adjust the initial bearing pressure and remove the Ahead cap. » ; « Release the bolts on the side or at the rear of the stem and pull the stem off the fork. » ; « Now you can remove the spacers. » ; « Apply a litte Canyon carbon assembly paste in the stem clamping area. » (sic) ; légende : « Apply some carbon assembly paste on the steerer tube » ; « Remount the stem entirely on the fork steerer tube and slip the spacers you have removed above the stem. »
+- Même page : « If you want to reduce the number of spacers, you have to shorten the steerer tube. This change is irreversible. » ; « Have this job carried out by an experienced mechanic. » ; « If you plan any changes, contact, if necessary, our service hotline or use the contact form on our website, www.canyon.com ».
+- Suite, p.38-39 imprimées (PDF p.21) : « Readjust the bearing. » ; « Realign the stem by making sure it is in alignment with the front wheel and at right angle relative to the handlebars and the direction of motion. After realignment of the stem retighten it and check whether the handlebars resist twisting and turning (see the chapter “The headset”). »
+- Pivot en carbone, p.38-39 imprimées (PDF p.21) : « If you have a Canyon road bike with a carbon steerer tube (which you can tell by the black or black shining colour in the stem slit), you have to be extremely careful when tightening the stem. This is a job for experts only! » La fourche FK0143 est en carbone (fiche) ; couleur du pivot dans la fente de la potence : à lire sur la pièce.
+- I-Lock, p.38-39 imprimées (PDF p.21) : « Keep hold of the fork and slip the stem off the steerer tube. » ; p.40-41 imprimées (PDF p.22) : « Slide the cap on top of the steerer tube, keep hold of the fork and press stem and cap downwards to eliminate any play. » ; légende : « Remount the cap and press it downwards to the fork you keep hold of and retighten the aligned stem to the prescribed tightening torque ». Le manuel ne le redit pas dans la procédure « AHEADSET® ».
+- Jeu de direction, p.98-99 imprimées (PDF p.51), « CHECKING AND READJUSTING » : « Check the headset for play by placing your fingers around the upper head cup. » ; « Bring your weight to bear on the saddle, pull the front brakes with your other hand and push your Canyon firmly back and forth with the wheel remaining on the ground. » ; « If there is play in the bearing, the upper head cap will move noticeably relative to the lower cup. » ; « Another way to check the headset is to lift the front wheel a little off the ground and then let it drop. If there is play in the bearing, you will hear a rattling noise in this area. » ; « To check the bearing for ease of running, lift the frame until the front wheel no longer touches the ground. Move the handlebars from the left to the right. The front wheel should turn very easily from far left to far right without catching anywhere. A light tap on the handlebars should be enough to turn the wheel to the side. » ; mises en garde : « Adjusting the headset requires a certain amount of experience and should, therefore, be left to a skilled mechanic. » ; « Riding the bike with a loose headset increases the stress acting on the fork and the bearing. This may damage the bearing or lead to a fork break with serious consequences! Risk of a fall! » ; « Check the secure seat of the stem after having adjusted the bearings, by holding the front wheel between your knees and trying to twist the handlebars relative to the front wheel. »
+- « THREADLESS HEADSET: AHEADSET® », p.100-101 imprimées (PDF p.52), réaligner sans sortir la potence : « Release the clamping bolts located on the sides or rear side of the stem. » ; « Gently tighten a little the countersunk adjusting bolt on the top by using an Allen key. » ; « Realign the stem with the frame so that the handlebars are not slanted when the wheel points straight ahead. » ; « Retighten the clamping bolts located on the side of the stem by using a torque wrench. » ; « Check the headset for play, as described further below. Be sure not to adjust the bearing too tight. » ; « To do the check stand in front of your Canyon and take the front wheel between your knees. Take hold of the handlebars at the brake levers and try to turn them relative to the front wheel. If you are able to turn the handlebars, retighten a little the clamping bolt(s) of the stem. »
+- Lecture : la vis du capuchon se serre à 2 Nm (QSG p.56) et les vis du pivot à 6 Nm (QSG p.57), limite que le manuel donne aussi pour un pivot en carbone (p.116-117 imprimées, PDF p.60). Le « retighten a little » du contrôle aux genoux ne permet donc pas de dépasser 6 Nm.
 
 ### 2.3 Tige de selle SP100 VCLS 2.1 et son collier, pages 13, 14, 26 et 27
 
@@ -117,10 +137,10 @@ Insertion (fiche du vélo, EN) : « Maximum Seat Post Insertion Depth in mm / 21
 
 | Étape | Ce que montre la page | Couple | Clé | Texte ou pictogramme |
 |---|---|---|---|---|
-| 5.1 | Le vélo posé sur son calage de carton, fourche en l'air | | | Dessin |
+| 5.1 | Le vélo, encore tenu par ses calages de carton (un bloc aux pattes arrière, une plaque au bout de la fourche), est retourné (flèche) et posé sur la selle et le cintre, fourche en l'air. Lecture corrigée le 24/10/2026 sur le dessin agrandi (la première lecture disait « posé sur son calage ») | | | Dessin |
 | 5.2 | Dévisser l'axe avant, qui traverse un calage de transport dans la fourche | | « 6 mm » | Pictogramme |
 | 5.3 | Sortir l'axe | | | Dessin |
-| 5.4 | Retirer la cale orange de l'étrier. Encadré barré : ne pas serrer le levier de frein | | | Pictogramme |
+| 5.4 | Retirer la cale de l'étrier. Le dessin la colore en orange, comme chaque pièce travaillée sur ces pages (vis, axe, roue, cales) : couleur réelle à lire sur la pièce. Le second dessin de l'étape montre la patte de fourche sans le calage de transport de 5.2 et 5.3 : ce calage est retiré entre 5.3 et 5.4, geste non dessiné. Encadré barré : ne pas serrer le levier de frein | | | Pictogramme |
 | 5.5 | Poser la roue dans la fourche | | | Dessin |
 | 5.6 | Introduire l'axe. La tête de l'axe dessinée porte « DT SWISS » et une inscription circulaire illisible sur le dessin | | | Dessin |
 | 5.7 | Serrer l'axe ; tableau | « TYPE / TORQUE ON AXLE / RIGID FORK 10-15 NM / SUSPENSION FORK 12 NM » | « 6 mm » | **Texte** (tableau) pour le couple, pictogramme pour la clé |
@@ -135,8 +155,8 @@ Le 4556 a une fourche FK0143 sans suspension dans la liste des composants, donc 
 | 6.2 | Retirer la cale de l'étrier arrière | | |
 | 6.3 | Poser la roue, chaîne sur la cassette | | |
 | 6.4 | Introduire l'axe et le serrer **par son levier**, à la main | **Aucun** | Aucune icône |
-| Encadrés | « SRAM » (verrou de chape) et « Shimano » (dessin d'un dérailleur à levier mécanique) | | |
-| 6.5 | Retourner le vélo sur ses roues | | |
+| Encadrés | « SRAM » (verrou de chape) et « Shimano » : un dérailleur dont un petit levier est basculé (flèche), à côté d'un cadenas ouvert (dessin agrandi, revu le 24/10/2026). Le relevé n'a pas d'information sur un tel levier pour le RD-M8250 : à lire sur la pièce | | |
+| 6.5 (p.18) | Retourner le vélo, posé sur la selle et le cintre, sur ses roues. Le calage de carton des pattes arrière, visible à l'étape 5.1, n'apparaît plus dans les dessins de l'étape 6 : son retrait n'est pas dessiné | | |
 
 **Couple de l'axe arrière : non publié par Canyon dans le QSG.** Voir le point 4 pour l'axe lui-même.
 
@@ -350,7 +370,7 @@ Aucune donnée personnelle ici. Les cotes de Lamine restent hors du dépôt publ
 4. **Axe avant.** Liste : « Canyon Through Axle ». QSG V02 p.15-16 : tête dessinée « DT SWISS », serrage à la clé de 6 mm. Photo de la pièce GP0197-02 : un axe à levier. Type réel : à lire sur la pièce.
 5. **Clé du RWS Plug-In** (si l'axe est un RWS). Manuel DT Swiss, texte anglais : « A 6 mm hex-key is included inside the axle. » ; texte allemand : « Auf der Innenseite des Hebels befindet sich ein 6 mm Innensechskant-Werkzeug » (dans le levier).
 6. **Pression maximale.** Page de la paire GR 30 CF : « Maximum pressure: 4 bars/58PSI ». Schwalbe : « max. Bar: 4 Bar », « max. Psi: 55 PSI ». Manuel Canyon des roues, jante sans crochet, pneu de 45 à 54 mm : « 3.0 » bar, « 43.5 » PSI. Règle du manuel : la plus basse s'impose, 3,0 bar.
-7. **Poids total admis.** Fiche du vélo : 120 kg (relevé du 23/10) ; QSG p.8 : « MAX. LOAD 120 KG » ; page de la paire GR 30 CF : « ASTM 2 », « Maximum systemweight: 130kg » ; manuel des roues : colonne « 1CX » à 120 kg, colonne « 2 » à 130 kg ; Fizik : « maximum 120 kg ». Le vélo est livré avec le « Canyon 1CX Bike Category Manual » : 120 kg s'impose.
+7. **Poids total admis.** Fiche du vélo : 120 kg (relevé du 23/10) ; QSG p.8 : « MAX. LOAD 120 KG » ; page de la paire GR 30 CF : « ASTM 2 », « Maximum systemweight: 130kg » ; manuel des roues, p.3 imprimée (PDF p.4), tableau « ASTM CATEGORY » : colonne « 1CX » à 120 kg, colonne « 2 » à 130 kg (vérifié sur l'image de la page le 24/10/2026) ; Fizik : « maximum 120 kg ». Le vélo est livré avec le « Canyon 1CX Bike Category Manual » : 120 kg s'impose.
 8. **Bague Center Lock et cassette** (pas le jour de livraison, pour les chapitres 2 et 4). Manuel Canyon des roues, p.7 imprimée, pictogrammes : disque Center Lock « 40 à 50 Nm », cassette « 40 Nm » ; disque 6 trous « 2 à 4 Nm ». Shimano : « 40 N·m » pour la bague du disque (DM-TORQUE, utilisé au chapitre 2) et « 30 - 50 N·m » pour la cassette CS-M8200-12 (DM-MACS010, `sources-cf8-di2.md`).
 9. **Contenu du carton, EN et FR.** Même position dans la liste : « Canyon Organza Bag » (en-ch) contre « Boîte à outils Canyon » (fr-ch). Le relevé du 23/10 (`composants-origine.md`) a repris la version française et n'a pas l'« Organza Bag ».
 10. **Pédales.** Fiche : « None included ». QSG p.7 : pédales dans « NOT INCLUDED ». Photo officielle du vélo : pédale Shimano « XT » montée (relevé du 23/10). Pas une contradiction de contenu, la photo est un visuel.
