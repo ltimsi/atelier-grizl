@@ -625,6 +625,27 @@ class TestPages(Site):
         self.assertIn("this.sel = -1;", set_pins)
         self.assertNotIn("ceramic", viewer)
 
+    def test_pieces_3d_montage(self):
+        # Les pièces 3D des ateliers 1.3 et 1.5, dans le dépôt (la tâche 5 y ajoutera les copies servies) : la potence
+        # ST0046, son capot serré par les deux vis du haut d'abord, sans jour en haut, puis par celles du bas, le cintre
+        # HB0067 et les cocottes ST-RX825, avec les couples du chapitre ; l'axe avant de 12 x 100 serré à 10-15 Nm à la
+        # clé de 6 mm, son type à lire sur la pièce. Aucune pièce du CF 7, aucun ordre de serrage croisé. L'en-tête de
+        # chaque fichier dit ce qui est approché.
+        attendus = {"m-cockpit.js": ("ST0046", "HB0067", "ST-RX825", "6\xa0Nm", "2\xa0Nm", "haut", "sans jour"),
+                    "m-axle.js": ("12 x 100", "10-15\xa0Nm", "6\xa0mm", "à lire sur la pièce")}
+        absents = ("CF 7", "CF\xa07", "GRX 610", "RX610", "RX820 mécanique", "en croix",
+                   "DT Swiss 350 Center Lock disque SM-RT64")
+        for nom, presents in attendus.items():
+            texte = (RACINE / "src" / "js" / "models" / nom).read_text(encoding="utf-8")
+            # assertTrue plutôt qu'assertIn : un échec nomme la valeur sans recopier tout le fichier.
+            for present in presents:
+                self.assertTrue(present in texte, f"{nom} : {present!r} absent")
+            for absent in absents:
+                self.assertFalse(absent in texte, f"{nom} : {absent!r} présent")
+            self.assertIsNone(re.search("[\u2014\u2013]", texte), f"{nom} : tiret cadratin ou demi-cadratin")
+            entete = texte[:texte.index("*/")]
+            self.assertIn("approchée", entete, f"{nom} : en-tête sans forme approchée")
+
     def test_approche_et_sources(self):
         for chemin, ident in (("approche/", "approche-page"), ("sources/", "sources-page")):
             racine = self.arbre(chemin)
