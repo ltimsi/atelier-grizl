@@ -36,6 +36,92 @@ COMPOSANTS = (RACINE / "src" / "parts" / "composants.html").read_text(encoding="
 # et les libellés d'une planche ; summary et button, les résumés et boutons écrits dans le source.
 BLOCS = ("p", "li", "td", "th", "tr", "div.q", "figcaption", "h4", "summary", "svg", "button")
 
+# Pièces 3D du lot 2 (ateliers 1.1, 1.3, 1.5, 1.6) : le texte complet de chaque pastille, dans l'ordre du fichier,
+# et la déclaration de chaque commande (étiquette, bornes du curseur, texte affiché). Un chiffre, une clé, un côté ou
+# un ordre changé fait échouer test_pieces_3d_montage. Espaces insécables écrites \xa0, apostrophes telles quelles.
+PASTILLES_3D_MONTAGE = {
+    'm-cockpit.js': [
+        'Vis du haut du capot\xa0: serre-les en premier, 6\xa0Nm, clé de 4\xa0mm (pictogramme du guide, p.10)',
+        'Haut du capot\xa0: sans jour contre la potence («\xa0NO GAP!\xa0» du guide, p.11)',
+        'Vis du bas du capot\xa0: ensuite, 6\xa0Nm, clé de 4\xa0mm (pictogramme du guide, p.10)',
+        'Bas du capot\xa0: le jour reste («\xa0GAP!\xa0» du guide, p.11)',
+        'Capot de la ST0046, 4 vis M5x22, couples des pictogrammes du guide, p.10\xa0; «\xa0ZERO GAP 6\xa0Nm\xa0» à lire sur la pièce',
+        'Vis du pivot\xa0: 2 vis M6x18, 6\xa0Nm, clé de 5\xa0mm, après le capuchon (pictogramme du guide, p.57)',
+        'Vis du capuchon\xa0: 2\xa0Nm, clé de 3\xa0mm, avant les vis du pivot (pictogramme du guide, p.56)\xa0; à la clé Canyon, aucun de tes outils ne descend à 2\xa0Nm',
+        'Entretoises\xa0: leur nombre est à lire sur la pièce',
+        'Potence ST0046\xa0: 60\xa0mm, 6°, pivot de 1\xa01/8 pouce, sur sa photo officielle',
+        'Cintre HB0067, collier de 31,8\xa0mm\xa0: centre-le dans la potence',
+        'Cocottes ST-RX825, montées sur le cintre à la livraison (la gauche\xa0: ST-RX825-L ou BL-RX825-L, à lire sur la pièce)',
+    ],
+    'm-axle.js': [
+        'Axe avant traversant de 12 x 100\xa0: 10-15\xa0Nm, clé de 6\xa0mm (tableau du guide, p.16)',
+        'Type d’axe et forme de sa tête\xa0: à lire sur la pièce (liste\xa0: «\xa0Canyon Through Axle\xa0»\xa0; guide\xa0: tête «\xa0DT SWISS\xa0»)',
+        'Bout fileté\xa0: il se visse dans la patte opposée à la tête (côté d’entrée à regarder sur le guide imprimé et sur ton vélo)',
+        'Fourche FK0143 rigide, axe de 12 x 100\xa0: ligne «\xa0RIGID FORK\xa0» du guide, à confirmer sur ton vélo',
+        'Moyeu avant DT Swiss 350 de la roue GR 30 CF (d’après la page de la paire), Center Lock',
+        'Disque Deore XT MT800 (ou RT-CL800), 160\xa0mm\xa0: modèle à lire sur la pièce',
+        'Étrier flat mount, simplifié\xa0: le disque passe entre les plaquettes',
+        'Cale de transport de l’étrier\xa0: retire-la avant de poser la roue, sans serrer le levier de frein (couleur à lire sur la pièce)',
+        'Embout six-pans de 6\xa0mm au carré de 3/8 de pouce, si ta caisse l’a, sur ta TW-6.2\xa0: 10-15\xa0Nm',
+    ],
+    'm-pedal.js': [
+        'Pédale Shimano PD-ME700, SPD (le système de cales Shimano)\xa0: deux mécanismes d’accrochage, une vis de tension à l’arrière de chacun, quatre en tout pour les deux pédales',
+        'Méplats de l’axe\xa0: clé plate de 15\xa0mm\xa0; serre la pédale à 35-55\xa0Nm, à la TW-6.2 avec une tête de clé plate de 15\xa0mm, si ta caisse l’a',
+        'Filetage\xa0: un peu de graisse (non fournie)\xa0; proposition\xa0: les premiers tours à la main',
+        'Repère R, pédale droite\xa0: pas à droite, elle se visse comme une vis ordinaire (flèche de l’étape 8.3 du guide)',
+        'Repère L, pédale gauche\xa0: pas à gauche, elle se visse dans le sens inverse de la droite (flèche de l’étape 8.2 du guide)',
+        'Flèches orange\xa0: le sens du serrage de la pédale droite, comme la flèche de l’étape 8.3 du guide (p.20)',
+        'Flèches orange\xa0: le sens du serrage de la pédale gauche, à l’inverse de la droite, comme la flèche de l’étape 8.2 du guide (p.20)',
+        'Vis de tension, à l’arrière du mécanisme, côté talon\xa0: clé six-pans de 3\xa0mm\xa0; en sens horaire, la cale tient plus fort\xa0; quatre clics par tour',
+        'Plaquette de réglage, à côté de la vis de tension, côté talon\xa0: mets les quatre vis au même réglage, en la regardant et en comptant les tours',
+        'Cale SM-SH51, noire\xa0: elle va au pied gauche comme au droit\xa0; ni jeu ni cale qui bouge avant de rouler',
+        'Vis de cale, six-pans de 4\xa0mm\xa0: d’abord 2,5\xa0Nm à la clé Canyon si sa plage le permet (à lire sur l’outil), aucun de tes outils ne descend si bas\xa0; puis 5-6\xa0Nm en alternant, à l’ATD-1.2',
+        'Semelle d’une chaussure SPD à deux vis, en coupe\xa0: la cale se règle sur 20\xa0mm d’avant en arrière et 5\xa0mm de gauche à droite',
+    ],
+    'm-torque.js': [
+        'Park Tool TW-6.2, clé à déclenchement\xa0: de 10 à 60\xa0Nm (newton-mètres), par pas de 0,25\xa0Nm\xa0; jamais au-delà de 60\xa0Nm',
+        'Levier du cliquet\xa0: à droite pour tourner en sens horaire, à gauche pour le sens inverse\xa0; la clé mesure aussi un filetage à gauche, comme celui de la pédale gauche',
+        'Bague de verrouillage\xa0: pousse-la pour déverrouiller, tourne-la jusqu’au couple voulu, tire-la pour verrouiller',
+        'Fenêtre de réglage\xa0: le couple réglé se lit sous la ligne rouge (chiffres de l’échelle à lire sur ta clé)',
+        'Carré de 3/8 de pouce et embout six-pans de 6\xa0mm, si ta caisse l’a\xa0; proposition\xa0: engage-le à fond, bien dans l’axe de la vis',
+        'Axe avant\xa0: 10-15\xa0Nm, clé de 6\xa0mm (tableau du guide, p.16)\xa0; ta TW-6.2 commence à 10\xa0Nm',
+        'Poignée\xa0: tiens-la et tourne avec une force régulière\xa0; proposition\xa0: garde la clé pour serrer, pas pour desserrer',
+        'Déclic entendu et senti, ou tête qui pivote par rapport au corps\xa0: arrête aussitôt, le couple réglé est atteint',
+        'Après le travail\xa0: ramène le réglage au plus petit chiffre de l’échelle',
+        'Tableau du tube\xa0: conversion des Nm en in·lb (pouce-livre)',
+    ],
+}
+ETIQUETTES_3D_MONTAGE = {
+    'm-cockpit.js': ['Vue', 'Vue du capot', 'Vue du poste', 'Serrage du capot'],
+    'm-axle.js': ['Pose de l’axe'],
+    'm-pedal.js': ['Pédale droite (R)', 'Pédale gauche (L)', 'Vissage'],
+    'm-torque.js': ['Couple réglé', 'Serrer'],
+}
+COMMANDES_3D_MONTAGE = {
+    'm-cockpit.js': [
+        "{ type: 'segmented', label: 'Vue', value: 'capot', options: [{ value: 'capot', label: 'Vue du capot' }, { value: 'poste', label: 'Vue du poste' }],",
+        "{ type: 'range', label: 'Serrage du capot', min: 0, max: 2, step: 1, value: 0,",
+        "format: function (v) { return v === 0 ? 'vis posées' : v === 1 ? '1, haut\xa0: 6\xa0Nm' : '2, bas\xa0: 6\xa0Nm'; },",
+        "api.setPins(v === 'poste' ? pins.slice(9) : pins);",
+    ],
+    'm-axle.js': [
+        "controls: [{ type: 'range', label: 'Pose de l’axe', min: 0, max: 100, step: 1, value: 100,",
+        "format: function (v) { return v >= 100 ? 'serré, 10-15\xa0Nm' : v > 70 ? 'il se visse' : v + '\xa0%'; },",
+    ],
+    'm-pedal.js': [
+        "{ type: 'segmented', value: 'R', options: [{ label: 'Pédale droite (R)', value: 'R' }, { label: 'Pédale gauche (L)', value: 'L' }],",
+        "{ type: 'range', label: 'Vissage', min: 0, max: 100, step: 1, value: 100,",
+        "format: function (v) { return v >= 100 ? 'à fond, puis 35-55\xa0Nm' : v > 45 ? 'elle se visse' : 'à la main'; },",
+    ],
+    'm-torque.js': [
+        'var T0 = 10;',
+        "function fr(v) { return String(Math.round(v * 100) / 100).replace('.', ','); }",
+        "{ type: 'range', label: 'Couple réglé', min: 10, max: 60, step: 0.25, value: T0,",
+        "format: function (v) { return fr(v) + '\xa0Nm'; },",
+        "{ type: 'toggle', label: 'Serrer', value: false, onChange: serrer }",
+    ],
+}
+
 
 def elements(parent):
     return [e for e in parent.enfants if isinstance(e, dom.Element)]
@@ -626,46 +712,93 @@ class TestPages(Site):
         self.assertNotIn("ceramic", viewer)
 
     def test_pieces_3d_montage(self):
-        # Les pièces 3D des ateliers 1.3 et 1.5, dans le dépôt (la tâche 5 y ajoutera les copies servies) : la potence
-        # ST0046, son capot serré par les deux vis du haut d'abord, sans jour en haut, puis par celles du bas, le cintre
-        # HB0067 et les cocottes ST-RX825, avec les couples du chapitre ; l'axe avant de 12 x 100 serré à 10-15 Nm à la
-        # clé de 6 mm, son type à lire sur la pièce. Aucune pièce du CF 7, aucun ordre de serrage croisé. L'en-tête de
-        # chaque fichier dit ce qui est approché.
-        # Ateliers 1.6 et 1.1 : la PD-ME700 et sa cale SM-SH51 avec les couples du chapitre (pédale 35-55 Nm à la clé
-        # plate de 15 mm, cales 2,5 Nm puis 5-6 Nm), le pas à gauche de la pédale gauche, jamais le six-pans des
-        # autres pédales Shimano ; la TW-6.2 de 10 à 60 Nm et son déclic, et de la clé Canyon rien d'autre que sa
-        # plage à lire sur l'outil, sans aucun chiffre.
-        attendus = {"m-cockpit.js": ("ST0046", "HB0067", "ST-RX825", "6\xa0Nm", "2\xa0Nm", "haut", "sans jour"),
-                    "m-axle.js": ("12 x 100", "10-15\xa0Nm", "6\xa0mm", "à lire sur la pièce"),
-                    "m-pedal.js": ("PD-ME700", "SM-SH51", "35-55\xa0Nm", "15\xa0mm", "2,5\xa0Nm", "5-6\xa0Nm",
-                                   "à gauche"),
-                    "m-torque.js": ("TW-6.2", "10 à 60\xa0Nm", "déclic", "à lire sur l'outil")}
-        absents = ("CF 7", "CF\xa07", "GRX 610", "RX610", "RX820 mécanique", "en croix",
-                   "DT Swiss 350 Center Lock disque SM-RT64")
-        for nom, presents in attendus.items():
+        # Les pièces 3D des ateliers 1.1, 1.3, 1.5 et 1.6, dans le dépôt (la tâche 5 y ajoutera les copies servies).
+        # Chaque pastille et chaque commande est comparée mot pour mot à PASTILLES_3D_MONTAGE, ETIQUETTES_3D_MONTAGE et
+        # COMMANDES_3D_MONTAGE : les couples et les clés du chapitre (capot 6 Nm haut puis bas, capuchon 2 Nm, axe
+        # 10-15 Nm à 6 mm, pédales 35-55 Nm à la clé plate de 15 mm, cales 2,5 Nm puis 5-6 Nm à 4 mm, tension à 3 mm,
+        # TW-6.2 de 10 à 60 Nm), le pas à droite et le pas à gauche, l'ordre des gestes. Restent vérifiés par motif :
+        # aucune pièce du CF 7, aucun ordre de serrage croisé, aucun « 8 mm » dans la pédale (le six-pans de 8 mm du DM
+        # va à d'autres pédales), aucune plage chiffrée pour la clé Canyon, et « approchée » dans chaque en-tête.
+        absents = ("CF 7", "CF\xa07", "GRX 610", "RX610", "RX820 mécanique", "en croix", "SM-RT64", "Continental",
+                   "Gravel LN")
+        for nom, attendues in PASTILLES_3D_MONTAGE.items():
             texte = (RACINE / "src" / "js" / "models" / nom).read_text(encoding="utf-8")
-            # Le site mélange les deux apostrophes : les valeurs sont cherchées avec l'apostrophe droite.
-            normal = texte.replace("\u2019", "'")
-            # assertTrue plutôt qu'assertIn : un échec nomme la valeur sans recopier tout le fichier.
-            for present in presents:
-                self.assertTrue(present in normal, f"{nom} : {present!r} absent")
+            pastilles = re.findall(r"text: '((?:[^'\\]|\\.)*)'", texte)
+            self.assertEqual(pastilles, attendues, f"{nom} : pastilles")
+            etiquettes = re.findall(r"\blabel: '((?:[^'\\]|\\.)*)'", texte)
+            self.assertEqual(etiquettes, ETIQUETTES_3D_MONTAGE[nom], f"{nom} : étiquettes des commandes")
+            for commande in COMMANDES_3D_MONTAGE[nom]:
+                self.assertEqual(texte.count(commande), 1, f"{nom} : commande {commande!r}")
+            # assertFalse plutôt qu'assertNotIn : un échec nomme la valeur sans recopier tout le fichier.
             for absent in absents:
                 self.assertFalse(absent in texte, f"{nom} : {absent!r} présent")
-            self.assertIsNone(re.search("[\u2014\u2013]", texte), f"{nom} : tiret cadratin ou demi-cadratin")
+            self.assertIsNone(re.search("[—–]", texte), f"{nom} : tiret cadratin ou demi-cadratin")
             entete = texte[:texte.index("*/")]
             self.assertIn("approchée", entete, f"{nom} : en-tête sans forme approchée")
+            # La clé Canyon : dans la phrase qui la nomme, jamais de plage chiffrée ; pour la pédale et la clé
+            # dynamométrique, sa plage y est « à lire sur l'outil ».
+            suivi = re.sub(r"\s+", " ", texte.replace("’", "'"))
+            for m in re.finditer(r"clé (?:dynamométrique )?Canyon", suivi):
+                fin = min([k for k in (suivi.find(c, m.end()) for c in ".;)") if k >= 0] + [len(suivi)])
+                phrase = suivi[m.start():fin + 1]
+                self.assertIsNone(re.search(r"\d+(?:[,.]\d+)?[ \xa0]*(?:à|-)[ \xa0]*\d", phrase),
+                                  f"{nom} : plage chiffrée près de la clé Canyon : {phrase!r}")
+                if nom in ("m-pedal.js", "m-torque.js"):
+                    self.assertIn("à lire sur l'outil", phrase, f"{nom} : {phrase!r}")
         # La PD-ME700 se serre à la clé plate de 15 mm : le six-pans de 8 mm du DM va à d'autres pédales.
         pedale = (RACINE / "src" / "js" / "models" / "m-pedal.js").read_text(encoding="utf-8")
         self.assertIsNone(re.search(r"(?<![\d,.])8[ \xa0]*mm", pedale), "m-pedal.js : « 8 mm » présent")
-        # La clé Canyon : chaque ligne qui la nomme dit que sa plage est à lire sur l'outil, et aucune ne porte de
-        # chiffre de couple ni de plage.
-        cle = (RACINE / "src" / "js" / "models" / "m-torque.js").read_text(encoding="utf-8").replace("\u2019", "'")
+        # La clé dynamométrique ne dit rien d'autre de la clé Canyon : chaque ligne qui la nomme dit que sa plage est à
+        # lire sur l'outil, et aucune ne porte de chiffre de couple ni de plage.
+        cle = (RACINE / "src" / "js" / "models" / "m-torque.js").read_text(encoding="utf-8").replace("’", "'")
         lignes = [ligne for ligne in cle.splitlines() if "Canyon" in ligne]
         self.assertTrue(lignes, "m-torque.js : la clé Canyon n'est pas nommée")
         for ligne in lignes:
             self.assertIn("à lire sur l'outil", ligne, f"m-torque.js : {ligne.strip()!r}")
             self.assertIsNone(re.search(r"\d[\d,.]*[ \xa0]*(?:à|-)[ \xa0]*\d|\d[ \xa0]*N·?m", ligne),
                               f"m-torque.js : chiffre près de la clé Canyon : {ligne.strip()!r}")
+
+    def test_disque_de_l_axe_comme_celui_du_chapitre_2(self):
+        # Le disque de la pièce de l'axe (1.5) recopie celui de m-rotor.js (2.2, déjà en ligne) : mêmes fentes à cinq
+        # pans, mêmes rayons, mêmes épaisseurs. Le test épingle ces constantes dans les deux fichiers, pour qu'une cote
+        # corrigée dans l'un ne laisse pas l'autre en arrière.
+        def normal(nom):
+            texte = (RACINE / "src" / "js" / "models" / nom).read_text(encoding="utf-8")
+            texte = re.sub(r"\b(?:q|pt)\(rf", "Q(rf", texte)    # nom de la fonction locale des fentes
+            return re.sub(r"\s+", " ", texte)
+        rotor, axe = normal("m-rotor.js"), normal("m-axle.js")
+        communs = (
+            "var a = (j + 0.5) / 30 * TAU, ca = Math.cos(a), sa = Math.sin(a), h = 4.25, w = 3.4, rf = 69.5;",
+            "return [Q(rf + h, -w), Q(rf + h, w), Q(rf - h / 3, w), Q(rf - h, 0), Q(rf - h / 3, -w)].reverse();",
+            "for (var j = 0; j < 30; j++) track.holes.push(H.path(slot5(j)));",
+            "var sweep = 0.2, R0 = 25.3, Rt = 62.4, rivR = 58.6",
+            " * TAU / 6 + Math.PI / 2 + sweep * Math.max(0, ",
+            "rIn = 63;", " * 63 / 8.6;", "63 - 9.6 * Math.pow(1 - Math.pow(Math.abs(s), 3), 0.5)",
+            "nt = 6, P = [], fw = 1.6, rc = 56.4", "H.pol(66, aS + (aE - aS) * q / 10)", "H.pol(60.6, ac + w)",
+            "H.circlePts(25.7, 96)", "H.gearPts(24, 18.45, 17.15, { tip: 0.3, flank: 0.1, phase: -TAU / 48 })",
+            "61 + 1.6 * Math.sqrt(1 - tq * tq)",
+            "new THREE.SphereGeometry(2.8, 20, 8, 0, TAU, 0, Math.PI / 2)",
+            "H.cyl(2.6, 0.5, 'z', M.steel, rotor, [rx, ry, -1.15], 20)",
+            "rA = 39.5",
+            "arr.moveTo(-5.6, -1.3); arr.lineTo(0.8, -1.3); arr.lineTo(0.8, -3.4); arr.lineTo(5.9, 0); "
+            "arr.lineTo(0.8, 3.4); arr.lineTo(0.8, 1.3); arr.lineTo(-5.6, 1.3); arr.lineTo(-5.6, -1.3);",
+            "H.gearPts(16, 20.7, 22.5, { tip: 0.6, flank: 0.05 })", "H.circlePts(15.5, 64)",
+            "ext(track, 1.8, 0.18, 0, 12)", "ext(finsSh, 2.4, 0.3, 2.1, 4)", "ext(ring, 6.6, 0.4, 1.3, 4)",
+            "ext(armSh, 3, 0.35, 2.4, 6)", "ext(lr, 3.5, 0.3, 6.35, 3)",
+        )
+        for fragment in communs:
+            self.assertEqual(rotor.count(fragment), 1, f"m-rotor.js : {fragment!r}")
+            self.assertEqual(axe.count(fragment), 1, f"m-axle.js : {fragment!r}")
+
+        def largeur_des_bras(texte):
+            m = re.search(r"function hw\((\w+)\) \{(.*?)return 7\.82; \}", texte)
+            self.assertIsNotNone(m)
+            return re.sub(r"\b%s\b" % m.group(1), "R", m.group(2))
+        self.assertEqual(largeur_des_bras(rotor), largeur_des_bras(axe))
+        # Disque de 160 mm : 80 mm de rayon dans les deux.
+        self.assertIn("var track = H.shape(H.circlePts(80, ", rotor)
+        self.assertIn("R_DISQUE = 160 / 2", axe)
+        self.assertIn("var track = H.shape(H.circlePts(R_DISQUE, ", axe)
 
     def test_approche_et_sources(self):
         for chemin, ident in (("approche/", "approche-page"), ("sources/", "sources-page")):

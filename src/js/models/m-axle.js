@@ -22,18 +22,22 @@
      couleur noire approchée ;
    - rayons : nombre publié, profil plat et croisement de la scène ; jante, pneu et bout des rayons non dessinés, les
      rayons s'estompent ;
-   - disque : piste, fentes, araignée, rivets, ailettes et flèche en forme approchée, comme le disque de 2.2 ;
-     épaisseur approchée ;
+   - disque : piste, fentes, araignée, rivets, ailettes et flèche en forme approchée, comme le disque de 2.2
+     (m-rotor.js, mêmes constantes, épinglées par un test) ; épaisseur approchée ;
    - bague Center Lock : dessinée à denture extérieure, l'un des deux types possibles ; type à lire sur la pièce ;
    - étrier : simplifié comme dans la scène (deux moitiés, logements des pistons, pont, plaquettes à ailettes, axe,
      vis de purge et raccord) ; support flat mount et vis : place et forme approchées ; place de l'étrier autour du
-     moyeu approchée, un peu plus en arrière que dans la scène pour ne pas entrer dans le fourreau dessiné ;
+     moyeu approchée : à 160° autour du moyeu, au lieu des 146° de la scène (geometrie.js), pour ne pas entrer dans le
+     fourreau dessiné ;
    - cale de transport : forme approchée ; elle est en orange comme sur le dessin du guide, qui colore ainsi chaque
      pièce travaillée, sa couleur réelle est à lire sur la pièce ;
    - durite et son passage dans le fourreau : grosseur et trajet approchés, comme dans la scène ;
    - axe : longueur, tête, six-pans, filetage et son pas approchés ; côté d'entrée de l'axe, côté disque comme dans
      la scène, à regarder sur le dessin du guide imprimé et sur ton vélo ; couleur noire approchée ;
-   - embout de 6 mm et son porte-embout : forme approchée.
+   - embout de 6 mm et son porte-embout : forme approchée ;
+   - couleurs, toutes approchées : piste du disque en acier gris, ailettes gris métal, araignée noire, bague gris foncé,
+     rivets acier, flèche blanche ; étrier noir, plaques des plaquettes en métal clair, garnitures brun foncé ; durite
+     noire ; rayons noirs ; moyeu, axe et insert noirs ; aucun document cité ne donne ces teintes.
    Repère : x vers l'avant, y vers le haut, z vers la droite du cycliste (disque à gauche, en z négatif) ; origine au
    centre du moyeu. Unités : mm. */
 (function () {
@@ -363,15 +367,16 @@
       pinsBase = [
         { obj: head, p: [0, 7, Z_TETE - 8], text: 'Axe avant traversant de 12 x 100 : 10-15 Nm, clé de 6 mm (tableau du guide, p.16)' },
         { obj: head, p: [10.1 * Math.cos(-0.8), 10.1 * Math.sin(-0.8), Z_TETE - 4], text: 'Type d’axe et forme de sa tête : à lire sur la pièce (liste : « Canyon Through Axle » ; guide : tête « DT SWISS »)' },
-        { obj: thread, p: [0, 0, Z_BOUT], text: 'Bout fileté : il se visse dans la patte opposée à la tête' },
+        { obj: thread, p: [0, 0, Z_BOUT], text: 'Bout fileté : il se visse dans la patte opposée à la tête (côté d’entrée à regarder sur le guide imprimé et sur ton vélo)' },
         { obj: legs[0], p: [U[0] * 120, U[1] * 120, -(Z_PATTE - 14 * 0.3) - (PATTE.e + 5 * 0.3)], text: 'Fourche FK0143 rigide, axe de 12 x 100 : ligne « RIGID FORK » du guide, à confirmer sur ton vélo' },
-        { obj: shell, p: [-18.2, 18.2, FLASQUES[0]], text: 'Moyeu avant DT Swiss 350 de la roue GR 30 CF, Center Lock' },
+        { obj: shell, p: [-18.2, 18.2, FLASQUES[0]], text: 'Moyeu avant DT Swiss 350 de la roue GR 30 CF (d’après la page de la paire), Center Lock' },
         { obj: trackM, p: [76 * Math.cos(-0.6), 76 * Math.sin(-0.6), 1], text: 'Disque Deore XT MT800 (ou RT-CL800), 160 mm : modèle à lire sur la pièce' },
         { obj: calBody, p: [ap(6, 18)[0], ap(6, 18)[1], PLAN - 18], text: 'Étrier flat mount, simplifié : le disque passe entre les plaquettes' }
       ];
       pinCale = { obj: cale, p: [42, 2, 1.6], text: 'Cale de transport de l’étrier : retire-la avant de poser la roue, sans serrer le levier de frein (couleur à lire sur la pièce)' };
-      pinBit = { obj: bit, p: [0, 8, Z_TETE - 24], text: 'Embout six-pans de 6 mm au carré de 3/8 de pouce, sur ta TW-6.2 : 10-15 Nm' };
+      pinBit = { obj: bit, p: [0, 8, Z_TETE - 24], text: 'Embout six-pans de 6 mm au carré de 3/8 de pouce, si ta caisse l’a, sur ta TW-6.2 : 10-15 Nm' };
       apply();
+      /* pièce vide à décalage nul : la visionneuse n'affiche « Vue éclatée » que si parts n'est pas vide ; l'éclaté est fait par apply() */
       var dummy = new THREE.Group(); root.add(dummy);
 
       return {

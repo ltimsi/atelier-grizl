@@ -9,11 +9,17 @@
    potence (« NO GAP! ») ; 2, les 2 vis du bas à 6 Nm, clé de 4 mm, et le jour reste en bas (« GAP! »). Vis du pivot :
    6 Nm, clé de 5 mm (pictogramme p.57). Vis du capuchon : 2 Nm, clé de 3 mm (pictogramme p.56), serrée avant les vis
    du pivot. Bascule de vue : le capot de près, ou le poste entier avec les cocottes.
-   Cotes reprises de la scène de l'accueil (src/scene/geometrie.js et pieces/poste.js) : angle de direction de 71°,
-   potence de 60 mm à 6° montée vers le bas, collier de 31,8 mm, 440 mm d'axe en axe aux cocottes et 510 mm aux drops,
-   déport de 70 mm et descente de 128 mm du marquage du cintre, évasement de 16°, inclinaison de 5°, collier des
-   cocottes de 23,8 à 24,2 mm (fiche ST-RX825), pose des cocottes et rotation du cintre lues sur la photo officielle du
-   vélo, comme dans la scène.
+   Cotes reprises de la scène de l'accueil (src/scene/geometrie.js et pieces/poste.js) : angle de direction de 71°
+   (voir plus bas), potence de 60 mm à 6° (sens de montage : voir plus bas), collier de 31,8 mm, 440 mm d'axe en axe
+   aux cocottes et 510 mm aux drops, déport de 70 mm et descente de 128 mm du marquage du cintre, évasement de 16°,
+   inclinaison de 5°, collier des cocottes de 23,8 à 24,2 mm (fiche ST-RX825), pose des cocottes et rotation du cintre
+   lues sur la photo officielle du vélo, comme dans la scène.
+   Choix déclarés :
+   - sens de montage de la potence : dessinée vers le bas, comme dans la scène et sur la photo officielle du vélo ; Canyon
+     ne dit pas dans quel sens elle est montée à la livraison, à regarder sur ton vélo ;
+   - angle de direction de 71° : la fiche nomme cette cote « inclinaison du cintre » ; c'est très probablement l'angle
+     de direction, à confirmer sur le schéma de la fiche. Il incline tout le poste et la fourche ;
+   - rondelles des 4 vis du capot (étape 2.4 du guide) : non dessinées, les têtes portent sur des sièges sombres.
    Formes approchées (aucune cote publiée dans les documents cités) :
    - potence : corps, collier du pivot, fente, oreilles et collier du cintre en forme approchée d'après sa photo
      officielle ; hauteur du collier du pivot et largeur du collier du cintre approchées ;
@@ -32,8 +38,9 @@
    - cocottes, leviers et palettes : forme approchée d'après la photo officielle du vélo, comme dans la scène ; la
      cocotte gauche est dessinée comme la droite ;
    - durites : grosseur et trajet approchés, comme dans la scène ;
-   - couleurs : potence, capot, cintre, ruban, vis, cocottes et durites en teintes approchées ; douille dans le violet
-     de la peinture Floating Violet de la scène, sans ses veines (teinte approchée) ;
+   - couleurs : potence, capot, cintre, ruban, vis, cocottes, durites, entretoises, capuchon, capot du jeu de direction
+     et pivot en teintes approchées ; douille dans le violet de la peinture Floating Violet de la scène, sans ses veines
+     (teinte approchée) ;
    - repère orange du jour, entre le capot et la potence : un repère de dessin, pas une pièce ; numéros 1 et 2 sur les
      vis : l'ordre du guide.
    Repère : x vers l'avant, y vers le haut, z vers la droite du cycliste, origine en haut de la douille. Groupe rig :
@@ -484,6 +491,8 @@
       };
       var vueT = null;
       function setVue(v) {
+        /* vue du poste : seules les pastilles du cintre et des cocottes, les autres s'entassent sur la potence */
+        api.setPins(v === 'poste' ? pins.slice(9) : pins);
         var w = api.viewer; vueT = VUES[v]; if (!w) return;
         w.cam0 = Object.assign({}, w.cam0, { target: w.cam0.target.slice(), dist: vueT.dist });
         w.min = vueT.min; w.max = vueT.max;
@@ -492,9 +501,9 @@
       /* ---------- Pastilles ---------- */
       var ang = 0.95;   // côté tourné vers la vue de départ
       var pins = [
-        { obj: topBolts[0], p: [0, 0, 5.4], text: 'Vis du haut du capot : serre-les en premier, 6 Nm, clé de 4 mm' },
+        { obj: topBolts[0], p: [0, 0, 5.4], text: 'Vis du haut du capot : serre-les en premier, 6 Nm, clé de 4 mm (pictogramme du guide, p.10)' },
         { obj: sfr, p: [0, EAR, 12], text: 'Haut du capot : sans jour contre la potence (« NO GAP! » du guide, p.11)' },
-        { obj: botBolts[0], p: [0, 0, 5.4], text: 'Vis du bas du capot : ensuite, 6 Nm, clé de 4 mm' },
+        { obj: botBolts[0], p: [0, 0, 5.4], text: 'Vis du bas du capot : ensuite, 6 Nm, clé de 4 mm (pictogramme du guide, p.10)' },
         { obj: jourBas, p: [0.5, -(EAR - 17.6) / 2, 12], text: 'Bas du capot : le jour reste (« GAP! » du guide, p.11)' },
         { obj: face, p: [R_OUT, 0, 6], text: 'Capot de la ST0046, 4 vis M5x22, couples des pictogrammes du guide, p.10 ; « ZERO GAP 6 Nm » à lire sur la pièce' },
         { obj: pivBolts[0], p: [0, 0, 6.2], text: 'Vis du pivot : 2 vis M6x18, 6 Nm, clé de 5 mm, après le capuchon (pictogramme du guide, p.57)' },

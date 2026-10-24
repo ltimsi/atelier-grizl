@@ -1,4 +1,4 @@
-/* Atelier Grizl : clé dynamométrique Park Tool TW-6.2 de Lamine, pour l'atelier 1.1 « Avant de commencer ».
+/* Atelier Grizl : ta clé dynamométrique Park Tool TW-6.2, pour l'atelier 1.1 « Avant de commencer ».
    Clé à déclenchement (« Ratcheting Click-Type Torque Wrench ») : de 10 à 60 Nm, réglable par pas de 0,25 Nm, tête à
    cliquet au carré de 3/8 de pouce (page Park Tool de la TW-6.2, relevé du montage, section 8). Elle porte un embout
    six-pans de 6 mm engagé dans la tête d'un axe avant traversant, serré à 10-15 Nm (tableau de l'étape 5.7 du guide
@@ -12,7 +12,8 @@
    ou jusqu'à ce que la tête pivote par rapport au corps, puis relâcher aussitôt ; après le travail, ramener le
    réglage au plus petit chiffre de l'échelle. Le même mode d'emploi place les graduations principales de la fenêtre
    tous les 4 Nm. La page Park Tool ajoute qu'elle mesure aussi dans le sens d'un pas à gauche, et qu'elle ne sert
-   pas de clé à cliquet ordinaire ; le chapitre dit de la garder pour serrer, pas pour desserrer.
+   pas de clé à cliquet ordinaire ; le chapitre propose de la garder pour serrer, pas pour desserrer. Ces lignes Park
+   Tool sont citées mot pour mot dans le relevé du montage, section 8.
    Curseur « Couple réglé », de 10 à 60 Nm par pas de 0,25 Nm : la bague avance (déverrouillée), tourne, l'échelle
    défile sous la ligne rouge, puis la bague revient (verrouillée). Bascule « Serrer » : la clé tourne en sens horaire
    avec l'axe, puis le déclic : le corps pivote un instant par rapport à la tête, la tête s'éclaire, « déclic »
@@ -283,7 +284,8 @@
         g.fillStyle = 'rgba(236,238,242,0.95)'; g.textAlign = 'center'; g.textBaseline = 'middle';
         g.font = 'bold 64px Arial, Helvetica, sans-serif'; g.fillText('TW-6.2', 256, 50);
         H.mesh(patchGeo(RT + 0.03, 56, 86, -0.5, 0.5, 6, 6), decalMat(texOf(c)), body, [0, YA, 0]);
-        /* d'après la photo de près : Nm de 10 à 60, in·lb de 100 à 500 (1 Nm = 8,85 in·lb, table Park Tool) */
+        /* d'après la photo de près : Nm de 10 à 60, in·lb de 100 à 500 ; 1 Nm = 8,85 in·lb, d'après la table de conversion
+           du mode d'emploi Park Tool, p.2 (« Newton meters », « Inch pounds », « 8.85 ») */
         var X0 = 66, X1 = 136, W = 1024, Hc = 150, cc = canvas(W, Hc), q = cc.getContext('2d');
         var A = 0.78, n0 = 0.07, n1 = 0.95;
         function xOf(nm) { return W * (n0 + (n1 - n0) * (nm - 10) / 50); }
@@ -337,16 +339,16 @@
       setT(T0); setLock(); pose();
 
       var pins = [
-        { obj: anchor(body, 71, YA + RT + 0.3, 0), p: [0, 0, 0], text: 'Park Tool TW-6.2, clé à déclenchement : de 10 à 60 Nm, par pas de 0,25 Nm ; jamais au-delà de 60 Nm' },
-        { obj: anchor(lever, 10.5, 2.6, 0), p: [0, 0, 0], text: 'Levier du cliquet : à droite pour tourner en sens horaire, à gauche pour le sens inverse, celui d’un pas à gauche comme la pédale gauche' },
+        { obj: anchor(body, 71, YA + RT + 0.3, 0), p: [0, 0, 0], text: 'Park Tool TW-6.2, clé à déclenchement : de 10 à 60 Nm (newton-mètres), par pas de 0,25 Nm ; jamais au-delà de 60 Nm' },
+        { obj: anchor(lever, 10.5, 2.6, 0), p: [0, 0, 0], text: 'Levier du cliquet : à droite pour tourner en sens horaire, à gauche pour le sens inverse ; la clé mesure aussi un filetage à gauche, comme celui de la pédale gauche' },
         { obj: anchor(lck, 5, 0, 12.6), p: [0, 0, 0], text: 'Bague de verrouillage : pousse-la pour déverrouiller, tourne-la jusqu’au couple voulu, tire-la pour verrouiller' },
         { obj: anchor(body, WX1 + 1, YA + RW + 0.2, 0), p: [0, 0, 0], text: 'Fenêtre de réglage : le couple réglé se lit sous la ligne rouge (chiffres de l’échelle à lire sur ta clé)' },
-        { obj: anchor(sock, 6.6, 32, -6.6), p: [0, 0, 0], text: 'Carré de 3/8 de pouce et embout six-pans de 6 mm : engage-le à fond, bien dans l’axe de la vis' },
+        { obj: anchor(sock, 6.6, 32, -6.6), p: [0, 0, 0], text: 'Carré de 3/8 de pouce et embout six-pans de 6 mm, si ta caisse l’a ; proposition : engage-le à fond, bien dans l’axe de la vis' },
         { obj: anchor(axleHead, -9.4, 4, -3.4), p: [0, 0, 0], text: 'Axe avant : 10-15 Nm, clé de 6 mm (tableau du guide, p.16) ; ta TW-6.2 commence à 10 Nm' },
-        { obj: anchor(body, XG + 95, YA, -14.6), p: [0, 0, 0], text: 'Poignée : tiens-la et tourne avec une force régulière ; garde la clé pour serrer, pas pour desserrer' },
+        { obj: anchor(body, XG + 95, YA, -14.6), p: [0, 0, 0], text: 'Poignée : tiens-la et tourne avec une force régulière ; proposition : garde la clé pour serrer, pas pour desserrer' },
         { obj: anchor(headShell, -HR - 0.2, YA, 0), p: [0, 0, 0], text: 'Déclic entendu et senti, ou tête qui pivote par rapport au corps : arrête aussitôt, le couple réglé est atteint' },
         { obj: anchor(lck, LR + 0.2, 0, 0), p: [0, 0, 0], text: 'Après le travail : ramène le réglage au plus petit chiffre de l’échelle' },
-        { obj: anchor(body, 101, YA - RT - 0.3, 0), p: [0, 0, 0], text: 'Tableau du tube : conversion des Nm (newton-mètres) en in·lb (pouce-livre)' }
+        { obj: anchor(body, 101, YA - RT - 0.3, 0), p: [0, 0, 0], text: 'Tableau du tube : conversion des Nm en in·lb (pouce-livre)' }
       ];
       var PIN_STOP = 7;
       function hi(on) {

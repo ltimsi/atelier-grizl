@@ -11,16 +11,22 @@
    Outils du chapitre : la TW-6.2 et une tête de clé plate de 15 mm pour 35-55 Nm ; la clé Canyon du carton pour 2,5 Nm,
    si sa plage le permet (à lire sur l'outil), car aucun de tes outils ne descend si bas ; l'ATD-1.2 pour 5-6 Nm.
    Bascule « Pédale droite (R) » / « Pédale gauche (L) » : la gauche est dessinée en miroir de la droite, avec son
-   filetage à pas à gauche, son repère L et sa chaussure gauche. Les flèches orange montrent le sens du serrage :
-   horaire vu du bout de la pédale droite, antihoraire vu du bout de la gauche. Curseur « Vissage » : la pédale entre
-   dans l'œil de la manivelle et son axe tourne dans le sens de la flèche. Vue éclatée : la pédale s'écarte de la
+   filetage à pas à gauche, son repère L et sa chaussure gauche. Les flèches orange montrent le sens du serrage, comme
+   les flèches des étapes 8.2 et 8.3 du guide (QSG p.20) que cite le chapitre : la pédale droite se visse comme une vis
+   ordinaire, la gauche, à pas à gauche, dans le sens inverse de la droite. Curseur « Vissage » : la pédale entre dans
+   l'œil de la manivelle et son axe tourne dans le sens de la flèche. Vue éclatée : la pédale s'écarte de la
    manivelle ; la semelle, la cale, sa plaquette et ses vis se séparent.
    Seule cote publiée de la pédale : 15 mm sur les méplats de l'axe (clé de la figure Shimano), respectée ici.
    Formes approchées (aucune autre cote publiée dans les documents cités) :
    - plateforme, picots, noyau, flasques et mâchoires du mécanisme : forme approchée ; picots : nombre et place
-     approchés ;
+     approchés ; boîtiers de ressort aux deux bouts du noyau : des blocs, dessinés sans ressort, forme approchée ;
+   - bossage côté manivelle et bouchon de l'extrémité extérieure : forme approchée, non publiée ; le bouchon est dessiné
+     lisse, sans empreinte ;
    - axe : épaulement, longueur et place des méplats, col, joint, diamètre et pas du filetage approchés ; repère L ou R :
-     place approchée, sur le méplat ;
+     place et orientation approchées, sur le méplat, le haut de la lettre vers l'avant du pied ; place et sens réels à
+     lire sur ta pédale ;
+   - vissage : course de dessin, la pédale sort de 22 mm à 0 %, et l'axe tourne sur les 12,2 derniers millimètres, à
+     raison d'un tour par pas de filetage, pas approché ;
    - vis de tension, son six-pans de 3 mm et la plaquette de réglage : forme et place approchées, à l'arrière de la
      mâchoire arrière comme le dit Shimano ;
    - manivelle, en transparence : forme approchée ;
@@ -169,7 +175,6 @@
         H.mesh(latheX([[0, -39.5], [7.3, -39.5], [7.3, 39.5], [0, 39.5]], 40), bodyMat, pedal);
         H.mesh(latheX([[0, -41.6], [9.8, -41.6], [10.6, -41.0], [10.6, -38.5], [0, -38.5]], 48), bodyMat, pedal);
         H.mesh(latheX([[0, 39], [7.6, 39], [7.6, 40.6], [7.0, 41.3], [0, 41.3]], 40), bodyMat, pedal);
-        H.mesh(new THREE.CircleGeometry(2.4, 6), dark, pedal, [41.32, 0, 0]).rotation.y = Math.PI / 2;
       })();
 
       /* Picots : 4 par face, sur les traverses avant et arrière. */
@@ -181,7 +186,7 @@
         });
       });
 
-      /* Noyau du mécanisme (lit de la cale à y = ±7,8) et boîtiers de ressort aux deux bouts. */
+      /* Noyau du mécanisme (lit de la cale à y = ±7,8) et boîtiers de ressort aux deux bouts : des blocs, sans ressort dessiné. */
       var BED = 7.8;
       H.mesh(planG(shp(rrect(-12.4 + 0.5, -20.8 + 0.5, 12.4 - 0.5, 20.8 - 0.5, 2, 3)), -BED, BED, 0.5, 6), coreMat, pedal);
       [-1, 1].forEach(function (s) {
@@ -256,8 +261,8 @@
       }
       var lblR = lettre('R', true), lblL = lettre('L', false);
 
-      /* Flèches du sens du serrage (repères de dessin) : rotation positive autour de +x dans ce repère, donc antihoraire
-         vue du bout de la pédale gauche, et horaire vue du bout de la droite, son miroir. */
+      /* Flèches du sens du serrage (repères de dessin), comme celles des étapes 8.2 et 8.3 du guide : rotation positive
+         autour de +x dans ce repère, celle du filetage à pas à gauche de la pédale gauche ; le miroir donne la droite. */
       function fleche(x0, r, phi0, arc, parent) {
         var g = new THREE.Group(); parent.add(g);
         var tg = new THREE.TorusGeometry(r, 0.85, 8, 56, arc); tg.rotateZ(phi0); tg.rotateY(Math.PI / 2);
@@ -410,17 +415,17 @@
       /* ---------- Pastilles ---------- */
       function pinsNow() {
         return [
-          { obj: platform, p: [30, YT, -39], text: 'Pédale Shimano PD-ME700, SPD (le système de cales Shimano) : un mécanisme d’accrochage par face' },
-          { obj: flats, p: [-49.3, 0, -10.3], text: 'Méplats de l’axe : clé plate de 15 mm ; serre la pédale à 35-55 Nm, à la TW-6.2 avec une tête de clé plate de 15 mm' },
-          { obj: threadCore, p: [-64, 0, -6.9], text: 'Filetage : un peu de graisse (non fournie), puis les premiers tours à la main' },
+          { obj: platform, p: [30, YT, -39], text: 'Pédale Shimano PD-ME700, SPD (le système de cales Shimano) : deux mécanismes d’accrochage, une vis de tension à l’arrière de chacun, quatre en tout pour les deux pédales' },
+          { obj: flats, p: [-49.3, 0, -10.3], text: 'Méplats de l’axe : clé plate de 15 mm ; serre la pédale à 35-55 Nm, à la TW-6.2 avec une tête de clé plate de 15 mm, si ta caisse l’a' },
+          { obj: threadCore, p: [-64, 0, -6.9], text: 'Filetage : un peu de graisse (non fournie) ; proposition : les premiers tours à la main' },
           droite
             ? { obj: lblR, p: [0, -5.6, 0.2], text: 'Repère R, pédale droite : pas à droite, elle se visse comme une vis ordinaire (flèche de l’étape 8.3 du guide)' }
             : { obj: lblL, p: [0, -5.6, 0.2], text: 'Repère L, pédale gauche : pas à gauche, elle se visse dans le sens inverse de la droite (flèche de l’étape 8.2 du guide)' },
           droite
-            ? { obj: flecheBout, p: [46.5, 0, 11], text: 'Flèches orange : le sens du serrage, horaire vu du bout de la pédale droite' }
-            : { obj: flecheBout, p: [46.5, 0, 11], text: 'Flèches orange : le sens du serrage, antihoraire vu du bout de la pédale gauche' },
-          { obj: top.bolt, p: [0, 0, -30.4], text: 'Vis de tension, à l’arrière du mécanisme : clé six-pans de 3 mm ; en sens horaire, la cale tient plus fort ; quatre clics par tour' },
-          { obj: top.plq, p: [4.2, 10, -27.9], text: 'Plaquette de réglage : mets les quatre vis au même réglage, en la regardant et en comptant les tours' },
+            ? { obj: flecheBout, p: [46.5, 0, 11], text: 'Flèches orange : le sens du serrage de la pédale droite, comme la flèche de l’étape 8.3 du guide (p.20)' }
+            : { obj: flecheBout, p: [46.5, 0, 11], text: 'Flèches orange : le sens du serrage de la pédale gauche, à l’inverse de la droite, comme la flèche de l’étape 8.2 du guide (p.20)' },
+          { obj: top.bolt, p: [0, 0, -30.4], text: 'Vis de tension, à l’arrière du mécanisme, côté talon : clé six-pans de 3 mm ; en sens horaire, la cale tient plus fort ; quatre clics par tour' },
+          { obj: top.plq, p: [4.2, 10, -27.9], text: 'Plaquette de réglage, à côté de la vis de tension, côté talon : mets les quatre vis au même réglage, en la regardant et en comptant les tours' },
           { obj: cleat, p: [12, 8.4, -14], text: 'Cale SM-SH51, noire : elle va au pied gauche comme au droit ; ni jeu ni cale qui bouge avant de rouler' },
           { obj: boltHeads[1], p: [0, 9, -4.4], text: 'Vis de cale, six-pans de 4 mm : d’abord 2,5 Nm à la clé Canyon si sa plage le permet (à lire sur l’outil), aucun de tes outils ne descend si bas ; puis 5-6 Nm en alternant, à l’ATD-1.2' },
           { obj: outsoleM, p: [-30, Y_CEIL, Z0], text: 'Semelle d’une chaussure SPD à deux vis, en coupe : la cale se règle sur 20 mm d’avant en arrière et 5 mm de gauche à droite' }
