@@ -1,4 +1,4 @@
-// Registre des documents officiels sur lesquels s'appuie la scène 3D.
+// Registre des documents officiels sur lesquels s'appuient la scène 3D et les pièces 3D des ateliers (src/js/models).
 // Règle des sources (docs/regle-des-sources.md) : cotes, formes et références viennent d'un document du fabricant.
 // Park Tool n'y figure pas : il ne sert que pour les gestes, jamais pour une cote ou une forme.
 // Module pur : aucune dépendance, utilisable tel quel dans le navigateur et dans Node.
@@ -86,6 +86,15 @@ export const SOURCES = Object.freeze({
     titre: 'Canyon, manuel d’utilisation des roues (WHEELSET OWNER’S MANUAL, version 01_11.06.2025) : ' +
       'pressions maximales sur jante hookless',
     url: 'https://www.canyon.com/on/demandware.static/-/Library-Sites-canyon-shared/default/dw22ff8457/documents/customer-service/gravel-bikes/canyon-wheelset-manual-2025.pdf',
+    type: 'manuel',
+  }),
+
+  // Canyon : Grizl CF 8 Di2, relevé du montage du 24 octobre 2026 (docs/recherche/montage-cf8-di2.md), cité par les
+  // pièces 3D des ateliers du montage
+  'canyon-qsg-r126-v02': Object.freeze({
+    titre: 'Canyon, guide de démarrage du Grizl (QUICK START GUIDE GRIZL R126, QSG R126 V02) : montage, couples des ' +
+      'pictogrammes, à comparer au guide imprimé du carton',
+    url: 'https://www.canyon.com/on/demandware.static/-/Library-Sites-canyon-shared/default/dw237d861e/documents/customer-service/gravel-bikes/canyon-grizl-quick-start-guide-2025-2.pdf',
     type: 'manuel',
   }),
 
@@ -200,6 +209,15 @@ export const SOURCES = Object.freeze({
     titre: 'Shimano, fiche technique de la batterie BT-DN320 (batterie embarquée, chargeur EC-DN100)',
     url: `${SHIMANO_INFO}/product/BT-DN320`,
     type: 'fiche',
+  }),
+
+  // Shimano : relevé du montage du 24 octobre 2026 (docs/recherche/montage-cf8-di2.md), cité par la pièce 3D de la
+  // pédale (atelier 1.6)
+  'shimano-dm-mapd001': Object.freeze({
+    titre: 'Shimano DM-MAPD001-07, manuel revendeur des pédales SPD : PD-ME700, cales SM-SH51, tension de ' +
+      'déclenchement (anglais)',
+    url: `${SHIMANO_DM}/en/pdfs/dm/MAPD001/DM-MAPD001-07-ENG.pdf`,
+    type: 'manuel',
   }),
 
   // Schwalbe

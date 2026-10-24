@@ -78,13 +78,67 @@ test('scène : projection vers les pixels et visibilité des pastilles', () => {
 });
 
 test('scène : zones lues sur les maillages de chaque pièce', () => {
+  // Dans l'ordre où chaque pièce construit ses maillages : le poste monte la potence et le cintre avant les cocottes,
+  // posées sur le cintre.
   const attendu = {
-    cadre: [], roues: [], freins: ['disques', 'etrier', 'manettes'], transmission: [], poste: ['manettes'],
+    cadre: ['selle'], roues: ['axes'], freins: ['disques', 'etrier', 'manettes'], transmission: ['pedalier', 'derailleur'],
+    poste: ['poste', 'manettes'],
   };
   assert.deepEqual(PIECES.map(m => m.META.id), Object.keys(attendu));
   for (const module of PIECES) {
     assert.deepEqual(zonesDuGroupe(groupeDe(module)), attendu[module.META.id], module.META.id);
   }
+});
+
+// Les maillages d'une zone, par leur nom : ce que la zone surligne, et rien d'autre.
+function nomsParZone() {
+  const noms = {};
+  for (const module of PIECES) groupeDe(module).traverse(o => {
+    if (o.isMesh && o.userData.zone) (noms[o.userData.zone] ??= new Set()).add(o.name || o.userData.role);
+  });
+  return noms;
+}
+
+test('scène : les zones du montage surlignent leurs pièces', () => {
+  const noms = nomsParZone();
+  for (const nom of ['potence', 'jeu de direction', 'cintre', 'collier du cintre', 'embout de cintre']) {
+    assert.ok(noms.poste.has(nom), `poste : ${nom}`);
+  }
+  for (const nom of ['cocotte droite', 'cocotte gauche', 'levier', 'palette', 'durite']) {
+    assert.ok(noms.manettes.has(nom), `manettes : ${nom}`);
+    assert.ok(!noms.poste.has(nom), `poste : ${nom} en trop`);
+  }
+  for (const nom of ['tige de selle', 'tête de tige', 'rail de selle', 'selle']) assert.ok(noms.selle.has(nom), `selle : ${nom}`);
+  assert.deepEqual([...noms.axes].sort(), ['axe arrière', 'axe avant']);
+  for (const nom of ['plateau', 'manivelle droite', 'manivelle gauche']) assert.ok(noms.pedalier.has(nom), `pédalier : ${nom}`);
+  for (const nom of ['dérailleur', 'corps du dérailleur', 'batterie', 'galet']) {
+    assert.ok(noms.derailleur.has(nom), `dérailleur : ${nom}`);
+  }
+  // Ni la chaîne, ni la cassette, ni le boîtier, ni le cadre ne changent de zone.
+  for (const nom of ['chaîne', 'pignon 9', 'pignon 45', 'boîtier', 'patte arrière', 'patte avant', 'boîte de pédalier']) {
+    assert.ok(!Object.values(noms).some(n => n.has(nom)), `${nom} : dans une zone`);
+  }
+});
+
+test('scène : chaque pastille du montage est posée sur sa pièce, celle des axes sous l’axe avant', () => {
+  const { ancres, FA } = points(GEO);
+  const boites = {};
+  for (const module of PIECES) groupeDe(module).traverse(o => {
+    if (o.isMesh && o.userData.zone) (boites[o.userData.zone] ??= new THREE.Box3()).expandByObject(o);
+  });
+  for (const [zone, ancre] of [['poste', 'potence'], ['selle', 'teteTige'], ['pedalier', 'manivelleDroite'],
+    ['derailleur', 'batterieDi2']]) {
+    const b = boites[zone].clone().expandByScalar(10);
+    assert.ok(b.containsPoint(new THREE.Vector3(...ancres[ancre])), `${ancre} hors de la zone ${zone}`);
+  }
+  // L'axe avant : la pastille est sous l'axe, sur la roue, du côté gauche où se trouve la tête de l'axe. Juste
+  // au-dessus du moyeu, la pastille de l'étrier prend la place.
+  const axes = boites.axes, [x, y, z] = ancres.axeAvant;
+  assert.ok(axes.clone().expandByScalar(10).containsPoint(new THREE.Vector3(...ancres.teteAxeAvant)),
+    'teteAxeAvant, que visent la vue et le schéma, hors de la zone des axes');
+  assert.equal(x, FA[0]);
+  assert.ok(y < axes.min.y && FA[1] - y < GEO.rayonPneu.v / 2, `axe avant : ${FA[1] - y} mm sous l’axe`);
+  assert.ok(z >= axes.min.z - 10 && z < 0, `axe avant : z = ${z}`);
 });
 
 test('scène : chaque zone de zones.json a des maillages, aucun maillage hors des zones', () => {

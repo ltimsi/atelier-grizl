@@ -6,7 +6,7 @@ Ce document permet à une nouvelle session de reprendre le projet sans rien perd
 
 Atelier Grizl est un guide d'atelier personnel, en français, pour monter, régler et réparer un Canyon Grizl CF 8 Di2 (réf. 4556, taille M, Floating Violet, version suisse). C'est un site statique en plusieurs pages, pensé d'abord pour l'ordinateur, dont Lamine se sert le plus, et lisible au téléphone : procédures pas à pas, couples de serrage, planches techniques en SVG et pièces en 3D que l'on fait tourner. La page d'accueil « Mon vélo » montre le vélo de Lamine en 3D réaliste ; ses pastilles et la colonne « Où intervenir » mènent aux ateliers, chacun sur sa page. La 3D utilise three.js 0.160.0 en modules ES. Il est servi par nginx dans Docker sur le serveur Hetzner de Lamine. La refonte en plusieurs pages suit [superpowers/specs/2026-10-21-site-multipage-design.md](superpowers/specs/2026-10-21-site-multipage-design.md) et la maquette que Lamine a validée le 21 octobre 2026.
 
-Le 23 octobre 2026, Lamine a changé de vélo. Le site, écrit d'abord pour un autre Grizl, est passé au CF 8 Di2 d'après [superpowers/specs/2026-10-23-grizl-cf8-di2-design.md](superpowers/specs/2026-10-23-grizl-cf8-di2-design.md), sur la branche `cf8-di2`. Le relevé du vélo est dans [recherche/composants-origine.md](recherche/composants-origine.md) et ses sources dans [recherche/sources-cf8-di2.md](recherche/sources-cf8-di2.md). Ce sont les deux seules références pour les pièces du CF 8 Di2.
+Le 23 octobre 2026, Lamine a changé de vélo. Le site, écrit d'abord pour un autre Grizl, est passé au CF 8 Di2 d'après [superpowers/specs/2026-10-23-grizl-cf8-di2-design.md](superpowers/specs/2026-10-23-grizl-cf8-di2-design.md), sur la branche `cf8-di2`. Le relevé du vélo est dans [recherche/composants-origine.md](recherche/composants-origine.md) et ses sources dans [recherche/sources-cf8-di2.md](recherche/sources-cf8-di2.md). Ce sont les deux seules références pour les pièces du CF 8 Di2. Le relevé du montage à la livraison (lot 2), fait le 24 octobre 2026 sur les documents officiels Canyon, Shimano, DT Swiss et Fizik, est dans [recherche/montage-cf8-di2.md](recherche/montage-cf8-di2.md).
 
 ## Décisions de Lamine, à respecter
 
@@ -19,38 +19,38 @@ Le 23 octobre 2026, Lamine a changé de vélo. Le site, écrit d'abord pour un a
 7. **Serveur.** Avant de modifier quoi que ce soit sur le serveur, expliquer ce qui va changer et pourquoi, et attendre son accord.
 8. **Style.** Français, tutoiement, phrases courtes. Jamais de tiret cadratin ni de demi-cadratin. Chaque abréviation est développée à sa première apparition dans un chapitre. Un conseil sans source va dans un encadré « Proposition ».
 
-## État au 23 octobre 2026
+## État au 24 octobre 2026
 
 | Lot | Contenu | Pièces 3D | État |
 |---|---|---|---|
 | 0 | Le vélo en 3D sur la page d'accueil, ses zones d'atelier et la liste « Ce qui est approché », et le site en plusieurs pages | `src/scene/pieces/` : cadre, roues, freins, transmission, poste de pilotage | en relecture par Lamine |
 | 1 | Freins, découpés en huit ateliers, une page chacun | `rotor` (disque Deore XT MT800 + bague, dessinée à denture extérieure, + TL-FC36), `caliper` (étrier BR-RX820 + plaquettes L05A-RF + curseur d'usure), `bleed` (kit de purge du DM-GADBR10, animé) | en relecture par Lamine |
-| 2 | Avant de commencer, montage à la livraison | `torque`, `cockpit`, `axle`, `pedal` | brouillon hors dépôt |
+| 2 | Avant de commencer et montage à la livraison, en neuf ateliers, une page chacun, et cinq zones de plus sur le vélo de l'accueil | `torque` (clé TW-6.2), `cockpit` (poste de pilotage et serrage du capot), `axle` (axe avant de 12 x 100), `pedal` (pédale PD-ME700 et cale SM-SH51) | en relecture par Lamine |
 | 3 | Tubeless et crevaisons | `rim`, `plug` | brouillon hors dépôt |
 | 4 | Transmission | `chain`, `cassette`, `derailleur`, `crank` | brouillon hors dépôt |
 | 5 | Entretien, accessoires, dépannage | `rack` | brouillon hors dépôt |
 | 6 | Aide-mémoire des couples, sources | | brouillon hors dépôt |
 
-Les brouillons des lots 2 à 6 ont été écrits puis relus par des agents, mais ils datent d'avant la règle des sources stricte et d'avant le changement de vélo : leurs références de pièces sont à reprendre d'après le relevé du CF 8 Di2. Ils contiennent encore des liens de revendeurs et de magazines, des valeurs du guide Canyon lues sur une copie non officielle, et des données personnelles. Les modèles 3D `cockpit`, `axle`, `pedal`, `torque`, `plug` et `crank` ont été écrits par des agents interrompus avant la fin : ils sont à tester et à finir.
+Les brouillons des lots 3 à 6 ont été écrits puis relus par des agents, mais ils datent d'avant la règle des sources stricte et d'avant le changement de vélo : leurs références de pièces sont à reprendre d'après le relevé du CF 8 Di2. Ils contiennent encore des liens de revendeurs et de magazines, des valeurs du guide Canyon lues sur une copie non officielle, et des données personnelles. Les modèles 3D `plug` et `crank` ont été écrits par des agents interrompus avant la fin : ils sont à tester et à finir. Le lot 2 a été refait le 24 octobre 2026 d'après [sa conception](superpowers/specs/2026-10-24-lot2-montage-design.md), sur la branche `lot2-montage`, et ses quatre modèles 3D finis.
 
 ## Les pages du site
 
 | Page | Adresse | Fait par |
 |---|---|---|
 | Mon vélo : le vélo en 3D, « Où intervenir », les pièces d'origine à remplacer, toutes les catégories | la racine | `src/parts/05-top.html`, complété par `build/pages.py` |
-| Une catégorie publiée : en-tête du chapitre, ordre du jour J, filtres, une carte par atelier, couples sur le côté | `freins/` | `build/pages.py` |
-| Un atelier, en deux colonnes : le texte et ses étapes repliables à gauche, à droite la planche ou la pièce 3D, ce qu'il faut démonter, « Il te faut », les couples et la vidéo | `freins/<atelier>/`, l'id de la section sans `freins-` (exemple : `freins/plaquettes/`) | `build/ateliers.py` et `build/pages.py`, depuis `src/parts/20-freins.html` |
-| Une catégorie à venir : son lot et ce qui y est prévu | `montage/`, `tubeless/`, `transmission/`, `accessoires/`, `revision/` | `build/pages.py` |
+| Une catégorie publiée : en-tête du chapitre, ordre du jour J, filtres, une carte par atelier, couples sur le côté | `freins/`, `montage/` | `build/pages.py` |
+| Un atelier, en deux colonnes : le texte et ses étapes repliables à gauche, à droite la planche ou la pièce 3D, ce qu'il faut démonter, « Il te faut », les couples et la vidéo | `freins/<atelier>/` et `montage/<atelier>/`, l'id de la section sans le préfixe du chapitre (exemples : `freins/plaquettes/`, `montage/di2/`) | `build/ateliers.py` et `build/pages.py`, depuis `src/parts/20-freins.html` et `src/parts/11-montage.html` |
+| Une catégorie à venir : son lot et ce qui y est prévu | `tubeless/`, `transmission/`, `accessoires/`, `revision/` | `build/pages.py` |
 | Références : composants d'origine, outils, couples de serrage, ce qui est approché, sources | `composants/`, `outils/`, `couples/`, `approche/`, `sources/` | `build/pages.py`, `src/parts/composants.html`, `src/js/references.js` |
 
 - Chaque page est le fichier `index.html` de son dossier. Tous les liens et chemins sont relatifs, jamais en `/…` : le même site marche sur le serveur, dans un sous-dossier et dans l'aperçu Claude. Dans `dist/site/`, la carte d'imports pointe vers `./vendor/three/` à la racine et vers `../` répété selon la profondeur ailleurs.
-- Les anciennes adresses de la page unique restent valables : à la racine, `src/js/site.js` lit le bloc `#liens-data` et renvoie `#freins-plaquettes` vers `freins/plaquettes/`, `#freins` vers `freins/`, `#freins-pl-2` vers `freins/plaquettes/#freins-pl-2`, sans laisser la racine derrière Retour.
+- Les anciennes adresses de la page unique restent valables : à la racine, `src/js/site.js` lit le bloc `#liens-data` et renvoie `#freins-plaquettes` vers `freins/plaquettes/`, `#freins` vers `freins/`, `#freins-pl-2` vers `freins/plaquettes/#freins-pl-2`, `#montage` vers `montage/` et `#montage-position` vers `montage/position/`, sans laisser la racine derrière Retour.
 - Points de rupture : deux colonnes au-dessus de 1100 px, une seule en dessous ; sous 900 px, le menu passe derrière le bouton « Menu ». La page ne défile jamais en largeur.
 - Sans JavaScript, tout reste lisible : étapes et blocs en `<details>`, menu et fil d'Ariane en HTML, aucun contenu caché par `hidden`. On perd la 3D, la recherche, les filtres, le mode pas à pas, les onglets des figures et la mémoire des cases cochées. La tête de chaque page pose la classe `js` avant l'affichage et la retire si `site.js` n'a pas tourné. À l'accueil, un `<noscript>` (pas `html:not(.js)`, qui vaut aussi quand seul `site.js` manque) cache les onglets de rendu, l'aide et les deux boutons de la scène, qui dit « Le vélo en 3D a besoin de JavaScript. ».
 - Si `js/scene/app.js` ne démarre pas, le garde-fou de `src/parts/99-foot.html` prend le relais : à l'accueil, il le dit et retire la scène ; sur un atelier qui a une pièce 3D, il lance la visionneuse, qui affiche dans la boîte de la pièce « La 3D n'a pas pu se charger ».
 - Clavier : sur chaque page, le premier arrêt de Tab est « Aller au contenu », caché tant qu'il n'a pas le focus, qui saute le menu vers `main#contenu`. Sous 900 px, le menu ouvert est modal : `.main` et ce lien sont inertes (`inert`), Tab reste dans le menu, Échap le ferme et rend le focus au bouton « Menu ».
-- Un lien « #id » du texte mène à la page qui porte l'id. L'id d'une catégorie à venir mène à sa page (« Chapitre 1 », `#montage`, mène à `montage/`). Un id qui n'est sur aucune page, comme `#montage-position`, devient du texte gris.
-- Les textes des ateliers passent tels quels de `src/parts/20-freins.html` : le build les découpe et les range, il n'en écrit pas. Il n'ajoute que des libellés d'interface et des copies tirées des ateliers eux-mêmes (titres, faits des cartes, liens).
+- Un lien « #id » du texte mène à la page qui porte l'id. L'id d'une catégorie à venir mène à sa page (« Chapitre 3 », `#tubeless`, mène à `tubeless/`). Un id qui n'est sur aucune page devient du texte gris.
+- Les textes des ateliers passent tels quels de `src/parts/20-freins.html` et `src/parts/11-montage.html` : le build les découpe et les range, il n'en écrit pas. Il n'ajoute que des libellés d'interface et des copies tirées des ateliers eux-mêmes (titres, faits des cartes, liens).
 
 ## Le dépôt
 
@@ -105,9 +105,9 @@ docs/                    règle des sources, suivi des lots, conception (superpo
   Garde les guillemets du motif. Sous Node 24, `node --test tests/js/` échoue : le dossier seul n'est plus parcouru.
 - Contrôle dans le navigateur : `cd tools && npm ci` (Playwright 1.56.0, figé par `package-lock.json`), puis `npx playwright install chromium` la première fois. Chromium sans écran rend le WebGL avec `--use-gl=angle --use-angle=swiftshader` : les options sont déjà dans les scripts. Les captures vont dans `tools/shots*/`, ignoré par Git. Regarde les captures.
   - Tout le site : `node scene-check.js ../dist/site shots-1440 1440 900 clair`. Arguments : le dossier du site, le dossier des captures, la largeur, la hauteur, `clair` ou `sombre`, puis au choix `--disable-webgl`, `--mouvement` (sans réduire les animations) et `--sans-js`. Le script sert le dossier lui-même sur 127.0.0.1, comme nginx (`freins/` sert `freins/index.html`), avec la politique de contenu lue dans `deploy/nginx.conf` (une violation devient une erreur de console), puis :
-    - ouvre chacune des 20 pages : aucune erreur dans la console ni requête en échec (seule la racine qui renvoie une ancienne ancre ailleurs a le droit d'abandonner des requêtes), pas de défilement horizontal, une capture par page (et la page entière pour l'accueil, `freins/` et `freins/plaquettes/`) ; sous 900 px, le menu est hors de l'écran tant que « Menu » n'est pas cliqué, le bouton l'ouvre et rend la page inerte (sur `freins/plaquettes/`, Tab ne sort pas du menu), Échap le referme ; chaque pièce 3D (2.2, 2.3, 2.7) est ouverte par son onglet et doit se dessiner, ou sans WebGL afficher son message ; enfin la page est tout dépliée (chaque `<details>` ouvert, les deux figures montrées) et ne doit toujours pas défiler en largeur ;
-    - accueil : la scène est dessinée ; la pastille 2 rend active la carte « Étrier et plaquettes » de « Où intervenir » ; sur une colonne, une pastille ne fait pas défiler la page et le bouton d'une carte ramène l'image à l'écran ; zone des disques sans variante, puis vue d'ensemble pour le budget de 500 000 triangles, variante des plaquettes sorties, schéma 2D, fenêtre « Ce qui est approché » ;
-    - anciennes ancres : `index.html#freins-plaquettes` arrive sur `freins/plaquettes/`, de même `#freins` et `#freins-pl-2`, et Retour quitte le site ;
+    - ouvre chacune des 29 pages : aucune erreur dans la console ni requête en échec (seule la racine qui renvoie une ancienne ancre ailleurs a le droit d'abandonner des requêtes), pas de défilement horizontal, une capture par page (et la page entière pour l'accueil, `freins/` et `freins/plaquettes/`) ; sous 900 px, le menu est hors de l'écran tant que « Menu » n'est pas cliqué, le bouton l'ouvre et rend la page inerte (sur `freins/plaquettes/`, Tab ne sort pas du menu), Échap le referme ; chaque pièce 3D (1.1, 1.3, 1.5, 1.6, 2.2, 2.3, 2.7) est ouverte par son onglet et doit se dessiner, ou sans WebGL afficher son message ; enfin la page est tout dépliée (chaque `<details>` ouvert, les deux figures montrées) et ne doit toujours pas défiler en largeur ;
+    - accueil : la scène est dessinée ; dans la vue d'ensemble, les huit pastilles sont affichées, à 30 px au moins l'une de l'autre, et aucune n'est sous l'aide ; la pastille 2 rend active la carte « Étrier et plaquettes » de « Où intervenir », la pastille 3 celle des manettes, la pastille 4 celle du poste de pilotage ; sur une colonne, une pastille ne fait pas défiler la page et le bouton d'une carte ramène l'image à l'écran ; zone des disques sans variante, puis vue d'ensemble pour le budget de 500 000 triangles, variante des plaquettes sorties, schéma 2D, fenêtre « Ce qui est approché » ;
+    - anciennes ancres : `index.html#freins-plaquettes` arrive sur `freins/plaquettes/`, de même `#freins` et `#freins-pl-2`, `#montage` sur `montage/` et `#montage-position` sur `montage/position/`, et Retour quitte le site ;
     - `freins/` : le filtre « Remplacer » laisse 1 carte, les plaquettes (la dépose du disque est un entretien) ;
     - `freins/plaquettes/` : l'anneau de focus du lien du fil d'Ariane n'est pas rogné, la pièce 3D est dessinée, « Tout déplier » ouvre les 10 étapes, le pas à pas passe de « 1 / 10 » à « 2 / 10 » par la flèche droite et se ferme par Échap ; sur une page neuve, le premier Tab montre « Aller au contenu », Entrée mène au contenu et le Tab suivant y reste ;
     - recherche : « TL-FC36 » mène à `freins/disques/` ;
@@ -141,6 +141,26 @@ Unités en millimètres. Moins de 120 000 triangles. Les textes des pastilles su
 7. Après sa validation : statut « validé », commit, étiquette `lot-N`, push.
 8. Mettre à jour `docs/lots.md`.
 
+## À lire sur le vélo à la livraison
+
+La liste de l'atelier 1.2 « Déballer et vérifier » (`montage/deballer/`), où Lamine la coche sur le site. Ce sont les valeurs et les références qu'aucun document publié ne donne, ou que le site ne peut pas trancher : elles se lisent sur la pièce, sur l'outil ou dans le guide imprimé. Entre parenthèses, l'atelier qui s'en sert.
+
+1. La clé dynamométrique Canyon du carton : sa plage, son type (à aiguille et à échelle d'après le manuel Canyon de 2021) et la taille de ses six embouts (1.1).
+2. Le guide de démarrage imprimé : sa version, au dos, p.72, et ses couples, à comparer à ceux du chapitre, relevés sur le PDF officiel V02.
+3. Le capot de potence : l'inscription « ZERO GAP 6 Nm » et les repères d'écart (1.3).
+4. Le collier de selle GP0596-01 : un couple gravé éventuel (1.4).
+5. La tige SP100 VCLS 2.1 : son repère « MIN », un couple gravé près des vis de tête et de la vis d'inclinaison, la position de sa tête « FLIP HEAD » et son échelle d'inclinaison (1.4).
+6. La selle Fizik : ses repères des 75 mm, sur le dessus et sur les rails, et les repères « max » et « min » des rails (1.4).
+7. Le nombre d'entretoises sous la potence et au-dessus (1.3).
+8. L'axe avant : son type (six-pans de 6 mm ou levier), sa marque et l'inscription de sa tête (1.5).
+9. L'axe arrière : son modèle (EP1916-01 ?), RWS (le système d'axe à levier de DT Swiss) ou non, levier amovible ou non, l'emplacement de sa clé de 6 mm et une inscription de couple (1.5).
+10. Les pneus : la plage de pression imprimée sur le flanc ; les jantes : leur pression maximale imprimée (1.5).
+11. Les pédales PD-ME700 : leurs méplats de 15 mm et leurs repères L et R ; dans leur boîte, les cales SM-SH51 et la cale d'épaisseur de 1,0 mm (1.6).
+12. Les chaussures : compatibles SPD (le système de cales Shimano) à deux vis (1.6).
+13. Le Di2 : le niveau de la batterie BT-DN320 (un clic sur le bouton du dérailleur), celui des piles CR1632 des manettes (deux boutons tenus 0,5 s), le passage des vitesses et l'appairage (1.7).
+14. Les réflecteurs : le contenu des deux lots et leur visserie. Canyon ne publie ni leur pose ni un couple (1.9).
+15. Les freins : les modèles des étriers, des disques, des plaquettes et de la manette gauche (2.1).
+
 ## Points ouverts par lot
 
 - **Lot 0** : les points « à vérifier à la livraison » et les contradictions relevées dans les documents sont listés dans [lots.md](lots.md) et dans [recherche/composants-origine.md](recherche/composants-origine.md).
@@ -149,19 +169,20 @@ Unités en millimètres. Moins de 120 000 triangles. Les textes des pastilles su
   - modèle exact des disques, RT-MT800 ou RT-CL800, et type de leur bague Center Lock : denture intérieure (outil TL-LR15) ou extérieure (outil TL-FC36) ;
   - plaquettes d'origine, L05A-RF attendues, et leur épaisseur neuve ;
   - manette gauche, ST-RX825-L ou BL-RX825-L ;
-  - couple de l'axe avant, à prendre dans le guide du carton.
+  - couple de l'axe avant : 10-15 Nm d'après le guide Canyon V02 (atelier 1.5), à comparer au guide imprimé du carton.
 - **Lot 2** :
-  - tous les couples du guide Canyon, sur photos, dont ceux des axes traversants ;
+  - la liste « À lire sur le vélo à la livraison » plus haut ;
+  - les couples du guide Canyon, relevés sur le PDF officiel V02 et souvent lus sur un pictogramme, à comparer aux pages du guide imprimé du carton (règle 5 de la règle des sources) ; Canyon ne publie pas le couple de l'axe arrière, à lire sur l'axe ;
+  - les contradictions du relevé, signalées sur les pages : couples de la potence et du collier (guide de 2025 contre manuel de 2021), axe arrière, pression maximale (3,0 bar retenus), charge admise (120 kg retenus), contenu du carton ;
   - longueur des manivelles : 165 mm en M sur la fiche, à lire sur la manivelle ;
-  - plage de la clé dynamométrique Canyon ;
+  - les couples de 2 Nm (capuchon), 2,5 N·m (serrage provisoire des cales) et 7 Nm (vis d'inclinaison de la tige) : ni la TW-6.2 (10 à 60 Nm) ni l'ATD-1.2 (4 à 6 Nm) ne les couvrent ; le site renvoie à la clé Canyon du carton, si sa plage le permet ;
   - outil à faible plage pour les couples sous 4 Nm : le plus petit couple publié pour le CF 8 Di2 est celui du couvercle des piles des manettes, 0,16-0,24 Nm (DM-GADBR10) ; pour les freins, c'est la vis de purge de la manette, 0,5-0,7 Nm.
 - **Lot 3** :
   - valves tubeless : présentes ou non dans le carton ;
   - pression maximale imprimée sur la jante, à lire ; le manuel Canyon des roues limite déjà un pneu de 45 mm sur jante sans crochet à 3,0 bar ;
   - version exacte du pneu, sur le flanc ;
   - calculs de charge et de pression fondés sur le poids de Lamine, à valider avec lui avant toute publication.
-- **Lot 4** :
-  - charge de la batterie BT-DN320, dans le dérailleur, à la réception, et piles CR1632 des manettes ;
+- **Lot 4** (la charge de la batterie BT-DN320 et les piles CR1632 des manettes sont dans l'atelier 1.7, au lot 2) :
   - patte de dérailleur UDH, la patte universelle de SRAM : présence et état ;
   - chaîne : référence, nombre de maillons et attache QUICK-LINK ; Canyon propose en pièces d'usure la CN-M8100 de 138 maillons et l'attache SM-CN910 ;
   - boîtier : référence exacte ; Canyon propose en pièce d'usure le SM-BB72-41B II ;
@@ -211,7 +232,7 @@ La procédure complète est dans [../deploy/DEPLOIEMENT.md](../deploy/DEPLOIEMEN
 
 ### Lots suivants
 
-Pour les pièces du CF 8 Di2, les liens sont dans [recherche/sources-cf8-di2.md](recherche/sources-cf8-di2.md). Les autres notes de recherche (`docs/recherche/freins.md`, `montage.md`, `transmission.md`, `tubeless.md`) datent du 20 octobre 2026 et portent sur le premier vélo : leurs références de pièces ne valent pas pour le CF 8 Di2, seules les méthodes et les sources générales peuvent servir de piste. Ces notes mélangent sources officielles et sources exclues : chaque lien doit être vérifié contre la règle des sources avant d'être cité.
+Pour les pièces du CF 8 Di2, les liens sont dans [recherche/sources-cf8-di2.md](recherche/sources-cf8-di2.md) ; pour le montage à la livraison (lot 2), dans [recherche/montage-cf8-di2.md](recherche/montage-cf8-di2.md). Les autres notes de recherche (`docs/recherche/freins.md`, `montage.md`, `transmission.md`, `tubeless.md`) datent du 20 octobre 2026 et portent sur le premier vélo : leurs références de pièces ne valent pas pour le CF 8 Di2, seules les méthodes et les sources générales peuvent servir de piste. Ces notes mélangent sources officielles et sources exclues : chaque lien doit être vérifié contre la règle des sources avant d'être cité.
 
 Documents officiels principaux :
 

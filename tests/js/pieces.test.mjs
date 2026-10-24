@@ -384,9 +384,12 @@ const etendueZ = ms => {
   return [Math.min(...z), Math.max(...z)];
 };
 
-test('roues : aucune zone, aucune variante', () => {
-  for (const m of construire(roues).maillages) {
-    assert.equal(m.userData.zone, null, `${m.name || m.userData.role} : zone ${m.userData.zone}`);
+test('roues : les deux axes en zone axes (atelier 1.5), le reste sans zone, aucune variante', () => {
+  const { maillages } = construire(roues);
+  for (const nom of ['axe avant', 'axe arrière']) assert.ok(parNom(maillages, nom).length > 0, `${nom} absent`);
+  for (const m of maillages) {
+    const attendue = ['axe avant', 'axe arrière'].includes(m.name) ? 'axes' : null;
+    assert.equal(m.userData.zone, attendue, `${m.name || m.userData.role} : zone ${m.userData.zone}`);
     assert.equal('variante' in m.userData, false);
   }
 });
@@ -722,9 +725,18 @@ test('transmission : le boîtier lit la largeur de boîte de GEO, 43,25 mm de ch
   for (const f of faces) assert.ok(Math.abs(f - GEO.largeurBoite.v / 2) < 0.01, `cuvette contre la boîte en ${f}`);
 });
 
-test('transmission : aucune zone, aucune variante', () => {
-  for (const m of construire(transmission).maillages) {
-    assert.equal(m.userData.zone, null, `${m.name || m.userData.role} : zone ${m.userData.zone}`);
+test('transmission : pédalier et dérailleur dans leurs zones (ateliers 1.6 et 1.7), le reste sans zone', () => {
+  // Le pédalier : plateau, araignée et manivelles, leur axe et le capuchon ; les cuvettes du boîtier, pressées dans le
+  // cadre, n'en sont pas. Le dérailleur entier, avec sa batterie BT-DN320. Cassette et chaîne restent sans zone.
+  const pedalier = ['plateau', 'manivelle droite', 'manivelle gauche', 'capuchon', 'axe de pédalier'];
+  const derailleur = ['dérailleur', 'corps du dérailleur', 'batterie', 'galet'];
+  const { maillages } = construire(transmission);
+  for (const nom of [...pedalier, ...derailleur, 'boîtier', 'chaîne']) {
+    assert.ok(parNom(maillages, nom).length > 0, `${nom} absent`);
+  }
+  for (const m of maillages) {
+    const attendue = pedalier.includes(m.name) ? 'pedalier' : derailleur.includes(m.name) ? 'derailleur' : null;
+    assert.equal(m.userData.zone, attendue, `${m.name || m.userData.role} : zone ${m.userData.zone}`);
     assert.equal('variante' in m.userData, false);
   }
 });
@@ -814,14 +826,17 @@ test('poste : la cocotte est posée comme sur la photo officielle, le cintre à 
   }
 });
 
-test('poste : cocottes, leviers et durites en zone manettes, le reste sans zone ni variante', () => {
+test('poste : cocottes, leviers et durites en zone manettes, le reste en zone poste, sans variante', () => {
+  // La zone poste (atelier 1.3) : capot et entretoise du jeu de direction, potence et capuchon, cintre, ruban, embouts.
   const { maillages } = construire(poste);
   const manettes = ['cocotte droite', 'cocotte gauche', 'levier', 'palette', 'durite'];
-  for (const nom of manettes) assert.ok(parNom(maillages, nom).length > 0, `${nom} absent`);
+  for (const nom of [...manettes, 'jeu de direction', 'potence', 'cintre', 'collier du cintre', 'embout de cintre']) {
+    assert.ok(parNom(maillages, nom).length > 0, `${nom} absent`);
+  }
   for (const m of parNom(maillages, 'durite')) assert.equal(m.userData.role, 'hose');
   for (const m of maillages) {
     assert.equal('variante' in m.userData, false);
-    const attendue = manettes.includes(m.name) ? 'manettes' : null;
+    const attendue = manettes.includes(m.name) ? 'manettes' : 'poste';
     assert.equal(m.userData.zone, attendue, `${m.name || m.userData.role} : zone ${m.userData.zone}`);
   }
 });

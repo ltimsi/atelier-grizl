@@ -19,18 +19,22 @@
 //      ouverte par son onglet et doit se dessiner (sans WebGL : afficher son message). Puis la page est tout dépliée
 //      (chaque <details> ouvert, chaque figure des onglets montrée) et ne doit toujours pas défiler en largeur ;
 //   2. accueil : la scène est dessinée (sans WebGL : le schéma 2D, et la page le dit). L'aide de la scène a un fond qui
-//      ne passe sur aucune pastille, en 3D comme en 2D. Un clic sur la pastille 2 rend active (aria-current) la carte
-//      « Étrier et plaquettes » de « Où intervenir », puis la pastille 3 celle des manettes, puis le bouton de la carte
-//      « Étrier et plaquettes » la sienne. Les pastilles sont cliquées à la souris là où elles sont, sans que le script
-//      fasse défiler la page ; le bouton aussi, une fois la page descendue jusqu'à lui, comme après avoir lu les
-//      cartes. Sur une seule colonne, une pastille ne fait pas défiler la page et le bouton d'une carte ramène l'image à
+//      ne passe sur aucune pastille, en 3D comme en 2D. Dans la vue d'ensemble du chargement (la 3D, ou le schéma 2D
+//      sans WebGL), les huit pastilles sont toutes affichées, deux pastilles ont leurs centres à 30 px au moins
+//      (ECART_PASTILLES : elles ne se chevauchent pas) et aucune n'est sous l'aide. Un clic sur la pastille 2 rend
+//      active (aria-current) la carte « Étrier et plaquettes » de « Où intervenir », puis la pastille 3 celle des
+//      manettes, la pastille 4 celle du poste de pilotage, puis le bouton de la carte « Étrier et plaquettes » la sienne.
+//      Les pastilles 3 et 4 partent de la vue d'ensemble. Les pastilles sont cliquées à la souris là où elles sont, sans
+//      que le script fasse défiler la page ; le bouton aussi, une fois la page descendue jusqu'à lui, comme après avoir
+//      lu les cartes. Sur une seule colonne, une pastille ne fait pas défiler la page et le bouton d'une carte ramène l'image à
 //      l'écran (95 % au moins entre la barre du haut et le bas de l'écran) ; sur deux colonnes, la carte choisie est à
 //      l'écran. Ensuite, avec WebGL : la zone des disques, sans variante (#variante reste caché), puis la vue
 //      d'ensemble, pour le budget de triangles ; la variante de l'étrier (plaquettes sorties) ; l'onglet « Schéma 2D » ;
 //      la fenêtre « Ce qui est approché », qui s'ouvre et se remplit ;
 //   3. anciennes ancres de la racine : index.html#freins-plaquettes et #freins-plaquettes arrivent sur
 //      freins/plaquettes/, #freins sur freins/, #freins-pl-2 sur freins/plaquettes/#freins-pl-2, avec la planche à
-//      l'écran sous la barre. La racine ne reste pas derrière Retour : Retour quitte le site ;
+//      l'écran sous la barre ; les liens du jour de la livraison #montage et #montage-position arrivent sur montage/ et
+//      montage/position/. La racine ne reste pas derrière Retour : Retour quitte le site ;
 //   4. catégorie freins/ : le filtre « Remplacer » laisse 1 carte visible, « Tout » les rend toutes ;
 //   5. atelier freins/plaquettes/ : le lien du fil d'Ariane, atteint par Tab, garde son anneau de focus entier (aucun
 //      parent ne le rogne). La pièce 3D (figure.v3d canvas, derrière l'onglet « Pièce en 3D ») est dessinée : la
@@ -105,7 +109,13 @@ const ANCIENNES_ANCRES = [
   ['#freins-plaquettes', 'freins/plaquettes/'],
   ['#freins', 'freins/'],
   ['#freins-pl-2', 'freins/plaquettes/#freins-pl-2'],
+  ['#montage', 'montage/'],
+  ['#montage-position', 'montage/position/'],
 ];
+// Les pastilles de l'accueil (src/scene/zones.json) et l'écart minimal de leurs centres dans la vue d'ensemble, en
+// pixels CSS : une pastille fait 30 px de large (00-head.html), deux pastilles plus proches se chevauchent.
+const NOMBRE_PASTILLES = 8;
+const ECART_PASTILLES = 30;
 const FAVORI = 'index.html#freins-plaquettes';
 const TITRE_ATELIER = 'Changer les plaquettes';
 const MODULES_ABSENTS = [['scene', 'js/scene/scene.js'], ['roues', 'js/scene/pieces/roues.js'], ['app', 'js/scene/app.js']];
@@ -536,7 +546,7 @@ async function controler(opts) {
             { timeout: 60000 }).catch(() => erreur('contrôle : accueil : aucune image 3D dessinée après ' + nom));
           await pause(PAUSE_ANIMATION);
         };
-        // Clique la pastille n (1 à 3) à la souris, là où elle est. Un clic de Playwright ferait d'abord défiler la
+        // Clique la pastille n (1 à 8) à la souris, là où elle est. Un clic de Playwright ferait d'abord défiler la
         // page jusqu'à elle, et « la pastille ne fait pas défiler la page » ne se verrait plus. Si la pastille n'est
         // pas à l'écran, l'image y est ramenée d'abord. Rend le défilement juste avant le clic, ou null.
         const cliquerPastille = async n => {
@@ -591,24 +601,42 @@ async function controler(opts) {
         // Aucune pastille visible sous le panneau de l'aide : le centre de chaque pastille doit montrer la pastille
         // et pas l'aide. L'aide ignore le pointeur : le temps du relevé, elle le reprend pour que elementFromPoint la
         // voie.
-        const controlerPastilles = async quand => {
+        // Dans la vue d'ensemble (`ensemble`), en plus : les huit pastilles affichées, et deux pastilles jamais à moins
+        // de ECART_PASTILLES l'une de l'autre, de centre à centre. Rend ce que la vue d'ensemble a relevé.
+        const controlerPastilles = async (quand, ensemble = false) => {
           await page.locator('#scene').scrollIntoViewIfNeeded();
-          const couvertes = await page.evaluate(() => {
+          const r = await page.evaluate(() => {
             const aide = document.getElementById('scene-aide');
             const avant = aide.style.pointerEvents;
             aide.style.pointerEvents = 'auto';
-            const sous = [...document.querySelectorAll('#pins .zpin')].filter(b => b.getClientRects().length).filter(b => {
-              const r = b.getBoundingClientRect();
-              const x = r.left + r.width / 2, y = r.top + r.height / 2;
+            const vues = [...document.querySelectorAll('#pins .zpin')].filter(b => !b.hidden && b.getClientRects().length);
+            const centres = vues.map(b => {
+              const q = b.getBoundingClientRect();
+              return { n: b.textContent, x: q.left + q.width / 2, y: q.top + q.height / 2 };
+            });
+            const sous = centres.filter(({ x, y }) => {
               if (x < 0 || y < 0 || x >= window.innerWidth || y >= window.innerHeight) return false;
               return aide.contains(document.elementFromPoint(x, y));
-            }).map(b => b.textContent);
+            }).map(c => c.n);
             aide.style.pointerEvents = avant;
-            return sous;
+            return { centres, sous };
           });
-          controle(couvertes.length === 0, `accueil, ${quand} : l’aide passe sur la pastille ${couvertes.join(', ')}`);
+          controle(r.sous.length === 0, `accueil, ${quand} : l’aide passe sur la pastille ${r.sous.join(', ')}`);
+          if (!ensemble) return null;
+          controle(r.centres.length === NOMBRE_PASTILLES,
+            `accueil, ${quand} : ${r.centres.length} pastilles affichées au lieu de ${NOMBRE_PASTILLES}`);
+          let min = null;
+          const proches = [];
+          for (let i = 0; i < r.centres.length; i++) for (let j = i + 1; j < r.centres.length; j++) {
+            const [p, q] = [r.centres[i], r.centres[j]];
+            const d = Math.round(Math.hypot(p.x - q.x, p.y - q.y) * 10) / 10;
+            if (!min || d < min.ecart) min = { ecart: d, pastilles: [p.n, q.n] };
+            if (d < ECART_PASTILLES) proches.push(`${p.n} et ${q.n} à ${d} px`);
+          }
+          controle(proches.length === 0, `accueil, ${quand} : pastilles à moins de ${ECART_PASTILLES} px : ${proches.join(', ')}`);
+          return { affichees: r.centres.length, ecartMin: min, centres: r.centres.map(c => [c.n, Math.round(c.x), Math.round(c.y)]) };
         };
-        await controlerPastilles(sansGl ? 'schéma 2D' : 'vue d’ensemble');
+        a.ensemble = await controlerPastilles(sansGl ? 'schéma 2D, vue d’ensemble' : 'vue d’ensemble', true);
         await capturer(page, 'accueil-scene.png', { sel: '#scene' });
 
         // Pastille 2, depuis le haut de la page : la carte « Étrier et plaquettes ».
@@ -624,6 +652,14 @@ async function controler(opts) {
         y0 = null;
         await agir('la pastille 3', async () => { y0 = await cliquerPastille(3); });
         if (y0 !== null) a.pastille3 = await choix('pastille 3', 'manettes', 'Manettes et durites', y0, false);
+
+        // Pastille 4, la première zone du montage, après la vue d'ensemble et depuis le haut : le poste de pilotage.
+        await agir('la vue d’ensemble', () => page.click('#vue-ensemble'));
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+        y0 = null;
+        await agir('la pastille 4', async () => { y0 = await cliquerPastille(4); });
+        if (y0 !== null) a.pastille4 = await choix('pastille 4', 'poste', 'Poste de pilotage', y0, false);
+        await capturer(page, 'accueil-pastille-4.png');
 
         // Le bouton de la carte « Étrier et plaquettes », comme après avoir lu les cartes : il est au milieu de
         // l'écran, et l'image en partie au-dessus.

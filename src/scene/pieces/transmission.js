@@ -12,7 +12,9 @@
 // capuchon du pivot de la chape, le galet bas et le brin de chaîne entre les galets. La chaîne y est sur le treize dents.
 // La cassette : son petit pignon et sa bague de blocage ne font qu'une pièce (« The smallest sprocket and the lock ring
 // are combined into a single part », manuel Shimano DM-MACS010, shimano-dm-macs010).
-// Aucune zone : les ateliers de la transmission ne sont pas dans cette livraison.
+// Zones : plateau, araignée, manivelles, leur axe et le capuchon en zone 'pedalier' (atelier 1.6, les pédales se vissent
+// au bout des manivelles) ; le dérailleur et sa batterie en zone 'derailleur' (atelier 1.7). Cuvettes du boîtier,
+// cassette et chaîne sans zone.
 // Un seul import : cheminChaine, du module pur geometrie.js. three.js arrive par les outils.
 import { cheminChaine } from '../geometrie.js';
 
@@ -38,7 +40,7 @@ export const DENTS_CASSETTE = Object.freeze([9, 11, 13, 15, 17, 19, 21, 24, 28, 
 export const META = Object.freeze({
   id: 'transmission',
   nom: 'Pédalier GRX FC-RX820-1, boîtier BB72, cassette XT CS-M8200, chaîne Shimano XT et dérailleur XT Di2 RD-M8250',
-  zone: null, // les ateliers de la transmission ne sont pas dans cette livraison
+  zone: null, // le pédalier en zone 'pedalier', le dérailleur en zone 'derailleur', le reste sans zone
   sources: Object.freeze([
     FICHE,
     'canyon-4556-en',
@@ -142,7 +144,8 @@ function enveloppe(cercles) {
 
 /**
  * Ajoute au groupe des outils le pédalier, le boîtier, la cassette, la chaîne et le dérailleur avec sa batterie.
- * Aucun maillage n'a de zone, et les outils en ressortent sans zone.
+ * Le pédalier est en zone 'pedalier' (sans les cuvettes du boîtier), le dérailleur en zone 'derailleur', le reste sans
+ * zone ; les outils en ressortent sans zone.
  * Noms des maillages que vérifient les tests : pignon 9 à pignon 45, plateau, manivelle droite, manivelle gauche,
  * chaîne, galet, boîtier, dérailleur, corps du dérailleur, batterie. Les autres : araignée de cassette, bague du petit
  * pignon, axe de pédalier, capuchon.
@@ -159,9 +162,12 @@ export function construire(o, p, geo) {
   const zPignon = k => geo.zPetitPignon.v - k * geo.ecartPignons.v;
   const plans = { avant: geo.ligneChaine.v, arriere: zPignon(kDessine) };
 
+  o.zone('pedalier');
   pedalier(o, p, geo, plans.avant);
+  o.zone(null);
   cassette(o, p, pas, zPignon);
   chaine(o, p, pas, plans);
+  o.zone('derailleur');
   derailleur(o, p, geo, plans.arriere);
   o.zone(null);
 }
@@ -242,8 +248,9 @@ function pedalier(o, p, geo, zPlateau) {
     nom('manivelle gauche')(o.boulon([c[0], c[1], -(zMoyeu + 8 + dz)], [dos[0], dos[1], 0], 3, 2, 'steel'));
   }
 
-  // Axe creux et cuvettes pressées dans la boîte de pédalier.
+  // Axe creux, puis les cuvettes pressées dans la boîte de pédalier, hors de la zone du pédalier.
   nom('axe de pédalier')(o.tubeZ(BB, -zMoyeu - 6, zMoyeu + 6, RAYON_AXE, 'steel', 32));
+  o.zone(null);
   for (const s of [-1, 1]) {
     nom('boîtier')(o.tubeZ(BB, s * zBoite, s * (zBoite + COUPELLE.ep), COUPELLE.rayon, 'black', 40));
   }

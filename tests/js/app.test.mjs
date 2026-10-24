@@ -166,17 +166,23 @@ test('choisirZone sur une page : zone inconnue refusée, zone connue choisie, sa
   const { module, el, cartes, boutons, pins, doc } = await pageFactice(t);
   assert.equal(doc.documentElement.dataset.app, 'demarre');
   assert.equal(pins.length, ZONES.length);
+  // Une zone : sa valeur `oui`, toutes les autres `non`, dans l'ordre de zones.json.
+  const seule = (id, oui, non) => ZONES.map(z => (z.id === id ? oui : non));
   // Une page, mais une zone inconnue : rien ne change.
   assert.equal(module.choisirZone('inconnue'), false);
-  assert.deepEqual(cartes.map(c => c.getAttribute('aria-current')), [null, null, null]);
-  assert.deepEqual(pins.map(p => p.classList.contains('on')), [false, false, false]);
+  assert.deepEqual(cartes.map(c => c.getAttribute('aria-current')), ZONES.map(() => null));
+  assert.deepEqual(pins.map(p => p.classList.contains('on')), ZONES.map(() => false));
   // Une zone connue : sa pastille, sa carte et son bouton seuls.
   assert.equal(module.choisirZone('etrier'), true);
-  assert.deepEqual(cartes.map(c => c.getAttribute('aria-current')), [null, 'true', null]);
-  assert.deepEqual(pins.map(p => p.getAttribute('aria-pressed')), ['false', 'true', 'false']);
-  assert.deepEqual(boutons.map(b => b.getAttribute('aria-pressed')), ['false', 'true', 'false']);
+  assert.deepEqual(cartes.map(c => c.getAttribute('aria-current')), seule('etrier', 'true', null));
+  assert.deepEqual(pins.map(p => p.getAttribute('aria-pressed')), seule('etrier', 'true', 'false'));
+  assert.deepEqual(boutons.map(b => b.getAttribute('aria-pressed')), seule('etrier', 'true', 'false'));
   assert.equal(module.choisirZone('disques'), true);
-  assert.deepEqual(cartes.map(c => c.getAttribute('aria-current')), ['true', null, null]);
+  assert.deepEqual(cartes.map(c => c.getAttribute('aria-current')), seule('disques', 'true', null));
+  // Une zone du montage, la pastille 4 : le poste de pilotage.
+  assert.equal(module.choisirZone('poste'), true);
+  assert.deepEqual(cartes.map(c => c.getAttribute('aria-current')), seule('poste', 'true', null));
+  assert.deepEqual(pins.map(p => p.getAttribute('aria-pressed')), seule('poste', 'true', 'false'));
   // choisirZone seul ne fait jamais défiler la page.
   for (const e of [...cartes, el['#scene-stage']]) assert.deepEqual(e.defilements, []);
 });
@@ -203,13 +209,13 @@ test('pastilles et boutons de carte : défilement selon une ou deux colonnes', a
   vider();
   pins[2].cliquer();
   assert.equal(cartes[2].getAttribute('aria-current'), 'true');
-  assert.deepEqual([...cartes, stage].map(e => e.defilements.length), [0, 0, 0, 0]);
+  assert.deepEqual([...cartes, stage].map(e => e.defilements.length), [...cartes, stage].map(() => 0));
   // Le bouton d'une carte ramène l'image, son haut sous la barre, si elle n'est pas en entier à l'écran.
   stage.rect = { top: -500, bottom: -180 };
   boutons[1].cliquer();
   assert.equal(cartes[1].getAttribute('aria-current'), 'true');
   assert.deepEqual(stage.defilements, [{ block: 'start', behavior: 'auto' }]);
-  assert.deepEqual(cartes.map(c => c.defilements.length), [0, 0, 0]);
+  assert.deepEqual(cartes.map(c => c.defilements.length), cartes.map(() => 0));
   // Déjà à l'écran (sous la barre, au-dessus du bas) : rien ne bouge.
   vider();
   stage.rect = { top: 80, bottom: 400 };

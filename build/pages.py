@@ -510,8 +510,8 @@ def toutes_les_pages(config: dict) -> list[Page]:
     if doublons:
         raise ValueError("deux pages à la même adresse : " + ", ".join(doublons))
     table = ancres(ateliers + [p for p in pages if all(p is not q for q in ateliers)])
-    # Une catégorie à venir n'a pas encore de contenu, mais sa page existe : « #montage » mène à « montage/ ». Un id
-    # qui n'est sur aucune page, comme « #montage-position », reste un texte.
+    # Une catégorie à venir n'a pas encore de contenu, mais sa page existe : « #tubeless » mène à « tubeless/ ». Un id
+    # qui n'est sur aucune page reste un texte.
     for lot in a_venir:
         table.setdefault(lot["categorie"]["id"], f'{lot["categorie"]["id"]}/')
     for page in pages:

@@ -19,14 +19,9 @@
     {
       "lot": 2,
       "titre": "Avant de commencer et montage à la livraison",
-      "statut": "à faire",
+      "statut": "en relecture",
       "categorie": {"id": "montage", "menu": "Montage à la livraison"},
-      "prevu": [
-        "Monter le vélo sorti du carton : cintre, roue avant, selle, contrôles avant la première sortie.",
-        "Monter les pédales PD-ME700 et les cales SPD.",
-        "Reporter ta position sur le Grizl : la forme de cet atelier sera décidée au lot 2."
-      ],
-      "parts": ["10-avant", "11-montage"],
+      "parts": ["11-montage"],
       "modeles": ["torque", "cockpit", "axle", "pedal"]
     },
     {
@@ -48,7 +43,6 @@
       "categorie": {"id": "transmission", "menu": "Transmission"},
       "prevu": [
         "Chaîne : usure, nettoyage, lubrification.",
-        "Charger la batterie Di2 BT-DN320.",
         "Régler le dérailleur Di2."
       ],
       "parts": ["40-transmission"],

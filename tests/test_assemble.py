@@ -22,6 +22,11 @@ PIED = (
 ZONES = [z["id"] for z in json.loads((RACINE / "src" / "scene" / "zones.json").read_text(encoding="utf-8"))]
 
 SLUGS = ["systeme", "disques", "plaquettes", "rodage", "centrage", "controles", "purge", "securite"]
+SLUGS_MONTAGE = ["avant", "deballer", "cintre", "selle", "roues", "pedales", "di2", "position", "controles"]
+# Les ateliers du chapitre Montage, dans l'ordre du document : id et data-zone (aucune pour 1.1, 1.2 et 1.9).
+ZONES_MONTAGE = [("montage-avant", None), ("montage-deballer", None), ("montage-cintre", "poste"),
+                 ("montage-selle", "selle"), ("montage-roues", "axes"), ("montage-pedales", "pedalier"),
+                 ("montage-di2", "derailleur"), ("montage-position", "selle"), ("montage-controles", None)]
 # Les ateliers du chapitre Freins, dans l'ordre du document : id, data-zone, data-type, data-de, data-vers.
 CORRESPONDANCE = [
     ("freins-systeme", "manettes", "comprendre", None, None),
@@ -191,7 +196,7 @@ class TestBuild(unittest.TestCase):
         # Pour chaque cible : le nombre de pages et la taille totale, sans erreur.
         for cible in ("site", "artifact"):
             ligne = next((l for l in self.res.stdout.splitlines() if l.startswith(f"{cible} : ")), "")
-            self.assertRegex(ligne, rf"^{cible} : 20 pages, \d+ octets en tout$", self.res.stdout)
+            self.assertRegex(ligne, rf"^{cible} : 29 pages, \d+ octets en tout$", self.res.stdout)
 
     def ateliers(self):
         # Une page par atelier, dans l'ordre du chapitre : chacune porte l'article.atelier de son atelier.
@@ -220,8 +225,15 @@ class TestBuild(unittest.TestCase):
                     self.assertEqual(GESTES - s["blocs"], set(), "blocs manquants")
 
     def test_zones_des_ateliers(self):
-        ateliers = self.ateliers()
+        # Chaque atelier publié est dans une zone de zones.json, sauf les fiches « comprendre » sans zone du Montage,
+        # et chaque zone a au moins un atelier publié.
+        montage = [s for slug in SLUGS_MONTAGE for s in Ateliers(self.page(chemin=f"montage/{slug}/")).liste]
+        self.assertEqual([(s["id"], s["zone"]) for s in montage], ZONES_MONTAGE)
+        ateliers = self.ateliers() + montage
         for s in ateliers:
+            if s["zone"] is None:
+                self.assertEqual(s["type"], "comprendre", s["id"])
+                continue
             self.assertIn(s["zone"], ZONES, s["id"])
         for z in ZONES:
             self.assertTrue(any(s["zone"] == z for s in ateliers), f"zone {z} sans atelier publié")
@@ -244,8 +256,9 @@ class TestControleAteliers(unittest.TestCase):
         self.assertEqual(self.controler(self.page(complet)), [])
 
     def test_chapitres_sources(self):
-        # Le chapitre Freins tel qu'il est écrit passe le contrôle.
-        texte = (RACINE / "src" / "parts" / "20-freins.html").read_text(encoding="utf-8")
+        # Les chapitres publiés tels qu'ils sont écrits passent le contrôle, ensemble : chaque zone a son atelier.
+        texte = "".join((RACINE / "src" / "parts" / f"{nom}.html").read_text(encoding="utf-8")
+                        for nom in ("20-freins", "11-montage"))
         self.assertEqual(self.controler(texte), [])
 
     def test_bloc_manquant(self):
@@ -271,8 +284,8 @@ class TestControleAteliers(unittest.TestCase):
         self.assertIn("atelier a : data-type « reparer » inconnu (comprendre, entretenir, regler ou remplacer)", err)
 
     def test_zone_inconnue(self):
-        err = self.controler(self.page(atelier("a", "selle", "regler", COMPLET)))
-        self.assertIn("atelier a : data-zone « selle » absente de src/scene/zones.json", err)
+        err = self.controler(self.page(atelier("a", "garde-boue", "regler", COMPLET)))
+        self.assertIn("atelier a : data-zone « garde-boue » absente de src/scene/zones.json", err)
 
     def test_sans_id(self):
         err = self.controler(self.page(atelier("", ZONES[0], "regler", COMPLET)))
@@ -316,9 +329,9 @@ class TestControleAteliers(unittest.TestCase):
 
     def test_atelier_comprendre_zone_inconnue_refuse(self):
         # Une zone écrite mais absente de zones.json reste refusée, même pour « comprendre ».
-        inconnue = atelier("montage-y", "selle", "comprendre", '<p class="a-video">V</p>')
+        inconnue = atelier("montage-y", "garde-boue", "comprendre", '<p class="a-video">V</p>')
         err = assemble.controle_ateliers(self.fragment_sans_zone(inconnue), ["disques"])
-        self.assertEqual(err, ["atelier montage-y : data-zone « selle » absente de src/scene/zones.json"])
+        self.assertEqual(err, ["atelier montage-y : data-zone « garde-boue » absente de src/scene/zones.json"])
 
     def test_atelier_sans_zone_garde_les_autres_controles(self):
         # Sans zone, un « comprendre » reste soumis aux blocs de son type et à la vidéo.

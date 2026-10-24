@@ -17,8 +17,35 @@ test('ancres connues', () => {
   }
 });
 
-test('zones attendues', () => {
-  assert.deepEqual(ZONES.map(z => z.id), ['disques', 'etrier', 'manettes']);
+test('zones attendues : les trois des freins, puis les cinq du montage', () => {
+  assert.deepEqual(ZONES.map(z => z.id),
+    ['disques', 'etrier', 'manettes', 'poste', 'selle', 'axes', 'pedalier', 'derailleur']);
+});
+
+test('zones du montage : noms et ancres, pastilles 4 à 8', () => {
+  const attendu = [
+    ['poste', 'Poste de pilotage', 'potence'],
+    ['selle', 'Selle et tige', 'teteTige'],
+    ['axes', 'Axes des roues', 'axeAvant'],
+    ['pedalier', 'Pédalier et pédales', 'manivelleDroite'],
+    ['derailleur', 'Dérailleur Di2', 'batterieDi2'],
+  ];
+  assert.deepEqual(ZONES.slice(3).map(z => [z.id, z.nom, z.ancre]), attendu);
+  // La vue et le cadre du schéma visent la pièce de la pastille. Celle des axes est posée sous l'axe avant, pour
+  // laisser la place à la pastille de l'étrier : sa vue et son cadre visent la tête de l'axe elle-même.
+  for (const z of ZONES.slice(3)) {
+    const cible = z.id === 'axes' ? 'teteAxeAvant' : z.ancre;
+    assert.equal(z.vue.cible, cible, `${z.id} : vue.cible`);
+    assert.equal(z.schema.centre, cible, `${z.id} : schema.centre`);
+  }
+});
+
+test('zones des freins inchangées', () => {
+  assert.deepEqual(ZONES.slice(0, 3).map(z => [z.id, z.nom, z.ancre]), [
+    ['disques', 'Disques de frein', 'disqueArriere'],
+    ['etrier', 'Étrier et plaquettes', 'etrierAvant'],
+    ['manettes', 'Manettes et durites', 'cocotteGauche'],
+  ]);
 });
 
 test('variantes : seule la zone de l’étrier en a une, les disques n’en ont plus', () => {
@@ -32,7 +59,8 @@ test('forme des zones : nom, vue et cadre du schéma', () => {
   for (const z of ZONES) {
     assert.equal(typeof z.nom, 'string', `${z.id} : nom`);
     assert.ok(z.nom.length > 0, `${z.id} : nom vide`);
-    assert.ok(!/\d/.test(z.nom), `${z.id} : chiffre dans le nom « ${z.nom} »`);
+    // Di2, le nom des vitesses électroniques Shimano, n'est pas une cote : seul chiffre permis dans un nom.
+    assert.ok(!/\d/.test(z.nom.replace(/\bDi2\b/g, '')), `${z.id} : chiffre dans le nom « ${z.nom} »`);
     assert.ok(!/[\u2014\u2013]/.test(JSON.stringify(z)), `${z.id} : tiret long`);
     assert.equal(z.vue.dir.length, 3, `${z.id} : vue.dir en trois dimensions`);
     assert.ok(z.vue.dir.every(Number.isFinite) && Math.hypot(...z.vue.dir) > 0, `${z.id} : vue.dir`);

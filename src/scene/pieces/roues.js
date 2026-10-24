@@ -9,6 +9,7 @@
 // rayons par roue, l'angle de leur trou de jante, leur croisement au plus juste, la valve en haut entre deux rayons, la
 // hauteur du pneu au-dessus de la jante, les crampons d'épaule groupés par deux. Sur la photo du passage de pneu
 // (canyon-photo-4556-degagement) : petits crampons serrés au centre, plus gros sur les épaules.
+// Zones : les deux axes traversants en zone 'axes' (atelier 1.5) ; pneus, jantes, rayons, moyeux et valves sans zone.
 // Aucun import : le module ne reçoit que les outils de construction, les points et GEO.
 
 const FICHE = 'canyon-4556';
@@ -28,7 +29,7 @@ export const COTES = Object.freeze({
 export const META = Object.freeze({
   id: 'roues',
   nom: 'Roues Canyon GR 30 CF, pneus Schwalbe G-One RX et axes traversants',
-  zone: null, // l'atelier tubeless n'est pas dans cette livraison
+  zone: null, // les axes en zone 'axes' ; l'atelier tubeless n'est pas dans cette livraison
   sources: Object.freeze([
     FICHE,
     'canyon-photo-4556-fv',
@@ -89,7 +90,7 @@ const pol = (c, r, deg) => [c[0] + r * Math.cos(deg * D2R), c[1] + r * Math.sin(
 
 /**
  * Ajoute au groupe des outils les deux roues : pneus et crampons, jantes, moyeux, rayons et écrous, valves, axes.
- * Aucun maillage n'a de zone, et les outils en ressortent sans zone.
+ * Les deux axes sont en zone 'axes', le reste sans zone ; les outils en ressortent sans zone.
  * Noms des maillages que vérifient les tests : pneu, jante, moyeu avant, moyeu arrière, rayons, axe avant, axe arrière.
  * @param {object} o Les outils de creerOutils.
  * @param {object} p Les points de points(geo).
@@ -108,6 +109,7 @@ export function construire(o, p, geo) {
   }
   // Axes : la tige traverse les pattes, la tête et l'embout se posent sur leur face extérieure. Faces extérieures
   // des pattes dessinées par cadre.js : bouts de fourche, pattes arrière, puis patte de dérailleur côté droit.
+  o.zone('axes');
   axe(o, p.FA, 'axe avant', [-74, -66], [66, 71]);
   axe(o, p.RA, 'axe arrière', [-88, -80], [85, 91]);
   o.zone(null);

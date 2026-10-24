@@ -7,6 +7,7 @@
 // inserts, lues au mieux sur la photo officielle de profil (canyon-photo-4556-fv), calée sur les pneus ; lames et tête
 // de la tige, contour et galbe de la selle, lus sur cette photo et sur celle de la tige et de la selle
 // (canyon-photo-4556-confort). Ces formes ne sont pas publiées. META.approche les liste, sans chiffre.
+// Zones : collier, tige de selle et selle en zone 'selle' (ateliers 1.4 et 1.8) ; le cadre et la fourche sans zone.
 // Aucun import : le module ne reçoit que les outils de construction, les points et GEO.
 
 const FICHE = 'canyon-4556';
@@ -34,7 +35,7 @@ export const COTES = Object.freeze({
 export const META = Object.freeze({
   id: 'cadre',
   nom: 'Cadre, fourche, tige de selle SP100 VCLS 2.1 et selle Fizik Argo Terra X5',
-  zone: null, // aucun atelier du cadre ni de la selle dans cette livraison
+  zone: null, // le collier, la tige et la selle en zone 'selle', le cadre et la fourche sans zone
   sources: Object.freeze([
     FICHE,
     'canyon-photo-4556-fv',
@@ -146,7 +147,7 @@ function fuseau(o, a, b, [la, ea], [lb, eb], role, seg = 32) {
 
 /**
  * Ajoute au groupe des outils le cadre, la fourche, le collier, la tige de selle et la selle.
- * Aucun maillage n'a de zone, et les outils en ressortent sans zone.
+ * Le collier, la tige et la selle sont en zone 'selle', le reste sans zone ; les outils en ressortent sans zone.
  * Les maillages dont un test vérifie la cote portent un nom : patte arrière, patte avant, boîte de pédalier,
  * tige de selle, rail de selle, selle.
  * @param {object} o Les outils de creerOutils.
@@ -158,7 +159,9 @@ export function construire(o, p, geo) {
   o.zone(null);
   cadre(o, p, geo);
   fourche(o, p);
+  o.zone('selle');
   tigeEtSelle(o, p, geo);
+  o.zone(null);
 }
 
 // Le cadre : tubes, raccords, bases, haubans, pattes, protections noires et inserts.

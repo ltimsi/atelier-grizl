@@ -73,6 +73,38 @@ test('ancres : les cinq noms attendus, en trois dimensions, disques à gauche', 
   assert.deepEqual([ancres.etrierAvant[0], ancres.etrierAvant[1]], p.CF);
 });
 
+test('ancres du montage : cinq pastilles, posées depuis les points du vélo', () => {
+  const p = points();
+  const { ancres } = p;
+  for (const nom of ['potence', 'teteTige', 'axeAvant', 'teteAxeAvant', 'manivelleDroite', 'batterieDi2']) {
+    assert.equal(ancres[nom]?.length, 3, nom);
+    assert.ok(ancres[nom].every(Number.isFinite), nom);
+  }
+  // Tête de tige : le haut de la tige, sous la selle, dans le plan du vélo.
+  assert.deepEqual(ancres.teteTige, [p.SPt[0], p.SPt[1], 0]);
+  // Bout de la manivelle droite, là où se visse la pédale, côté transmission.
+  assert.deepEqual(ancres.manivelleDroite.slice(0, 2), p.PR);
+  assert.ok(ancres.manivelleDroite[2] > 0, 'manivelle droite : côté transmission');
+  // Potence : au dos de son serrage sur le pivot, au-dessus du capot du jeu de direction, côté transmission.
+  const arriere = [-p.dHT[1], p.dHT[0]];
+  const le = [ancres.potence[0] - p.S0[0], ancres.potence[1] - p.S0[1]];
+  proche(le[0] * p.dHT[0] + le[1] * p.dHT[1], 0, 1e-9, 'potence : à la hauteur de l’axe de la potence sur le pivot');
+  assert.ok(le[0] * arriere[0] + le[1] * arriere[1] > 0, 'potence : derrière le pivot');
+  assert.ok(ancres.potence[1] > p.HTt[1], 'potence : au-dessus du capot du jeu de direction');
+  assert.ok(ancres.potence[2] > 0, 'potence : côté transmission');
+  // Axe avant : côté gauche, sous l'axe, sur la roue. La pastille de l'étrier est juste au-dessus du moyeu.
+  assert.equal(ancres.axeAvant[0], p.FA[0]);
+  assert.ok(ancres.axeAvant[1] < p.FA[1] && ancres.axeAvant[1] > p.FA[1] - GEO.rayonPneu.v / 2, 'axe avant : sous l’axe');
+  assert.ok(ancres.axeAvant[2] < 0, 'axe avant : côté gauche');
+  assert.ok(ancres.etrierAvant[1] > p.FA[1], 'la pastille de l’étrier est au-dessus du moyeu');
+  // La vue et le cadre de la zone visent la tête de l'axe : sur l'axe, du même côté que la pastille.
+  assert.deepEqual(ancres.teteAxeAvant, [p.FA[0], p.FA[1], ancres.axeAvant[2]]);
+  // Batterie Di2 : sur le dérailleur, derrière et sous l'axe de la roue arrière, côté transmission.
+  assert.ok(ancres.batterieDi2[0] < p.RA[0] && ancres.batterieDi2[1] < p.RA[1], 'batterie : derrière et sous l’axe');
+  assert.ok(ancres.batterieDi2[1] > p.poulieBasse[1], 'batterie : au-dessus du galet bas');
+  assert.ok(ancres.batterieDi2[2] > 0, 'batterie : côté transmission');
+});
+
 test('tige de selle : l’insertion reste dans la plage publiée', () => {
   const p = points();
   const sorti = dist(p.BB, p.SPt) - dist(p.BB, p.STt);
@@ -277,6 +309,32 @@ test('registre des sources : les documents du Grizl CF 8 Di2', () => {
   }
 });
 
+// Les documents du lot 2 que citent, par leur nom, les pièces 3D des ateliers du montage (src/js/models), avec
+// l'adresse du relevé du montage. Le chapitre les cite par cette adresse.
+test('registre des sources : les documents du montage que citent les pièces 3D des ateliers', () => {
+  const lire = chemin => readFileSync(new URL(`../../${chemin}`, import.meta.url), 'utf8');
+  const releve = lire('docs/recherche/montage-cf8-di2.md'), chapitre = lire('src/parts/11-montage.html');
+  const modeles = ['m-torque', 'm-cockpit', 'm-axle', 'm-pedal'].map(m => lire(`src/js/models/${m}.js`)).join('\n');
+  const attendus = {
+    'canyon-qsg-r126-v02': [/QSG R126 V02/, 'https://www.canyon.com/on/demandware.static/-/Library-Sites-canyon-shared/' +
+      'default/dw237d861e/documents/customer-service/gravel-bikes/canyon-grizl-quick-start-guide-2025-2.pdf'],
+    'shimano-dm-mapd001': [/DM-MAPD001-07/, 'https://si.shimano.com/en/pdfs/dm/MAPD001/DM-MAPD001-07-ENG.pdf'],
+  };
+  for (const [id, [nom, url]] of Object.entries(attendus)) {
+    assert.ok(SOURCES[id], `source absente : ${id}`);
+    assert.equal(SOURCES[id].type, 'manuel', id);
+    assert.equal(SOURCES[id].url, url, id);
+    assert.match(SOURCES[id].titre, nom, id);
+    assert.ok(nom.test(modeles), `${id} : cité par aucune pièce 3D du montage`);
+    assert.ok(releve.includes(url), `${id} : adresse absente du relevé du montage`);
+    assert.ok(chapitre.includes(`href="${url}"`), `${id} : adresse absente du chapitre`);
+  }
+  // Déjà au registre, et cités par une pièce de la scène ou par le chapitre : le manuel des roues, la tige SP100 et
+  // la selle Fizik.
+  assert.equal(SOURCES['canyon-manuel-roues'].url, 'https://www.canyon.com/on/demandware.static/-/Library-Sites-' +
+    'canyon-shared/default/dw22ff8457/documents/customer-service/gravel-bikes/canyon-wheelset-manual-2025.pdf');
+  for (const id of ['canyon-sp100', 'fizik-argo-terra-x5']) assert.ok(SOURCES[id], id);
+});
 
 test('registre des sources : plus aucune source du Grizl CF 7 ni de ses pièces', () => {
   for (const [id, s] of Object.entries(SOURCES)) {

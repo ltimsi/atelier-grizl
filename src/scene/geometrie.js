@@ -128,6 +128,20 @@ export const GEO = Object.freeze({
 // Les ancres se posent juste à gauche de la pièce, du côté des disques, pour rester visibles (placement de vue, pas une cote).
 const DEVANT_DISQUE = 5;
 const DEVANT_ETRIER = 24;
+// Les ancres des zones du montage, chacune sur sa pièce, du côté où la vue d'ensemble la montre. Sur l'image la plus
+// étroite de l'accueil (360 px de large), trente pixels valent à peu près dix-neuf centimètres du vélo : chaque ancre
+// est assez loin des autres pour que deux pastilles ne se chevauchent pas (tools/scene-check.js). Placement de vue,
+// pas une cote.
+const DOS_POTENCE = 28; // le long de l'arrière du pivot, jusqu'au dos du serrage de la potence, où sont ses deux vis
+const FACE_POTENCE = 11; // côté transmission, sur la face de ce serrage
+// Sous l'axe avant, côté gauche, là où se trouve la tête de l'axe : la pastille de l'étrier est juste au-dessus du
+// moyeu, et deux pastilles sur l'axe se chevaucheraient. La vue de la zone vise la tête de l'axe elle-même.
+const SOUS_AXE = 160;
+const GAUCHE_AXE = 80;
+const FACE_MANIVELLE = 80; // côté transmission, juste au-delà de la face extérieure de la manivelle
+// Batterie Di2 : depuis l'axe de la roue arrière, en arrière, vers le bas et côté transmission. Le bas du corps du
+// dérailleur, sous la batterie que transmission.js loge dans le bloc arrière du corps, sur sa face extérieure.
+const SOUS_BATTERIE = Object.freeze([-20, -98, 98]);
 
 const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
 const mul = (a, k) => [a[0] * k, a[1] * k];
@@ -189,12 +203,22 @@ export function points(geo = GEO) {
   const rayonDisque = g('diametreDisque') / 2;
   const zCocotte = g('largeurCintre') / 2;
   const main = add(BB, [g('reachEfficace'), g('stackEfficace')]);
+  // Le dos du serrage de la potence sur le pivot, à la hauteur de l'axe de la potence (S0), au-dessus du capot du jeu
+  // de direction.
+  const dosPotence = add(S0, mul([-dHT[1], dHT[0]], DOS_POTENCE));
   const ancres = {
     disqueArriere: [RA[0], RA[1] + rayonDisque, -(g('decalageDisqueArriere') + DEVANT_DISQUE)],
     disqueAvant: [FA[0], FA[1] + rayonDisque, -(g('decalageDisqueAvant') + DEVANT_DISQUE)],
     etrierAvant: [CF[0], CF[1], -(g('decalageDisqueAvant') + DEVANT_ETRIER)],
     cocotteGauche: [main[0], main[1], -zCocotte],
     mains: [main[0], main[1], zCocotte],
+    // Zones du montage : poste de pilotage, selle et tige, axes des roues, pédalier, dérailleur Di2.
+    potence: [dosPotence[0], dosPotence[1], FACE_POTENCE],
+    teteTige: [SPt[0], SPt[1], 0], // la tête de la tige, qui serre les rails sous la selle
+    axeAvant: [FA[0], FA[1] - SOUS_AXE, -GAUCHE_AXE],
+    teteAxeAvant: [FA[0], FA[1], -GAUCHE_AXE],
+    manivelleDroite: [PR[0], PR[1], FACE_MANIVELLE], // le bout du bras, là où se visse la pédale
+    batterieDi2: [RA[0] + SOUS_BATTERIE[0], RA[1] + SOUS_BATTERIE[1], SOUS_BATTERIE[2]],
   };
 
   return { RA, FA, BB, HTt, HTb, STt, SPt, S0, S1, PR, PL, CF, CR, CROWN, dHT, dST, poulieHaute, poulieBasse, rayons, ancres };

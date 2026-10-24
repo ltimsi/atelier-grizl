@@ -18,7 +18,8 @@
 // sur la photo : sa place sur la courbe du cintre et la rotation du cintre dans la potence sont lues sur la photo,
 // pas calculées depuis la main. Le cintre est construit en arrière, depuis son collier dans la potence, avec le déport
 // et la descente du marquage officiel.
-// Zones : cocottes, leviers, palettes et durites en zone 'manettes' ; le reste sans zone.
+// Zones : capot et entretoise du jeu de direction, potence, capuchon, cintre, ruban et embouts en zone 'poste' (atelier
+// 1.3) ; cocottes, leviers, palettes et durites en zone 'manettes'.
 // Aucun import : le module ne reçoit que les outils de construction, les points et GEO.
 
 const FICHE = 'canyon-4556';
@@ -39,7 +40,7 @@ export const META = Object.freeze({
   id: 'poste',
   nom: 'Jeu de direction, potence ST0046, cintre HB0067, ruban, manettes GRX Di2 (droite ST-RX825, gauche ' +
     'ST-RX825-L ou BL-RX825-L, à lire sur la pièce) et durites',
-  zone: null, // cocottes, leviers, palettes et durites en zone 'manettes', le reste sans zone
+  zone: null, // deux zones selon les maillages : 'poste' (jeu de direction, potence, cintre) et 'manettes'
   sources: Object.freeze([
     FICHE,
     'canyon-photo-4556-fv',
@@ -146,7 +147,7 @@ const v = (q, z = 0) => [q[0], q[1], z];
  * @returns {void}
  */
 export function construire(o, p, geo) {
-  o.zone(null);
+  o.zone('poste');
   directionEtPotence(o, p);
   const pose = poseCintre(p, geo);
   const cotes = [1, -1].map(s => ({ s, pts: pose.points.map(([x, y, z]) => [x, y, s * z]) }));

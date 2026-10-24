@@ -20,5 +20,40 @@
     "ancre": "cocotteGauche",
     "vue": { "cible": "cocotteGauche", "dir": [0.75, 0.45, -1], "dist": 900 },
     "schema": { "centre": "cocotteGauche", "largeur": 480 }
+  },
+  {
+    "id": "poste",
+    "nom": "Poste de pilotage",
+    "ancre": "potence",
+    "vue": { "cible": "potence", "dir": [0.5, 0.8, 1], "dist": 760 },
+    "schema": { "centre": "potence", "largeur": 420 }
+  },
+  {
+    "id": "selle",
+    "nom": "Selle et tige",
+    "ancre": "teteTige",
+    "vue": { "cible": "teteTige", "dir": [-0.4, 0.3, 1], "dist": 700 },
+    "schema": { "centre": "teteTige", "largeur": 480 }
+  },
+  {
+    "id": "axes",
+    "nom": "Axes des roues",
+    "ancre": "axeAvant",
+    "vue": { "cible": "teteAxeAvant", "dir": [0.45, 0.25, -1], "dist": 640 },
+    "schema": { "centre": "teteAxeAvant", "largeur": 420 }
+  },
+  {
+    "id": "pedalier",
+    "nom": "Pédalier et pédales",
+    "ancre": "manivelleDroite",
+    "vue": { "cible": "manivelleDroite", "dir": [0.15, 0.25, 1], "dist": 800 },
+    "schema": { "centre": "manivelleDroite", "largeur": 560 }
+  },
+  {
+    "id": "derailleur",
+    "nom": "Dérailleur Di2",
+    "ancre": "batterieDi2",
+    "vue": { "cible": "batterieDi2", "dir": [-0.5, 0.15, 1], "dist": 560 },
+    "schema": { "centre": "batterieDi2", "largeur": 380 }
   }
 ]

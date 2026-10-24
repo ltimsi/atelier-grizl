@@ -32,3 +32,19 @@ test('lots.md : la liste « Ce qui est approché » est à jour', () => {
   const bloc = doc.slice(i + DEBUT.length, j).trim();
   assert.equal(bloc, generer().stdout.trim(), 'liste périmée : lance node tools/approximations-md.mjs --lots');
 });
+
+test('lots.md : une entrée par lot publié de build/lots.json, avec son titre et son statut, dans l’ordre des lots', () => {
+  const doc = readFileSync(new URL('../../docs/lots.md', import.meta.url), 'utf8');
+  const config = JSON.parse(readFileSync(new URL('../../build/lots.json', import.meta.url), 'utf8'));
+  const publies = config.lots.filter(l => ['validé', 'en relecture'].includes(l.statut));
+  assert.deepEqual(publies.map(l => l.lot), [0, 1, 2]);
+  const titres = [...doc.matchAll(/^## Lot (\d+) · (.+)$/gm)].map(m => [Number(m[1]), m[2]]);
+  assert.deepEqual(titres, publies.map(l => [l.lot, `${l.titre} · ${l.statut}`]));
+  // L'entrée du lot 2 dit ce qu'il publie : son chapitre, ses cinq zones et ses quatre pièces 3D.
+  const lot2 = doc.slice(doc.indexOf('## Lot 2 · '), doc.indexOf('\n## ', doc.indexOf('## Lot 2 · ') + 1));
+  for (const attendu of ['11-montage', 'Poste de pilotage', 'Selle et tige', 'Axes des roues', 'Pédalier et pédales',
+    'Dérailleur Di2', '`torque`', '`cockpit`', '`axle`', '`pedal`', 'scene-check']) {
+    assert.ok(lot2.includes(attendu), `entrée du lot 2 : « ${attendu} » absent`);
+  }
+  assert.ok(!/[\u2014\u2013]/.test(doc), 'tiret long dans lots.md');
+});

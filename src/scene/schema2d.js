@@ -137,7 +137,7 @@ export function formesSchema(p, geo = GEO) {
   const sousLeRuban = axeCintre.slice(0, pose.iCollier + 1).reverse();
   chemin(gDurites, [...sousLeRuban, lePivot(30, -26), lePivot(17, -20), lePivot(10, -17)], 'h', false);
 
-  capsule(groupe(), BB, PL, 14, 10, 'h'); // manivelle gauche
+  capsule(groupe('pedalier'), BB, PL, 14, 10, 'h'); // manivelle gauche
 
   // ---- Roues ----
   const gRoues = groupe();
@@ -152,7 +152,6 @@ export function formesSchema(p, geo = GEO) {
       ajouter(gRoues, 'line', { x1: f(h[0]), y1: f(-h[1]), x2: f(r[0]), y2: f(-r[1]), class: 't' });
     }
     cercle(gRoues, c, DESSIN.moyeu, 'o');
-    cercle(gRoues, c, COTES_ROUES.diametreAxe.v / 2, 'n');
   }
 
   // ---- Cadre et fourche, avec les valeurs de dessin de cadre.js ----
@@ -171,13 +170,17 @@ export function formesSchema(p, geo = GEO) {
   capsule(gCadre, HTb, HTt, 26.5, 26.5, 'o'); // douille
   cercle(gCadre, BB, 26.5, 'o'); // boîte de pédalier
 
+  // ---- Les bouts des axes traversants, sur les pattes, comme dans la 3D (roues.js) : la zone des axes ----
+  const gAxes = groupe('axes');
+  for (const c of [RA, FA]) cercle(gAxes, c, COTES_ROUES.diametreAxe.v / 2, 'k');
+
   // ---- Cassette, plateau, chaîne ----
   const gCassette = groupe();
   DENTS_CASSETTE.forEach((dents, k) => {
     cercle(gCassette, RA, rayonPrimitif(dents, pas) + 2.5, k === 0 || k === DENTS_CASSETTE.length - 1 ? 'n' : 't');
   });
   cercle(gCassette, RA, DESSIN.contreEcrou, 'n');
-  const gPlateau = groupe();
+  const gPlateau = groupe('pedalier');
   chemin(gPlateau, engrenage(BB, geo.dentsPlateau.v, rayons.plateau + 4.5, rayons.plateau - 2), 'o');
   cercle(gPlateau, BB, COTES_TRANSMISSION.entraxe.v / 2, 'n');
   const gChaine = groupe();
@@ -186,7 +189,7 @@ export function formesSchema(p, geo = GEO) {
   chemin(gChaine, chaine, 'ch2');
 
   // ---- Collier, tige et selle, posés comme dans la 3D (poseSelle de cadre.js) ----
-  const gSelle = groupe();
+  const gSelle = groupe('selle');
   const rTige = COTES_CADRE.diametreTige.v / 2, selle = poseSelle(p, geo);
   capsule(gSelle, add(STt, mul(dST, -8)), add(STt, mul(dST, 12)), rTige + 5, rTige + 5, 'k'); // collier
   capsule(gSelle, add(STt, mul(dST, 12)), selle.fente, rTige, rTige, 'k'); // tige, ses deux lames serrées
@@ -202,7 +205,7 @@ export function formesSchema(p, geo = GEO) {
   chemin(gSelle, [...hauts, ...bas], 'k');
 
   // ---- Jeu de direction, potence et cintre ----
-  const gPoste = groupe();
+  const gPoste = groupe('poste');
   const du = nrm(sub(S1, S0));
   capsule(gPoste, HTt, add(S0, mul(dHT, -21)), 23, 19, 'k'); // capot et entretoise
   capsule(gPoste, add(S0, mul(dHT, -21)), add(S0, mul(dHT, 25)), 21, 17, 'k'); // serrage de la potence
@@ -218,11 +221,11 @@ export function formesSchema(p, geo = GEO) {
   chemin(gManette, LEVIER.map(versVelo), 'kb2', false, 'levier');
 
   // ---- Côté droit, devant : manivelle et dérailleur ----
-  const gManivelle = groupe();
+  const gManivelle = groupe('pedalier');
   capsule(gManivelle, BB, PR, 15, 11, 'k');
   cercle(gManivelle, BB, 12, 'n');
-  const gDerailleur = groupe();
-  boite(gDerailleur, [RA[0] - 6, RA[1] - 16], 16, 34, -0.3 / D2R, 'k'); // patte de dérailleur, comme cadre.js
+  boite(groupe(), [RA[0] - 6, RA[1] - 16], 16, 34, -0.3 / D2R, 'k'); // patte de dérailleur, du cadre comme dans cadre.js
+  const gDerailleur = groupe('derailleur');
   // Chape, du pivot au galet bas, puis le corps et le pivot, comme transmission.js.
   const pivot = add(RA, PIVOT_CHAPE);
   capsule(gDerailleur, pivot, poulieBasse, 14, 22, 'n'); // chape
