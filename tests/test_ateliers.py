@@ -1,5 +1,6 @@
 """Tests de build/ateliers.py : le chapitre Freins relu en ateliers, puis les deux colonnes de la page d'un atelier,
 étapes et blocs repliés dans des <details>, sans texte perdu ni contenu caché."""
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -329,6 +330,316 @@ class Ateliers(unittest.TestCase):
                 for selecteur in ("p", "li", "h4", "td", "b", "summary", "figcaption"):
                     for e in dom.selectionner(a.section, selecteur):
                         self.assertIn(e.texte(), texte, f"{selecteur} : {e.texte()[:60]}")
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Chapitre 1, Montage à la livraison : relu depuis son fragment, qu'il soit publié ou non
+# ---------------------------------------------------------------------------------------------------------------
+
+MONTAGE = RACINE / "src" / "parts" / "11-montage.html"
+GESTES = (".a-dem", ".kit", "ol.steps")
+QSG = "canyon-grizl-quick-start-guide-2025-2.pdf"
+# Les couples qu'aucun outil de Lamine ne couvre : 2 Nm, 2,5 N·m, 7 Nm (pas 12 Nm, 0,2 Nm ni 2,5 mm).
+HORS_OUTILS = re.compile(r"(?<![\d,.])(?:2|7|2,5)[ \u00a0](?:Nm|N·m)\b")
+# Les lignes du texte : une étape, une ligne de tableau, un point de liste, un paragraphe, une légende, un titre.
+LIGNES = ("li", "tr", "p", "figcaption", "summary", "h4")
+
+
+def normaliser(texte):
+    """Le texte comparé : l'apostrophe typographique devient droite, pour accepter les deux."""
+    return texte.replace("\u2019", "'")
+
+
+def texte_de(element):
+    return normaliser(element.texte())
+
+
+def lignes_de(racine):
+    """Chaque ligne de `racine` : l'élément de LIGNES le plus haut, pris en entier (une étape avec son titre et son
+    corps, une ligne de tableau avec ses cellules), dans l'ordre du document."""
+    trouvees = []
+
+    def parcourir(element):
+        for enfant in elements(element):
+            if enfant.tag in LIGNES:
+                trouvees.append(enfant)
+            else:
+                parcourir(enfant)
+    parcourir(racine)
+    return trouvees
+
+
+def aria_labels(racine):
+    return [normaliser(e.get("aria-label")) for e in dom.selectionner(racine, "[aria-label]")]
+
+
+class TestMontage(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.source = MONTAGE.read_text(encoding="utf-8")
+        cls.ch = ateliers.relever_chapitre(cls.source)
+        cls.par_id = {a.id: a for a in cls.ch.ateliers}
+        cls.section = cls.ch.tete.parent
+
+    def html_de(self, ident):
+        return self.par_id[ident].section.html()
+
+    def texte_complet(self):
+        return texte_de(self.section)
+
+    def test_chapitre(self):
+        self.assertEqual(self.ch.id, "montage")
+        self.assertEqual((self.section.tag, self.section.classes()), ("section", ["chapter"]))
+        (num,) = dom.selectionner(self.ch.tete, "p.ch-num")
+        self.assertEqual(num.texte(), "Chapitre 1 · Montage à la livraison")
+        self.assertEqual(dom.selectionner(self.ch.tete, "h2")[0].texte(), "Montage à la livraison")
+        ids = [e.get("id") for e in dom.selectionner(dom.analyser(self.source), "[id]")]
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertEqual(sorted(self.ch.resumes), ["couples", "ordre"])
+
+    def test_ateliers_ids_types_zones(self):
+        self.assertEqual([(a.id, a.num, a.type, a.zone) for a in self.ch.ateliers], [
+            ("montage-avant", "1.1", "comprendre", None), ("montage-deballer", "1.2", "comprendre", None),
+            ("montage-cintre", "1.3", "regler", "poste"), ("montage-selle", "1.4", "regler", "selle"),
+            ("montage-roues", "1.5", "regler", "axes"), ("montage-pedales", "1.6", "remplacer", "pedalier"),
+            ("montage-di2", "1.7", "entretenir", "derailleur"), ("montage-position", "1.8", "regler", "selle"),
+            ("montage-controles", "1.9", "comprendre", None)])
+        # Sans zone, pas d'attribut du tout, même vide.
+        for a in self.ch.ateliers:
+            self.assertEqual(any(n == "data-zone" for n, _ in a.section.attrs), a.zone is not None, a.id)
+
+    def test_remplacer_pedales(self):
+        p = self.par_id["montage-pedales"]
+        self.assertEqual((p.de, p.vers), ("Aucune pédale, non fournies", "Shimano PD-ME700 et cales SM-SH51"))
+        for a in self.ch.ateliers:
+            if a.id != "montage-pedales":
+                self.assertEqual((a.de, a.vers), (None, None), a.id)
+
+    def test_blocs_par_type(self):
+        # Une fiche « comprendre » n'a aucun bloc de gestes, les autres types les ont tous. Chacune a sa vidéo.
+        for a in self.ch.ateliers:
+            with self.subTest(a.id):
+                presents = [g for g in GESTES if dom.selectionner(a.section, g)]
+                self.assertEqual(presents, [] if a.type == "comprendre" else list(GESTES))
+                self.assertTrue(dom.selectionner(a.section, "ul.media") + dom.selectionner(a.section, "p.a-video"))
+                videos = [h for h in elements(a.section) if h.tag == "h4" and h.texte() in ateliers.VIDEO]
+                self.assertEqual(len(videos), 1)
+                if a.type != "comprendre":
+                    self.assertTrue(a.outils and a.etapes and a.demonter)
+                    self.assertEqual(len(dom.selectionner(a.section, "ol.steps")), 1)
+                gauche, droite = ateliers.colonnes(a)
+                self.assertEqual(dom.selectionner(dom.analyser(gauche + droite), "[hidden]"), [])
+
+    def test_figures_3d(self):
+        attendu = {"montage-avant": ["torque"], "montage-cintre": ["cockpit"], "montage-roues": ["axle"],
+                   "montage-pedales": ["pedal"]}
+        for a in self.ch.ateliers:
+            with self.subTest(a.id):
+                self.assertEqual(a.modeles, attendu.get(a.id, []))
+                for figure in dom.selectionner(a.section, "figure.v3d"):
+                    (scene,) = dom.selectionner(figure, "div.v3d-stage")
+                    self.assertEqual(scene.get("role"), "img")
+                    self.assertTrue(scene.get("aria-label"))
+                    (legende,) = dom.selectionner(figure, "figcaption")
+                    self.assertTrue(legende.texte().startswith(f"3D {a.num}"), legende.texte())
+
+    def test_valeurs_du_releve(self):
+        t = {a.id: texte_de(a.section) for a in self.ch.ateliers}
+        for ident, valeurs in {
+            "montage-cintre": ("6\xa0Nm", "2\xa0Nm", "4\xa0mm", "5\xa0mm", "3\xa0mm", "sans jour", "pictogramme",
+                               "guide imprimé", "M5x22", "M6x18", "ZERO GAP"),
+            "montage-selle": ("110\xa0mm", "210\xa0mm", "MIN", "6\xa0Nm", "5\xa0Nm", "7\xa0Nm", "pâte de montage",
+                              "pictogramme", "guide imprimé", "18\xa0Nm", "75\xa0mm"),
+            "montage-roues": ("10-15\xa0Nm", "6\xa0mm", "non publié", "3,0\xa0bar", "RIGID FORK", "12 x 100",
+                              "12 x 142"),
+            "montage-pedales": ("35-55\xa0N·m", "15\xa0mm", "2,5\xa0N·m", "5-6\xa0N·m", "3\xa0mm", "à gauche",
+                                "4\xa0mm", "GREASE NOT INCLUDED", "20\xa0mm"),
+            "montage-di2": ("BT-DN320", "EC-DN100", "une heure", "CR1632", "E-TUBE PROJECT", "test purposes",
+                            "orange", "0,5\xa0s", "51-100\xa0%"),
+            "montage-avant": ("TW-6.2", "ATD-1.2", "mâchoires", "à lire sur l\u2019outil", "10 à 60\xa0Nm", "4,5",
+                              "5,5", "0,25\xa0Nm", "PLEASE ALWAYS USE A TORQUE WRENCH"),
+            "montage-deballer": ("EC-DN100", "Reflector Set", "FIX", "p.72", "V02", "Bike Guard", "None included",
+                                 "QSG R126"),
+            "montage-position": ("710", "810", "Park Tool", "SETBACK", "+5", "75\xa0mm", "entretoises", "MIN"),
+            "montage-controles": ("p.60", "p.61", "120\xa0kg", "BED-IN"),
+        }.items():
+            for v in valeurs:
+                self.assertIn(normaliser(v), t[ident], f"{ident} : {v}")
+
+    def test_aucun_outil_pour_2_25_7(self):  # Review Focus 3
+        # Chaque ligne qui porte 2 Nm, 2,5 N·m ou 7 Nm dit qu'aucun de tes outils ne le couvre (TW-6.2 de 10 à
+        # 60 Nm, ATD-1.2 de 4 à 6 Nm) et renvoie à la clé Canyon du carton. Les aria-label comptent aussi.
+        vues = 0
+        for texte in [texte_de(l) for l in lignes_de(self.section)] + aria_labels(self.section):
+            if HORS_OUTILS.search(texte):
+                vues += 1
+                bas = texte.lower()
+                self.assertIn("aucun de tes outils", bas, texte[:160])
+                self.assertIn("clé canyon", bas, texte[:160])
+        self.assertGreaterEqual(vues, 6)
+        self.assertIsNotNone(HORS_OUTILS.search("à 2\xa0Nm"))
+        self.assertIsNotNone(HORS_OUTILS.search("« 0.5-2 Nm »"))
+        for permis in ("12\xa0Nm", "0,2\xa0Nm", "2,5\xa0mm", "17\xa0Nm", "2\xa0mm", "7\xa0mm"):
+            self.assertIsNone(HORS_OUTILS.search(permis), permis)
+
+    def test_valeur_avec_source_officielle(self):  # Review Focus 4
+        # Toute ligne (étape, ligne de tableau, point de liste, paragraphe) qui porte un span.nm porte aussi un a.src
+        # officiel : Park Tool sert pour un geste, jamais pour une valeur.
+        vues = 0
+        for ligne in lignes_de(self.section):
+            if dom.selectionner(ligne, "span.nm"):
+                vues += 1
+                officielles = [a for a in dom.selectionner(ligne, "a.src") if "parktool.com" not in a.get("href")]
+                self.assertTrue(officielles, texte_de(ligne)[:160])
+        self.assertGreaterEqual(vues, 15)
+        for a in dom.selectionner(self.section, "a.src"):
+            self.assertTrue(a.get("href").startswith("https://"), a.get("href"))
+            self.assertEqual((a.get("target"), a.get("rel")), ("_blank", "noopener"), a.get("href"))
+
+    def test_pictogrammes_du_qsg(self):
+        # Un couple du QSG V02 dit s'il vient d'un pictogramme ou du tableau de la page, avec sa page ; l'atelier
+        # renvoie au guide imprimé du carton, à comparer (règle 5 des sources).
+        vues = set()
+        for a in self.ch.ateliers:
+            for ligne in lignes_de(a.section):
+                qsg = [s for s in dom.selectionner(ligne, "a.src") if QSG in s.get("href")]
+                if not (qsg and dom.selectionner(ligne, "span.nm")):
+                    continue
+                vues.add(a.id)
+                texte = texte_de(ligne)
+                self.assertTrue("pictogramme" in texte or "tableau" in texte, texte[:160])
+                for s in qsg:
+                    self.assertRegex(s.texte(), r"QSG V02 p\.\d", texte[:160])
+                if "pictogramme" in texte:
+                    self.assertIn("guide imprimé", texte_de(a.section), a.id)
+        self.assertLessEqual({"montage-avant", "montage-cintre", "montage-selle", "montage-roues",
+                              "montage-position"}, vues)
+
+    def test_sans_ecarts_des_brouillons(self):
+        # Les écarts du relevé (section « Écarts avec les brouillons du 20/10 »), chacun par un indice précis.
+        texte, html = self.texte_complet(), normaliser(self.source)
+        for absent in (
+            "68\xa0mm", "68 mm", "2,5 fois",  # règle Park Tool d'insertion, au lieu des 110 mm de Canyon
+            "en croix",  # le capot se serre haut puis bas
+            "câble de dérailleur", "câble du dérailleur", "serre-câble", "mou initial",  # Di2 sans fil
+            "DM-GARD010", "RD-RX822", "8-10\xa0Nm", "6-7\xa0Nm",
+            "Ortlieb", "15\xa0kg",  # porte-bagages : hors du relevé
+            "Selle Royal", "Continental", "4,5\xa0bar",  # pièces du CF 7, pression d'un revendeur
+            "déjà posé",  # Canyon n'écrit pas que le ruban est posé : seul le dessin du QSG le montre
+            "0,2-0,4", "ST-RX610", "CN-M6100", "BB-RS500", "DM-MACS001", "UM-LAR0A",
+            "chariot de selle",  # 7 Nm est la vis d'inclinaison, au pied de la tige
+            "3 à 12", "40,7", "360 in-lb",  # article de magazine, conversion d'une valeur Park Tool
+            "ne donne pas la taille de clé",  # Shimano dessine l'embout de 4 mm des cales
+            "How to unbox",  # titre de vidéo pris dans des résultats de recherche
+        ):
+            self.assertNotIn(absent, texte, absent)
+        for motif in (r"\bSIS\b", r"\bBSA\b", r"ST-RX820\b"):
+            self.assertIsNone(re.search(motif, texte), motif)
+        # Les pages du QSG V01 des brouillons (48-49, 52-53) sont 56-57 et 60-61 en V02 : aucun renvoi au guide n'y
+        # mène. Les pages 48-49 du manuel route de 2021, elles, sont justes.
+        for lien in dom.selectionner(self.section, "a.src"):
+            if QSG in lien.get("href"):
+                self.assertIsNone(re.search(r"p\.(48|49|52|53)\b", lien.texte()), lien.texte())
+        self.assertIsNone(re.search(r"(?:QSG|guide)(?: V0\d)? p\.(?:48|49|52|53)\b", texte))
+        cf7 = re.compile(r"(?<![0-9a-z#])CF[\s_-]*7(?![0-9])|4553", re.I)
+        self.assertIsNone(cf7.search(texte))
+        self.assertIsNone(cf7.search(html))
+        for adresse in ("manualslib", "bike-magazin", "nminus1", "99spokes", "rosebikes", "decathlon",
+                        "bike-components", "app.canyon.com", "/en-qa/", "GADBR01-10", "MAN_WXWXXXXXX1610S",
+                        "torque-specifications-and-concepts", "V0waw53NNHA"):
+            self.assertNotIn(adresse, html, adresse)
+        # L'axe arrière RWS n'est pas confirmé : ses 15 à 20 Nm ne sont jamais un couple à appliquer.
+        self.assertNotIn('<span class="nm">15', self.source)
+        # Les pédales PD-ME700 se serrent à la clé plate de 15 mm seule : ni Allen de 8 ni de 6 mm (1.6).
+        pedales = texte_de(self.par_id["montage-pedales"].section)
+        for absent in ("8\xa0mm", "Allen de 8", "Allen de 6", "six-pans de 6", "six-pans de 8"):
+            self.assertNotIn(absent, pedales, absent)
+
+    def test_aucune_donnee_personnelle(self):
+        texte, html = self.texte_complet(), self.source
+        for absent in ("CHF", "€", "/Users/", "ltimsi", "file:"):
+            self.assertNotIn(absent, texte, absent)
+            self.assertNotIn(absent, html, absent)
+        # Ni commande ni prix : « recommande » reste permis.
+        self.assertIsNone(re.search(r"\b(?:commandes?|prix)\b", texte, re.I))
+        # 1.8 donne la méthode seulement : aucune cote hors de celles des documents, aucun angle.
+        position = texte_de(self.par_id["montage-position"].section)
+        self.assertIn("ailleurs que sur ce site", position)
+        self.assertNotIn("°", position)
+        cotes = set(re.findall(r"(\d+(?:,\d+)?)\xa0mm", position))
+        self.assertLessEqual(cotes, {"3", "4", "5", "6", "7", "18", "60", "75", "110", "210", "440", "710", "810"})
+
+    def test_contradictions(self):
+        # Chaque contradiction du relevé qui touche un atelier est dite sur sa page, avec la valeur appliquée.
+        attendu = {
+            "montage-cintre": ("2021", "4,5-5,5", "QSG V02"),  # couples de potence
+            "montage-selle": ("2021", "5\xa0Nm", "6\xa0Nm"),  # collier
+            "montage-roues": ("12x148", "4\xa0bar", "3,0\xa0bar", "DT SWISS", "levier"),  # axes et pression
+            "montage-deballer": ("Organza", "Boîte à outils Canyon"),  # contenu du carton
+            "montage-controles": ("120\xa0kg", "130\xa0kg", "1CX"),  # charge totale
+            "montage-pedales": ("XT",),  # pédale de la photo officielle
+        }
+        for ident, mots in attendu.items():
+            with self.subTest(ident):
+                notes = [n for n in dom.selectionner(self.par_id[ident].section, "aside.note")
+                         if texte_de(dom.selectionner(n, "p.note-t")[0]).startswith("Contradiction")]
+                self.assertTrue(notes, ident)
+                texte = " ".join(texte_de(n) for n in notes)
+                for mot in mots:
+                    self.assertIn(mot, texte, mot)
+                self.assertTrue(any(m in texte for m in ("retenu", "appliqu", "s'impose", "prime")), texte[:160])
+
+    def test_a_lire_a_la_livraison(self):
+        # 1.2 : la liste du relevé « À lire sur la pièce ou sur l'outil à la livraison », à cocher.
+        section = self.par_id["montage-deballer"].section
+        (liste,) = dom.selectionner(section, "ul.check")
+        self.assertEqual(liste.get("data-key"), "montage-releve")
+        (bouton,) = dom.selectionner(section, "button.btn-reset")
+        self.assertEqual(bouton.get("data-reset"), "montage-releve")
+        points = dom.selectionner(liste, "li")
+        self.assertGreaterEqual(len(points), 14)
+        for n, li in enumerate(points, 1):
+            self.assertEqual(dom.selectionner(li, "input")[0].get("id"), f"ck-montage-releve-{n}")
+            self.assertTrue(dom.selectionner(li, "span.verif"), texte_de(li)[:80])
+        tout = " ".join(texte_de(li) for li in points) + liste.html()
+        for mot in ("clé dynamométrique Canyon", "p.72", "ZERO GAP", "GP0596-01", "MIN", "FLIP HEAD", "75\xa0mm",
+                    "entretoises", "Axe avant", "Axe arrière", "flanc", "jante", "L et R", "1,0\xa0mm", "SPD",
+                    "BT-DN320", "CR1632", "Réflecteurs", "#freins-systeme"):
+            self.assertIn(normaliser(mot), tout, mot)
+
+    def test_di2_premier_jour(self):
+        di2 = texte_de(self.par_id["montage-di2"].section)
+        for mot in ("RD-M8250", "△", "lock", "Single-click", "solid blue", "function button", "manivelle",
+                    "pas nécessaire", "QSG V02 p.32"):
+            self.assertIn(mot, di2, mot)
+
+    def test_pied_d_atelier(self):
+        # L'interdiction Canyon est en 1.1 et rappelée en 1.4.
+        for ident in ("montage-avant", "montage-selle"):
+            texte = texte_de(self.par_id[ident].section)
+            self.assertIn("mâchoires", texte, ident)
+            self.assertIn("Do not clamp carbon frames or seat posts", texte, ident)
+
+    def test_renvois_freins(self):  # 1.9 renvoie à 2.4 et 2.6 sans les recopier
+        self.assertIn('href="#freins-rodage"', self.html_de("montage-controles"))
+        self.assertIn('href="#freins-controles"', self.html_de("montage-controles"))
+        section = self.par_id["montage-controles"].section
+        texte = texte_de(section)
+        for recopie in ("20 fois", "vitesse moyenne", "allure de la marche"):
+            self.assertNotIn(recopie, texte, recopie)
+        premiere, chaque = dom.selectionner(section, "ul.check")
+        self.assertEqual((premiere.get("data-key"), chaque.get("data-key")), ("montage-premiere", "montage-chaque"))
+        self.assertGreaterEqual(len(dom.selectionner(premiere, "li")), 4)
+        self.assertGreaterEqual(len(dom.selectionner(chaque, "li")), 6)
+
+    def test_typographie(self):
+        # Le texte du source, balises remplacées par un séparateur (deux cellules voisines ne se collent pas).
+        texte = re.sub(r"<[^>]*>", " | ", self.source) + " | " + " | ".join(aria_labels(self.section))
+        self.assertIsNone(re.search("[\u2014\u2013]", self.source))
+        # Une valeur et son unité sont séparées par une espace insécable, comme au chapitre 2.
+        motif = r".{0,40}\d (?:Nm|N·m|mm|bar|kg|PSI|V|A|s|%)(?![\w·])"
+        self.assertIsNone(re.search(motif, texte), re.search(motif, texte))
+        self.assertNotIn("&nbsp;", self.source)
 
 
 if __name__ == "__main__":
