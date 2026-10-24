@@ -507,17 +507,21 @@ class TestPages(Site):
 
     def test_page_couples(self):
         # Une section par catégorie publiée, dans l'ordre des lots : Freins (2.1), puis Montage à la livraison (1.1).
+        # Le tableau des Freins n'a pas de lien « #id » : il est recopié tel quel. Celui du Montage renvoie à 1.5 par
+        # « #montage-roues », réécrit vers la page de l'atelier.
         racine = self.arbre("couples/")
         sections = dom.selectionner(racine, "section.couples-cat")
-        attendu = [("Freins", "freins", "../freins/systeme/"), ("Montage à la livraison", "montage", "../montage/avant/")]
-        self.assertEqual(len(sections), len(attendu))
-        for section, (titre, ident, origine) in zip(sections, attendu):
+        categories = [("Freins", "freins", "../freins/systeme/", {}),
+                      ("Montage à la livraison", "montage", "../montage/avant/", {"#montage-roues": "../montage/roues/"})]
+        self.assertEqual(len(sections), len(categories))
+        for section, (titre, ident, origine, liens) in zip(sections, categories):
             self.assertEqual(un(section, "h2").texte(), titre)
             (tableau,) = dom.selectionner(section, '[data-resume="couples"]')
-            # Le tableau du chapitre, ses liens « #id » réécrits vers la page qui porte l'id (les ateliers d'abord).
-            table = pages.ancres(sorted(self.pages, key=lambda p: p.chemin.count("/") != 2))
-            attendu = gabarit.reecrire_liens(self.chapitres[ident].resumes["couples"][0].html(), "couples/", table)
-            self.assertEqual(tableau.html(), attendu)
+            source = self.chapitres[ident].resumes["couples"][0].html()
+            self.assertEqual(re.findall(r'href="(#[^"]+)"', source), list(liens), ident)
+            for avant, apres in liens.items():
+                source = source.replace(f'href="{avant}"', f'href="{apres}"')
+            self.assertEqual(tableau.html(), source, ident)
             # Le renvoi vers l'atelier d'où vient le tableau.
             self.assertEqual(dom.selectionner(un(section, "p.origine"), "a")[0].get("href"), origine)
 
@@ -892,6 +896,11 @@ class TestPages(Site):
                           ("div", ["intro"]), ("section", ["accueil-bloc"])])
         self.assertEqual(un(blocs[0], "p.eyebrow").texte(), "Canyon Grizl CF 8 Di2 · taille M · Floating Violet")
         self.assertEqual(un(blocs[0], "h1").texte(), "Ton Grizl CF 8 Di2, tel qu’il sort du carton")
+        # La légende du schéma 2D, sous l'image : app.js la montre en 2D, l'aide du 2D tenant sur une ligne.
+        scene = un(page, '[id="scene"]')
+        legende = un(un(scene, "figcaption"), '[id="legende-2d"]')
+        self.assertEqual(legende.texte().strip(), "Vue côté transmission : en pointillés, les pièces du côté gauche.")
+        self.assertIn("hidden", [n for n, _ in legende.attrs])
         # Sans « à droite » : sous 1100 px, « Où intervenir » est sous la scène.
         self.assertEqual(un(blocs[0], "p.lead").texte(), "Fais tourner le vélo, touche une pastille, ou choisis une "
                          "zone pour ouvrir ses ateliers.")

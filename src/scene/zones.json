@@ -38,7 +38,8 @@
   {
     "id": "axes",
     "nom": "Axes des roues",
-    "ancre": "axeAvant",
+    "ancre": "teteAxeAvant",
+    "decalage": [0, 34],
     "vue": { "cible": "teteAxeAvant", "dir": [0.45, 0.25, -1], "dist": 640 },
     "schema": { "centre": "teteAxeAvant", "largeur": 420 }
   },
@@ -46,7 +47,7 @@
     "id": "pedalier",
     "nom": "Pédalier et pédales",
     "ancre": "manivelleDroite",
-    "vue": { "cible": "manivelleDroite", "dir": [0.15, 0.25, 1], "dist": 800 },
+    "vue": { "cible": "manivelleDroite", "dir": [0.15, 0.55, 1], "dist": 1080 },
     "schema": { "centre": "manivelleDroite", "largeur": 560 }
   },
   {

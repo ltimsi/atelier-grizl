@@ -15,6 +15,10 @@
 // Une pastille ou le bouton d'une carte (button.zone-btn) appelle choisirZone : la pastille et la carte deviennent
 // actives, la 3D surligne la zone et la vise, le schéma 2D la cadre, et la variante de la zone s'affiche dans
 // l'image. Les liens des cartes mènent aux pages des ateliers, sans JavaScript : sans app.js, ils marchent encore.
+// Pastilles : chacune est posée sur la projection de l'ancre de sa zone, en 3D (scene.pastilles) comme en 2D
+// (schema.pastilles). Une zone peut avoir un champ decalage, [dx, dy] en pixels de l'écran : sa pastille est posée à ce
+// décalage de son ancre, à toutes les largeurs (placeDePastille). Celle des axes a [0, 34] : elle est juste sous la tête
+// de l'axe avant, parce que la pastille de l'étrier se projette juste au-dessus du moyeu.
 // Défilement après le choix (montrerChoix) : sur deux colonnes, la carte vient à l'écran si elle n'y est pas. Sur une
 // seule, la scène est au-dessus des cartes : une pastille ne fait pas défiler la page, pour garder le vélo à l'écran,
 // et le bouton d'une carte ramène l'image.
@@ -33,7 +37,9 @@ const ADDONS = Object.freeze([
 
 const TEXTES = Object.freeze({
   aide3d: 'Un doigt pour tourner, deux pour zoomer.',
-  aide2d: 'Vue côté transmission. En pointillés : les pièces du côté gauche. Touche une pastille pour zoomer.',
+  // Une ligne sur un écran de 360 px, comme l'aide de la 3D. La vue côté transmission et les pointillés du côté gauche
+  // sont dits sous l'image, par la légende #legende-2d que montre le mode 2D.
+  aide2d: 'Touche une pastille pour zoomer.',
   echec: 'La 3D n’a pas pu se charger sur cet appareil. Le schéma 2D reste disponible.',
   echecTout: 'Ni la 3D ni le schéma 2D n’ont pu se charger. Les ateliers restent accessibles par le menu et par ' +
     '« Où intervenir ».',
@@ -212,6 +218,7 @@ function choisirMode(m) {
   ui.canvas.hidden = m === '2d';
   ui.stage.classList.toggle('studio', m === 'reel');
   ui.legende.hidden = m !== 'simple';
+  if (ui.legende2d) ui.legende2d.hidden = m !== '2d';
   ui.aide.textContent = m === '2d' ? TEXTES.aide2d : TEXTES.aide3d;
   ui.statut.hidden = m === '2d' || etat.scene !== null || etat.echec;
   if (m === '2d') {
@@ -222,9 +229,21 @@ function choisirMode(m) {
   placerPastilles();
 }
 
+/**
+ * La place d'une pastille : la projection de l'ancre de sa zone, plus le décalage de la zone (decalage de zones.json,
+ * [dx, dy] en pixels de l'écran) s'il en a un. La visibilité reste celle de l'ancre.
+ * @param {{x: number, y: number, visible: boolean}} place La projection de l'ancre, en pixels de l'image.
+ * @param {object} zone Une zone de zones.json.
+ * @returns {{x: number, y: number, visible: boolean}}
+ */
+export function placeDePastille(place, zone) {
+  const [dx, dy] = zone.decalage ?? [0, 0];
+  return { ...place, x: place.x + dx, y: place.y + dy };
+}
+
 function poserPastilles(places) {
-  places.forEach((q, i) => {
-    const b = ui.pins[i];
+  places.forEach((p, i) => {
+    const b = ui.pins[i], q = placeDePastille(p, ui.zones[i]);
     b.hidden = !q.visible;
     b.style.transform = `translate(${q.x.toFixed(1)}px, ${q.y.toFixed(1)}px)`;
   });
@@ -368,7 +387,8 @@ function demarrer() {
   ui = {
     zones,
     stage: $('#scene-stage'), svg: $('#plan'), canvas: $('#gl'), variante: $('#variante'),
-    aide: $('#scene-aide'), legende: $('#key'), statut: $('#scene-statut'), alerte: $('#scene-alerte'),
+    aide: $('#scene-aide'), legende: $('#key'), legende2d: $('#legende-2d'), statut: $('#scene-statut'),
+    alerte: $('#scene-alerte'),
     dialogue: $('#approche-liste'), contenu: $('#approche-contenu'),
     onglets: [...document.querySelectorAll('#scene .modes [role="tab"]')],
     cartes: [...document.querySelectorAll('.zone-carte[data-zone]')],

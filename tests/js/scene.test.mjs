@@ -120,25 +120,29 @@ test('scène : les zones du montage surlignent leurs pièces', () => {
   }
 });
 
-test('scène : chaque pastille du montage est posée sur sa pièce, celle des axes sous l’axe avant', () => {
-  const { ancres, FA } = points(GEO);
-  const boites = {};
-  for (const module of PIECES) groupeDe(module).traverse(o => {
-    if (o.isMesh && o.userData.zone) (boites[o.userData.zone] ??= new THREE.Box3()).expandByObject(o);
-  });
-  for (const [zone, ancre] of [['poste', 'potence'], ['selle', 'teteTige'], ['pedalier', 'manivelleDroite'],
-    ['derailleur', 'batterieDi2']]) {
-    const b = boites[zone].clone().expandByScalar(10);
-    assert.ok(b.containsPoint(new THREE.Vector3(...ancres[ancre])), `${ancre} hors de la zone ${zone}`);
+// Une ancre du montage est sur sa pièce : à moins de SUR_LA_PIECE mm d'un sommet d'un maillage de sa zone. Une boîte
+// englobante ne suffirait pas : celle du poste couvre tout le cintre, et une ancre en l'air entre le cintre et la
+// potence y serait.
+const SUR_LA_PIECE = 15;
+
+test('scène : chaque pastille du montage est posée sur sa pièce, au plus près d’un sommet de sa zone', () => {
+  const { ancres } = points(GEO);
+  const sommets = {};
+  const v = new THREE.Vector3();
+  for (const module of PIECES) {
+    const groupe = groupeDe(module);
+    groupe.updateMatrixWorld(true);
+    groupe.traverse(o => {
+      if (!o.isMesh || !o.userData.zone) return;
+      const pos = o.geometry.attributes.position, liste = (sommets[o.userData.zone] ??= []);
+      for (let i = 0; i < pos.count; i++) liste.push(v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld).toArray());
+    });
   }
-  // L'axe avant : la pastille est sous l'axe, sur la roue, du côté gauche où se trouve la tête de l'axe. Juste
-  // au-dessus du moyeu, la pastille de l'étrier prend la place.
-  const axes = boites.axes, [x, y, z] = ancres.axeAvant;
-  assert.ok(axes.clone().expandByScalar(10).containsPoint(new THREE.Vector3(...ancres.teteAxeAvant)),
-    'teteAxeAvant, que visent la vue et le schéma, hors de la zone des axes');
-  assert.equal(x, FA[0]);
-  assert.ok(y < axes.min.y && FA[1] - y < GEO.rayonPneu.v / 2, `axe avant : ${FA[1] - y} mm sous l’axe`);
-  assert.ok(z >= axes.min.z - 10 && z < 0, `axe avant : z = ${z}`);
+  for (const z of ZONES.slice(3)) {
+    const a = ancres[z.ancre];
+    const d = Math.min(...sommets[z.id].map(q => Math.hypot(q[0] - a[0], q[1] - a[1], q[2] - a[2])));
+    assert.ok(d <= SUR_LA_PIECE, `${z.ancre} à ${d.toFixed(1)} mm de la zone ${z.id}`);
+  }
 });
 
 test('scène : chaque zone de zones.json a des maillages, aucun maillage hors des zones', () => {

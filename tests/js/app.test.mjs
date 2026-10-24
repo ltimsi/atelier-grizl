@@ -9,7 +9,7 @@ import * as app from '../../src/scene/app.js';
 import * as scene from '../../src/scene/scene.js';
 
 const CODE = readFileSync(new URL('../../src/scene/app.js', import.meta.url), 'utf8');
-const { approximationsSansScene, chargerLibs, choisirZone } = app;
+const { approximationsSansScene, chargerLibs, choisirZone, placeDePastille } = app;
 
 test('approximationsSansScene : les META de chaque pièce, sans zone, puis la géométrie', () => {
   const liste = approximationsSansScene(scene);
@@ -55,8 +55,23 @@ test('choisirZone : false hors navigateur, la page n’a pas de scène', () => {
   assert.equal(choisirZone('inconnue'), false);
 });
 
-test('app.js : la fiche et l’historique sont partis, seuls trois calculs restent exportés', () => {
-  assert.deepEqual(Object.keys(app).sort(), ['approximationsSansScene', 'chargerLibs', 'choisirZone']);
+test('placeDePastille : la place projetée de l’ancre, plus le décalage de la zone, en pixels', () => {
+  const place = { x: 120.5, y: 80, visible: true };
+  assert.deepEqual(placeDePastille(place, { id: 'disques' }), place, 'sans décalage, la place de l’ancre');
+  assert.deepEqual(placeDePastille(place, { id: 'axes', decalage: [0, 34] }), { x: 120.5, y: 114, visible: true });
+  assert.deepEqual(placeDePastille({ x: 0, y: 0, visible: false }, { decalage: [3, -4] }), { x: 3, y: -4, visible: false });
+});
+
+test('aide du schéma 2D : une ligne courte, comme l’aide de la 3D, qui tient sur un écran de 360 px', () => {
+  const texte = cle => CODE.match(new RegExp(`^  ${cle}: '([^']+)',$`, 'm'))?.[1];
+  const [aide3d, aide2d] = [texte('aide3d'), texte('aide2d')];
+  assert.equal(aide3d, 'Un doigt pour tourner, deux pour zoomer.');
+  assert.ok(aide2d, 'aide2d absente');
+  assert.ok(aide2d.length <= aide3d.length, `aide 2D de ${aide2d.length} caractères, plus longue que l’aide 3D`);
+});
+
+test('app.js : la fiche et l’historique sont partis, seuls quatre calculs restent exportés', () => {
+  assert.deepEqual(Object.keys(app).sort(), ['approximationsSansScene', 'chargerLibs', 'choisirZone', 'placeDePastille']);
   for (const nom of ['atelierDuClic', 'ouvrirAtelier', 'ouvrirZone', 'atelierDeLEntree', 'ancreDe', 'lignesPieces',
     'notesDeZone', 'idDuHash']) {
     assert.equal(nom in app, false, `${nom} encore exporté`);

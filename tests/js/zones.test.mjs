@@ -26,18 +26,32 @@ test('zones du montage : noms et ancres, pastilles 4 à 8', () => {
   const attendu = [
     ['poste', 'Poste de pilotage', 'potence'],
     ['selle', 'Selle et tige', 'teteTige'],
-    ['axes', 'Axes des roues', 'axeAvant'],
+    ['axes', 'Axes des roues', 'teteAxeAvant'],
     ['pedalier', 'Pédalier et pédales', 'manivelleDroite'],
     ['derailleur', 'Dérailleur Di2', 'batterieDi2'],
   ];
   assert.deepEqual(ZONES.slice(3).map(z => [z.id, z.nom, z.ancre]), attendu);
-  // La vue et le cadre du schéma visent la pièce de la pastille. Celle des axes est posée sous l'axe avant, pour
-  // laisser la place à la pastille de l'étrier : sa vue et son cadre visent la tête de l'axe elle-même.
+  // La vue et le cadre du schéma visent la pièce de la pastille.
   for (const z of ZONES.slice(3)) {
-    const cible = z.id === 'axes' ? 'teteAxeAvant' : z.ancre;
-    assert.equal(z.vue.cible, cible, `${z.id} : vue.cible`);
-    assert.equal(z.schema.centre, cible, `${z.id} : schema.centre`);
+    assert.equal(z.vue.cible, z.ancre, `${z.id} : vue.cible`);
+    assert.equal(z.schema.centre, z.ancre, `${z.id} : schema.centre`);
   }
+});
+
+// decalage : [dx, dy] en pixels de l'écran, facultatif. app.js pose la pastille à ce décalage de la projection de son
+// ancre, en 3D comme en 2D, à toutes les largeurs. Seule la zone des axes en a un : sa pastille est juste sous la tête
+// de l'axe avant, parce que la pastille de l'étrier se projette juste au-dessus du moyeu.
+test('décalage des pastilles : seule celle des axes, vers le bas, assez pour l’écart de 30 px avec l’étrier', () => {
+  assert.deepEqual(ZONES.filter(z => 'decalage' in z).map(z => z.id), ['axes']);
+  const d = parId.axes.decalage;
+  assert.equal(d.length, 2);
+  assert.ok(d.every(Number.isFinite), 'deux nombres');
+  assert.equal(d[0], 0, 'droit sous l’ancre');
+  // La pastille de l'étrier (2) est au-dessus du moyeu, celle des axes (6) à d[1] pixels sous lui : leurs centres sont
+  // au moins à d[1] pixels l'un de l'autre, quelle que soit la largeur.
+  assert.ok(ancres.etrierAvant[1] > ancres[parId.axes.ancre][1], 'l’étrier au-dessus de l’axe');
+  assert.ok(d[1] >= 30, `décalage de ${d[1]} px, moins que l’écart minimal des pastilles`);
+  assert.ok(d[1] <= 40, `décalage de ${d[1]} px : la pastille s’éloigne de son axe`);
 });
 
 test('zones des freins inchangées', () => {
@@ -67,5 +81,7 @@ test('forme des zones : nom, vue et cadre du schéma', () => {
     assert.ok(Number.isFinite(z.vue.dist) && z.vue.dist > 0, `${z.id} : vue.dist`);
     assert.ok(Number.isFinite(z.schema.largeur) && z.schema.largeur > 0, `${z.id} : schema.largeur`);
     if (z.variante) assert.equal(z.variante.libelles.length, 2, `${z.id} : deux libellés`);
+    const connus = ['id', 'nom', 'ancre', 'vue', 'schema', 'variante', 'decalage'];
+    for (const cle of Object.keys(z)) assert.ok(connus.includes(cle), `${z.id} : champ inconnu « ${cle} »`);
   }
 });

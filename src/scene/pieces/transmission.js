@@ -165,6 +165,7 @@ export function construire(o, p, geo) {
   o.zone('pedalier');
   pedalier(o, p, geo, plans.avant);
   o.zone(null);
+  boitier(o, p, geo);
   cassette(o, p, pas, zPignon);
   chaine(o, p, pas, plans);
   o.zone('derailleur');
@@ -172,7 +173,10 @@ export function construire(o, p, geo) {
   o.zone(null);
 }
 
-// Plateau, araignée, manivelles, axe et cuvettes du boîtier.
+// Moyeu des manivelles : de la face extérieure d'une cuvette du boîtier jusqu'à la manivelle.
+const zMoyeuManivelle = geo => geo.largeurBoite.v / 2 + COUPELLE.ep + 0.75;
+
+// Plateau, araignée, manivelles et leur axe.
 function pedalier(o, p, geo, zPlateau) {
   const T = o.THREE;
   const { BB } = p;
@@ -232,7 +236,7 @@ function pedalier(o, p, geo, zPlateau) {
   oeil.absarc(L, 0, MANIVELLE.trouPedale, 0, Math.PI * 2, true);
   profil.holes.push(oeil);
   const demiQ = COTES.facteurQ.v / 2, demiEp = MANIVELLE.ep / 2 + MANIVELLE.biseau;
-  const zBoite = geo.largeurBoite.v / 2, zMoyeu = zBoite + COUPELLE.ep + 0.75;
+  const zMoyeu = zMoyeuManivelle(geo);
   for (const [s, cote, a] of [[1, 'droite', angle], [-1, 'gauche', angle + 180]]) {
     const n = nom(`manivelle ${cote}`);
     const m = n(o.extr(profil, MANIVELLE.ep, 'crank', MANIVELLE.biseau));
@@ -248,11 +252,15 @@ function pedalier(o, p, geo, zPlateau) {
     nom('manivelle gauche')(o.boulon([c[0], c[1], -(zMoyeu + 8 + dz)], [dos[0], dos[1], 0], 3, 2, 'steel'));
   }
 
-  // Axe creux, puis les cuvettes pressées dans la boîte de pédalier, hors de la zone du pédalier.
+  // Axe creux.
   nom('axe de pédalier')(o.tubeZ(BB, -zMoyeu - 6, zMoyeu + 6, RAYON_AXE, 'steel', 32));
-  o.zone(null);
+}
+
+// Les cuvettes du boîtier, pressées dans la boîte de pédalier du cadre : hors de la zone du pédalier.
+function boitier(o, p, geo) {
+  const zBoite = geo.largeurBoite.v / 2;
   for (const s of [-1, 1]) {
-    nom('boîtier')(o.tubeZ(BB, s * zBoite, s * (zBoite + COUPELLE.ep), COUPELLE.rayon, 'black', 40));
+    o.tubeZ(p.BB, s * zBoite, s * (zBoite + COUPELLE.ep), COUPELLE.rayon, 'black', 40).name = 'boîtier';
   }
 }
 

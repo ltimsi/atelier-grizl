@@ -76,7 +76,7 @@ test('ancres : les cinq noms attendus, en trois dimensions, disques à gauche', 
 test('ancres du montage : cinq pastilles, posées depuis les points du vélo', () => {
   const p = points();
   const { ancres } = p;
-  for (const nom of ['potence', 'teteTige', 'axeAvant', 'teteAxeAvant', 'manivelleDroite', 'batterieDi2']) {
+  for (const nom of ['potence', 'teteTige', 'teteAxeAvant', 'manivelleDroite', 'batterieDi2']) {
     assert.equal(ancres[nom]?.length, 3, nom);
     assert.ok(ancres[nom].every(Number.isFinite), nom);
   }
@@ -92,13 +92,12 @@ test('ancres du montage : cinq pastilles, posées depuis les points du vélo', (
   assert.ok(le[0] * arriere[0] + le[1] * arriere[1] > 0, 'potence : derrière le pivot');
   assert.ok(ancres.potence[1] > p.HTt[1], 'potence : au-dessus du capot du jeu de direction');
   assert.ok(ancres.potence[2] > 0, 'potence : côté transmission');
-  // Axe avant : côté gauche, sous l'axe, sur la roue. La pastille de l'étrier est juste au-dessus du moyeu.
-  assert.equal(ancres.axeAvant[0], p.FA[0]);
-  assert.ok(ancres.axeAvant[1] < p.FA[1] && ancres.axeAvant[1] > p.FA[1] - GEO.rayonPneu.v / 2, 'axe avant : sous l’axe');
-  assert.ok(ancres.axeAvant[2] < 0, 'axe avant : côté gauche');
+  // Axe avant : sur l'axe, côté gauche, là où se trouve sa tête. La pastille de l'étrier est juste au-dessus du moyeu :
+  // celle des axes est décalée vers le bas à l'écran (zones.json, decalage).
+  assert.deepEqual(ancres.teteAxeAvant.slice(0, 2), p.FA);
+  assert.ok(ancres.teteAxeAvant[2] < 0, 'tête de l’axe avant : côté gauche');
   assert.ok(ancres.etrierAvant[1] > p.FA[1], 'la pastille de l’étrier est au-dessus du moyeu');
-  // La vue et le cadre de la zone visent la tête de l'axe : sur l'axe, du même côté que la pastille.
-  assert.deepEqual(ancres.teteAxeAvant, [p.FA[0], p.FA[1], ancres.axeAvant[2]]);
+  assert.equal(ancres.axeAvant, undefined, 'plus d’ancre sous l’axe, sur les rayons');
   // Batterie Di2 : sur le dérailleur, derrière et sous l'axe de la roue arrière, côté transmission.
   assert.ok(ancres.batterieDi2[0] < p.RA[0] && ancres.batterieDi2[1] < p.RA[1], 'batterie : derrière et sous l’axe');
   assert.ok(ancres.batterieDi2[1] > p.poulieBasse[1], 'batterie : au-dessus du galet bas');
@@ -333,7 +332,13 @@ test('registre des sources : les documents du montage que citent les pièces 3D 
   // la selle Fizik.
   assert.equal(SOURCES['canyon-manuel-roues'].url, 'https://www.canyon.com/on/demandware.static/-/Library-Sites-' +
     'canyon-shared/default/dw22ff8457/documents/customer-service/gravel-bikes/canyon-wheelset-manual-2025.pdf');
-  for (const id of ['canyon-sp100', 'fizik-argo-terra-x5']) assert.ok(SOURCES[id], id);
+  // La page de la tige SP100 et celle de la selle Fizik : leur adresse est celle du relevé du montage.
+  for (const id of ['canyon-sp100', 'fizik-argo-terra-x5']) {
+    assert.ok(SOURCES[id], id);
+    assert.ok(releve.includes(SOURCES[id].url), `${id} : adresse absente du relevé du montage`);
+  }
+  assert.equal(SOURCES['canyon-sp100'].url,
+    'https://www.canyon.com/en-ch/gear/bike-parts/posts-and-clamps/canyon-sp100-vcls-2.1-cf-27.2-seatpost/10016374.html');
 });
 
 test('registre des sources : plus aucune source du Grizl CF 7 ni de ses pièces', () => {

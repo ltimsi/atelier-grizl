@@ -10,7 +10,7 @@ export const SOURCES = Object.freeze({
   // Canyon
   'canyon-sp100': Object.freeze({
     titre: 'Canyon, page de la tige de selle SP100 VCLS 2.1 CF 27.2',
-    url: 'https://www.canyon.com/fr-ch/accessoires-velo/composants/tige-de-selle-et-colliers/canyon-sp100-vcls-2.1-cf-27.2-seatpost/10016374.html',
+    url: 'https://www.canyon.com/en-ch/gear/bike-parts/posts-and-clamps/canyon-sp100-vcls-2.1-cf-27.2-seatpost/10016374.html',
     type: 'fiche',
   }),
   'canyon-photo-sp100': Object.freeze({
