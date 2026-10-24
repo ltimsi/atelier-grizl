@@ -681,6 +681,28 @@ class TestMontage(unittest.TestCase):
                     "Centre the handlebars accurately", "drops", "This is a job for experts only", "encoche"):
             self.assertIn(mot, texte, mot)
 
+    def test_pas_a_pas_de_la_potence(self):
+        # Le mode pas à pas ne montre que le titre et le corps de chaque étape, en ligne droite : l'avertissement du
+        # pivot en carbone et les sorties de branche doivent donc être dans les corps des étapes de 1.3.
+        a = self.par_id["montage-cintre"]
+        etapes = dom.selectionner(a.section, "ol.steps > li")
+
+        def corps(n):
+            return " ".join(texte_de(e) for e in elements(etapes[n - 1]) if "st-t" not in e.classes())
+        for n in (9, 15):
+            for mot in ("Pivot en carbone", "This is a job for experts only", "clé Canyon", "2\u00a0Nm", "ne commence pas"):
+                self.assertIn(mot, corps(n), f"étape {n} : {mot}")
+        self.assertIn("Fin du réalignement", corps(14))
+        self.assertIn("ne fais pas l'étape 15", corps(14))
+        for n in (8, 14):
+            self.assertIn("ferme le mode pas à pas", corps(n).lower(), n)
+        titres = [e.titre for e in a.etapes]
+        self.assertEqual(len(titres), 24)
+        self.assertTrue(all(t.startswith("Réaligner") for t in titres[8:14]), titres[8:14])
+        self.assertTrue(all(t.startswith("Hauteur") for t in titres[14:]), titres[14:])
+        # L'alignement de l'étape 8 demande la roue avant : 1.5 renvoie à 1.3 une fois la roue montée.
+        self.assertIn('href="#montage-cintre"', self.html_de("montage-roues"))
+
     def test_corrections_de_la_relecture(self):
         par_id, texte = self.par_id, self.texte_complet()
         # Cale de transport et calages de carton retirés en étapes à part ; le vélo retourné sur la selle et le cintre.
