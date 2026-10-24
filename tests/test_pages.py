@@ -631,20 +631,41 @@ class TestPages(Site):
         # HB0067 et les cocottes ST-RX825, avec les couples du chapitre ; l'axe avant de 12 x 100 serré à 10-15 Nm à la
         # clé de 6 mm, son type à lire sur la pièce. Aucune pièce du CF 7, aucun ordre de serrage croisé. L'en-tête de
         # chaque fichier dit ce qui est approché.
+        # Ateliers 1.6 et 1.1 : la PD-ME700 et sa cale SM-SH51 avec les couples du chapitre (pédale 35-55 Nm à la clé
+        # plate de 15 mm, cales 2,5 Nm puis 5-6 Nm), le pas à gauche de la pédale gauche, jamais le six-pans des
+        # autres pédales Shimano ; la TW-6.2 de 10 à 60 Nm et son déclic, et de la clé Canyon rien d'autre que sa
+        # plage à lire sur l'outil, sans aucun chiffre.
         attendus = {"m-cockpit.js": ("ST0046", "HB0067", "ST-RX825", "6\xa0Nm", "2\xa0Nm", "haut", "sans jour"),
-                    "m-axle.js": ("12 x 100", "10-15\xa0Nm", "6\xa0mm", "à lire sur la pièce")}
+                    "m-axle.js": ("12 x 100", "10-15\xa0Nm", "6\xa0mm", "à lire sur la pièce"),
+                    "m-pedal.js": ("PD-ME700", "SM-SH51", "35-55\xa0Nm", "15\xa0mm", "2,5\xa0Nm", "5-6\xa0Nm",
+                                   "à gauche"),
+                    "m-torque.js": ("TW-6.2", "10 à 60\xa0Nm", "déclic", "à lire sur l'outil")}
         absents = ("CF 7", "CF\xa07", "GRX 610", "RX610", "RX820 mécanique", "en croix",
                    "DT Swiss 350 Center Lock disque SM-RT64")
         for nom, presents in attendus.items():
             texte = (RACINE / "src" / "js" / "models" / nom).read_text(encoding="utf-8")
+            # Le site mélange les deux apostrophes : les valeurs sont cherchées avec l'apostrophe droite.
+            normal = texte.replace("\u2019", "'")
             # assertTrue plutôt qu'assertIn : un échec nomme la valeur sans recopier tout le fichier.
             for present in presents:
-                self.assertTrue(present in texte, f"{nom} : {present!r} absent")
+                self.assertTrue(present in normal, f"{nom} : {present!r} absent")
             for absent in absents:
                 self.assertFalse(absent in texte, f"{nom} : {absent!r} présent")
             self.assertIsNone(re.search("[\u2014\u2013]", texte), f"{nom} : tiret cadratin ou demi-cadratin")
             entete = texte[:texte.index("*/")]
             self.assertIn("approchée", entete, f"{nom} : en-tête sans forme approchée")
+        # La PD-ME700 se serre à la clé plate de 15 mm : le six-pans de 8 mm du DM va à d'autres pédales.
+        pedale = (RACINE / "src" / "js" / "models" / "m-pedal.js").read_text(encoding="utf-8")
+        self.assertIsNone(re.search(r"(?<![\d,.])8[ \xa0]*mm", pedale), "m-pedal.js : « 8 mm » présent")
+        # La clé Canyon : chaque ligne qui la nomme dit que sa plage est à lire sur l'outil, et aucune ne porte de
+        # chiffre de couple ni de plage.
+        cle = (RACINE / "src" / "js" / "models" / "m-torque.js").read_text(encoding="utf-8").replace("\u2019", "'")
+        lignes = [ligne for ligne in cle.splitlines() if "Canyon" in ligne]
+        self.assertTrue(lignes, "m-torque.js : la clé Canyon n'est pas nommée")
+        for ligne in lignes:
+            self.assertIn("à lire sur l'outil", ligne, f"m-torque.js : {ligne.strip()!r}")
+            self.assertIsNone(re.search(r"\d[\d,.]*[ \xa0]*(?:à|-)[ \xa0]*\d|\d[ \xa0]*N·?m", ligne),
+                              f"m-torque.js : chiffre près de la clé Canyon : {ligne.strip()!r}")
 
     def test_approche_et_sources(self):
         for chemin, ident in (("approche/", "approche-page"), ("sources/", "sources-page")):
