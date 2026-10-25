@@ -1555,6 +1555,17 @@ class TestSiteAvecAtelierSansZone(unittest.TestCase):
             self.assertNotIn("Zone ", texte, chemin)
             self.assertNotIn("data-zone", texte, chemin)
 
+    def test_fil_d_ariane_sans_zone(self):
+        # Le fil d'Ariane d'un atelier sans zone : Ateliers, la catégorie (lien vers sa page), puis l'atelier, sans
+        # aucune zone ni « Zone N ».
+        attendu = {"montage/avant/": "1.1 Avant de commencer", "montage/deballer/": "1.2 Déballer sans rien abîmer"}
+        for chemin, atelier in attendu.items():
+            fil = un(dom.analyser(self.rendues[chemin]), "nav.crumbs")
+            self.assertEqual(fil.texte(), f"Ateliers/Montage à la livraison/{atelier}", chemin)
+            self.assertEqual([(a.get("href"), a.texte()) for a in dom.selectionner(fil, "a")],
+                             [("../", "Montage à la livraison")], chemin)
+            self.assertEqual(un(fil, '[aria-current="page"]').texte(), atelier, chemin)
+
     def test_accueil_n_a_pas_de_carte_sans_zone(self):
         # « Où intervenir » (les div.zone-carte) liste l'atelier à zone du Montage et aucun des deux autres. L'ancre
         # « montage-avant » du bloc des anciennes adresses mène, elle, à sa page.

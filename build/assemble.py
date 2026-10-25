@@ -101,8 +101,11 @@ def controle_ateliers(texte, zones):
         zone, type_, blocs = s.get("data-zone") or None, s.get("data-type"), s["blocs"]
         if not s.get("id"):
             erreurs.append(f"{nom} : app.js ne peut pas l'ouvrir")
-        if zone not in zones and not (zone is None and type_ == "comprendre"):
-            erreurs.append(f"{nom} : data-zone « {zone or ''} » absente de src/scene/zones.json")
+        if zone is None and type_ != "comprendre":
+            erreurs.append(f"{nom} : data-zone manquante ; seul un atelier « comprendre » peut s'en passer "
+                           f"(type {type_ or 'absent'})")
+        elif zone is not None and zone not in zones:
+            erreurs.append(f"{nom} : data-zone « {zone} » absente de src/scene/zones.json")
         if type_ not in TYPES_ATELIER:
             erreurs.append(f"{nom} : data-type « {type_ or ''} » inconnu (comprendre, entretenir, regler ou remplacer)")
         elif type_ == "comprendre":

@@ -312,7 +312,8 @@ class TestControleAteliers(unittest.TestCase):
             with self.subTest(type=type_):
                 sans_zone = atelier("montage-x", None, type_, COMPLET, attributs)
                 err = assemble.controle_ateliers(self.fragment_sans_zone(sans_zone), ["disques"])
-                self.assertIn("atelier montage-x : data-zone «  » absente de src/scene/zones.json", err)
+                self.assertIn("atelier montage-x : data-zone manquante ; seul un atelier « comprendre » peut s'en passer "
+                              f"(type {type_})", err)
                 self.assertEqual(len(err), 1, err)
 
     def test_atelier_sans_zone_type_inconnu_refuse(self):

@@ -20,8 +20,8 @@
 //      (chaque <details> ouvert, chaque figure des onglets montrée) et ne doit toujours pas défiler en largeur ;
 //   2. accueil : la scène est dessinée (sans WebGL : le schéma 2D, et la page le dit). L'aide de la scène a un fond, et
 //      aucune pastille ne touche son rectangle, en 3D comme en 2D. Dans les deux vues d'ensemble, celle du chargement (la
-//      3D, ou le schéma 2D sans WebGL) et celle du schéma 2D après son onglet, toutes les pastilles de zones.json sont
-//      affichées et deux pastilles ont leurs centres à 30 px au moins (ECART_PASTILLES : elles ne se chevauchent pas).
+//      3D, ou le schéma 2D sans WebGL) et celle du schéma 2D après son onglet, toutes les pastilles du bloc #zones-data
+//      de la page (celui qu'app.js lit) sont affichées et deux pastilles ont leurs centres à 30 px au moins (ECART_PASTILLES : elles ne se chevauchent pas).
 //      Un clic sur la pastille 2 rend active (aria-current) la carte « Étrier et plaquettes » de « Où intervenir », puis
 //      la pastille 3 celle des manettes, la pastille 4 celle du poste de pilotage, puis le bouton de la carte « Étrier
 //      et plaquettes » la sienne. Les pastilles 3 et 4 partent de la vue d'ensemble. Les pastilles sont cliquées à la
@@ -30,7 +30,8 @@
 //      l'écran (95 % au moins entre la barre du haut et le bas de l'écran) ; sur deux colonnes, la carte choisie est à
 //      l'écran. Ensuite, avec WebGL : la zone des disques, sans variante (#variante reste caché), puis la vue
 //      d'ensemble, pour le budget de triangles ; la variante de l'étrier (plaquettes sorties) ; l'onglet « Schéma 2D »,
-//      puis sa vue d'ensemble ; la fenêtre « Ce qui est approché », qui s'ouvre et se remplit ;
+//      puis sa vue d'ensemble ; la fenêtre « Ce qui est approché », qui s'ouvre et se remplit. La légende du schéma 2D
+//      (#legende-2d) est visible en 2D (onglet « Schéma 2D », ou dès le chargement sans WebGL) et cachée en 3D ;
 //   3. anciennes ancres de la racine : index.html#freins-plaquettes et #freins-plaquettes arrivent sur
 //      freins/plaquettes/, #freins sur freins/, #freins-pl-2 sur freins/plaquettes/#freins-pl-2, avec la planche à
 //      l'écran sous la barre ; les liens du jour de la livraison #montage et #montage-position arrivent sur montage/ et
@@ -113,8 +114,8 @@ const ANCIENNES_ANCRES = [
   ['#montage-position', 'montage/position/'],
 ];
 // L'écart minimal des centres des pastilles de l'accueil dans la vue d'ensemble, en pixels CSS : une pastille fait
-// 30 px de large (00-head.html), deux pastilles plus proches se chevauchent. Leur nombre est celui des zones du
-// js/scene/zones.json servi.
+// 30 px de large (00-head.html), deux pastilles plus proches se chevauchent. Leur nombre est celui des zones du bloc
+// #zones-data de la page d'accueil, celui qu'app.js lit.
 const ECART_PASTILLES = 30;
 const FAVORI = 'index.html#freins-plaquettes';
 const TITRE_ATELIER = 'Changer les plaquettes';
@@ -231,12 +232,6 @@ async function controler(opts) {
 
   const pages = pagesDu(racine);
   for (const p of [ACCUEIL, CATEGORIE, ATELIER, DISQUES]) controle(pages.includes(p), `page absente : ${p || 'accueil'}`);
-  let nombrePastilles = null;
-  try {
-    nombrePastilles = JSON.parse(fs.readFileSync(path.join(racine, 'js', 'scene', 'zones.json'), 'utf8')).length;
-  } catch (e) {
-    erreur('contrôle : js/scene/zones.json illisible : ' + premiereLigne(e));
-  }
   controle(CSP, 'deploy/nginx.conf : pas de Content-Security-Policy à envoyer avec les pages');
   const srv = await servir(racine);
   const base = `http://127.0.0.1:${srv.address().port}/`;
@@ -525,6 +520,7 @@ async function controler(opts) {
             svg2d: !document.getElementById('plan').hasAttribute('hidden') &&
               document.getElementById('plan').getBoundingClientRect().height > 0,
             canevas: !document.getElementById('gl').hidden,
+            legende2d: vu(document.getElementById('legende-2d')),
             scene: vu(st),
             actives: actives.map(c => c.dataset.zone),
             nomActif: actives.length === 1 ? (actives[0].querySelector('.zone-btn')?.textContent.trim() ?? null) : null,
@@ -596,34 +592,44 @@ async function controler(opts) {
         if (sansGl) {
           controle(e.alerte !== null, 'accueil : sans WebGL, la page ne dit pas que la 3D manque');
           controle(e.svg2d && !e.canevas, 'accueil : sans WebGL, le schéma 2D n’est pas visible');
+          controle(e.legende2d, 'accueil : sans WebGL, la légende du schéma 2D (#legende-2d) n’est pas visible');
           controle(await page.$eval('#mode-reel', b => b.disabled), 'accueil : sans WebGL, l’onglet 3D réaliste reste actif');
         } else {
           controle(e.alerte === null, 'accueil : la 3D ne s’est pas montée : ' + e.alerte);
           controle(e.canevas && !e.svg2d, 'accueil : le rendu réaliste n’est pas affiché');
+          controle(!e.legende2d, 'accueil : en 3D, la légende du schéma 2D (#legende-2d) reste affichée');
         }
-        a.chargement = { alerte: e.alerte, svg2d: e.svg2d, canevas: e.canevas };
+        a.chargement = { alerte: e.alerte, svg2d: e.svg2d, canevas: e.canevas, legende2d: e.legende2d };
         const fondAide = await page.$eval('#scene-aide', x => getComputedStyle(x).backgroundColor);
         controle(!/^(transparent|rgba\(0, 0, 0, 0\))$/.test(fondAide), 'accueil : l’aide de la scène n’a pas de fond : ' + fondAide);
         // Aucune pastille visible sous le panneau de l'aide : le rectangle de chaque pastille ne touche pas celui de
         // l'aide. Les pastilles sont peintes par-dessus l'aide (#pins a un z-index, .stage-haut n'en a pas) :
         // elementFromPoint rendrait toujours la pastille, il ne voit pas qu'elle cache le texte de l'aide.
-        // Dans la vue d'ensemble (`ensemble`), en plus : toutes les pastilles de zones.json affichées, et deux pastilles
+        // Dans la vue d'ensemble (`ensemble`), en plus : toutes les pastilles du bloc #zones-data affichées, et deux pastilles
         // jamais à moins de ECART_PASTILLES l'une de l'autre, de centre à centre. Rend ce que la vue d'ensemble a relevé.
         const controlerPastilles = async (quand, ensemble = false) => {
           await page.locator('#scene').scrollIntoViewIfNeeded();
           const r = await page.evaluate(() => {
+            // Le nombre attendu vient du bloc #zones-data de la page, celui qu'app.js lit pour poser les pastilles.
+            let attendues = null;
+            try {
+              attendues = JSON.parse(document.getElementById('zones-data').textContent).length;
+            } catch {
+              attendues = null;
+            }
             const q = document.getElementById('scene-aide').getBoundingClientRect();
             const vues = [...document.querySelectorAll('#pins .zpin')].filter(b => !b.hidden && b.getClientRects().length);
             const rects = vues.map(b => ({ n: b.textContent, r: b.getBoundingClientRect() }));
             const sous = q.width > 0 && q.height > 0 ? rects.filter(({ r }) =>
               r.left < q.right && r.right > q.left && r.top < q.bottom && r.bottom > q.top).map(p => p.n) : [];
             const centres = rects.map(({ n, r }) => ({ n, x: r.left + r.width / 2, y: r.top + r.height / 2 }));
-            return { centres, sous, aide: [q.left, q.top, q.right, q.bottom].map(Math.round) };
+            return { centres, sous, attendues, aide: [q.left, q.top, q.right, q.bottom].map(Math.round) };
           });
           controle(r.sous.length === 0, `accueil, ${quand} : l’aide passe sur la pastille ${r.sous.join(', ')} (aide ${r.aide})`);
           if (!ensemble) return null;
-          controle(r.centres.length === nombrePastilles,
-            `accueil, ${quand} : ${r.centres.length} pastilles affichées au lieu de ${nombrePastilles}`);
+          controle(r.attendues !== null, `accueil, ${quand} : bloc #zones-data absent ou illisible`);
+          controle(r.centres.length === r.attendues,
+            `accueil, ${quand} : ${r.centres.length} pastilles affichées au lieu de ${r.attendues} (#zones-data)`);
           let min = null;
           const proches = [];
           for (let i = 0; i < r.centres.length; i++) for (let j = i + 1; j < r.centres.length; j++) {
@@ -705,6 +711,8 @@ async function controler(opts) {
         e = await etat();
         await relever(page, 'accueil, schéma 2D');
         controle(e.svg2d, 'accueil, onglet « Schéma 2D » : le schéma n’est pas visible');
+        controle(e.legende2d, 'accueil, onglet « Schéma 2D » : la légende du schéma (#legende-2d) n’est pas visible');
+        a.legende2d = e.legende2d;
         controle(e.variante === null, 'accueil, onglet « Schéma 2D » : la variante reste affichée');
         await controlerPastilles('schéma 2D');
         await capturer(page, 'accueil-2d.png', { sel: '#scene' });

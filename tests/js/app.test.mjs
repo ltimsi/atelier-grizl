@@ -62,6 +62,22 @@ test('placeDePastille : la place projetée de l’ancre, plus le décalage de la
   assert.deepEqual(placeDePastille({ x: 0, y: 0, visible: false }, { decalage: [3, -4] }), { x: 3, y: -4, visible: false });
 });
 
+test('poserPastilles passe chaque place par placeDePastille : le décalage d’une zone vaut en 3D comme en 2D', () => {
+  // Le test ci-dessus ne vérifie que le calcul. Sans cet appel, la zone des axes reprendrait sa place d’ancre, sous
+  // la pastille des disques (scene-check le voit, mais seulement dans le navigateur).
+  const debut = CODE.indexOf('function poserPastilles(');
+  assert.ok(debut >= 0, 'poserPastilles absente de app.js');
+  const fin = CODE.indexOf('\n}\n', debut);
+  const corps = CODE.slice(debut, fin);
+  assert.match(corps, /placeDePastille\(p, ui\.zones\[i\]\)/, 'poserPastilles n’appelle plus placeDePastille');
+  assert.match(corps, /b\.hidden = !q\.visible/, 'la visibilité ne vient plus de la place décalée');
+  assert.match(corps, /translate\(\$\{q\.x\.toFixed\(1\)\}px, \$\{q\.y\.toFixed\(1\)\}px\)/,
+    'la pastille n’est plus posée à la place décalée');
+  // Les deux rendus passent par poserPastilles.
+  assert.match(CODE, /poserPastilles\(ui\.schema\.pastilles\(ui\.W, ui\.H\)\)/);
+  assert.match(CODE, /poserPastilles\(etat\.scene\.pastilles\(\)\)/);
+});
+
 test('aide du schéma 2D : une ligne courte, comme l’aide de la 3D, qui tient sur un écran de 360 px', () => {
   const texte = cle => CODE.match(new RegExp(`^  ${cle}: '([^']+)',$`, 'm'))?.[1];
   const [aide3d, aide2d] = [texte('aide3d'), texte('aide2d')];
