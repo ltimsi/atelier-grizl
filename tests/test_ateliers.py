@@ -500,11 +500,16 @@ class TestMontage(unittest.TestCase):
     def test_pictogrammes_du_qsg(self):
         # Un couple du QSG V02 dit s'il vient d'un pictogramme ou du tableau de la page, avec sa page ; l'atelier
         # renvoie au guide imprimé du carton, à comparer (règle 5 des sources).
-        vues = set()
+        # Une ligne dont le couple vient de Shimano (elle cite si.shimano.com) et qui ne cite le QSG que pour une flèche
+        # n'est pas un couple du QSG : seule l'étape 5 de 1.6 (pédales, flèches 8.2 et 8.3) est dans ce cas.
+        vues, shimano = set(), []
         for a in self.ch.ateliers:
             for ligne in lignes_de(a.section):
                 qsg = [s for s in dom.selectionner(ligne, "a.src") if QSG in s.get("href")]
                 if not (qsg and dom.selectionner(ligne, "span.nm")):
+                    continue
+                if any("si.shimano.com" in s.get("href") for s in dom.selectionner(ligne, "a.src")):
+                    shimano.append(texte_de(ligne)[:21])
                     continue
                 vues.add(a.id)
                 texte = texte_de(ligne)
@@ -515,6 +520,7 @@ class TestMontage(unittest.TestCase):
                     self.assertIn("guide imprimé", texte_de(a.section), a.id)
         self.assertLessEqual({"montage-avant", "montage-cintre", "montage-selle", "montage-roues",
                               "montage-position"}, vues)
+        self.assertEqual(shimano, ["Serre chaque pédale à"])
 
     def test_sans_ecarts_des_brouillons(self):
         # Les écarts du relevé (section « Écarts avec les brouillons du 20/10 »), chacun par un indice précis.
@@ -767,7 +773,8 @@ class TestMontage(unittest.TestCase):
         # vérifiée pied par pied (une consigne Shimano, plus une proposition), serrage final, joints étanches.
         etapes = self.etapes_de("montage-pedales")
         ordre = [self.rang(etapes, d) for d in (
-            "Retire le cache en caoutchouc", "Place l'écrou de cale", "Pose la cale, son bout étroit vers la pointe",
+            "Retire le cache en caoutchouc", "Place l'écrou de cale",
+            "Pose la cale, bout étroit vers la pointe du pied, d'après la figure de Shimano",
             "Serre-la d'abord à 2,5", "Vérifie la place de chaque cale, pied par pied", "Serre-la à 5-6",
             "Pose les joints étanches")]
         self.assertEqual(ordre, sorted(ordre))
@@ -788,6 +795,9 @@ class TestMontage(unittest.TestCase):
         for cle, i in zip(cles, ordre):
             hrefs = [a.get("href") for a in dom.selectionner(lis[i], "a.src")]
             self.assertIn("https://si.shimano.com/en/dm/MAPD001/attachi_cleat", hrefs, cle)
+        # Le sens de la cale est une lecture de la figure, dite comme telle dans la légende 3D aussi (R1).
+        (legende,) = dom.selectionner(self.par_id["montage-pedales"].section, "figure.v3d > figcaption")
+        self.assertIn("bout étroit vers la pointe du pied, d'après la figure de Shimano", texte_de(legende))
         # La vérification de la place n'est plus une simple proposition.
         for prop in dom.selectionner(self.par_id["montage-pedales"].section, "aside.note.prop"):
             self.assertNotIn("place de la cale", texte_de(prop))
@@ -817,10 +827,17 @@ class TestMontage(unittest.TestCase):
         # Pédales : le levier du cliquet de chaque côté, et la tête de clé plate à angle droit.
         etapes = self.etapes_de("montage-pedales")
         serrage = etapes[self.rang(etapes, "Serre chaque pédale")][1]
-        for mot in ("pédale gauche", "levier du cliquet à gauche", "Flip ratchet lever to the left",
+        for mot in ("pédale gauche", "levier à gauche", "Flip ratchet lever to the left",
+                    "the left pedal has a left-hand thread", "On en déduit, en regardant la pédale par le côté extérieur du vélo",
+                    "Park Tool et Shimano ne l'écrivent pas pour une pédale", "étape 8.2 pour la gauche et 8.3 pour la droite",
                     "left hand and right hand threading", "déclic", "angle droit", "re-calculate the needed torque",
                     "TWB-15"):
             self.assertIn(mot, serrage, mot)
+        # La déduction suit la citation Shimano, jamais l'inverse (R2), et la proposition dit comment voir l'erreur.
+        self.assertLess(serrage.index("the left pedal has a left-hand thread"), serrage.index("On en déduit"))
+        props = " ".join(texte_de(n) for n in dom.selectionner(self.par_id["montage-pedales"].section, "aside.note.prop"))
+        self.assertIn("vérifie que la clé entraîne la vis dans le sens où tu tournes", props)
+        self.assertIn("pour une pédale", " ".join(texte_de(li) for li in avant if "TW-6.2, le sens" in texte_de(li)).lower())
         lis = dom.selectionner(self.par_id["montage-pedales"].section, "ol.steps > li")
         hrefs = [a.get("href") for a in dom.selectionner(lis[self.rang(etapes, "Serre chaque pédale")], "a.src")]
         self.assertIn("https://www.parktool.com/assets/doc/product/TW-1_TW-2_instructions.pdf", hrefs)
@@ -848,6 +865,7 @@ class TestMontage(unittest.TestCase):
             self.assertIn(mot.lower(), corps.lower(), mot)
         self.assertLess(corps.index("clé Canyon"), corps.lower().index("desserre le collier"))
         self.assertIn("axe du cadre", position[haut][1])
+        self.assertIn("Desserre le collier (1.4, étape 1) s'il ne l'est pas déjà", position[haut][1])
 
     def test_potence_gestes_de_canyon(self):  # M2 et laissés n°4 et n°5 de task-2-rereview
         cintre = self.etapes_de("montage-cintre")
@@ -862,6 +880,12 @@ class TestMontage(unittest.TestCase):
         self.assertNotIn("au-dessus", cintre[retire][0])
         for mot in ("double flèche", "monter le cintre", "baisser le cintre", "au-dessus"):
             self.assertIn(mot, cintre[renfile][1] + cintre[retire][1], mot)
+        self.assertIn("D'après le dessin du guide (encadré de la page 56, double flèche), et non d'après un texte Canyon\xa0:",
+                      cintre[retire][1])
+        self.assertIn("d'après le dessin du guide et non d'après un texte Canyon", cintre[renfile][1])
+        self.assertNotIn("dans l'ordre", cintre[retire][1])
+        props = " ".join(texte_de(n) for n in dom.selectionner(self.par_id["montage-cintre"].section, "aside.note.prop"))
+        self.assertIn("entretoises", props)
 
     def test_di2_dans_l_ordre_shimano(self):  # M3 et M4
         di2 = self.etapes_de("montage-di2")
