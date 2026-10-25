@@ -700,8 +700,12 @@ class TestMontage(unittest.TestCase):
         self.assertEqual(len(titres), 24)
         self.assertTrue(all(t.startswith("Réaligner") for t in titres[8:14]), titres[8:14])
         self.assertTrue(all(t.startswith("Hauteur") for t in titres[14:]), titres[14:])
-        # L'alignement de l'étape 8 demande la roue avant : 1.5 renvoie à 1.3 une fois la roue montée.
-        self.assertIn('href="#montage-cintre"', self.html_de("montage-roues"))
+        # L'alignement de l'étape 8 demande la roue avant : 1.5 renvoie à l'étape 8 de 1.3, par son ancre, une fois la
+        # roue montée. L'ancre est dans le corps de l'étape 8 : le lien ouvre l'étape, et le pas à pas en retire l'id.
+        self.assertIn('href="#montage-cintre-8"', self.html_de("montage-roues"))
+        (ancre,) = dom.selectionner(a.section, '[id="montage-cintre-8"]')
+        self.assertEqual(dom.selectionner(etapes[7], '[id="montage-cintre-8"]'), [ancre])
+        self.assertNotIn("st-t", ancre.classes())
 
     def test_corrections_de_la_relecture(self):
         par_id, texte = self.par_id, self.texte_complet()
@@ -724,11 +728,12 @@ class TestMontage(unittest.TestCase):
                 vus += 1
                 self.assertRegex(lien.texte(), r"p\.\d+(-\d+)? imprimées? \(PDF p\.\d+\)$", lien.texte())
         self.assertGreaterEqual(vus, 40)
-        # Une étape à 2, 2,5 ou 7 Nm nomme la clé Canyon dès son titre, que reprend la boîte des couples.
+        # Une étape à 2, 2,5 ou 7 Nm nomme la clé Canyon dès son titre, que reprend la boîte des couples, avec sa
+        # réserve : la boîte ne recopie que le titre, qui ne doit pas affirmer que la clé Canyon convient.
         for a in self.ch.ateliers:
             for e in a.etapes:
                 if any(HORS_OUTILS.search(c) for c in e.couples):
-                    self.assertIn("clé Canyon", e.titre, e.titre)
+                    self.assertIn("(clé Canyon, si sa plage le permet)", e.titre, e.titre)
         # Si la clé Canyon ne couvre pas ces couples : une proposition sans valeur, et le service client Canyon.
         (secours,) = [n for n in dom.selectionner(par_id["montage-avant"].section, "aside.note.prop")
                       if "service client Canyon" in n.texte()]
@@ -742,6 +747,143 @@ class TestMontage(unittest.TestCase):
                      if "Left-hand thread" in li.texte()]
         self.assertIn("8.2", texte_de(gauche))
         self.assertIn("QSG V02 p.20", texte_de(gauche))
+
+    # ---- Vague finale du lot 2 ----
+
+    def etapes_de(self, ident):
+        """Les étapes d'un atelier : (titre, texte complet du li), dans l'ordre."""
+        lis = dom.selectionner(self.par_id[ident].section, "ol.steps > li")
+        return [(normaliser(e.titre).replace("\xa0", " "), texte_de(li)) for e, li in zip(self.par_id[ident].etapes, lis)]
+
+    def rang(self, etapes, debut):
+        """Le rang (0, 1...) de la seule étape dont le titre commence par `debut`."""
+        rangs = [i for i, (t, _) in enumerate(etapes) if t.startswith(debut)]
+        self.assertEqual(len(rangs), 1, f"{debut} : {[t for t, _ in etapes]}")
+        return rangs[0]
+
+    def test_pose_des_cales_dans_l_ordre_shimano(self):  # I1
+        # Les gestes de la section « Installing the cleats » du DM-MAPD001-07, dans son ordre : cache en caoutchouc,
+        # écrou de cale, cale posée dans le sens de la flèche « Toe side » avec sa rondelle, serrage provisoire, place
+        # vérifiée pied par pied (une consigne Shimano, plus une proposition), serrage final, joints étanches.
+        etapes = self.etapes_de("montage-pedales")
+        ordre = [self.rang(etapes, d) for d in (
+            "Retire le cache en caoutchouc", "Place l'écrou de cale", "Pose la cale, son bout étroit vers la pointe",
+            "Serre-la d'abord à 2,5", "Vérifie la place de chaque cale, pied par pied", "Serre-la à 5-6",
+            "Pose les joints étanches")]
+        self.assertEqual(ordre, sorted(ordre))
+        self.assertEqual(ordre[1:], [ordre[0] + k for k in range(1, 7)])
+        cles = ("cache", "ecrou", "pose", "provisoire", "place", "final", "joints")
+        corps = {cle: etapes[i][1] for cle, i in zip(cles, ordre)}
+        for cle, mots in {
+            "cache": ("Remove the rubber cover", "may not be necessary", "tournevis cruciforme", "selon ta chaussure"),
+            "ecrou": ("Set the cleat nut", "semelle intérieure", "trous oblongs", "selon ta chaussure"),
+            "pose": ("Toe side", "Cleat washer", "rondelle", "triangle", "à lire sur la pièce", "pied gauche comme au droit",
+                     "une seule par chaussure"),
+            "place": ("Repeatedly adjust and confirm for each foot", "20\xa0mm", "5\xa0mm"),
+            "joints": ("waterproof seals", "SHIMANO"),
+        }.items():
+            for mot in mots:
+                self.assertIn(mot.lower(), corps[cle].lower(), f"{cle} : {mot}")
+        lis = dom.selectionner(self.par_id["montage-pedales"].section, "ol.steps > li")
+        for cle, i in zip(cles, ordre):
+            hrefs = [a.get("href") for a in dom.selectionner(lis[i], "a.src")]
+            self.assertIn("https://si.shimano.com/en/dm/MAPD001/attachi_cleat", hrefs, cle)
+        # La vérification de la place n'est plus une simple proposition.
+        for prop in dom.selectionner(self.par_id["montage-pedales"].section, "aside.note.prop"):
+            self.assertNotIn("place de la cale", texte_de(prop))
+        # Le relevé cite ces gestes mot pour mot, avant le site.
+        releve = (RACINE / "docs" / "recherche" / "montage-cf8-di2.md").read_text(encoding="utf-8")
+        for citation in ("Remove the rubber cover for the cleat mounting holes.", "Set the cleat nut.", "Toe side",
+                         "Cleat washer", "Confirm the optimal cleat positions.", "Cross head screwdriver[#2]",
+                         "If your SHIMANO shoes came packaged with waterproof seals"):
+            self.assertIn(citation, releve, citation)
+
+    def test_se_servir_des_outils_dynamometriques(self):  # I2
+        # Le texte, et pas seulement une pastille 3D, apprend à se servir de la TW-6.2 et de l'ATD-1.2, d'après Park
+        # Tool, fabricant de ces outils : le levier du cliquet, la bague, le déclic puis lâcher, le rangement ; le
+        # déclic de l'ATD-1.2 et son sens horaire seul ; le levier à gauche pour la pédale gauche ; la tête de clé
+        # plate montée à angle droit, sans chiffre de correction.
+        avant = dom.selectionner(self.par_id["montage-avant"].section, "ul > li")
+        tw = " ".join(texte_de(li) for li in avant if "TW-6.2" in texte_de(li))
+        for mot in ("levier du cliquet", "à droite", "à gauche", "bague de verrouillage", "ligne rouge", "déclic",
+                    "lâche aussitôt", "Immediately release force from torque wrench", "plus petit chiffre"):
+            self.assertIn(mot, tw, mot)
+        atd = " ".join(texte_de(li) for li in avant if "ATD-1.2" in texte_de(li))
+        for mot in ("loud", "déclic", "sens horaire", "only for setting torque clockwise", "vitesse régulière"):
+            self.assertIn(mot, atd, mot)
+        notice = "parktool.com/assets/doc/product/TW-5.2_TW-6.2_instructions.pdf"
+        self.assertIn(notice, self.html_de("montage-avant"))
+        self.assertIn("parktool.com/en-us/blog/repair-help/torque-wrench-use-and-care", self.html_de("montage-avant"))
+        # Pédales : le levier du cliquet de chaque côté, et la tête de clé plate à angle droit.
+        etapes = self.etapes_de("montage-pedales")
+        serrage = etapes[self.rang(etapes, "Serre chaque pédale")][1]
+        for mot in ("pédale gauche", "levier du cliquet à gauche", "Flip ratchet lever to the left",
+                    "left hand and right hand threading", "déclic", "angle droit", "re-calculate the needed torque",
+                    "TWB-15"):
+            self.assertIn(mot, serrage, mot)
+        lis = dom.selectionner(self.par_id["montage-pedales"].section, "ol.steps > li")
+        hrefs = [a.get("href") for a in dom.selectionner(lis[self.rang(etapes, "Serre chaque pédale")], "a.src")]
+        self.assertIn("https://www.parktool.com/assets/doc/product/TW-1_TW-2_instructions.pdf", hrefs)
+        self.assertIn("https://www.parktool.com/en-us/product/pedal-wrench-crow-foot-twb-15", hrefs)
+        # Aucun chiffre de correction : ni pourcentage ni couple corrigé dans l'étape.
+        self.assertNotIn("%", serrage)
+        self.assertLessEqual(set(re.findall(r"\d+(?:[,-]\d+)*\xa0Nm", serrage)), {"35-55\xa0Nm", "60\xa0Nm"})
+        # Axe avant : arrêt au déclic.
+        roues = self.etapes_de("montage-roues")
+        self.assertIn("déclic", roues[self.rang(roues, "Serre l'axe avant")][1])
+
+    def test_tige_de_selle_sans_perdre_la_hauteur(self):  # M1 et laissé n°3 de task-2-rereview
+        # 1.4 : pour l'inclinaison, d'abord la plage de la clé Canyon, puis desserrer le collier, puis sortir la tige.
+        selle = self.etapes_de("montage-selle")
+        sortie = selle[self.rang(selle, "Pour l'inclinaison, sors la tige du cadre")][1]
+        for mot in ("clé Canyon", "7\xa0Nm", "ne commence pas", "desserre", "collier"):
+            self.assertIn(mot, sortie.lower() if mot == "desserre" else sortie, mot)
+        self.assertLess(sortie.index("clé Canyon"), sortie.lower().index("desserre"))
+        # 1.8 : l'inclinaison avant la hauteur, le contrôle de la clé Canyon d'abord, et la selle alignée.
+        position = self.etapes_de("montage-position")
+        incl, haut = (self.rang(position, d) for d in ("Reporte l'inclinaison", "Règle la hauteur de selle"))
+        self.assertLess(incl, haut)
+        corps = position[incl][1]
+        for mot in ("clé Canyon", "ne commence pas", "desserre le collier"):
+            self.assertIn(mot.lower(), corps.lower(), mot)
+        self.assertLess(corps.index("clé Canyon"), corps.lower().index("desserre le collier"))
+        self.assertIn("axe du cadre", position[haut][1])
+
+    def test_potence_gestes_de_canyon(self):  # M2 et laissés n°4 et n°5 de task-2-rereview
+        cintre = self.etapes_de("montage-cintre")
+        texte = texte_de(self.par_id["montage-cintre"].section)
+        self.assertNotIn("assis sur la selle", texte)
+        self.assertIn("en appuyant de ton poids sur la selle", texte)
+        self.assertIn("Bring your weight to bear on the saddle", texte)
+        # Les entretoises : retirées, potence renfilée, puis replacées, dans les deux sens de la double flèche.
+        retire, renfile = (self.rang(cintre, d) for d in ("Hauteur : retire les entretoises",
+                                                         "Hauteur : renfile la potence"))
+        self.assertLess(retire, renfile)
+        self.assertNotIn("au-dessus", cintre[retire][0])
+        for mot in ("double flèche", "monter le cintre", "baisser le cintre", "au-dessus"):
+            self.assertIn(mot, cintre[renfile][1] + cintre[retire][1], mot)
+
+    def test_di2_dans_l_ordre_shimano(self):  # M3 et M4
+        di2 = self.etapes_de("montage-di2")
+        batterie, cable = (self.rang(di2, d) for d in ("Mets la batterie dans le chargeur", "Branche le câble USB"))
+        self.assertEqual((batterie, cable), (2, 3))
+        self.assertIn("Install the battery to the battery charger", di2[batterie][1])
+        self.assertIn("Connect the USB cable to the USB port of the battery charger", di2[cable][1])
+        appairage = di2[self.rang(di2, "Si rien ne passe, appaire")][1]
+        for mot in ("Do not operate another shift switch", "une seule manette de chaque côté"):
+            self.assertIn(mot, appairage, mot)
+
+    def test_pastilles_masquees_dites_dans_l_aide(self):  # point parqué n°4
+        # La visionneuse commune (src/js/viewer.js, aussi aux freins) dessine un numéro même quand une pièce cache son
+        # ancre. Plutôt que de masquer par lancer de rayon des pastilles des freins déjà en ligne, l'aide de chaque
+        # pièce 3D, sa légende, le dit, aux deux chapitres.
+        for texte in (self.source, FREINS):
+            legendes = [texte_de(f) for f in dom.selectionner(dom.analyser(texte), "figure.v3d > figcaption")]
+            self.assertTrue(legendes)
+            for legende in legendes:
+                self.assertIn("Touche un numéro pour repérer la pièce. Un numéro peut se dessiner par-dessus une pièce "
+                              "qui cache la sienne\xa0: fais tourner la pièce, ou lis la liste numérotée sous la figure.",
+                              legende, legende[:60])
 
     def test_abreviations_par_page(self):
         # Chaque atelier devient sa propre page : une abréviation y est développée avant ou juste après sa première

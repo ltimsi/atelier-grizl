@@ -4,7 +4,9 @@
      filetage ; la pédale droite a un pas à droite, la gauche un pas à gauche, repères L et R (étapes 8.2 et 8.3 du
      guide de démarrage Canyon, QSG R126 V02, p.20, avec leurs flèches) ;
    - cale SM-SH51 (noire), réglable sur 20 mm d'avant en arrière et 5 mm de gauche à droite, pour le pied gauche comme
-     pour le droit ; vis de cale : 2,5 Nm de serrage provisoire, puis 5-6 Nm en alternant, six-pans de 4 mm ;
+     pour le droit ; vis de cale : 2,5 Nm de serrage provisoire, puis 5-6 Nm en alternant, six-pans de 4 mm ; sous les
+     têtes de vis, la rondelle de cale (« Cleat washer »), une plaque percée de deux trous ; sens de la cale d'après
+     l'encadré de la figure : la flèche « Toe side » vise son bout étroit, dessiné ici vers +z, l'avant du pied ;
    - tension de déclenchement : une vis à l'arrière de chaque mécanisme d'accrochage, quatre pour les deux pédales,
      six-pans de 3 mm pour la PD-ME700 ; en sens horaire la cale tient plus fort ; quatre clics par tour ; plaquette de
      réglage pour mettre les quatre au même réglage.
@@ -33,7 +35,8 @@
    - semelle en coupe : forme de la chaussure, épaisseurs, crampons et creux de la cale approchés ; fentes de réglage
      dessinées pour les 20 mm du manuel, leur vraie longueur dépend de ta chaussure ;
    - cale SM-SH51 : contour, épaisseurs et trous oblongs approchés, ces trous donnant les 5 mm de gauche à droite ;
-     plaquette sous les têtes de vis et vis à six-pans de 4 mm : forme approchée ;
+     bout étroit vers l'avant du pied, comme la flèche « Toe side » de Shimano ; le petit triangle de la figure n'est
+     pas dessiné ; rondelle de cale sous les têtes de vis et vis à six-pans de 4 mm : forme approchée ;
    - pédale gauche : miroir de la droite, forme approchée ;
    - couleurs : aluminium noir, acier, cale noire, semelle : teintes approchées ;
    - flèches orange : des repères de dessin, comme les flèches du guide, pas des pièces ; la pédale est montrée
@@ -382,7 +385,7 @@
         H.mesh(planG(shp(rrect(-15 + b, -11.5 + b, 15 - b, 11.5 - b, 2, 3), [pocket]), Y2, Y3, b, 8), cleatMat, cleat);
         H.mesh(planG(shp(rrect(-14.6 + b, -11.2 + b, 14.6 - b, 11.2 - b, 2.4, 3), [pill(-7, 0, 10.9, 5.9, 0, 5), pill(7, 0, 10.9, 5.9, 0, 5)]), Y3, Y4, b, 8), cleatMat, cleat);
       })();
-      /* plaquette en acier dans la poche, sous les têtes de vis */
+      /* rondelle de cale (« Cleat washer » de Shimano) : une plaque à deux trous, dans la poche, sous les têtes de vis */
       H.mesh(planG(shp(rrect(-10.6 + 0.25, -5.4 + 0.25, 10.6 - 0.25, 5.4 - 0.25, 1.6, 3), [H.circlePts(2.75, 20, -7, 0), H.circlePts(2.75, 20, 7, 0)]), 9.9, 11.6, 0.25, 8), plateMat, plate);
       /* 2 vis : tête basse à six-pans creux de 4 mm, tige filetée */
       var headG = latheY([[0, 8.2], [3.8, 8.2], [4.3, 8.65], [4.3, 9.9], [0, 9.9]], 28);
@@ -426,8 +429,8 @@
             : { obj: flecheBout, p: [46.5, 0, 11], text: 'Flèches orange : le sens du serrage de la pédale gauche, à l’inverse de la droite, comme la flèche de l’étape 8.2 du guide (p.20)' },
           { obj: top.bolt, p: [0, 0, -30.4], text: 'Vis de tension, à l’arrière du mécanisme, côté talon : clé six-pans de 3 mm ; en sens horaire, la cale tient plus fort ; quatre clics par tour' },
           { obj: top.plq, p: [4.2, 10, -27.9], text: 'Plaquette de réglage, à côté de la vis de tension, côté talon : mets les quatre vis au même réglage, en la regardant et en comptant les tours' },
-          { obj: cleat, p: [12, 8.4, -14], text: 'Cale SM-SH51, noire : elle va au pied gauche comme au droit ; ni jeu ni cale qui bouge avant de rouler' },
-          { obj: boltHeads[1], p: [0, 9, -4.4], text: 'Vis de cale, six-pans de 4 mm : d’abord 2,5 Nm à la clé Canyon si sa plage le permet (à lire sur l’outil), aucun de tes outils ne descend si bas ; puis 5-6 Nm en alternant, à l’ATD-1.2' },
+          { obj: cleat, p: [12, 8.4, -14], text: 'Cale SM-SH51, noire : son bout étroit vers la pointe du pied, comme la flèche « Toe side » de la figure Shimano ; elle va au pied gauche comme au droit ; ni jeu ni cale qui bouge avant de rouler' },
+          { obj: boltHeads[1], p: [0, 9, -4.4], text: 'Vis de cale, six-pans de 4 mm, sur la rondelle de cale : d’abord 2,5 Nm à la clé Canyon si sa plage le permet (à lire sur l’outil), aucun de tes outils ne descend si bas ; puis 5-6 Nm en alternant, à l’ATD-1.2' },
           { obj: outsoleM, p: [-30, Y_CEIL, Z0], text: 'Semelle d’une chaussure SPD à deux vis, en coupe : la cale se règle sur 20 mm d’avant en arrière et 5 mm de gauche à droite' }
         ];
       }

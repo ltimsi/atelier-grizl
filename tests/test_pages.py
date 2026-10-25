@@ -77,8 +77,8 @@ PASTILLES_3D_MONTAGE = {
         'Flèches orange\xa0: le sens du serrage de la pédale gauche, à l’inverse de la droite, comme la flèche de l’étape 8.2 du guide (p.20)',
         'Vis de tension, à l’arrière du mécanisme, côté talon\xa0: clé six-pans de 3\xa0mm\xa0; en sens horaire, la cale tient plus fort\xa0; quatre clics par tour',
         'Plaquette de réglage, à côté de la vis de tension, côté talon\xa0: mets les quatre vis au même réglage, en la regardant et en comptant les tours',
-        'Cale SM-SH51, noire\xa0: elle va au pied gauche comme au droit\xa0; ni jeu ni cale qui bouge avant de rouler',
-        'Vis de cale, six-pans de 4\xa0mm\xa0: d’abord 2,5\xa0Nm à la clé Canyon si sa plage le permet (à lire sur l’outil), aucun de tes outils ne descend si bas\xa0; puis 5-6\xa0Nm en alternant, à l’ATD-1.2',
+        'Cale SM-SH51, noire\xa0: son bout étroit vers la pointe du pied, comme la flèche «\xa0Toe side\xa0» de la figure Shimano\xa0; elle va au pied gauche comme au droit\xa0; ni jeu ni cale qui bouge avant de rouler',
+        'Vis de cale, six-pans de 4\xa0mm, sur la rondelle de cale\xa0: d’abord 2,5\xa0Nm à la clé Canyon si sa plage le permet (à lire sur l’outil), aucun de tes outils ne descend si bas\xa0; puis 5-6\xa0Nm en alternant, à l’ATD-1.2',
         'Semelle d’une chaussure SPD à deux vis, en coupe\xa0: la cale se règle sur 20\xa0mm d’avant en arrière et 5\xa0mm de gauche à droite',
     ],
     'm-torque.js': [
@@ -1060,8 +1060,8 @@ class TestRecherche(Site):
         fiche = dom.analyser(COMPOSANTS)
         lignes = len(dom.selectionner(fiche, "tbody > tr")) + len(dom.selectionner(fiche, "ul.accessoires > li"))
         self.assertEqual(len(pieces), lignes)
-        # 45 étapes aux Freins, 85 au Montage (1.3 : 24, 1.4 : 14, 1.5 : 17, 1.6 : 11, 1.7 : 11, 1.8 : 8).
-        self.assertEqual(len([e for e in index if e["k"].startswith("Étape · ")]), 45 + 85)
+        # 45 étapes aux Freins, 89 au Montage (1.3 : 24, 1.4 : 14, 1.5 : 17, 1.6 : 15, 1.7 : 11, 1.8 : 8).
+        self.assertEqual(len([e for e in index if e["k"].startswith("Étape · ")]), 45 + 89)
         # Les ateliers passent en premier, avant les étapes et les outils.
         genres = [e["k"].split(" ")[0] for e in index]
         self.assertLess(genres.index("Atelier"), genres.index("Étape"))
