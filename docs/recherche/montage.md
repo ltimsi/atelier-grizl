@@ -4,7 +4,7 @@
 - canyon.com a refusé certaines lectures, dont la fiche en-ch 50046435.
 - Les pages produit de bike.shimano.com sont en maintenance jusqu'au 21/10 à 12:00 (heure du Japon).
 - Les PDF officiels Canyon (Quick Start Guide, manuel route) sont annoncés sur les pages support, mais sans lien.
-- J'ai épuisé le quota de recherches web de ce tour. Retül, Knog et le manuel revendeur des manettes GRX ST-RX610 n'ont donc pas pu être cherchés. Une relance permettrait de compléter.
+- J'ai épuisé le quota de recherches web de ce tour. Knog et le manuel revendeur des manettes GRX ST-RX610 n'ont donc pas pu être cherchés. Une relance permettrait de compléter.
 - Les couples Canyon viennent du Quick Start Guide Grizl R126 (version 11.02.25, réf. 20026100 | 056-V01) consulté sur manualslib.de, un miroir non officiel : https://www.manualslib.de/manual/1431417/Canyon-Grizl-R126.html. Seuls les pictogrammes (valeurs et tailles de clé) sont lisibles. J'ai attribué chaque valeur à une vis d'après le titre de la section, je le signale à chaque fois. Le QSG imprimé livré dans le carton fait foi.
 
 ## 0. Configuration réelle du Grizl CF 7 suisse
@@ -250,5 +250,4 @@ Titres vérifiés sur la page YouTube, sauf mention contraire.
 - La compatibilité entre le Quick-Rack et le garde-boue Canyon.
 
 **Non cherché, quota de recherche épuisé**
-- Retül.
 - Knog Blinder et Oi Luxe.
