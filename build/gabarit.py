@@ -102,10 +102,22 @@ def _lien(page, chemin, contenu, classe=None):
 # Menu, fil d'Ariane
 # ---------------------------------------------------------------------------------------------------------------
 
-def _categories(config):
-    """Les lots qui ont une catégorie, publiés d'abord puis à venir, chacun dans l'ordre des lots."""
+def numero_de_chapitre(lot: dict) -> int:
+    """Le numéro du chapitre d'un lot : le premier chiffre du nom de son premier fragment (« 11-montage » : chapitre 1,
+    « 20-freins » : chapitre 2), comme le p.ch-num du chapitre l'écrit. Sans fragment numéroté, le numéro du lot."""
+    m = re.match(r"(\d)", lot["parts"][0]) if lot.get("parts") else None
+    return int(m.group(1)) if m else lot["lot"]
+
+
+def categories(config: dict) -> tuple[list[dict], list[dict]]:
+    """Les lots qui ont une catégorie : les publiés, dans l'ordre de leurs chapitres (le chapitre 1, Montage, avant le
+    chapitre 2, Freins, quel que soit l'ordre des lots), puis ceux à venir, dans l'ordre des lots."""
     avec = [l for l in config["lots"] if l.get("categorie")]
-    return ([l for l in avec if l["statut"] in PUBLIES], [l for l in avec if l["statut"] not in PUBLIES])
+    publies = sorted((l for l in avec if l["statut"] in PUBLIES), key=numero_de_chapitre)
+    return publies, [l for l in avec if l["statut"] not in PUBLIES]
+
+
+_categories = categories
 
 
 def menu(config: dict, chapitres: dict[str, Chapitre], page: Page) -> str:

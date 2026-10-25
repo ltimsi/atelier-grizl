@@ -26,10 +26,10 @@ CONFIG = json.loads((RACINE / "build" / "lots.json").read_text(encoding="utf-8")
 ZONES = json.loads((RACINE / "src" / "scene" / "zones.json").read_text(encoding="utf-8"))
 SLUGS = ["systeme", "disques", "plaquettes", "rodage", "centrage", "controles", "purge", "securite"]
 SLUGS_MONTAGE = ["avant", "deballer", "cintre", "selle", "roues", "pedales", "di2", "position", "controles"]
-PUBLIEES = ["freins", "montage"]  # les catégories publiées, dans l'ordre des lots
+PUBLIEES = ["montage", "freins"]  # les catégories publiées, dans l'ordre des chapitres : 1 Montage, 2 Freins
 A_VENIR = ["tubeless", "transmission", "accessoires", "revision"]
 REFERENCES = ["composants", "outils", "couples", "approche", "sources"]
-CHEMINS = ([""] + ["freins/"] + [f"freins/{s}/" for s in SLUGS] + ["montage/"] + [f"montage/{s}/" for s in SLUGS_MONTAGE]
+CHEMINS = ([""] + ["montage/"] + [f"montage/{s}/" for s in SLUGS_MONTAGE] + ["freins/"] + [f"freins/{s}/" for s in SLUGS]
            + [f"{c}/" for c in A_VENIR] + [f"{r}/" for r in REFERENCES])
 MD = (RACINE / "docs" / "recherche" / "composants-origine.md").read_text(encoding="utf-8")
 COMPOSANTS = (RACINE / "src" / "parts" / "composants.html").read_text(encoding="utf-8")
@@ -184,8 +184,8 @@ class Site(unittest.TestCase):
 
 class TestPages(Site):
     def test_pages_generees(self):
-        # 29 pages : la racine, Freins et ses 8 ateliers, Montage à la livraison et ses 9 ateliers, les 4 catégories à
-        # venir et les 5 références.
+        # 29 pages : la racine, Montage à la livraison et ses 9 ateliers, Freins et ses 8 ateliers (l'ordre des
+        # chapitres), les 4 catégories à venir et les 5 références.
         self.assertEqual(len(CHEMINS), 29)
         self.assertEqual([p.chemin for p in self.pages], CHEMINS)
         for cible in ("site", "artifact"):
@@ -506,13 +506,13 @@ class TestPages(Site):
         self.assertEqual(faible, ["2.3 Changer les plaquettes", "2.7 Purger les freins"])
 
     def test_page_couples(self):
-        # Une section par catégorie publiée, dans l'ordre des lots : Freins (2.1), puis Montage à la livraison (1.1).
+        # Une section par catégorie publiée, dans l'ordre des chapitres : Montage à la livraison (1.1), puis Freins (2.1).
         # Le tableau des Freins n'a pas de lien « #id » : il est recopié tel quel. Celui du Montage renvoie à 1.5 par
         # « #montage-roues », réécrit vers la page de l'atelier.
         racine = self.arbre("couples/")
         sections = dom.selectionner(racine, "section.couples-cat")
-        categories = [("Freins", "freins", "../freins/systeme/", {}),
-                      ("Montage à la livraison", "montage", "../montage/avant/", {"#montage-roues": "../montage/roues/"})]
+        categories = [("Montage à la livraison", "montage", "../montage/avant/", {"#montage-roues": "../montage/roues/"}),
+                      ("Freins", "freins", "../freins/systeme/", {})]
         self.assertEqual(len(sections), len(categories))
         for section, (titre, ident, origine, liens) in zip(sections, categories):
             self.assertEqual(un(section, "h2").texte(), titre)
@@ -866,6 +866,14 @@ class TestPages(Site):
             self.assertEqual(len(dom.selectionner(racine, "h1")), 1, chemin)
         lien = [a for a in dom.selectionner(self.arbre("sources/"), "a") if a.get("href") == "../freins/securite/"]
         self.assertEqual([a.texte() for a in lien], ["2.8 Sécurité et manuels"])
+        # Les manuels du montage (Canyon, DT Swiss, Shimano) : renvoi aux ateliers qui les listent.
+        montage = [(a.get("href"), a.texte()) for a in dom.selectionner(un(self.arbre("sources/"), "main"), "a")
+                   if a.get("href").startswith("../montage/")]
+        self.assertEqual(montage, [("../montage/deballer/", "1.2 Déballer et vérifier"),
+                                   ("../montage/roues/", "1.5 Roues et axes"),
+                                   ("../montage/pedales/", "1.6 Pédales et cales"),
+                                   ("../montage/di2/", "1.7 Charger et vérifier le Di2")])
+        self.assertIn("Les manuels du montage sont dans les ateliers", self.arbre("sources/").texte())
 
     def test_sources_suit_l_atelier(self):
         # Le libellé du renvoi vient de l'atelier freins-securite : il suit son numéro et son titre, et disparaît
@@ -1116,27 +1124,27 @@ class TestAccueil(unittest.TestCase):
     def test_a_remplacer(self):
         racine = dom.analyser(pages.pieces_a_remplacer(self.chapitres))
         lignes = dom.selectionner(racine, "ul.a-remplacer > li")
-        # 2.2 dépose et repose le disque d'origine : se remplacent la pièce de 2.3, et les pédales de 1.6, que le vélo
-        # n'a pas à la livraison.
+        # 2.2 dépose et repose le disque d'origine : se remplacent les pédales de 1.6, que le vélo n'a pas à la
+        # livraison, puis la pièce de 2.3, dans l'ordre des chapitres.
         self.assertEqual(len(lignes), 2)
-        self.assertEqual(un(lignes[0], ".vers").texte(), "Shimano L05A-RF neuves")
-        self.assertEqual(un(lignes[0], ".de").texte(), "à la place de : Plaquettes d’origine, L05A-RF attendues")
-        self.assertEqual(un(lignes[0], "a").get("href"), "freins/plaquettes/")
-        self.assertEqual(un(lignes[1], ".vers").texte(), "Shimano PD-ME700 et cales SM-SH51")
-        self.assertEqual(un(lignes[1], ".de").texte(), "à la place de : Aucune pédale, non fournies")
-        self.assertEqual(un(lignes[1], "a").get("href"), "montage/pedales/")
+        self.assertEqual(un(lignes[0], ".vers").texte(), "Shimano PD-ME700 et cales SM-SH51")
+        self.assertEqual(un(lignes[0], ".de").texte(), "à la place de : Aucune pédale, non fournies")
+        self.assertEqual(un(lignes[0], "a").get("href"), "montage/pedales/")
+        self.assertEqual(un(lignes[1], ".vers").texte(), "Shimano L05A-RF neuves")
+        self.assertEqual(un(lignes[1], ".de").texte(), "à la place de : Plaquettes d’origine, L05A-RF attendues")
+        self.assertEqual(un(lignes[1], "a").get("href"), "freins/plaquettes/")
 
     def test_categories(self):
         racine = dom.analyser(pages.cartes_des_categories(CONFIG, self.chapitres))
         cartes = dom.selectionner(racine, "a.cat")
         self.assertEqual([c.get("href") for c in cartes], [f"{c}/" for c in PUBLIEES + A_VENIR])
         self.assertEqual([c.classes() for c in cartes], [["cat"]] * 2 + [["cat", "soon"]] * 4)
-        self.assertEqual(un(cartes[0], "span.label").texte(), "Lot 1 · en relecture")
-        self.assertEqual(un(cartes[0], "h3").texte(), "Freins")
-        self.assertEqual(un(cartes[0], "p").texte(), "8 ateliers")
-        self.assertEqual(un(cartes[1], "span.label").texte(), "Lot 2 · en relecture")
-        self.assertEqual(un(cartes[1], "h3").texte(), "Montage à la livraison")
-        self.assertEqual(un(cartes[1], "p").texte(), "9 ateliers")
+        self.assertEqual(un(cartes[0], "span.label").texte(), "Lot 2 · en relecture")
+        self.assertEqual(un(cartes[0], "h3").texte(), "Montage à la livraison")
+        self.assertEqual(un(cartes[0], "p").texte(), "9 ateliers")
+        self.assertEqual(un(cartes[1], "span.label").texte(), "Lot 1 · en relecture")
+        self.assertEqual(un(cartes[1], "h3").texte(), "Freins")
+        self.assertEqual(un(cartes[1], "p").texte(), "8 ateliers")
         self.assertEqual(un(cartes[3], "span.label").texte(), "Lot 4 · à venir")
         self.assertEqual(un(cartes[3], "p").texte(), CONFIG["lots"][4]["prevu"][0])
 

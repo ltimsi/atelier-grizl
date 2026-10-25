@@ -18,7 +18,7 @@ CHAPITRES = {nom: ateliers.relever_chapitre((RACINE / "src" / "parts" / f"{fichi
              for nom, fichier in (("freins", "20-freins"), ("montage", "11-montage"))}
 SLUGS = ["systeme", "disques", "plaquettes", "rodage", "centrage", "controles", "purge", "securite"]
 SLUGS_MONTAGE = ["avant", "deballer", "cintre", "selle", "roues", "pedales", "di2", "position", "controles"]
-PUBLIEES = ["freins", "montage"]  # les catégories publiées, dans l'ordre des lots
+PUBLIEES = ["montage", "freins"]  # les catégories publiées, dans l'ordre des chapitres : 1 Montage, 2 Freins
 A_VENIR = ["tubeless", "transmission", "accessoires", "revision"]
 REFERENCES = ["composants", "outils", "couples", "approche", "sources"]
 TOUS_LES_SCRIPTS = dict(zones=True, liens=True, three=True, modeles=["caliper"], app=True, references=True,
@@ -154,7 +154,8 @@ class TestMenu(unittest.TestCase):
         m = self.menu("")
         libelles = re.findall(r'<div class="label">([^<]*)</div>', m)
         self.assertEqual(libelles, ["Ateliers", "Références"])
-        # Mon vélo, puis les catégories publiées, puis celles à venir dans l'ordre des lots, puis les références.
+        # Mon vélo, puis les catégories publiées dans l'ordre des chapitres, puis celles à venir dans l'ordre des lots,
+        # puis les références.
         self.assertEqual(liens(m), ["./"] + [f"{c}/" for c in PUBLIEES + A_VENIR] + [f"{r}/" for r in REFERENCES])
         reference = m[m.index("Références"):]
         textes = re.findall(r">([^<]+)</a>", reference)
@@ -182,6 +183,21 @@ class TestMenu(unittest.TestCase):
         config["lots"][1]["categorie"]["menu"] = "Freins & <disques>"
         m = gabarit.menu(config, CHAPITRES, page("outils/"))
         self.assertIn("Freins &amp; &lt;disques&gt;", m)
+
+    def test_ordre_des_chapitres(self):
+        # Le chapitre 1 (Montage, lot 2) passe avant le chapitre 2 (Freins, lot 1) : le jour J, le menu ouvre sur le
+        # montage. Le numéro du chapitre est le premier chiffre du nom de son fragment, et le chapitre le dit dans son
+        # p.ch-num ; les catégories à venir gardent l'ordre des lots.
+        lots = {l["lot"]: l for l in CONFIG["lots"]}
+        self.assertEqual([gabarit.numero_de_chapitre(lots[n]) for n in (1, 2, 3, 4, 5, 6)], [2, 1, 3, 4, 5, 8])
+        for n in (1, 2):
+            fragment = (RACINE / "src" / "parts" / f"{lots[n]['parts'][0]}.html").read_text(encoding="utf-8")
+            self.assertIn(f'<p class="ch-num">Chapitre {gabarit.numero_de_chapitre(lots[n])} ·', fragment)
+        m = self.menu("")
+        self.assertLess(m.index('href="montage/"'), m.index('href="freins/"'))
+        publies, a_venir = gabarit.categories(CONFIG)
+        self.assertEqual([l["categorie"]["id"] for l in publies], PUBLIEES)
+        self.assertEqual([l["categorie"]["id"] for l in a_venir], A_VENIR)
 
     def test_chapitre_absent(self):
         with self.assertRaises(ValueError):

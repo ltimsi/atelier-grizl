@@ -22,13 +22,16 @@ import unicodedata
 
 from ateliers import Atelier, Chapitre, colonnes, relever_chapitre
 from dom import Element, analyser, fragment, selectionner
-from gabarit import NOM, PUBLIES, REFERENCES, Page, lire, lire_zones, reecrire_liens, relatif
+from gabarit import (NOM, PUBLIES, REFERENCES, Page, categories, lire, lire_zones, numero_de_chapitre, reecrire_liens,
+                     relatif)
 
 TYPES = {"comprendre": "Comprendre", "remplacer": "Remplacer", "regler": "Régler", "entretenir": "Entretenir"}
 FILTRES = ("tout", "comprendre", "remplacer", "regler", "entretenir")  # boutons de la page d'une catégorie
 # Les marques de 05-top que le build remplace (la tâche 6 les pose) ; une marque absente est ignorée.
 MARQUES = ("<!--OU-INTERVENIR-->", "<!--A-REMPLACER-->", "<!--CATEGORIES-->")
 MANUELS = "freins-securite"  # l'atelier des manuels, vers lequel la page Sources renvoie
+# Les ateliers du montage qui listent ses manuels : Canyon (1.2), Canyon et DT Swiss (1.5), Shimano (1.6 et 1.7).
+MANUELS_MONTAGE = ("montage-deballer", "montage-roues", "montage-pedales", "montage-di2")
 # La barre des étapes d'un atelier ; js/site.js fait marcher ses deux boutons.
 BARRE_ETAPES = ('<div class="etapes-barre"><button type="button" class="btn" id="tout-deplier">Tout déplier</button>'
                 '<button type="button" class="btn pri" id="pas-a-pas">Mode pas à pas</button></div>')
@@ -64,18 +67,19 @@ def _publie(lot):
 
 
 def _lots(config):
-    """Les lots qui ont une catégorie : publiés, puis à venir, chacun dans l'ordre des lots."""
-    avec = [l for l in config["lots"] if l.get("categorie")]
-    return [l for l in avec if _publie(l)], [l for l in avec if not _publie(l)]
+    """Les lots qui ont une catégorie : publiés, dans l'ordre de leurs chapitres, puis à venir, dans l'ordre des lots
+    (gabarit.categories)."""
+    return categories(config)
 
 
 def chapitres_publies(config: dict) -> dict[str, Chapitre]:
-    """Le chapitre de chaque catégorie publiée, par id de catégorie, dans l'ordre des lots.
+    """Le chapitre de chaque catégorie publiée, par id de catégorie, dans l'ordre des chapitres (Montage, chapitre 1,
+    avant Freins, chapitre 2), comme le menu.
 
     Chaque fragment d'un lot publié doit être le chapitre de la catégorie du lot : un fragment sans page ferait perdre
     son texte en silence, il lève donc ValueError."""
     chapitres = {}
-    for lot in config["lots"]:
+    for lot in sorted(config["lots"], key=numero_de_chapitre):
         if not _publie(lot):
             continue
         categorie = lot.get("categorie")
@@ -457,16 +461,24 @@ def page_approche() -> Page:
 
 
 def page_sources(chapitres: dict[str, Chapitre] | None = None) -> Page:
-    """Sources : le registre des documents officiels de la 3D (#sources-page, rempli par js/references.js) et un
-    renvoi vers les manuels des freins, l'atelier MANUELS. Le libellé du renvoi est le numéro et le titre de cet
-    atelier ; sans lui (pas publié), pas de renvoi."""
+    """Sources : le registre des documents officiels de la 3D (#sources-page, rempli par js/references.js) et des
+    renvois vers les manuels des ateliers : ceux des freins (l'atelier MANUELS) et ceux du montage (MANUELS_MONTAGE).
+    Le libellé d'un renvoi est le numéro et le titre de son atelier ; un atelier non publié n'a pas de renvoi."""
     chapeau = ("Les documents officiels qui ont servi à dessiner le vélo et ses pièces en 3D, avec ce que chacun "
                "justifie.")
+
+    def lien(chapitre, a):
+        return f'<a href="{relatif("sources/", _chemin(chapitre, a))}">{_e(a.num)} {_e(a.titre)}</a>'
     for chapitre in (chapitres or {}).values():
+        montage = []
         for a in chapitre.ateliers:
             if a.id == MANUELS:
-                chapeau += (f' Les manuels des freins sont dans l’atelier <a href="{relatif("sources/", _chemin(chapitre, a))}">'
-                            f"{_e(a.num)} {_e(a.titre)}</a>.")
+                chapeau += f" Les manuels des freins sont dans l’atelier {lien(chapitre, a)}."
+            elif a.id in MANUELS_MONTAGE:
+                montage.append(lien(chapitre, a))
+        if montage:
+            liste = montage[0] if len(montage) == 1 else ", ".join(montage[:-1]) + " et " + montage[-1]
+            chapeau += f" Les manuels du montage sont dans {'l’atelier' if len(montage) == 1 else 'les ateliers'} {liste}."
     return _page_js("sources", "sources-page", chapeau)
 
 
