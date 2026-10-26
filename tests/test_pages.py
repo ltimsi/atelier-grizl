@@ -125,6 +125,69 @@ COMMANDES_3D_MONTAGE = {
     ],
 }
 
+# Pièces 3D du lot 3 (ateliers 3.2 et 3.5) : même règle que le lot 2. Leurs valeurs sont celles du chapitre
+# src/parts/30-tubeless.html, qu'elles répètent : jante GR 30 CF sans crochet de 30 mm de haut, 27 et 33 mm de large,
+# 70 à 80 ml de Muc-Off et jusqu'à 20 ml de plus, jamais plus de 3,0 bar ; les gestes de la notice du TPT-1, dans son
+# ordre, et ses 6,35 mm de bouts visibles.
+PASTILLES_3D_TUBELESS = {
+    'm-rim.js': [
+        'Jante Canyon GR 30 CF en carbone, sans crochet (TSS, Tubeless Straight Side), désignée 622x27TSS\xa0: profil '
+        'approché, Canyon ne publie que sa hauteur et ses largeurs',
+        'Hauteur de la jante\xa0: 30\xa0mm',
+        'Largeur intérieure\xa0: 27\xa0mm',
+        'Largeur extérieure\xa0: 33\xa0mm',
+        'Bord de jante droit, sans crochet, et siège du talon\xa0: forme approchée',
+        'Ruban tubeless\xa0: il couvre tous les trous de rayons, sans aucun trou découvert, et se change au moins une '
+        'fois par an\xa0; sa largeur est à lire sur ton ruban',
+        'Valve tubeless Presta à obus démontable, sans marque (à choisir, 3.1)\xa0: sa longueur pour ta jante de 30\xa0mm '
+        'est à lire sur la pièce',
+        'Écrou de valve\xa0: serré à la main seulement, sans outil\xa0; un couple éventuel est à lire sur la notice de ta '
+        'valve',
+        'Obus démontable\xa0: retire-le pour injecter le liquide par la valve, puis remets-le',
+        'Pneu Schwalbe G-One RX 45-622 TLR (Tubeless Ready)\xa0: version exacte à lire sur le flanc',
+        'Talon du pneu assis le long du bord de la jante\xa0: la ligne du pneu à égale distance du bord, des deux côtés',
+        'Liquide Muc-Off Road & Gravel\xa0: 70 à 80\xa0ml au minimum par pneu, et jusqu’à 20\xa0ml de plus',
+        'Jamais plus de 3,0\xa0bar dans le pneu, même pour talonner (manuel Canyon des roues, p.4 imprimée)',
+    ],
+    'm-plug.js': [
+        'Liquide dans le pneu\xa0: le plus efficace sur les petits trous\xa0; un trou plus grand peut demander une mèche '
+        'ou une chambre à air (Canyon)',
+        'Trou dans la bande de roulement\xa0: trouve-le, et retire l’objet qui l’a fait s’il y est encore',
+        'Park Tool TPT-1, livré avec 5 mèches',
+        'Capuchon du TPT-1\xa0: dévisse-le et retire-le avant les étapes suivantes',
+        'Partie moletée de la fourche\xa0: enfonce l’outil dans le trou et alèse la zone abîmée en la faisant aller et '
+        'venir',
+        'Mèche enfilée à mi-longueur dans la fourche de l’outil',
+        'Bouts de la mèche\xa0: environ 6,35\xa0mm (0,25\xa0pouce) encore visibles\xa0; la mèche se plie en deux en entrant',
+        'Bague de maintien\xa0: pousse-la contre le pneu, là où la mèche dépasse, puis tiens-la en place en retirant '
+        'l’outil',
+        'Regonfle pour tester, jamais plus de 3,0\xa0bar, lus sur le manomètre de ta mini-pompe, sans cartouche de CO2 '
+        '(dioxyde de carbone)\xa0; ta jante reste sans crochet',
+        'Réparation provisoire\xa0: remplace le pneu dès que possible (notice Park Tool)',
+    ],
+}
+ETIQUETTES_3D_TUBELESS = {
+    'm-rim.js': ['Pneu transparent'],
+    'm-plug.js': ['Notice TPT-1'],
+}
+# Les huit gestes de la notice du TPT-1, tels que les titres des étapes « Mèche » de 3.5, dans l'ordre de la notice.
+ETAPES_3D_TPT1 = [
+    'Trouve le trou et retire l’objet', 'Dévisse le capuchon du TPT-1', 'Alèse le trou',
+    'Enfile une mèche à mi-longueur dans la fourche de l’outil', 'Enfonce l’outil, environ 6,35\xa0mm de mèche visibles',
+    'Pousse la bague de maintien sur le pneu', 'Retire l’outil en tenant la bague',
+    'Regonfle pour tester, jamais plus de 3,0\xa0bar',
+]
+COMMANDES_3D_TUBELESS = {
+    'm-rim.js': [
+        "controls: [{ type: 'toggle', label: 'Pneu transparent', value: false, onChange: setGhost }]",
+    ],
+    'm-plug.js': [
+        "var LABELS = [" + ", ".join(f"'{e}'" for e in ETAPES_3D_TPT1) + "];",
+        "controls: [{ type: 'range', label: 'Notice TPT-1', min: 1, max: 8, step: 1, value: 6,",
+        "format: function (v) { return v + ' · ' + LABELS[v - 1]; },",
+    ],
+}
+
 
 def elements(parent):
     return [e for e in parent.enfants if isinstance(e, dom.Element)]
@@ -816,6 +879,92 @@ class TestPages(Site):
                 self.assertIn("à lire sur l'outil", ligne, f"{nom} : {ligne.strip()!r}")
                 self.assertIsNone(re.search(r"\d[\d,.]*[ \xa0]*(?:à|-)[ \xa0]*\d|\d[ \xa0]*N·?m", ligne),
                                   f"{nom} : chiffre près de la clé Canyon : {ligne.strip()!r}")
+
+    def test_pieces_3d_tubeless(self):
+        # Les pièces 3D des ateliers 3.2 (« rim ») et 3.5 (« plug »), lues dans le dépôt : le lot 3 n'est pas encore
+        # publié, la tâche qui le publie ajoute leurs copies servies. Chaque pastille, chaque commande et chaque geste du
+        # curseur est comparé mot pour mot à PASTILLES_3D_TUBELESS, ETIQUETTES_3D_TUBELESS, COMMANDES_3D_TUBELESS et
+        # ETAPES_3D_TPT1. Puis, sur tout le fichier, commentaires compris :
+        # - rien du CF 7 ni des brouillons (jante DT Swiss Gravel LN à crochets, pneu Continental à flancs ambrés, valve
+        #   DT Swiss à 0,5 Nm, autres outils à mèches, liquide qui « colmate » autour de la mèche) ; « crochet » n'y
+        #   est jamais écrit sans « sans » devant ;
+        # - aucune pression sinon « jamais plus de 3,0 bar », en chiffres ou en lettres, en bar, psi, kPa ou atm ;
+        # - aucun couple, aucun poids, aucune donnée personnelle, aucune marque de valve ;
+        # - « approchée » et les couleurs dans chaque en-tête, aucun tiret cadratin ni demi-cadratin.
+        # Les valeurs viennent du chapitre : chaque nombre suivi d'une unité y est écrit, la pastille des 3,0 bar commence
+        # par la phrase de la légende de la figure de 3.2, les gestes du curseur sont les titres des étapes « Mèche » de
+        # 3.5 dans l'ordre de la notice, et chaque légende dit que les numéros se dessinent par-dessus les pièces cachées.
+        def plat(t):
+            return t.replace("’", "'").replace("\xa0", " ")
+        source = (RACINE / "src" / "parts" / "30-tubeless.html").read_text(encoding="utf-8")
+        par_id = {a.id: a for a in ateliers.relever_chapitre(source).ateliers}
+        chapitre = plat(source)
+        jetons = RACINE / "brouillons" / "jetons-personnels.txt"  # hors du dépôt : brouillons/ est ignoré par git
+        jetons = [l.strip() for l in jetons.read_text(encoding="utf-8").splitlines()
+                  if l.strip() and not l.lstrip().startswith("#")] if jetons.exists() else []
+        absents = ("Gravel LN", "Continental", "Terra Adventure", "à crochet", "DT Swiss", "Dynaplug", "DART", "Stan's",
+                   "bacon", "skinwall", "ambré", "colmate", "surgonfl", "over-inflate", "maximum du flanc", "plus fort",
+                   "type Park Tool", "Lamine", "/Users/", "ltimsi", "CHF", "€")
+        motifs = (r"\bTC\b", r"(?i)\bhook(?!less)", r"(?i)CF[\s_-]*7(?!\d)|4553", r"\d\s*N·?m\b", r"(?i)\d\s*kg\b",
+                  r"(?i)valves?\s+(?:tubeless\s+)?(?:Presta\s+)?(?:DT|Schwalbe|Muc-Off|Stan|Topeak|Park Tool|Canyon"
+                  r"|Pirelli|Clik|Reserve|Silca|Zipp)")
+        legende_3d = ("Touche un numéro pour repérer la pièce. Un numéro peut se dessiner par-dessus une pièce qui cache "
+                      "la sienne : fais tourner la pièce, ou lis la liste numérotée sous la figure.")
+        limite = "Jamais plus de 3,0\xa0bar dans le pneu, même pour talonner"
+        for fichier, (modele, atelier) in {"m-rim.js": ("rim", "tubeless-passer"),
+                                           "m-plug.js": ("plug", "tubeless-crevaison")}.items():
+            chemin = RACINE / "src" / "js" / "models" / fichier
+            self.assertTrue(chemin.exists(), f"{fichier} absent")
+            texte = chemin.read_text(encoding="utf-8")
+            self.assertEqual(texte.count(f"AtelierModels.register('{modele}', {{"), 1, f"{fichier} : register")
+            pastilles = re.findall(r"text: '((?:[^'\\]|\\.)*)'", texte)
+            self.assertEqual(pastilles, PASTILLES_3D_TUBELESS[fichier], f"{fichier} : pastilles")
+            etiquettes = re.findall(r"\blabel: '((?:[^'\\]|\\.)*)'", texte)
+            self.assertEqual(etiquettes, ETIQUETTES_3D_TUBELESS[fichier], f"{fichier} : étiquettes des commandes")
+            for commande in COMMANDES_3D_TUBELESS[fichier]:
+                self.assertEqual(texte.count(commande), 1, f"{fichier} : commande {commande!r}")
+            liste = re.search(r"var LABELS = \[(.*?)\];", texte)
+            etapes = re.findall(r"'((?:[^'\\]|\\.)*)'", liste.group(1)) if liste else []
+            self.assertEqual(etapes, ETAPES_3D_TPT1 if modele == "plug" else [], f"{fichier} : gestes du curseur")
+            # Les valeurs : chaque nombre suivi d'une unité, dans une pastille ou un geste, est écrit dans le chapitre.
+            for libelle in pastilles + etapes:
+                for v in re.findall(r"(?:\d+(?:,\d+)? à )?\d+(?:,\d+)?\xa0(?:mm|ml|bar|pouce)\b", libelle):
+                    self.assertIn(plat(v), chapitre, f"{fichier} : {v!r} absent du chapitre : {libelle[:60]}")
+            figures = [f for f in dom.selectionner(par_id[atelier].section, "figure.v3d") if f.get("data-model") == modele]
+            self.assertEqual(len(figures), 1, f"{atelier} : figure {modele}")
+            legende = plat(un(figures[0], "figcaption").texte())
+            self.assertIn(legende_3d, legende, f"{atelier} : légende")
+            if modele == "rim":
+                self.assertEqual([p for p in pastilles if p.startswith(limite)], [PASTILLES_3D_TUBELESS[fichier][-1]])
+                self.assertIn(plat(limite), legende, "3,0 bar : phrase de la légende de 3.2")
+            else:
+                titres = [plat(un(li, "p.st-t").texte()) for li in dom.selectionner(par_id[atelier].section, "ol.steps > li")]
+                meches = [(i, t[len("Mèche : "):]) for i, t in enumerate(titres) if t.startswith("Mèche : ")]
+                self.assertEqual([t for _, t in meches], [plat(e[0].lower() + e[1:]) for e in ETAPES_3D_TPT1])
+                corps = [plat(li.texte()) for li in dom.selectionner(par_id[atelier].section, "ol.steps > li")]
+                for n, (i, _) in enumerate(meches, 1):
+                    self.assertIn(f"« {n}. ", corps[i], f"geste {n} de la notice")
+            # Tout le fichier, commentaires compris, les blancs ramenés à une espace : une phrase coupée en fin de ligne de
+            # commentaire est lue entière. assertFalse plutôt qu'assertNotIn : un échec nomme la valeur sans recopier
+            # tout le fichier.
+            lu = re.sub(r"\s+", " ", plat(texte))
+            for absent in absents:
+                self.assertFalse(absent in lu, f"{fichier} : {absent!r} présent")
+            for motif in motifs:
+                m = re.search(motif, lu)
+                self.assertIsNone(m, f"{fichier} : {m and lu[max(0, m.start() - 30):m.end() + 30]!r}")
+            for m in re.finditer(r"crochets?", lu, re.I):
+                self.assertEqual(lu[max(0, m.start() - 5):m.start()].lower(), "sans ",
+                                 f"{fichier} : {lu[max(0, m.start() - 30):m.end() + 10]!r}")
+            for m in re.finditer(r"\b(?:bars?|psi|kpa|atm)\b", lu, re.I):
+                self.assertTrue(lu[:m.start()].lower().endswith("jamais plus de 3,0 "),
+                                f"{fichier} : pression {lu[max(0, m.start() - 40):m.end()]!r}")
+            for n, jeton in enumerate(jetons, 1):
+                self.assertFalse(jeton in texte, f"{fichier} : jeton personnel n°{n}")
+            self.assertIsNone(re.search("[\u2014\u2013]", texte), f"{fichier} : tiret cadratin ou demi-cadratin")
+            entete = texte[:texte.index("*/")] if "*/" in texte else ""
+            for mot in ("approchée", "couleurs"):
+                self.assertIn(mot, entete, f"{fichier} : en-tête sans « {mot} »")
 
     def test_disque_de_l_axe_comme_celui_du_chapitre_2(self):
         # Le disque de la pièce de l'axe (1.5) recopie celui de m-rotor.js (2.2, déjà en ligne) : mêmes fentes à cinq
