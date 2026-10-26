@@ -1,9 +1,11 @@
 """Tests de build/ateliers.py : le chapitre Freins relu en ateliers, puis les deux colonnes de la page d'un atelier,
 étapes et blocs repliés dans des <details>, sans texte perdu ni contenu caché."""
+import json
 import re
 import sys
 import unittest
 from pathlib import Path
+from urllib.parse import urlparse
 
 RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE / "build"))
@@ -355,14 +357,15 @@ def texte_de(element):
     return normaliser(element.texte())
 
 
-def lignes_de(racine):
+def lignes_de(racine, questions=False):
     """Chaque ligne de `racine` : l'élément de LIGNES le plus haut, pris en entier (une étape avec son titre et son
-    corps, une ligne de tableau avec ses cellules), dans l'ordre du document."""
+    corps, une ligne de tableau avec ses cellules), dans l'ordre du document. Avec `questions`, chaque div.q d'une fiche
+    « comprendre » (une question, son titre en b et sa réponse) compte aussi pour une ligne."""
     trouvees = []
 
     def parcourir(element):
         for enfant in elements(element):
-            if enfant.tag in LIGNES:
+            if enfant.tag in LIGNES or (questions and enfant.tag == "div" and "q" in enfant.classes()):
                 trouvees.append(enfant)
             else:
                 parcourir(enfant)
@@ -928,6 +931,461 @@ class TestMontage(unittest.TestCase):
 
     def test_texte_conserve(self):
         # Comme pour Freins : les deux colonnes de chaque page gardent tout le texte du source.
+        for a in self.ch.ateliers:
+            with self.subTest(a.id):
+                gauche, droite = ateliers.colonnes(a)
+                sortie = dom.analyser(gauche + droite)
+                for ajout in dom.selectionner(sortie, "summary > span.st-n") + dom.selectionner(sortie, "summary > span.nm"):
+                    ajout.retirer()
+                texte = sortie.texte()
+                for selecteur in ("p", "li", "h4", "td", "b", "summary", "figcaption"):
+                    for e in dom.selectionner(a.section, selecteur):
+                        self.assertIn(e.texte(), texte, f"{selecteur} : {e.texte()[:60]}")
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Chapitre 3, Pneus et tubeless : relu depuis son fragment, hors publication (le lot 3 reste « à faire »)
+# ---------------------------------------------------------------------------------------------------------------
+
+TUBELESS = RACINE / "src" / "parts" / "30-tubeless.html"
+RELEVE_TUBELESS = RACINE / "docs" / "recherche" / "tubeless-cf8-di2.md"
+MANUEL_ROUES = "canyon-wheelset-manual-2025.pdf"
+_N = r"\d+(?:[.,]\d+)?"
+_EN_LETTRES = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "eleven": 11,
+               "un": 1, "deux": 2, "trois": 3, "quatre": 4, "cinq": 5, "onze": 11}
+# Une pression écrite : un nombre ou une plage (« 1,9-2,2 », « 2.5 à 4.5 »), en chiffres ou en lettres (« four bars »),
+# puis bar ou psi, au besoin après le » d'une citation (« 3.0 » bar).
+PRESSION = re.compile(r"(?<![\d.,])(" + _N + r"|\b(?:" + "|".join(_EN_LETTRES) + r"))(?:[\s ]*(?:-|à|to)[\s ]*("
+                      + _N + r"))?[\s ]*(?:»[\s ]*)?(bars?|psi)\b", re.I)
+VOLUME = re.compile(r"(?<![\d.,])" + _N + r"[\s ]*(?:»[\s ]*)?ml\b", re.I)
+LIMITE = {"bar": 3.0, "psi": 43.5}  # manuel Canyon des roues : « 3.0 » bar, « 43.5 » PSI pour 45 à 54 mm
+# Les documents des fabricants des pièces et du matériel de Lamine, et les vidéos de leurs chaînes : aucun autre site.
+OFFICIELS = {"www.canyon.com", "dma.canyon.com", "www.schwalbe.com", "www.topeak.com", "muc-off.com", "eu.muc-off.com",
+             "d2a13k6araex7u.cloudfront.net", "www.youtube.com", "www.parktool.com"}
+S_APPLIQUE = "3,0 bar s'applique"
+
+
+def valeur(nombre):
+    return float(_EN_LETTRES[nombre.lower()] if nombre.lower() in _EN_LETTRES else nombre.replace(",", "."))
+
+
+def pressions(texte):
+    """Chaque pression du texte : (début, valeur la plus haute, unité « bar » ou « psi », nombres lus)."""
+    for m in PRESSION.finditer(texte):
+        nombres = [valeur(n) for n in m.groups()[:2] if n]
+        yield m.start(), max(nombres), "bar" if m.group(3).lower().startswith("bar") else "psi", nombres
+
+
+def dans_une_citation(texte, i):
+    """Vrai si la position `i` est entre « et »."""
+    return texte[:i].count("«") > texte[:i].count("»")
+
+
+def lignes_tubeless(racine):
+    """Les lignes du chapitre 3, questions de 3.6 comprises."""
+    return lignes_de(racine, questions=True)
+
+
+class TestTubeless(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.source = TUBELESS.read_text(encoding="utf-8")
+        cls.releve = RELEVE_TUBELESS.read_text(encoding="utf-8")
+        cls.ch = ateliers.relever_chapitre(cls.source)
+        cls.par_id = {a.id: a for a in cls.ch.ateliers}
+        cls.section = cls.ch.tete.parent
+
+    def texte_complet(self):
+        return texte_de(self.section)
+
+    def texte_atelier(self, ident):
+        return texte_de(self.par_id[ident].section)
+
+    def lignes(self):
+        return [texte_de(l) for l in lignes_tubeless(self.section)]
+
+    def etapes_de(self, ident):
+        """Les étapes d'un atelier : (titre, corps), le corps sans le titre, comme le montre le mode pas à pas."""
+        return [(texte_de(dom.selectionner(li, "p.st-t")[0]),
+                 " ".join(texte_de(e) for e in elements(li) if "st-t" not in e.classes()))
+                for li in dom.selectionner(self.par_id[ident].section, "ol.steps > li")]
+
+    def corps(self, ident, debut):
+        """Le corps de la seule étape de l'atelier dont le titre commence par `debut`."""
+        trouvees = [c for t, c in self.etapes_de(ident) if t.startswith(debut)]
+        self.assertEqual(len(trouvees), 1, f"{ident} : {debut} : {[t for t, _ in self.etapes_de(ident)]}")
+        return trouvees[0]
+
+    def test_chapitre(self):
+        self.assertEqual(self.ch.id, "tubeless")
+        self.assertEqual((self.section.tag, self.section.classes()), ("section", ["chapter"]))
+        (num,) = dom.selectionner(self.ch.tete, "p.ch-num")
+        self.assertEqual(num.texte(), "Chapitre 3 · Pneus et tubeless")
+        self.assertEqual(dom.selectionner(self.ch.tete, "h2")[0].texte(), "Pneus et tubeless")
+        ids = [e.get("id") for e in dom.selectionner(dom.analyser(self.source), "[id]")]
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertEqual(sorted(self.ch.resumes), ["ordre"])
+
+    def test_non_publie(self):
+        # Le chapitre est écrit, mais le lot 3 reste « à faire » : il n'est publié qu'à la tâche 3.
+        config = json.loads((RACINE / "build" / "lots.json").read_text(encoding="utf-8"))
+        (lot,) = [l for l in config["lots"] if l["lot"] == 3]
+        self.assertEqual((lot["statut"], lot["parts"], lot["modeles"]), ("à faire", ["30-tubeless"], ["rim", "plug"]))
+
+    def test_ateliers_ids_types_zones(self):
+        self.assertEqual([(a.id, a.num, a.type, a.zone) for a in self.ch.ateliers], [
+            ("tubeless-materiel", "3.1", "comprendre", "pneus"), ("tubeless-passer", "3.2", "remplacer", "pneus"),
+            ("tubeless-liquide", "3.3", "entretenir", "pneus"), ("tubeless-pression", "3.4", "regler", "pneus"),
+            ("tubeless-crevaison", "3.5", "entretenir", "pneus"), ("tubeless-problemes", "3.6", "comprendre", "pneus")])
+
+    def test_remplacer_passer(self):
+        p = self.par_id["tubeless-passer"]
+        self.assertEqual((p.de, p.vers), ("Chambres à air si le vélo en est livré (à lire sur la pièce)",
+                                          "Tubeless\xa0: valves, liquide Muc-Off"))
+        for a in self.ch.ateliers:
+            if a.id != "tubeless-passer":
+                self.assertEqual((a.de, a.vers), (None, None), a.id)
+
+    def test_blocs_par_type(self):
+        # Une fiche « comprendre » n'a aucun bloc de gestes, les autres types les ont tous ; chacune a sa vidéo.
+        for a in self.ch.ateliers:
+            with self.subTest(a.id):
+                presents = [g for g in GESTES if dom.selectionner(a.section, g)]
+                self.assertEqual(presents, [] if a.type == "comprendre" else list(GESTES))
+                self.assertTrue(dom.selectionner(a.section, "ul.media") + dom.selectionner(a.section, "p.a-video"))
+                videos = [h for h in elements(a.section) if h.tag == "h4" and h.texte() in ateliers.VIDEO]
+                self.assertEqual(len(videos), 1)
+                if a.type != "comprendre":
+                    self.assertTrue(a.outils and a.etapes and a.demonter)
+                    self.assertEqual(len(dom.selectionner(a.section, "ol.steps")), 1)
+                gauche, droite = ateliers.colonnes(a)
+                self.assertEqual(dom.selectionner(dom.analyser(gauche + droite), "[hidden]"), [])
+
+    def test_figures_3d(self):
+        # Les deux pièces de la tâche 2 : leurs légendes et leurs aria-label ne portent que des valeurs du relevé.
+        attendu = {"tubeless-passer": ["rim"], "tubeless-crevaison": ["plug"]}
+        mots = {"rim": ("GR 30 CF", "sans crochet", "27\xa0mm", "33\xa0mm", "30\xa0mm", "G-One RX", "45-622", "ruban",
+                        "liquide", "Presta", "3,0\xa0bar", "approché"),
+                "plug": ("TPT-1", "alèse", "mi-longueur", "6,35\xa0mm", "0,25 pouce", "bague", "5 mèches", "approché")}
+        releve = self.releve.replace(",", ".")
+        for a in self.ch.ateliers:
+            with self.subTest(a.id):
+                self.assertEqual(a.modeles, attendu.get(a.id, []))
+                for figure in dom.selectionner(a.section, "figure.v3d"):
+                    (scene,) = dom.selectionner(figure, "div.v3d-stage")
+                    self.assertEqual(scene.get("role"), "img")
+                    (legende,) = dom.selectionner(figure, "figcaption")
+                    self.assertTrue(legende.texte().startswith(f"3D {a.num}"), legende.texte())
+                    textes = [normaliser(scene.get("aria-label")), texte_de(legende)]
+                    for mot in mots[figure.get("data-model")]:
+                        for t in textes:
+                            self.assertIn(mot, t, mot)
+                    # Chaque nombre, hors du numéro de la figure et des pages citées, est un nombre du relevé.
+                    for t in textes:
+                        t = re.sub(r"\(PDF p\.\d+\)|p\.\d+ imprimée", "", t.replace(f"3D {a.num}", ""))
+                        for n in re.findall(_N, t):
+                            self.assertIn(n.replace(",", "."), releve, f"{n} : {t[:80]}")
+
+    def test_jamais_plus_de_3_bar(self):  # Review Focus 1
+        # Chaque pression écrite (bar, psi, en chiffres ou en lettres, plages comprises) est d'au plus 3,0 bar ou
+        # 43,5 psi. Seule exception : une citation entre « », dans une ligne qui dit « 3,0 bar s'applique » et qui cite
+        # le manuel Canyon des roues, la raison (la plus basse des sources, « always never exceed »).
+        vues, citees = 0, 0
+        for texte in self.lignes() + aria_labels(self.section):
+            for debut, haut, unite, _ in pressions(texte):
+                vues += 1
+                if haut <= LIMITE[unite]:
+                    continue
+                citees += 1
+                self.assertTrue(dans_une_citation(texte, debut), f"hors citation : {texte[debut:debut + 30]} : {texte[:160]}")
+                self.assertIn(S_APPLIQUE, texte, texte[:160])
+        self.assertGreaterEqual(vues, 40)
+        self.assertGreaterEqual(citees, 10)
+        raisons = 0
+        for ligne in lignes_tubeless(self.section):
+            if S_APPLIQUE in texte_de(ligne):
+                raisons += 1
+                self.assertTrue([a for a in dom.selectionner(ligne, "a.src") if MANUEL_ROUES in a.get("href")],
+                                texte_de(ligne)[:160])
+        self.assertGreaterEqual(raisons, 6)
+        # Les citations qui disent de gonfler davantage sont toutes citées, comme contradictions.
+        texte = self.texte_complet()
+        for citation in ("Slightly over-inflate the tire for a short time", "Inflate the tire to at least the maximum pressure",
+                         "pump as hard and as fast as you can", "always never exceed"):
+            self.assertIn(citation, texte, citation)
+        # Les consignes fausses du brouillon, et toute invitation française à dépasser.
+        for absent in ("maximum du flanc", "au moins à la pression maximale", "jusqu'au maximum", "augmente brièvement",
+                       "pression de talonnage de"):
+            self.assertNotIn(absent, texte, absent)
+        self.assertIsNone(re.search(r"\bsurgonfle\b", texte))  # « surgonfler », titre d'une contradiction, reste permis
+        # Le motif lui-même : plages, lettres, unité après le guillemet, et rien d'autre.
+        def lues(t):
+            return [(h, u) for _, h, u, _ in pressions(t)]
+        self.assertEqual(lues("« 4 bars/58PSI »"), [(4, "bar"), (58, "psi")])
+        self.assertEqual(lues("« 3.0 » bar, « 43.5 » PSI"), [(3.0, "bar"), (43.5, "psi")])
+        self.assertEqual(lues("« 160\xa0psi / 11\xa0bar »"), [(160, "psi"), (11, "bar")])
+        self.assertEqual(lues("de 2.5 à 4.5 bar, 1,9-2,2\xa0bar, leave it at four bars"),
+                         [(4.5, "bar"), (2.2, "bar"), (4, "bar")])
+        self.assertEqual(lues("45\xa0mm, 70 à 80\xa0ml, 3,0\xa0bars"), [(3.0, "bar")])
+
+    def test_reservoir_contre_pneu(self):  # Review Focus 2
+        # Le corps des étapes de la JoeBlow Booster distingue la pression du réservoir (la charge de 11 bar de Topeak)
+        # de celle du pneu, que tu surveilles au manomètre et que tu purges aussitôt au-delà de 3,0 bar.
+        charge = self.corps("tubeless-passer", "Charge le réservoir")
+        talon = self.corps("tubeless-passer", "Talonne")
+        for mot in ("Pump to 160\xa0psi / 11\xa0bar for best results.", "CHARGE", "Air Chamber", "réservoir",
+                    "pas dans le pneu", "jamais celle de ton pneu", S_APPLIQUE, "always never exceed",
+                    "DO NOT squeeze tire when engaging pump head.", "DO NOT turn Mode Selector to mid-point between modes."):
+            self.assertIn(mot, charge, mot)
+        for mot in ("INFLATE", "manomètre", "pression du pneu", "3,0\xa0bar", "dégonfle aussitôt", "Air Release Button",
+                    "DO NOT exceed the maximum air pressure of your tubeless tire.", "non publiée",
+                    "déduction de ce site", "always never exceed", "DO NOT store pressurized air in Air Chamber"):
+            self.assertIn(mot, talon, mot)
+        self.assertLess(talon.index("manomètre"), talon.index("dégonfle aussitôt"))
+        # 11 bar et 160 psi ne s'écrivent que dans la citation de Topeak, dans une ligne qui parle du réservoir.
+        vues = 0
+        for texte in self.lignes() + aria_labels(self.section):
+            for debut, haut, unite, _ in pressions(texte):
+                if haut in (11, 160):
+                    vues += 1
+                    self.assertTrue(dans_une_citation(texte, debut), texte[:160])
+                    self.assertIn("réservoir", texte, texte[:160])
+        self.assertGreaterEqual(vues, 2)
+
+    def test_valeur_avec_source_officielle(self):  # Review Focus 3
+        # Toute ligne qui porte un span.nm, une pression ou une dose en ml porte un a.src officiel autre que Park Tool,
+        # qui ne sert que pour un geste ou pour ses propres outils.
+        vues = 0
+        for ligne in lignes_tubeless(self.section):
+            texte = texte_de(ligne)
+            if dom.selectionner(ligne, "span.nm") or PRESSION.search(texte) or VOLUME.search(texte):
+                vues += 1
+                officielles = [a for a in dom.selectionner(ligne, "a.src")
+                               if urlparse(a.get("href")).hostname != "www.parktool.com"]
+                self.assertTrue(officielles, texte[:160])
+        self.assertGreaterEqual(vues, 35)
+        # Chaque lien sort vers un document officiel, et c'est un document du relevé, à son adresse exacte.
+        liens = [e for e in dom.selectionner(self.section, "[href]") if e.tag == "a"]
+        self.assertGreaterEqual(len(liens), 100)
+        for a in liens:
+            href = a.get("href")
+            if href.startswith("#"):
+                continue
+            self.assertTrue(href.startswith("https://"), href)
+            self.assertIn(urlparse(href).hostname, OFFICIELS, href)
+            self.assertIn(href, self.releve, href)
+            self.assertEqual((a.get("target"), a.get("rel")), ("_blank", "noopener"), href)
+        # Les pages du manuel Canyon des roues : la page imprimée, puis celle du PDF, qui vaut une de plus.
+        vues = 0
+        for a in dom.selectionner(self.section, "a.src"):
+            if MANUEL_ROUES in a.get("href"):
+                vues += 1
+                m = re.fullmatch(r"Canyon, manuel des roues p\.(\d+)(?:-(\d+))? imprimées? \(PDF p\.(\d+)(?:-(\d+))?\)",
+                                 a.texte())
+                self.assertIsNotNone(m, a.texte())
+                self.assertEqual(int(m.group(3)), int(m.group(1)) + 1, a.texte())
+                if m.group(2):
+                    self.assertEqual(int(m.group(4)), int(m.group(2)) + 1, a.texte())
+        self.assertGreaterEqual(vues, 30)
+
+    def test_pas_a_pas_securite(self):  # Review Focus 5
+        # Le mode pas à pas ne montre que le titre et le corps des étapes : 3,0 bar, solvants sur le carbone et CO2
+        # sont dans les corps des étapes de 3.2 (et de 3.5 pour le CO2), pas seulement dans un encadré.
+        etapes = self.etapes_de("tubeless-passer")
+        gonfler = [(t, c) for t, c in etapes
+                   if re.search(r"(?<!dé)gonfle|talonne|réservoir|pression|fuites|ligne du pneu|roule", t, re.I)]
+        self.assertGreaterEqual(len(gonfler), 7, [t for t, _ in etapes])
+        for t, c in gonfler:
+            self.assertIn("3,0\xa0bar", c, t)
+        talon = self.corps("tubeless-passer", "Talonne")
+        for mot in ("always never exceed", S_APPLIQUE, "Slightly over-inflate the tire for a short time",
+                    "Inflate the tire to at least the maximum pressure on the label.", "pump as hard and as fast as you can",
+                    "CO2 (dioxyde de carbone)", "Please do not use CO2 cartridges for inflation.",
+                    "If a floor pump fails, use a tubeless inflator, CO2 cartridge, or compressor.", "la plus prudente",
+                    "ne gonfle jamais plus fort", "3.6"):
+            self.assertIn(mot, talon, mot)
+        for debut, mots in {
+            "Démonte": ("Do not use metal tools to install or remove tubeless tyres.", "Use plastic tyre lever if necessary."),
+            "Contrôle le ruban": ("solvant", "carbone", "which is not visible to the naked eye"),
+            "Ruban à changer": ("Isopropyl Alcohol", "solvant", "carbone", "which is not visible to the naked eye",
+                                "service client Canyon"),
+            "Pneu neuf": ("Disc Brake Cleaner", "solvant", "carbone", "loin de la jante", "Proposition"),
+        }.items():
+            c = self.corps("tubeless-passer", debut)
+            for mot in mots:
+                self.assertIn(mot, c, f"{debut} : {mot}")
+        # 3.5 : chaque étape qui fait regonfler dit 3,0 bar et écarte le CO2, avec sa raison.
+        regonfler = [(t, c) for t, c in self.etapes_de("tubeless-crevaison") if "gonfle" in t.lower()]
+        self.assertGreaterEqual(len(regonfler), 2)
+        for t, c in regonfler:
+            for mot in ("3,0\xa0bar", "CO2", "Please do not use CO2 cartridges for inflation.", "la plus prudente"):
+                self.assertIn(mot, c, f"{t} : {mot}")
+
+    def test_materiel(self):
+        texte = self.texte_complet()
+        for mot in ("Muc-Off", "Road & Gravel Tubeless Sealant", "JoeBlow Booster", "TPT-1"):
+            self.assertIn(mot, texte, mot)
+        outils = {a.id: " ".join(a.outils) for a in self.ch.ateliers}
+        for ident, mots in {"tubeless-passer": ("JoeBlow Booster", "Muc-Off", "plastique", "Presta"),
+                            "tubeless-liquide": ("Muc-Off",), "tubeless-pression": ("JoeBlow Booster",),
+                            "tubeless-crevaison": ("TPT-1", "45-622", "Presta", "plastique")}.items():
+            for mot in mots:
+                self.assertIn(mot, outils[ident], f"{ident} : {mot}")
+        # Les valves : les critères officiels du relevé, sans aucune marque.
+        materiel = self.texte_atelier("tubeless-materiel")
+        for mot in ("Presta", "obus démontable", "If you use valves without exchangeable valve inserts",
+                    "The valve nut is absolutely necessary", "Exclusively tighten the valve nut by hand.",
+                    "install the valve according to the valve instructions", "30\xa0mm", "notice de la valve",
+                    "aucune marque"):
+            self.assertIn(mot, materiel, mot)
+        marques = r"(?:DT\s?Swiss|Schwalbe|Muc-Off|Stan[’']?s|Topeak|Park Tool|Canyon|Pirelli|Clik|Reserve|Silca|Zipp)"
+        for motif in (r"valves?\s+(?:tubeless\s+)?" + marques, marques + r"\s+(?:tubeless\s+)?valves?", r"\bclik\b",
+                      r"TVVXA", r"\bStan[’']?s\b", r"0,5 Nm", r"Dynaplug", r"\bDART\b"):
+            self.assertIsNone(re.search(motif, texte, re.I), motif)
+
+    def test_sans_ecarts_des_brouillons(self):
+        # Les écarts du relevé (section « Écarts avec les brouillons du 20/10 »), chacun par un indice précis.
+        texte, html = self.texte_complet(), normaliser(self.source)
+        for absent in (
+            "Continental", "Terra Adventure", "RevoSealant", "Gravel LN", "G 540", "G540",  # pièces du CF 7
+            "24\xa0mm", "25 ou 26", "25\xa0mm", "TVX2710S29813S",  # cotes et ruban de la jante du CF 7
+            "4,5\xa0bar", "65\xa0psi", "pression de départ", "ton calcul", "Ton fichier",  # revendeurs, données perso
+            "maximum du flanc", "plafond", "au moins à la pression maximale",  # talonnage dangereux
+            "acétone", "liquide vaisselle", "Lave le pneu", "lave le pneu",  # solvant et lavage du CF 7, dosage Stan's
+            "2,5 à 5", "5 à 7\xa0cm", "7 à 9\xa0cm", "30\xa0ml", "475\xa0ml", "0,17",  # Park Tool, Stan's, Continental
+            "aluminium", "corrosion", "tous les 3\xa0mois", "12\xa0mois",  # jante aluminium, ruban DT Swiss des roues
+            "Vittoria", "ENVE", "SRAM", "Zipp", "Silca", "BikeRadar",  # tableaux et calculateurs hors pièces
+            "Dynaplug", "DART", "Stan's", "TB-2",  # outils non choisis
+            "à crochets", "à crochet", "contre les crochets", "Le crochet", "le crochet retient",  # jante à crochets
+            "Ruban DT Swiss 27",  # mauvais ruban pour 27 mm
+        ):
+            self.assertNotIn(absent, texte, absent)
+        for motif in (r"\bTC\b", r"\bTR\b", r"\b[4578] h\b", r"\d bar (?:avant|arrière|à l'avant|à l'arrière)"):
+            self.assertIsNone(re.search(motif, texte), motif)
+        cf7 = re.compile(r"(?<![0-9a-z#])CF[\s_-]*7(?![0-9])|4553", re.I)
+        self.assertIsNone(cf7.search(texte))
+        self.assertIsNone(cf7.search(html))
+        for adresse in ("mrcyclingworld", "rosebikes", "mhw-bike", "modernbike", "bicyclerollingresistance", "cykelpartner",
+                        "cdn.shopify", "continental-tires", "bikeradar", "MAN_WXWXXXXXX1610S", "MAN_RXWXXXXXXWRXXS",
+                        "MAN_TDXXXXXX04814S", "tire-and-tube-removal-and-installation", "tubeless-tire-conversion",
+                        "/grizl-cf-7/", "50047675", "WGR00LNAIDXSO19861"):
+            self.assertNotIn(adresse, html, adresse)
+        # La conversion des 750 miles de Muc-Off est un calcul, dit comme tel.
+        for ligne in self.lignes():
+            if "1200\xa0km" in ligne:
+                self.assertIn("calcul de ce site", ligne)
+        # Le ruban posé n'est pas affirmé : Canyon l'écrit pour la paire vendue seule, pas pour le vélo.
+        self.assertIn("Delivered pre-taped", self.texte_atelier("tubeless-materiel"))
+        self.assertNotIn("ruban déjà posé", texte)
+
+    def test_aucune_donnee_personnelle(self):
+        # Les jetons personnels de Lamine ne sont jamais écrits dans un fichier suivi par git : ils sont lus dans
+        # brouillons/jetons-personnels.txt, hors du dépôt, quand il existe, et jamais recopiés dans un message.
+        texte = self.texte_complet().replace(" ", " ")
+        html = self.source.replace(" ", " ")
+        for absent in ("CHF", "€", "/Users/", "ltimsi", "file:", "Lamine"):
+            self.assertNotIn(absent, texte, absent)
+            self.assertNotIn(absent, html, absent)
+        if JETONS.exists():
+            jetons = [l.strip() for l in JETONS.read_text(encoding="utf-8").splitlines()
+                      if l.strip() and not l.lstrip().startswith("#")]
+            self.assertTrue(jetons)
+            for n, absent in enumerate(jetons, 1):
+                self.assertFalse(absent in texte or absent in html, f"jeton personnel n°{n} de {JETONS.name}")
+        self.assertIsNone(re.search(r"\b(?:commandes?|prix|magasin|boutique)\b", texte, re.I))
+        # Aucune pression calculée : chaque pression du chapitre est une valeur du relevé, avec son unité.
+        dans_le_releve = {(n, u) for _, _, u, ns in pressions(self.releve) for n in ns}
+        for t in self.lignes() + aria_labels(self.section):
+            for _, _, u, ns in pressions(t):
+                for n in ns:
+                    self.assertIn((n, u), dans_le_releve, f"{n} {u} : {t[:120]}")
+        # Aucun poids hors du tableau Canyon (catégories de cyclistes) et des charges admises (vélo, paire de roues).
+        self.assertLessEqual(set(re.findall(r"(?<![\d.,])(\d+)\s?kg\b", texte, re.I)), {"64", "82", "120", "130"})
+        self.assertLessEqual(set(re.findall(r"(?<![\d.,])(\d+)\s?lbs\b", texte, re.I)), {"140", "180"})
+        # 3.4 donne la méthode et les limites, et fait noter ta pression ailleurs.
+        pression = self.texte_atelier("tubeless-pression")
+        self.assertIn("ailleurs que sur ce site", pression)
+        self.assertIn("ne calcule pas ta pression", pression)
+
+    def test_contradictions(self):
+        # Chaque contradiction du relevé qui touche un atelier est dite sur sa page, avec la valeur appliquée.
+        attendu = {
+            "tubeless-materiel": ("Delivered with tubeless valve", "chat Canyon", "Delivered pre-taped", "Performance",
+                                  "608\xa0g", "4\xa0bars/58PSI", "130\xa0kg", "120\xa0kg", "2-4\xa0mm wider", "29\xa0mm"),
+            "tubeless-passer": ("Slightly over-inflate", "at least the maximum pressure", "as hard and as fast",
+                                "Please do not use CO2 cartridges", "CO2 cartridge", "Can be used with CO2",
+                                "beginning at the valve", "Isopropyl Alcohol", "brake cleaner", "Disc Brake Cleaner",
+                                "three spoke positions", "15\xa0cm", "overlap in the valve area", "40-622"),
+            "tubeless-liquide": ("70 - 80ml", "60 - 90", "fill in 60\xa0ml", "60 à 100\xa0ml", "50 à 80\xa0ml",
+                                 "Lasts 3-6 months", "2000\xa0km", "three to six months", "for the life of the tyre",
+                                 "No Puncture Hassle", "Cross 700CC"),
+            "tubeless-pression": ("4\xa0bars/58PSI", "55\xa0PSI", "4.5", "5\xa0bar for road bikes", "four bars", "0\xa0Bar",
+                                  "Coming soon", "rough guide"),
+            "tubeless-crevaison": ("Please do not use CO2 cartridges", "Can be used with CO2", "snake", "anglais"),
+            "tubeless-problemes": ("Slightly over-inflate", "as hard and as fast"),
+        }
+        for ident, mots in attendu.items():
+            with self.subTest(ident):
+                notes = [n for n in dom.selectionner(self.par_id[ident].section, "aside.note")
+                         if texte_de(dom.selectionner(n, "p.note-t")[0]).startswith("Contradiction")]
+                self.assertTrue(notes, ident)
+                texte = " ".join(texte_de(n) for n in notes)
+                for mot in mots:
+                    self.assertIn(mot, texte, mot)
+                for n in notes:
+                    t = texte_de(n)
+                    self.assertTrue(any(m in t for m in ("s'applique", "retenu", "appliqu", "s'impose", "prime")), t[:160])
+
+    def test_a_lire_a_la_livraison(self):
+        # 3.1 : la liste du relevé « À lire sur la pièce à la livraison », à cocher, point par point.
+        section = self.par_id["tubeless-materiel"].section
+        (liste,) = dom.selectionner(section, "ul.check")
+        self.assertEqual(liste.get("data-key"), "tubeless-releve")
+        (bouton,) = dom.selectionner(section, "button.btn-reset")
+        self.assertEqual(bouton.get("data-reset"), "tubeless-releve")
+        points = dom.selectionner(liste, "li")
+        self.assertEqual(len(points), 11)
+        for n, li in enumerate(points, 1):
+            self.assertEqual(dom.selectionner(li, "input")[0].get("id"), f"ck-tubeless-releve-{n}")
+            self.assertTrue(dom.selectionner(li, "span.verif"), texte_de(li)[:80])
+        tout = " ".join(texte_de(li) for li in points)
+        for mot in ("chambres à air", "TUBELESS SEALANT QUANTITY", "obus démontable", "622x27TSS", "trou de valve",
+                    "PRO", "45-622", "flèche", "plastique", "TJB-BST2", "TJB-BST3", "fill lines",
+                    "use within 2 years of purchase", "à retirer entièrement", "p.72", "30\xa0mm", "3,0\xa0bar"):
+            self.assertIn(mot, tout, mot)
+
+    def test_typographie(self):
+        texte = re.sub(r"<[^>]*>", " | ", self.source) + " | " + " | ".join(aria_labels(self.section))
+        self.assertIsNone(re.search("[—–]", self.source))
+        motif = r".{0,40}\d (?:Nm|mm|cm|bars?|psi|PSI|kg|ml|km|g|h|°C|%|miles|lbs)(?![\w·])"
+        self.assertIsNone(re.search(motif, texte), re.search(motif, texte))
+        # Une espace insécable avant « : ; ? ! » et à l'intérieur des guillemets, comme aux chapitres 1 et 2.
+        self.assertIsNone(re.search(r".{0,30}[^\s|] [:;?!»]", texte), re.search(r".{0,30}[^\s|] [:;?!»]", texte))
+        self.assertIsNone(re.search(r".{0,30}« ", texte), re.search(r".{0,30}« ", texte))
+        self.assertNotIn("&nbsp;", self.source)
+        self.assertNotIn("N·m", self.source)
+
+    def test_abreviations_par_page(self):
+        # Chaque atelier devient sa propre page : une abréviation y est développée avant ou juste après sa première
+        # apparition, liens compris.
+        developpements = {"TLR": "Tubeless Ready", "TLE": "Tubeless Easy", "TSS": "Tubeless Straight Side",
+                          "ETRTO": "European Tyre and Rim Technical Organization", "psi": "livres par pouce carré",
+                          "CO2": "dioxyde de carbone", "QSG": "guide de démarrage Canyon",
+                          "PDF": "Portable Document Format", "FAQ": "foire aux questions",
+                          "lbs": "livres anglo-saxonnes"}
+        vues = set()
+        for a in self.ch.ateliers:
+            texte = texte_de(a.section)
+            for abr, dev in developpements.items():
+                m = re.search(r"\b" + abr + r"\b", texte, re.I if abr == "psi" else 0)
+                if m:
+                    vues.add(abr)
+                    i = texte.find(dev)
+                    self.assertTrue(0 <= i <= m.start() + 40, f"{a.id} : {abr}")
+        self.assertEqual(vues, set(developpements))
+
+    def test_texte_conserve(self):
+        # Comme pour Freins et Montage : les deux colonnes de chaque page gardent tout le texte du source.
         for a in self.ch.ateliers:
             with self.subTest(a.id):
                 gauche, droite = ateliers.colonnes(a)
