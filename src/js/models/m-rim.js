@@ -18,14 +18,15 @@
      valeurs de dessin de la scène ; haut des bords arrondi, flancs droits, fond en U, caisson creux et épaisseurs du
      carbone approchés ; trous de rayons du fond de jante et trou de valve : place et taille approchées ;
    - ruban : largeur de dessin, du creux central jusqu'aux bords, et épaisseur exagérée pour se voir ; sa largeur
-     est à lire sur ton ruban ;
+     est à lire sur ton ruban ; son recouvrement, environ trois rayons d'après la vidéo Canyon du ruban (3.2,
+     étape 6), n'est pas dessiné ;
    - pneu : section, épaisseur de la carcasse, talons et leurs tringles, bande de roulement et crampons approchés ;
      crampons placés comme dans la scène, petits et serrés au centre, plus gros et groupés par deux sur les épaules
      (photos officielles du vélo) ; inscriptions des flancs non dessinées ;
    - liquide : dessiné en couche sous la bande de roulement, comme après l'avoir réparti en faisant tourner la roue ;
      épaisseur et répartition approchées ;
    - valve : forme générique d'une valve Presta tubeless à obus démontable, longueur de dessin ; sa vraie longueur pour
-     ta jante de 30 mm est à lire sur la pièce ; pied en caoutchouc, filetage, écrou moleté et obus en forme approchée ;
+     ta jante de 30 mm est à lire sur la notice de la valve (critères de 3.1) ; pied en caoutchouc, filetage, écrou moleté et obus en forme approchée ;
    - rayons et écrous de rayon : place autour de la valve, croisement et profil plat comme dans la scène ; seuls les 4
      de la portion sont dessinés, coupés avant le moyeu ;
    - cotes en violet : des repères de dessin, pas des pièces ;
@@ -43,7 +44,7 @@
   var DEG = Math.PI / 180;
 
   AtelierModels.register('rim', {
-    camera: { yaw: 1.0, pitch: 0.14, dist: 205, target: [-12, 308, -2], min: 80, max: 700 },
+    camera: { yaw: 1.0, pitch: 0.14, dist: 212, target: [-12, 300, -2], min: 80, max: 700 },
     explodeLabel: 'Vue éclatée',
     build: function (ctx) {
       var THREE = ctx.THREE, H = ctx.H, M = ctx.M;
@@ -200,7 +201,8 @@
       caps(treadLoop, [], treadCut, tire);
       /* crampons, comme dans la scène : par motif, quatre rangées de petits crampons au centre, puis une paire sur
          chaque épaule, les deux épaules décalées d'un demi-motif ; s : place le long de la section depuis le sommet */
-      var MOTIFS = 84, CENTRE = { L: 3.6, W: 4, h: 2.6, rangees: [[-8, 0, 8], [-4, 4], [-8, 0, 8], [-4, 4]] };
+      var MOTIFS = 84;
+      var CENTRE = { L: 3.6, W: 4, h: 2.6, rangees: [[-8, 0, 8], [-4, 4], [-8, 0, 8], [-4, 4]] };
       var EPAULE = [{ s: 15, t: 0, L: 4.5, W: 8.5, h: 3.4, ang: 0.5 }, { s: 20, t: 0.42, L: 10, W: 6.5, h: 3.4, ang: 0 }];
       var iC = 0; TO.forEach(function (p, k) { if (Math.abs(p[1]) < Math.abs(TO[iC][1])) iC = k; });
       function surf(s) { /* point et normale (vers l'extérieur) de la bande de roulement, à s mm du sommet */
@@ -334,7 +336,7 @@
         { obj: dim, p: [XD, Y_EXT, -9], text: 'Largeur extérieure : 33 mm' },
         { obj: rimBody, p: onCut(C_BORD[0] + 0.6, C_BORD[1]), text: 'Bord de jante droit, sans crochet, et siège du talon : forme approchée' },
         { obj: tapeBody, p: onCut(309.1, -7.1), text: 'Ruban tubeless : il couvre tous les trous de rayons, sans aucun trou découvert, et se change au moins une fois par an ; sa largeur est à lire sur ton ruban' },
-        { obj: stem, p: [0, 296, -3.0], text: 'Valve tubeless Presta à obus démontable, sans marque (à choisir, 3.1) : sa longueur pour ta jante de 30 mm est à lire sur la pièce' },
+        { obj: stem, p: [0, 296, -3.0], text: 'Valve tubeless Presta à obus démontable, sans marque (à choisir, 3.1) : sa longueur pour ta jante de 30 mm est à lire sur la notice' },
         { obj: nut, p: [0, 1.2, 5.35], text: 'Écrou de valve : serré à la main seulement, sans outil ; un couple éventuel est à lire sur la notice de ta valve' },
         { obj: core, p: [0, BOUT - 7, 0.95], text: 'Obus démontable : retire-le pour injecter le liquide par la valve, puis remets-le' },
         { obj: tyreBody, p: onCut(331, -21.9), text: 'Pneu Schwalbe G-One RX 45-622 TLR (Tubeless Ready) : version exacte à lire sur le flanc' },

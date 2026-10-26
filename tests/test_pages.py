@@ -143,7 +143,7 @@ PASTILLES_3D_TUBELESS = {
         'Ruban tubeless\xa0: il couvre tous les trous de rayons, sans aucun trou découvert, et se change au moins une '
         'fois par an\xa0; sa largeur est à lire sur ton ruban',
         'Valve tubeless Presta à obus démontable, sans marque (à choisir, 3.1)\xa0: sa longueur pour ta jante de 30\xa0mm '
-        'est à lire sur la pièce',
+        'est à lire sur la notice',
         'Écrou de valve\xa0: serré à la main seulement, sans outil\xa0; un couple éventuel est à lire sur la notice de ta '
         'valve',
         'Obus démontable\xa0: retire-le pour injecter le liquide par la valve, puis remets-le',
@@ -187,9 +187,37 @@ COMMANDES_3D_TUBELESS = {
     'm-plug.js': [
         "var LABELS = [" + ", ".join(f"'{e}'" for e in ETAPES_3D_TPT1) + "];",
         "controls: [{ type: 'range', label: 'Notice TPT-1', min: 1, max: 8, step: 1, value: 6,",
-        "format: function (v) { return v + ' · ' + LABELS[v - 1]; },",
+        # Le compteur du curseur reste court, pour que le curseur garde sa largeur ; le geste entier va sur une ligne qui
+        # revient à la ligne, sous la barre des commandes (rien au-dessus du curseur ne change de hauteur d'un cran à
+        # l'autre), et n'est jamais coupé.
+        "format: function (v) { geste(v); return 'Étape ' + v + ' / 8'; },",
+        "ligne.textContent = 'Étape ' + v + ' de la notice\xa0: ' + LABELS[v - 1];",
+        "if (barre && barre !== ligne && barre.nextElementSibling !== ligne) barre.insertAdjacentElement('afterend', ligne);",
+        "if (!placee) { placee = true; geste(sT); }",
+        "white-space:normal",
     ],
 }
+# Les déclarations de chaque en-tête : chaque puce nommée est là, dit ce qu'elle approche (« approché », « dessin »), et
+# porte les mots demandés (le recouvrement du ruban, la longueur de valve à lire sur sa notice, les pièces de l'outil
+# déduites, les 6,35 mm de la notice).
+DECLARATIONS_3D_TUBELESS = {
+    'm-rim.js': {'jante': (), 'ruban': ('recouvrement',), 'pneu': (), 'liquide': (), 'valve': ('à lire sur la notice',),
+                 'rayons et écrous de rayon': (), 'cotes en violet': (), 'couleurs': ()},
+    'm-plug.js': {'outil': ('nommées par la notice', 'déduits'), 'capuchon': (), 'bague de maintien': (),
+                  'mèche': ('6,35 mm',), 'objet': (), 'pneu': (), 'couleurs': ()},
+}
+# Les cotes publiées, dans les constantes dessinées : chaque constante est affectée une seule fois, et les cotes violettes
+# de la jante sont tracées entre ces valeurs.
+CONSTANTES_3D_TUBELESS = {
+    'm-rim.js': ("var SIEGE = 622 / 2;", "var HAUTEUR = 30, DEMI_INT = 27 / 2, DEMI_EXT = 33 / 2, DEMI_PNEU = 45 / 2;",
+                 "var HAUT = SIEGE + BORD, BAS = HAUT - HAUTEUR;", "trait('z', -DEMI_INT, DEMI_INT, Y_INT);",
+                 "trait('z', -DEMI_EXT, DEMI_EXT, Y_EXT);", "trait('y', BAS, HAUT, Z_HAUT);",
+                 "var poses = [], pas = 360 / MOTIFS;"),
+    'm-plug.js': ("var A = 45 / 2, B = 22.0, RC = 330;", "var TAIL = 6.35;",
+                  "var TIP4 = -(LH - RN - PI / 2 * RHO - TAIL) - RHO - SLOT_Y;", "var MOTIF = 360 / MOTIFS * PI / 180 * R0;"),
+}
+AFFECTATIONS_3D_TUBELESS = {'m-rim.js': ("SIEGE", "HAUTEUR", "DEMI_INT", "DEMI_EXT", "DEMI_PNEU", "HAUT", "BAS"),
+                            'm-plug.js': ("A", "TAIL", "TIP4", "MOTIF")}
 
 
 def elements(parent):
@@ -918,9 +946,12 @@ class TestPages(Site):
         # - rien du CF 7 ni des brouillons (jante DT Swiss Gravel LN à crochets, pneu Continental à flancs ambrés, valve
         #   DT Swiss à 0,5 Nm, autres outils à mèches, liquide qui « colmate » autour de la mèche) ; « crochet » n'y
         #   est jamais écrit sans « sans » devant ;
-        # - aucune pression sinon « jamais plus de 3,0 bar », en chiffres ou en lettres, en bar, psi, kPa ou atm ;
+        # - aucune pression sinon « jamais plus de 3,0 bar », en chiffres ou en lettres, l'unité collée ou non au nombre,
+        #   en bar, psi, kPa, MPa, atm ou atmosphères ; aucune pastille écrite autrement que `text: '…'` ;
         # - aucun couple, aucun poids, aucune donnée personnelle, aucune marque de valve ;
-        # - « approchée » et les couleurs dans chaque en-tête, aucun tiret cadratin ni demi-cadratin.
+        # - « approchée » et les couleurs dans chaque en-tête, et chaque puce de DECLARATIONS_3D_TUBELESS ; les cotes
+        #   publiées dans les constantes dessinées (CONSTANTES_3D_TUBELESS), affectées une seule fois ; les crampons des
+        #   deux pièces lus dans la scène de l'accueil (src/scene/pieces/roues.js) ; aucun tiret cadratin ni demi-cadratin.
         # Les valeurs viennent du chapitre : chaque nombre suivi d'une unité y est écrit, la pastille des 3,0 bar commence
         # par la phrase de la légende de la figure de 3.2, les gestes du curseur sont les titres des étapes « Mèche » de
         # 3.5 dans l'ordre de la notice, et chaque légende dit que les numéros se dessinent par-dessus les pièces cachées.
@@ -941,6 +972,20 @@ class TestPages(Site):
         legende_3d = ("Touche un numéro pour repérer la pièce. Un numéro peut se dessiner par-dessus une pièce qui cache "
                       "la sienne : fais tourner la pièce, ou lis la liste numérotée sous la figure.")
         limite = "Jamais plus de 3,0\xa0bar dans le pneu, même pour talonner"
+        # Les crampons de la scène de l'accueil, recopiés dans les deux pièces (des IIFE autonomes) : une valeur changée
+        # dans l'un des trois fichiers fait échouer le test.
+        roues = (RACINE / "src" / "scene" / "pieces" / "roues.js").read_text(encoding="utf-8")
+        crampon = re.search(r"^const CRAMPON = ([\d.]+);", roues, re.M).group(1)
+        motifs_scene = re.search(r"^const MOTIFS = (\d+);", roues, re.M).group(1)
+        centre = re.search(r"^const CENTRE = Object\.freeze\(\{ longueur: ([\d.]+), largeur: ([\d.]+), rangees: (\[.*\]) \}\);",
+                           roues, re.M)
+        epaule = re.findall(r"\{ s: ([\d.]+), t: ([\d.]+), longueur: ([\d.]+), largeur: ([\d.]+), hauteur: ([\d.]+), "
+                            r"angle: ([\d.]+) \}", roues)
+        self.assertEqual(len(epaule), 2, "roues.js : crampons d'épaule")
+        crampons = (f"var MOTIFS = {motifs_scene};",
+                    f"var CENTRE = {{ L: {centre[1]}, W: {centre[2]}, h: {crampon}, rangees: {centre[3]} }};",
+                    "var EPAULE = [" + ", ".join(f"{{ s: {s}, t: {u}, L: {l}, W: {w}, h: {h}, ang: {a} }}"
+                                                 for s, u, l, w, h, a in epaule) + "];")
         def copies(fichier):
             """Le fichier du dépôt, puis ses copies servies par les deux cibles, avec le nom qu'en donne un échec."""
             yield fichier, (RACINE / "src" / "js" / "models" / fichier).read_text(encoding="utf-8")
@@ -955,10 +1000,14 @@ class TestPages(Site):
                 self.assertEqual(texte.count(f"AtelierModels.register('{modele}', {{"), 1, f"{nom} : register")
                 pastilles = re.findall(r"text: '((?:[^'\\]|\\.)*)'", texte)
                 self.assertEqual(pastilles, PASTILLES_3D_TUBELESS[fichier], f"{nom} : pastilles")
+                self.assertEqual(len(re.findall(r"\btext['\"]?\s*:", texte)), len(pastilles), f"{nom} : pastille écrite autrement")
                 etiquettes = re.findall(r"\blabel: '((?:[^'\\]|\\.)*)'", texte)
                 self.assertEqual(etiquettes, ETIQUETTES_3D_TUBELESS[fichier], f"{nom} : étiquettes des commandes")
-                for commande in COMMANDES_3D_TUBELESS[fichier]:
-                    self.assertEqual(texte.count(commande), 1, f"{nom} : commande {commande!r}")
+                for commande in (*COMMANDES_3D_TUBELESS[fichier], *CONSTANTES_3D_TUBELESS[fichier], *crampons):
+                    self.assertEqual(texte.count(commande), 1, f"{nom} : commande ou constante {commande!r}")
+                for nom_constante in AFFECTATIONS_3D_TUBELESS[fichier]:
+                    self.assertEqual(len(re.findall(r"(?<![\w.])%s\s*=(?!=)" % nom_constante, texte)), 1,
+                                     f"{nom} : {nom_constante} affectée plus d'une fois")
                 liste = re.search(r"var LABELS = \[(.*?)\];", texte)
                 etapes = re.findall(r"'((?:[^'\\]|\\.)*)'", liste.group(1)) if liste else []
                 self.assertEqual(etapes, ETAPES_3D_TPT1 if modele == "plug" else [], f"{nom} : gestes du curseur")
@@ -996,7 +1045,7 @@ class TestPages(Site):
                 for m in re.finditer(r"crochets?", lu, re.I):
                     self.assertEqual(lu[max(0, m.start() - 5):m.start()].lower(), "sans ",
                                      f"{nom} : {lu[max(0, m.start() - 30):m.end() + 10]!r}")
-                for m in re.finditer(r"\b(?:bars?|psi|kpa|atm)\b", lu, re.I):
+                for m in re.finditer(r"(?<![^\W\d_])(?:bars?|psi|kpa|mpa|atm\w*)(?![^\W\d_])", lu, re.I):
                     self.assertTrue(lu[:m.start()].lower().endswith("jamais plus de 3,0 "),
                                     f"{nom} : pression {lu[max(0, m.start() - 40):m.end()]!r}")
                 for n, jeton in enumerate(jetons, 1):
@@ -1005,6 +1054,12 @@ class TestPages(Site):
                 entete = texte[:texte.index("*/")] if "*/" in texte else ""
                 for mot in ("approchée", "couleurs"):
                     self.assertIn(mot, entete, f"{nom} : en-tête sans « {mot} »")
+                puces = [re.sub(r"\s+", " ", plat(p)) for p in re.split(r"\n\s*- ", entete)[1:]]
+                for cle, mots in DECLARATIONS_3D_TUBELESS[fichier].items():
+                    trouvees = [p for p in puces if p.startswith(cle) and p[len(cle):len(cle) + 1] in (" ", ",")]
+                    self.assertEqual(len(trouvees), 1, f"{nom} : déclaration « {cle} » de l'en-tête")
+                    for mot in ("approch|dessin",) + mots:
+                        self.assertRegex(trouvees[0], mot, f"{nom} : déclaration « {cle} » sans « {mot} »")
 
     def test_disque_de_l_axe_comme_celui_du_chapitre_2(self):
         # Le disque de la pièce de l'axe (1.5) recopie celui de m-rotor.js (2.2, déjà en ligne) : mêmes fentes à cinq

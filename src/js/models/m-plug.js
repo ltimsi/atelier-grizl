@@ -11,19 +11,21 @@
    remplacer dès que possible. Son étape 9, plusieurs mèches pour un très grand trou, n'est pas dessinée ; la taille de
    trou maximale du TPT-1 n'est pas publiée. Le liquide : Canyon le dit le plus efficace sur les petits trous, un trou
    plus grand pouvant demander une mèche ou une chambre à air.
-   Curseur « Notice TPT-1 », de 1 à 8 : chaque cran montre le geste de la notice qui porte ce numéro.
+   Curseur « Notice TPT-1 », de 1 à 8 : chaque cran montre le geste de la notice qui porte ce numéro. Son compteur dit
+   « Étape n / 8 » ; le geste entier s'écrit sur une ligne sous la barre des commandes, qui revient à la ligne.
    Vue éclatée : le capuchon, tant qu'il est dessiné, s'éloigne encore de l'outil, et la bague de maintien s'écarte
    de l'aiguille.
    Formes approchées (aucune photo ni cote du TPT-1 n'est relevée ; seule cote publiée, les 6,35 mm de bouts visibles,
    respectée ici) :
-   - outil : poignée cannelée, nez fileté où se visse le capuchon, aiguille, fourche à deux branches et sa partie
-     moletée, d'après les seules pièces que nomme la notice ; formes, longueurs et diamètres approchés ;
+   - outil : pièces nommées par la notice, d'après le relevé : le capuchon, la fourche et sa partie moletée, la bague
+     de maintien ; la poignée cannelée, l'aiguille et le nez fileté où se visse le capuchon sont déduits ; formes,
+     longueurs et diamètres approchés ;
    - capuchon : un tube fermé qui couvre la fourche, forme approchée ; une fois dévissé, il est posé debout à côté de
      la place de l'outil, puis rangé : il n'est plus dessiné à partir du geste 3 ;
    - bague de maintien : une bague qui coulisse sur l'aiguille, forme et course approchées ;
    - mèche : une lanière pliée en deux, longueur, largeur et épaisseur approchées ; ses bouts sont dessinés à 6,35 mm
      au-dessus de la bande de roulement ;
-   - objet : un petit clou, pour l'exemple ;
+   - objet : un petit clou, dessiné pour l'exemple ;
    - pneu : section de 45 mm de large au plus ; bande de roulement, carcasse, gomme intérieure et couche de liquide en
      épaisseurs approchées, la carcasse plus épaisse sous la bande de roulement ; crampons placés comme dans la pièce de
      3.2 et la scène de l'accueil, petits et serrés au centre, plus gros et groupés par deux sur les épaules ; largeur
@@ -206,10 +208,11 @@
         }
         return null;
       }
-      var MOTIF = 360 / 84 * PI / 180 * R0;          // longueur d'un motif sur le tour, 84 motifs comme dans la scène
-      var CENTRE = { L: 3.6, W: 4, h: 2.6, rangees: [[-4, 4], [-8, 0, 8], [-4, 4], [-8, 0, 8]] };
+      var MOTIFS = 84;
+      var CENTRE = { L: 3.6, W: 4, h: 2.6, rangees: [[-8, 0, 8], [-4, 4], [-8, 0, 8], [-4, 4]] };
       var EPAULE = [{ s: 15, t: 0, L: 4.5, W: 8.5, h: 3.4, ang: 0.5 }, { s: 20, t: 0.42, L: 10, W: 6.5, h: 3.4, ang: 0 }];
-      var C0 = 5.3;                                 // premier rang de crampons, à l'écart du trou
+      var MOTIF = 360 / MOTIFS * PI / 180 * R0;     // longueur d'un motif sur le tour
+      var C0 = 5.3 - MOTIF / 4;                     // début du motif : le premier rang dessiné, de deux crampons, est à 5,3 mm du trou
       var kl = [];
       for (var mo = -1; mo < 2; mo++) {
         CENTRE.rangees.forEach(function (rang, k) {
@@ -324,12 +327,12 @@
 
       /* ---------- Mèche : lanière balayée le long d'un chemin dans le plan x = 0 ---------- */
       var TAIL = 6.35;                               // bouts visibles, notice Park Tool
-      var LH = 21, RHO = 0.8, HQ = 0.68, HBN = 0.65, RTB = 1.0, DROOP = -0.1, PSI4 = PI / 3, PSI5 = PI / 4;
-      function halfPath(g, psi1, psi2, yb, rt) {
+      var LH = 21, RHO = 0.8, HQ = 0.68, HBN = 0.65, RTB = 1.0, DROOP = -0.1, ANG4 = PI / 3, ANG5 = PI / 4;
+      function halfPath(g, ang1, ang2, yb, rt) {
         var pts = [[0, yb]], z = 0, y = yb, inc = 0, L = 0, ds = 0.04;
-        function adv(len, dpsi) {
+        function adv(len, dang) {
           if (len <= 1e-6) return;
-          var n = Math.max(1, Math.ceil(len / ds)), h = len / n, dp = dpsi / n;
+          var n = Math.max(1, Math.ceil(len / ds)), h = len / n, dp = dang / n;
           for (var i = 0; i < n && L < LH - 1e-6; i++) {
             var hh = Math.min(h, LH - L), f = hh / h;
             inc += dp * f / 2; z += Math.cos(inc) * hh; y += Math.sin(inc) * hh; inc += dp * f / 2; L += hh;
@@ -337,9 +340,9 @@
           }
         }
         adv(g, 0);
-        adv(RHO * Math.abs(psi1), psi1);
-        if (psi1 > 0.15 && y < 0) adv(-y / Math.sin(psi1), 0);
-        adv(rt * Math.abs(psi2 - inc), psi2 - inc);
+        adv(RHO * Math.abs(ang1), ang1);
+        if (ang1 > 0.15 && y < 0) adv(-y / Math.sin(ang1), 0);
+        adv(rt * Math.abs(ang2 - inc), ang2 - inc);
         adv(LH - L, 0);
         /* rééchantillonnage régulier */
         var out = [pts[0]], acc = 0, step = 0.3, need = step;
@@ -390,10 +393,10 @@
       var plugFrame = new THREE.Group(); root.add(plugFrame);
       var plug = new THREE.Mesh(new THREE.BufferGeometry(), mPlug); plugFrame.add(plug);
       var plugKey = '', plugEnds = null;
-      function buildPlug(g, psi1, psi2, yb, zOff, rt) {
-        var key = [g, psi1, psi2, yb, zOff, rt].map(function (v) { return v.toFixed(3); }).join(',');
+      function buildPlug(g, ang1, ang2, yb, zOff, rt) {
+        var key = [g, ang1, ang2, yb, zOff, rt].map(function (v) { return v.toFixed(3); }).join(',');
         if (key === plugKey) return; plugKey = key;
-        var hp2 = halfPath(g, psi1, psi2 * (psi2 > 0 ? 1.06 : 1), yb, rt), hpL = halfPath(g, psi1, psi2 * (psi2 > 0 ? 0.9 : 1.1), yb, rt);
+        var hp2 = halfPath(g, ang1, ang2 * (ang2 > 0 ? 1.06 : 1), yb, rt), hpL = halfPath(g, ang1, ang2 * (ang2 > 0 ? 0.9 : 1.1), yb, rt);
         var fullP = hpL.slice().reverse().map(function (p) { return [-p[0], p[1]]; }).concat(hp2.slice(1));
         var P3 = fullP.map(function (p) { return new THREE.Vector3(0, p[1], p[0] + zOff); });
         plug.geometry.dispose(); plug.geometry = sweep(P3);
@@ -405,8 +408,9 @@
       var aHole = new THREE.Object3D(); aHole.position.set(0.02, -1.4, 1.9); root.add(aHole);
       var aFork = new THREE.Object3D(), aTail = new THREE.Object3D(); root.add(aFork); root.add(aTail);
       var aSeal = new THREE.Object3D(), aAir = new THREE.Object3D(), aProv = new THREE.Object3D(); root.add(aSeal); root.add(aAir); root.add(aProv);
-      (function () { var th = Math.acos(8.5 / A), q = linIn(th), d = sealT(8.5) * 0.5, n = Nn(th); aSeal.position.set(0.03, q[0] - n[0] * d - R0, q[1] - n[1] * d); })();
-      aAir.position.set(0.03, Y_IN - 5, -7);
+      /* liquide, air et trou écartés du groupe de la mèche, sur leur pièce, pour que les numéros ne se couvrent pas */
+      (function () { var th = Math.acos(15 / A), q = linIn(th), d = sealT(15) * 0.5, n = Nn(th); aSeal.position.set(0.03, q[0] - n[0] * d - R0, q[1] - n[1] * d); })();
+      aAir.position.set(0.03, Y_IN - 22, -13);
       (function () { var th = 0.22, p = off(th, 0), ph = PI + 15 / p[0]; aProv.position.set(p[0] * Math.sin(ph), -p[0] * Math.cos(ph) - R0, p[1] + 0.05); })();
 
       /* ---------- Étapes de la notice : la pose au cran v montre le geste v ; entre deux crans, le geste suivant ---------- */
@@ -417,7 +421,7 @@
       function sousLaBague(nat, rb) { return Math.min(nat, Math.asin(clamp((rb - 1.55) / 5, 0, 1))); } // la bague rabat les bouts
       function pose(s) {
         var st = { nailVis: false, nailTip: 2, nailZ: -3, nailTilt: 0.35, tipY: PARK.y, toolZ: PARK.z, tilt: PARK.t, ret: RET_PARK, cap: 1,
-          plugVis: false, inTool: false, g: RN, psi1: 0, psi2: -0.22, rt: 34, yb: SLOT_Y, zOff: 0, reamed: s >= 3, capVis: s < 2.5 };
+          plugVis: false, inTool: false, g: RN, ang1: 0, ang2: -0.22, rt: 34, yb: SLOT_Y, zOff: 0, reamed: s >= 3, capVis: s < 2.5 };
         var k = Math.min(7, Math.floor(s)), t = s - k, a, b, c, dd;
         if (k < 1) { k = 1; t = 0; }
         if (k === 1) {                                  // 1 -> 2 : l'objet s'en va, le capuchon se dévisse
@@ -437,11 +441,11 @@
         } else if (k === 4) {                           // 4 -> 5 : l'outil enfonce la mèche, qui se plie en deux
           st.toolZ = 0; st.tilt = 0; st.plugVis = true;
           st.tipY = lerp(TIP3, TIP4, sstep(0, 1, t));
-          if (st.tipY + SLOT_Y > 4.5) { st.inTool = true; st.psi2 = lerp(-0.22, DROOP, sstep(TIP3 + SLOT_Y, 4.5, st.tipY + SLOT_Y)); }
+          if (st.tipY + SLOT_Y > 4.5) { st.inTool = true; st.ang2 = lerp(-0.22, DROOP, sstep(TIP3 + SLOT_Y, 4.5, st.tipY + SLOT_Y)); }
           else {
             st.yb = st.tipY + SLOT_Y; dd = -st.yb;
-            st.psi1 = PI / 2 * sstep(-0.9, 1.4, dd); st.rt = lerp(34, RTB, sstep(-4.5, -0.5, dd));
-            st.psi2 = sousLaBague(lerp(DROOP, PSI4, sstep(0.3, 9, dd)), st.tipY + RET_PARK);
+            st.ang1 = PI / 2 * sstep(-0.9, 1.4, dd); st.rt = lerp(34, RTB, sstep(-4.5, -0.5, dd));
+            st.ang2 = sousLaBague(lerp(DROOP, ANG4, sstep(0.3, 9, dd)), st.tipY + RET_PARK);
           }
         } else {                                        // 5 -> 6 : la bague descend ; 6 -> 7 : l'outil sort, puis s'écarte
           var p1 = k === 5 ? sstep(0, 1, t) : 1, p2 = k === 6 ? sstep(0, 0.55, t) : k > 6 ? 1 : 0, p4 = k === 6 ? sstep(0.55, 0.95, t) : k > 6 ? 1 : 0;
@@ -449,8 +453,8 @@
           var retW = lerp(TIP4 + RET_PARK, RET_PRESS, p1);
           st.ret = clamp(retW - st.tipY, RET_MIN, RET_PARK);
           var col = sstep(-12.5, 0.5, st.tipY);
-          st.plugVis = true; st.g = RN * (1 - col); st.yb = YB4 - 0.6 * col; st.psi1 = PI / 2; st.rt = RTB;
-          st.psi2 = sousLaBague(lerp(PSI4, PSI5, col), st.tipY + st.ret * Math.cos(st.tilt));
+          st.plugVis = true; st.g = RN * (1 - col); st.yb = YB4 - 0.6 * col; st.ang1 = PI / 2; st.rt = RTB;
+          st.ang2 = sousLaBague(lerp(ANG4, ANG5, col), st.tipY + st.ret * Math.cos(st.tilt));
         }
         return st;
       }
@@ -466,7 +470,7 @@
         plug.visible = st.plugVis;
         if (st.inTool) { plugFrame.position.copy(tool.position); plugFrame.rotation.x = st.tilt; }
         else { plugFrame.position.set(0, 0, 0); plugFrame.rotation.x = 0; }
-        if (st.plugVis) buildPlug(st.inTool ? RN : st.g, st.inTool ? 0 : st.psi1, st.psi2, st.yb, st.zOff, st.rt);
+        if (st.plugVis) buildPlug(st.inTool ? RN : st.g, st.inTool ? 0 : st.ang1, st.ang2, st.yb, st.zOff, st.rt);
         /* largeur du trou : objet, aiguille ou mèche qui l'occupent */
         var needleIn = Math.abs(st.toolZ) < 0.3 && Math.abs(st.tilt) < 0.01 && st.tipY < 0.2 ? 1 : 0;
         var legsIn = st.plugVis && !st.inTool ? sstep(-0.5, 1.2, -st.yb) : 0;
@@ -478,9 +482,25 @@
         if (st.plugVis && plugEnds) {
           var en = plugEnds.left;
           aTail.position.copy(plugFrame.localToWorld(tmpV.set(HBN + 0.02, en.y, en.z)));
-          if (st.inTool || st.g > RN / 2) aFork.position.copy(plugFrame.localToWorld(tmpV.set(HBN + 0.02, st.yb + (st.psi1 > 0.5 ? 0.25 : 0), st.zOff - (st.g + 0.55))));
+          if (st.inTool || st.g > RN / 2) aFork.position.copy(plugFrame.localToWorld(tmpV.set(HBN + 0.02, st.yb - 0.4, st.zOff - (st.g + 1.5))));  // bas du pli, côté extérieur
           else aFork.position.set(FAR[0], FAR[1], FAR[2]);  // la fourche est sortie de la mèche
         } else { aTail.position.set(FAR[0], FAR[1], FAR[2]); aFork.position.set(FAR[0], FAR[1], FAR[2]); }
+      }
+      /* Le compteur du curseur reste court (« Étape 4 / 8 ») : un texte long écraserait le curseur, que la barre
+         partage avec les boutons. Le geste entier s'écrit sur une ligne à lui, sous la barre des commandes, qui revient
+         à la ligne : « jamais plus de 3,0 bar » du geste 8 n'est jamais coupé, et rien au-dessus du curseur ne change de
+         hauteur d'un cran à l'autre. La barre est l'élément qui suit la pièce (la visionneuse l'y pose). format() est
+         appelé à la création de la barre, puis à chaque cran ; la liste numérotée, posée ensuite sous la barre, passe
+         sous la ligne à la première image (onFrame). */
+      var ligne = null, placee = false;
+      function geste(v) {
+        var stage = api.viewer && api.viewer.stage, barre = stage && stage.nextElementSibling;
+        if (!ligne) {
+          ligne = document.createElement('p'); ligne.className = 'v3d-geste'; ligne.setAttribute('aria-live', 'polite');
+          ligne.style.cssText = 'margin:0;padding:8px 12px;border-top:1px solid var(--line-2);font-family:var(--f-mono);font-size:.76rem;line-height:1.45;color:var(--acc);white-space:normal';
+        }
+        if (barre && barre !== ligne && barre.nextElementSibling !== ligne) barre.insertAdjacentElement('afterend', ligne);
+        ligne.textContent = 'Étape ' + v + ' de la notice : ' + LABELS[v - 1];
       }
       var s = 6, sT = 6, lastE = -1;
       apply(pose(s));
@@ -503,9 +523,10 @@
           { obj: aProv, p: [0, 0, 0], text: 'Réparation provisoire : remplace le pneu dès que possible (notice Park Tool)' }
         ],
         controls: [{ type: 'range', label: 'Notice TPT-1', min: 1, max: 8, step: 1, value: 6,
-          format: function (v) { return v + ' · ' + LABELS[v - 1]; },
+          format: function (v) { geste(v); return 'Étape ' + v + ' / 8'; },
           onChange: function (v) { sT = v; if (reduce) { s = sT; apply(pose(s)); } api.dirty(); } }],
         onFrame: function (dt) {
+          if (!placee) { placee = true; geste(sT); }
           var e = api.viewer ? api.viewer.ex : 0;
           if (s === sT) { if (e !== lastE) { lastE = e; apply(cur); } return false; }
           var sp = (dt || 0.016) / 1.15 * (1 + 0.6 * Math.max(0, Math.abs(sT - s) - 1));
