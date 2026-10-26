@@ -88,6 +88,12 @@ export const SOURCES = Object.freeze({
     url: 'https://www.canyon.com/on/demandware.static/-/Library-Sites-canyon-shared/default/dw22ff8457/documents/customer-service/gravel-bikes/canyon-wheelset-manual-2025.pdf',
     type: 'manuel',
   }),
+  // Relevé du tubeless du 26 octobre 2026 (docs/recherche/tubeless-cf8-di2.md), cité par la mèche de l'atelier 3.5
+  'canyon-tubed-vs-tubeless': Object.freeze({
+    titre: 'Canyon, article « Tubed vs tubeless bike tyres » : le liquide, le plus efficace sur les petits trous',
+    url: 'https://www.canyon.com/en-ch/blog-content/advice/tubed-vs-tubeless-bike-tyre/b29052026.html',
+    type: 'fiche',
+  }),
 
   // Canyon : Grizl CF 8 Di2, relevé du montage du 24 octobre 2026 (docs/recherche/montage-cf8-di2.md), cité par les
   // pièces 3D des ateliers du montage
@@ -224,6 +230,19 @@ export const SOURCES = Object.freeze({
   'schwalbe-g-one-rx': Object.freeze({
     titre: 'Schwalbe, page du pneu G-One RX en 45-622 (version RACE, RaceGuard, gomme ADDIX Green, n° 11654623)',
     url: 'https://www.schwalbe.com/en/G-One-RX-11654623',
+    type: 'fiche',
+  }),
+  // Relevé du tubeless du 26 octobre 2026, cité par la mèche de l'atelier 3.5
+  'schwalbe-faq-tubeless': Object.freeze({
+    titre: 'Schwalbe, FAQ du tubeless : montage, liquide, jamais de cartouche de CO2 pour gonfler',
+    url: 'https://www.schwalbe.com/en/technology-faq/tubeless/',
+    type: 'fiche',
+  }),
+
+  // Muc-Off : relevé du tubeless du 26 octobre 2026, cité par la coupe de roue de l'atelier 3.2
+  'muc-off-road-gravel': Object.freeze({
+    titre: 'Muc-Off, page du liquide Road & Gravel Tubeless Sealant : dose par largeur de pneu, pose par la valve',
+    url: 'https://muc-off.com/products/road-gravel-tubeless-sealant',
     type: 'fiche',
   }),
 

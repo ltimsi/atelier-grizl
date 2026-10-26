@@ -27,12 +27,8 @@
     {
       "lot": 3,
       "titre": "Tubeless et crevaisons",
-      "statut": "à faire",
+      "statut": "en relecture",
       "categorie": {"id": "tubeless", "menu": "Pneus et tubeless"},
-      "prevu": [
-        "Passer les pneus en tubeless : valves, liquide, pompe à réservoir.",
-        "Crevaisons."
-      ],
       "parts": ["30-tubeless"],
       "modeles": ["rim", "plug"]
     },

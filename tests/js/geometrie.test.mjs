@@ -104,6 +104,20 @@ test('ancres du montage : cinq pastilles, posées depuis les points du vélo', (
   assert.ok(ancres.batterieDi2[2] > 0, 'batterie : côté transmission');
 });
 
+// La pastille des pneus et des valves (zone 9) : sur la valve de la roue avant, en haut de la roue comme la valve de
+// roues.js et de la photo officielle, dans le plan de la roue, là où elle sort du fond de la jante. Celle de la roue
+// arrière tomberait sur la pastille du disque arrière, juste au-dessus du moyeu arrière.
+test('ancre des pneus : la valve de la roue avant, en haut de la roue, au fond de la jante', () => {
+  const p = points();
+  const { valveAvant } = p.ancres;
+  assert.equal(valveAvant?.length, 3);
+  assert.ok(valveAvant.every(Number.isFinite));
+  assert.equal(valveAvant[0], p.FA[0], 'à la verticale de l’axe avant');
+  assert.equal(valveAvant[2], 0, 'dans le plan de la roue');
+  const r = valveAvant[1] - p.FA[1], siege = GEO.diametreSiegeJante.v / 2;
+  assert.ok(r < siege && r > siege - 40, `à ${r} mm de l’axe : sous le siège du talon, au fond de la jante de 30 mm`);
+});
+
 test('tige de selle : l’insertion reste dans la plage publiée', () => {
   const p = points();
   const sorti = dist(p.BB, p.SPt) - dist(p.BB, p.STt);
@@ -339,6 +353,37 @@ test('registre des sources : les documents du montage que citent les pièces 3D 
   }
   assert.equal(SOURCES['canyon-sp100'].url,
     'https://www.canyon.com/en-ch/gear/bike-parts/posts-and-clamps/canyon-sp100-vcls-2.1-cf-27.2-seatpost/10016374.html');
+});
+
+// Les documents du lot 3 que citent les pièces 3D des ateliers du tubeless (src/js/models/m-rim.js et m-plug.js),
+// hors Park Tool, qui n'entre pas au registre : la page Muc-Off du liquide (sa dose, dans la coupe de roue de 3.2), la
+// FAQ tubeless de Schwalbe (pas de cartouche de CO2) et l'article Canyon « Tubed vs tubeless » (le liquide sur les
+// petits trous), dans la mèche de 3.5. Leur adresse est celle du relevé du lot 3, et le chapitre les cite par elle.
+test('registre des sources : les documents du tubeless que citent les pièces 3D des ateliers', () => {
+  const lire = chemin => readFileSync(new URL(`../../${chemin}`, import.meta.url), 'utf8');
+  const releve = lire('docs/recherche/tubeless-cf8-di2.md'), chapitre = lire('src/parts/30-tubeless.html');
+  const rim = lire('src/js/models/m-rim.js'), plug = lire('src/js/models/m-plug.js');
+  const attendus = {
+    'muc-off-road-gravel': [rim, /page Muc-Off du liquide/, /Muc-Off/,
+      'https://muc-off.com/products/road-gravel-tubeless-sealant'],
+    'schwalbe-faq-tubeless': [plug, /CO2 \(Schwalbe\)/, /Schwalbe/, 'https://www.schwalbe.com/en/technology-faq/tubeless/'],
+    'canyon-tubed-vs-tubeless': [plug, /Canyon le dit le plus efficace sur les petits trous/, /Canyon/,
+      'https://www.canyon.com/en-ch/blog-content/advice/tubed-vs-tubeless-bike-tyre/b29052026.html'],
+  };
+  for (const [id, [modele, cite, nom, url]] of Object.entries(attendus)) {
+    assert.ok(SOURCES[id], `source absente : ${id}`);
+    assert.equal(SOURCES[id].type, 'fiche', id);
+    assert.equal(SOURCES[id].url, url, id);
+    assert.match(SOURCES[id].titre, nom, id);
+    assert.match(modele, cite, `${id} : la pièce 3D ne le cite plus`);
+    assert.ok(releve.includes(url), `${id} : adresse absente du relevé du lot 3`);
+    assert.ok(chapitre.includes(`href="${url}"`), `${id} : adresse absente du chapitre`);
+  }
+  // Déjà au registre : le manuel Canyon des roues, la page de la paire GR 30 CF, la fiche du vélo et celle du pneu,
+  // que les deux pièces citent aussi.
+  for (const id of ['canyon-manuel-roues', 'canyon-gr30cf', 'canyon-4556', 'schwalbe-g-one-rx']) assert.ok(SOURCES[id], id);
+  // Ni la notice du TPT-1 ni la vidéo Canyon du tubeless : Park Tool et YouTube n'entrent pas au registre.
+  assert.ok(!Object.values(SOURCES).some(s => /TPT-1|Pp9OO2xm65I/.test(s.url)), 'notice Park Tool ou vidéo au registre');
 });
 
 test('registre des sources : plus aucune source du Grizl CF 7 ni de ses pièces', () => {

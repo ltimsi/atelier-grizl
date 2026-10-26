@@ -15,11 +15,13 @@ import gabarit  # noqa: E402
 
 CONFIG = json.loads((RACINE / "build" / "lots.json").read_text(encoding="utf-8"))
 CHAPITRES = {nom: ateliers.relever_chapitre((RACINE / "src" / "parts" / f"{fichier}.html").read_text(encoding="utf-8"))
-             for nom, fichier in (("freins", "20-freins"), ("montage", "11-montage"))}
+             for nom, fichier in (("freins", "20-freins"), ("montage", "11-montage"), ("tubeless", "30-tubeless"))}
 SLUGS = ["systeme", "disques", "plaquettes", "rodage", "centrage", "controles", "purge", "securite"]
 SLUGS_MONTAGE = ["avant", "deballer", "cintre", "selle", "roues", "pedales", "di2", "position", "controles"]
-PUBLIEES = ["montage", "freins"]  # les catégories publiées, dans l'ordre des chapitres : 1 Montage, 2 Freins
-A_VENIR = ["tubeless", "transmission", "accessoires", "revision"]
+SLUGS_TUBELESS = ["materiel", "passer", "liquide", "pression", "crevaison", "problemes"]
+# Les catégories publiées, dans l'ordre des chapitres : 1 Montage, 2 Freins, 3 Pneus et tubeless.
+PUBLIEES = ["montage", "freins", "tubeless"]
+A_VENIR = ["transmission", "accessoires", "revision"]
 REFERENCES = ["composants", "outils", "couples", "approche", "sources"]
 TOUS_LES_SCRIPTS = dict(zones=True, liens=True, three=True, modeles=["caliper"], app=True, references=True,
                         garde_fou=True)
@@ -57,11 +59,8 @@ class TestLots(unittest.TestCase):
 
     def test_prevu(self):
         # Un lot publié n'a plus de « prevu » : sa catégorie montre ses ateliers.
-        for numero in (0, 1, 2):
+        for numero in (0, 1, 2, 3):
             self.assertNotIn("prevu", self.lot(numero), f"lot {numero}")
-        self.assertEqual(self.lot(3)["prevu"], [
-            "Passer les pneus en tubeless : valves, liquide, pompe à réservoir.",
-            "Crevaisons."])
         # Lot 4 : le réglage du dérailleur Di2 du Grizl CF 8 Di2 rejoint la transmission, et le kit de transmission
         # mécanique de l'ancien vélo disparaît. La charge de la batterie Di2 BT-DN320 est dans le lot 2 (atelier 1.7).
         self.assertEqual(self.lot(4)["prevu"], [
@@ -80,7 +79,7 @@ class TestLots(unittest.TestCase):
 
     def test_statuts(self):
         self.assertEqual([(l["lot"], l["statut"]) for l in CONFIG["lots"]],
-                         [(n, "en relecture") for n in range(0, 3)] + [(n, "à faire") for n in range(3, 7)])
+                         [(n, "en relecture") for n in range(0, 4)] + [(n, "à faire") for n in range(4, 7)])
 
     def test_lot_2_publie(self):
         # Le lot 2 publie le chapitre 11-montage (il n'y a pas de fragment 10-avant) et ses quatre pièces 3D.
@@ -90,6 +89,15 @@ class TestLots(unittest.TestCase):
         self.assertEqual(lot["modeles"], ["torque", "cockpit", "axle", "pedal"])
         self.assertTrue((RACINE / "src" / "parts" / "11-montage.html").is_file())
         self.assertFalse((RACINE / "src" / "parts" / "10-avant.html").exists())
+
+    def test_lot_3_publie(self):
+        # Le lot 3 publie le chapitre 30-tubeless et ses deux pièces 3D, la coupe de roue et la mèche.
+        lot = self.lot(3)
+        self.assertEqual(lot["statut"], "en relecture")
+        self.assertEqual(lot["parts"], ["30-tubeless"])
+        self.assertEqual(lot["modeles"], ["rim", "plug"])
+        for chemin in ("src/parts/30-tubeless.html", "src/js/models/m-rim.js", "src/js/models/m-plug.js"):
+            self.assertTrue((RACINE / chemin).is_file(), chemin)
 
 
 class TestAdresses(unittest.TestCase):
@@ -144,6 +152,8 @@ class TestMenu(unittest.TestCase):
         self.assertIn('<a href="freins/">Freins<span class="cnt">8</span></a>', m)
         self.assertIn('<a href="montage/">Montage à la livraison<span class="cnt">9</span></a>', m)
         self.assertNotIn('class="soon" href="montage/"', m)
+        self.assertIn('<a href="tubeless/">Pneus et tubeless<span class="cnt">6</span></a>', m)
+        self.assertNotIn('class="soon" href="tubeless/"', m)
 
     def test_menu_a_venir_courant(self):
         m = self.menu("transmission/", "transmission")
@@ -163,10 +173,11 @@ class TestMenu(unittest.TestCase):
                                   "Sources"])
 
     def test_liens_relatifs_qui_menent_aux_bonnes_pages(self):
-        ateliers_ = {"freins": SLUGS, "montage": SLUGS_MONTAGE}
+        ateliers_ = {"freins": SLUGS, "montage": SLUGS_MONTAGE, "tubeless": SLUGS_TUBELESS}
         cibles = [""] + PUBLIEES + [f"{c}/{s}" for c in PUBLIEES for s in ateliers_[c]] + A_VENIR + REFERENCES
         for chemin, categorie in [("", None), ("freins/", "freins"), ("freins/plaquettes/", "freins"),
                                   ("montage/", "montage"), ("montage/di2/", "montage"), ("tubeless/", "tubeless"),
+                                  ("tubeless/crevaison/", "tubeless"), ("transmission/", "transmission"),
                                   ("approche/", None)]:
             m = self.menu(chemin, categorie)
             hrefs = liens(m)
@@ -190,11 +201,12 @@ class TestMenu(unittest.TestCase):
         # p.ch-num ; les catégories à venir gardent l'ordre des lots.
         lots = {l["lot"]: l for l in CONFIG["lots"]}
         self.assertEqual([gabarit.numero_de_chapitre(lots[n]) for n in (1, 2, 3, 4, 5, 6)], [2, 1, 3, 4, 5, 8])
-        for n in (1, 2):
+        for n in (1, 2, 3):
             fragment = (RACINE / "src" / "parts" / f"{lots[n]['parts'][0]}.html").read_text(encoding="utf-8")
             self.assertIn(f'<p class="ch-num">Chapitre {gabarit.numero_de_chapitre(lots[n])} ·', fragment)
         m = self.menu("")
         self.assertLess(m.index('href="montage/"'), m.index('href="freins/"'))
+        self.assertLess(m.index('href="freins/"'), m.index('href="tubeless/"'))
         publies, a_venir = gabarit.categories(CONFIG)
         self.assertEqual([l["categorie"]["id"] for l in publies], PUBLIEES)
         self.assertEqual([l["categorie"]["id"] for l in a_venir], A_VENIR)
@@ -368,7 +380,7 @@ class TestDocument(unittest.TestCase):
         self.assertIn(f'Version {CONFIG["version"]} du ', d)
         self.assertNotIn("<!--VERSION-->", d)
         self.assertNotIn("<!--SCRIPTS-->", d)
-        self.assertIn("Lots 0, 1 et 2 en relecture.", d)
+        self.assertIn("Lots 0, 1, 2 et 3 en relecture.", d)
 
     def test_scripts_minimaux(self):
         d = self.doc("freins/plaquettes/")
@@ -447,10 +459,10 @@ class TestDocument(unittest.TestCase):
         config = json.loads(json.dumps(CONFIG))
         config["lots"][1]["statut"] = "validé"
         pied = gabarit.document(page("outils/", "Outils"), config, CHAPITRES, "site")
-        self.assertIn("Lot 1 validé. Lots 0 et 2 en relecture. Les catégories en pointillés", pied)
+        self.assertIn("Lot 1 validé. Lots 0, 2 et 3 en relecture. Les catégories en pointillés", pied)
         config["lots"][0]["statut"] = "validé"
         pied = gabarit.document(page("outils/", "Outils"), config, CHAPITRES, "site")
-        self.assertIn("Lots 0 et 1 validés. Lot 2 en relecture. Les catégories en pointillés", pied)
+        self.assertIn("Lots 0 et 1 validés. Lots 2 et 3 en relecture. Les catégories en pointillés", pied)
 
     def test_aucun_tiret_long(self):
         for chemin, cible in [("", "site"), ("freins/plaquettes/", "site"), ("", "artifact")]:
@@ -473,8 +485,8 @@ class TestLiensAnciens(unittest.TestCase):
         self.assertEqual(liens_anciens["freins-pl-2"], "freins/plaquettes/#freins-pl-2")
         self.assertEqual(liens_anciens["freins-mk-5"], "freins/purge/#freins-mk-5")
         self.assertEqual(liens_anciens["ck-freins-apres-3"], "freins/controles/#ck-freins-apres-3")
-        # Chaque ancien id de src/parts/20-freins.html et de src/parts/11-montage.html a une nouvelle adresse.
-        for fichier in ("20-freins", "11-montage"):
+        # Chaque ancien id de src/parts/20-freins.html, 11-montage.html et 30-tubeless.html a une nouvelle adresse.
+        for fichier in ("20-freins", "11-montage", "30-tubeless"):
             source = (RACINE / "src" / "parts" / f"{fichier}.html").read_text(encoding="utf-8")
             for ident in re.findall(r'\sid="([^"]+)"', source):
                 self.assertIn(ident, liens_anciens, fichier)
@@ -484,6 +496,11 @@ class TestLiensAnciens(unittest.TestCase):
         self.assertEqual(liens_anciens["montage-position"], "montage/position/")
         self.assertEqual(liens_anciens["montage-di2"], "montage/di2/")
         self.assertEqual(liens_anciens["montage-h"], "montage/#montage-h")
+        # « #tubeless », le lien « Chapitre 3 » du jour de la livraison, ouvre la catégorie publiée, et l'id de chaque
+        # atelier du chapitre 3 la page de cet atelier.
+        self.assertEqual(liens_anciens["tubeless"], "tubeless/")
+        for slug in SLUGS_TUBELESS:
+            self.assertEqual(liens_anciens[f"tubeless-{slug}"], f"tubeless/{slug}/")
 
     def test_pas_de_chemin_absolu(self):
         for adresse in gabarit.liens_anciens(CONFIG, CHAPITRES).values():

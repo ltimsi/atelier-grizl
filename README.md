@@ -2,21 +2,21 @@
 
 Guide d'atelier personnel pour monter, régler et réparer un Canyon Grizl CF 8 Di2 (réf. 4556, taille M, Floating Violet) : procédures pas à pas, couples de serrage, planches techniques en SVG et pièces en 3D à faire tourner. Site statique en plusieurs pages, pensé d'abord pour l'ordinateur et lisible au téléphone, servi par nginx sur le serveur Hetzner derrière le reverse proxy.
 
-La page d'accueil « Mon vélo » montre le vélo en 3D réaliste, avec ses pièces d'origine. Ses huit pastilles et la colonne « Où intervenir » mènent aux ateliers de huit zones : poste de pilotage, selle et tige, axes des roues, pédalier et pédales, dérailleur Di2 pour le montage à la livraison, et disques de frein, étrier et plaquettes, manettes et durites pour les freins. Les fiches « comprendre » sans pièce à viser (1.1, 1.2 et 1.9 du montage) n'ont pas de zone : elles s'ouvrent par le menu, la recherche et leur catégorie. Chaque atelier a sa page : ses étapes, ou les blocs d'une fiche « comprendre », se déplient d'un clic, un mode pas à pas montre les étapes une à une, et à droite viennent, selon l'atelier, la planche ou la pièce 3D, ce qu'il faut démonter, les outils et les couples. Sans WebGL, un schéma 2D prend le relais. Ce qui n'est pas publié par les fabricants est dessiné au mieux et listé sous « Ce qui est approché ». La 3D utilise three.js 0.160.0 en modules ES : en local depuis `vendor/three/` pour le site, depuis jsDelivr pour l'aperçu.
+La page d'accueil « Mon vélo » montre le vélo en 3D réaliste, avec ses pièces d'origine. Ses neuf pastilles et la colonne « Où intervenir » mènent aux ateliers de neuf zones : poste de pilotage, selle et tige, axes des roues, pédalier et pédales, dérailleur Di2 pour le montage à la livraison, disques de frein, étrier et plaquettes, manettes et durites pour les freins, et pneus et valves pour le tubeless. Les fiches « comprendre » sans pièce à viser (1.1, 1.2 et 1.9 du montage) n'ont pas de zone : elles s'ouvrent par le menu, la recherche et leur catégorie. Chaque atelier a sa page : ses étapes, ou les blocs d'une fiche « comprendre », se déplient d'un clic, un mode pas à pas montre les étapes une à une, et à droite viennent, selon l'atelier, la planche ou la pièce 3D, ce qu'il faut démonter, les outils et les couples. Sans WebGL, un schéma 2D prend le relais. Ce qui n'est pas publié par les fabricants est dessiné au mieux et listé sous « Ce qui est approché ». La 3D utilise three.js 0.160.0 en modules ES : en local depuis `vendor/three/` pour le site, depuis jsDelivr pour l'aperçu.
 
 ## Les pages
 
 | Page | Adresse |
 |---|---|
 | Mon vélo : le vélo en 3D, « Où intervenir », les pièces à remplacer, les catégories | la racine |
-| Catégorie publiée : en-tête du chapitre, ordre du jour J, filtres, une carte par atelier, couples | `montage/` (chapitre 1, Montage à la livraison), `freins/` (chapitre 2, Freins) |
-| Un atelier | `montage/<atelier>/` ou `freins/<atelier>/`, par exemple `montage/di2/` ou `freins/plaquettes/` |
-| Catégorie à venir : son lot et ce qui y est prévu | `tubeless/`, `transmission/`, `accessoires/`, `revision/` |
+| Catégorie publiée : en-tête du chapitre, ordre du jour J, filtres, une carte par atelier, couples | `montage/` (chapitre 1, Montage à la livraison), `freins/` (chapitre 2, Freins), `tubeless/` (chapitre 3, Pneus et tubeless) |
+| Un atelier | `montage/<atelier>/`, `freins/<atelier>/` ou `tubeless/<atelier>/`, par exemple `montage/di2/`, `freins/plaquettes/` ou `tubeless/passer/` |
+| Catégorie à venir : son lot et ce qui y est prévu | `transmission/`, `accessoires/`, `revision/` |
 | Références | `composants/`, `outils/`, `couples/`, `approche/`, `sources/` |
 
-Chaque page est le fichier `index.html` de son dossier, et tous ses liens sont relatifs : le même site marche à la racine d'un serveur, dans un sous-dossier et dans l'aperçu Claude. Les catégories publiées sont rangées par numéro de chapitre, dans le menu comme dans les pages : le montage (chapitre 1) avant les freins (chapitre 2). Le menu des catégories est à gauche, le fil d'Ariane et la recherche en haut. Sous 1100 px de large, tout passe sur une colonne ; sous 900 px, le menu se range derrière le bouton « Menu ».
+Chaque page est le fichier `index.html` de son dossier, et tous ses liens sont relatifs : le même site marche à la racine d'un serveur, dans un sous-dossier et dans l'aperçu Claude. Les catégories publiées sont rangées par numéro de chapitre, dans le menu comme dans les pages : le montage (chapitre 1), les freins (chapitre 2), puis les pneus et le tubeless (chapitre 3). Le menu des catégories est à gauche, le fil d'Ariane et la recherche en haut. Sous 1100 px de large, tout passe sur une colonne ; sous 900 px, le menu se range derrière le bouton « Menu ».
 
-Les anciennes adresses de la page unique restent valables : `#freins-plaquettes` à la racine ouvre `freins/plaquettes/`, `#freins` ouvre `freins/`, et une ancre de planche comme `#freins-pl-2` ouvre la page de son atelier, sur la planche. De même pour le montage : `#montage` ouvre `montage/`, `#montage-position` ouvre `montage/position/`, et chaque ancre `#montage-<atelier>` (par exemple `#montage-roues`) ouvre la page de son atelier.
+Les anciennes adresses de la page unique restent valables : `#freins-plaquettes` à la racine ouvre `freins/plaquettes/`, `#freins` ouvre `freins/`, et une ancre de planche comme `#freins-pl-2` ouvre la page de son atelier, sur la planche. De même pour le montage : `#montage` ouvre `montage/`, `#montage-position` ouvre `montage/position/`, et chaque ancre `#montage-<atelier>` (par exemple `#montage-roues`) ouvre la page de son atelier ; et pour le tubeless : `#tubeless` ouvre `tubeless/`, et chaque ancre `#tubeless-<atelier>` la page de son atelier.
 
 Sans JavaScript, tout reste lisible : les étapes et les blocs s'ouvrent d'un clic, le menu et le fil d'Ariane sont des liens. On perd seulement la 3D, la recherche, les filtres, le mode pas à pas, les onglets des figures et la mémoire des cases cochées.
 
@@ -29,7 +29,7 @@ Le contenu est publié lot par lot. Un lot n'apparaît sur le site que s'il est 
 | 0 | Le vélo en 3D de la page d'accueil, et le site en plusieurs pages | cadre, roues, freins, transmission, poste de pilotage | en relecture |
 | 1 | Freins, en huit ateliers | disque Center Lock, étrier, kit de purge | en relecture |
 | 2 | Avant de commencer, montage à la livraison, en neuf ateliers | clé dynamométrique, poste de pilotage, axe traversant, pédale | en relecture |
-| 3 | Tubeless et crevaisons | coupe de roue, mèche | à faire |
+| 3 | Tubeless et crevaisons, en six ateliers | coupe de roue, mèche | en relecture |
 | 4 | Transmission | chaîne, cassette, dérailleur, pédalier | à faire |
 | 5 | Entretien, accessoires, dépannage | porte-bagages | à faire |
 | 6 | Aide-mémoire des couples, sources | | à faire |
@@ -86,7 +86,7 @@ cd tools && npm ci && npx playwright install chromium   # une fois
 node scene-check.js ../dist/site shots-site 1440 900 clair
 ```
 
-`scene-check.js` ouvre les 29 pages de `dist/site/` dans Chromium, avec la politique de contenu du serveur, et enregistre une capture par page. Il sort en erreur s'il voit une erreur dans une page, un défilement horizontal (à l'arrivée et page tout dépliée), un menu à l'écran sous 900 px avant le clic sur « Menu », plus de 500 000 triangles dans la 3D de l'accueil, ou un des parcours qui ne marche pas : pastilles et « Où intervenir » (toutes les pastilles du bloc `#zones-data` de l'accueil affichées, à 30 px au moins l'une de l'autre, hors de l'aide), légende du schéma 2D, anciennes ancres, filtres, pièces 3D des ateliers, « Tout déplier », pas à pas, menu et « Aller au contenu » au clavier, recherche, modules absents, accueil sans JavaScript. `--disable-webgl` le lance sans WebGL, `--mouvement` sans réduire les animations, `--sans-js` sans JavaScript. Le détail est dans [docs/PASSATION.md](docs/PASSATION.md).
+`scene-check.js` ouvre les 35 pages de `dist/site/` dans Chromium, avec la politique de contenu du serveur, et enregistre une capture par page. Il sort en erreur s'il voit une erreur dans une page, un défilement horizontal (à l'arrivée et page tout dépliée), un menu à l'écran sous 900 px avant le clic sur « Menu », plus de 500 000 triangles dans la 3D de l'accueil, ou un des parcours qui ne marche pas : pastilles et « Où intervenir » (toutes les pastilles du bloc `#zones-data` de l'accueil affichées, à 30 px au moins l'une de l'autre, hors de l'aide), légende du schéma 2D, anciennes ancres, filtres, pièces 3D des ateliers, « Tout déplier », pas à pas, menu et « Aller au contenu » au clavier, recherche, modules absents, accueil sans JavaScript. `--disable-webgl` le lance sans WebGL, `--mouvement` sans réduire les animations, `--sans-js` sans JavaScript. Le détail est dans [docs/PASSATION.md](docs/PASSATION.md).
 
 ## Déployer
 

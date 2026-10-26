@@ -9,7 +9,8 @@
 // rayons par roue, l'angle de leur trou de jante, leur croisement au plus juste, la valve en haut entre deux rayons, la
 // hauteur du pneu au-dessus de la jante, les crampons d'épaule groupés par deux. Sur la photo du passage de pneu
 // (canyon-photo-4556-degagement) : petits crampons serrés au centre, plus gros sur les épaules.
-// Zones : les deux axes traversants en zone 'axes' (atelier 1.5) ; pneus, jantes, rayons, moyeux et valves sans zone.
+// Zones : les deux axes traversants en zone 'axes' (atelier 1.5) ; les pneus, crampons compris, et les valves en zone
+// 'pneus' (ateliers 3.1 à 3.6) ; jantes, rayons et moyeux sans zone.
 // Aucun import : le module ne reçoit que les outils de construction, les points et GEO.
 
 const FICHE = 'canyon-4556';
@@ -29,7 +30,7 @@ export const COTES = Object.freeze({
 export const META = Object.freeze({
   id: 'roues',
   nom: 'Roues Canyon GR 30 CF, pneus Schwalbe G-One RX et axes traversants',
-  zone: null, // les axes en zone 'axes' ; l'atelier tubeless n'est pas dans cette livraison
+  zone: null, // les axes en zone 'axes', les pneus et les valves en zone 'pneus'
   sources: Object.freeze([
     FICHE,
     'canyon-photo-4556-fv',
@@ -89,15 +90,22 @@ const D2R = Math.PI / 180;
 const pol = (c, r, deg) => [c[0] + r * Math.cos(deg * D2R), c[1] + r * Math.sin(deg * D2R)];
 
 /**
- * Ajoute au groupe des outils les deux roues : pneus et crampons, jantes, moyeux, rayons et écrous, valves, axes.
- * Les deux axes sont en zone 'axes', le reste sans zone ; les outils en ressortent sans zone.
- * Noms des maillages que vérifient les tests : pneu, jante, moyeu avant, moyeu arrière, rayons, axe avant, axe arrière.
+ * Ajoute au groupe des outils les deux axes, puis les deux roues : pneus et crampons, jantes, moyeux, rayons et écrous,
+ * valves. Les axes sont en zone 'axes', les pneus et les valves en zone 'pneus', le reste sans zone ; les outils en
+ * ressortent sans zone.
+ * Noms des maillages que vérifient les tests : pneu, valve, jante, moyeu avant, moyeu arrière, rayons, axe avant,
+ * axe arrière.
  * @param {object} o Les outils de creerOutils.
  * @param {object} p Les points de points(geo).
  * @param {object} geo GEO, ou un objet de même forme.
  * @returns {void}
  */
 export function construire(o, p, geo) {
+  // Axes : la tige traverse les pattes, la tête et l'embout se posent sur leur face extérieure. Faces extérieures
+  // des pattes dessinées par cadre.js : bouts de fourche, pattes arrière, puis patte de dérailleur côté droit.
+  o.zone('axes');
+  axe(o, p.FA, 'axe avant', [-74, -66], [66, 71]);
+  axe(o, p.RA, 'axe arrière', [-88, -80], [85, 91]);
   o.zone(null);
   const roues = [
     { c: p.FA, cote: 'avant', largeur: COTES.axeAvant.v, plan: -geo.decalageDisqueAvant.v, ...MOYEUX.avant },
@@ -107,15 +115,9 @@ export function construire(o, p, geo) {
     roue(o, r, geo);
     moyeu(o, r);
   }
-  // Axes : la tige traverse les pattes, la tête et l'embout se posent sur leur face extérieure. Faces extérieures
-  // des pattes dessinées par cadre.js : bouts de fourche, pattes arrière, puis patte de dérailleur côté droit.
-  o.zone('axes');
-  axe(o, p.FA, 'axe avant', [-74, -66], [66, 71]);
-  axe(o, p.RA, 'axe arrière', [-88, -80], [85, 91]);
-  o.zone(null);
 }
 
-// Pneu, jante, rayons et valve d'une roue.
+// Pneu, jante, rayons et valve d'une roue : le pneu et la valve en zone 'pneus', la jante et les rayons sans zone.
 function roue(o, { c, flasques }, geo) {
   const siege = geo.diametreSiegeJante.v / 2;
   const nom = n => m => { m.name = n; return m; };
@@ -161,8 +163,10 @@ function roue(o, { c, flasques }, geo) {
     ...arc,
     [haut + 1.7, demi + 3.4], [haut + 0.1, demi + 0.2], [siege, demi - 0.1],
   ];
+  o.zone('pneus');
   nom('pneu')(o.lathe(profilPneu, 160, 'rubber')).position.set(c[0], c[1], 0);
   nom('pneu')(crampons(o, c, centre, R));
+  o.zone(null);
 
   // Rayons plats et écrous de rayon noirs : InstancedMesh, un trou de jante tous les quinze degrés pour vingt-quatre
   // rayons. Un rayon plat est large le long de l'axe de la roue et mince le long du tour : de profil, on voit sa tranche.
@@ -193,9 +197,11 @@ function roue(o, { c, flasques }, geo) {
 
   // Valve : tige qui sort du fond de jante vers le moyeu, écrou contre la jante, obus au bout.
   const v = r => [...pol(c, r, ANGLE_VALVE), 0];
+  o.zone('pneus');
   nom('valve')(o.tube(v(siege - 4), v(bas - 22), 3, 3, 'steel', { seg: 16 }));
   nom('valve')(o.tube(v(bas + 0.5), v(bas - 4), 4.2, 4.2, 'steel', { seg: 6 }));
   nom('valve')(o.tube(v(bas - 22), v(bas - 31), 1.6, 1.6, 'steel', { seg: 12 }));
+  o.zone(null);
 }
 
 // Crampons d'un pneu, dans une seule InstancedMesh : pavés à flancs inclinés, plantés dans la carcasse.

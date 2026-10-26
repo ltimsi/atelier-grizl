@@ -17,9 +17,9 @@ test('ancres connues', () => {
   }
 });
 
-test('zones attendues : les trois des freins, puis les cinq du montage', () => {
+test('zones attendues : les trois des freins, les cinq du montage, puis celle des pneus', () => {
   assert.deepEqual(ZONES.map(z => z.id),
-    ['disques', 'etrier', 'manettes', 'poste', 'selle', 'axes', 'pedalier', 'derailleur']);
+    ['disques', 'etrier', 'manettes', 'poste', 'selle', 'axes', 'pedalier', 'derailleur', 'pneus']);
 });
 
 test('zones du montage : noms et ancres, pastilles 4 à 8', () => {
@@ -30,12 +30,21 @@ test('zones du montage : noms et ancres, pastilles 4 à 8', () => {
     ['pedalier', 'Pédalier et pédales', 'manivelleDroite'],
     ['derailleur', 'Dérailleur Di2', 'batterieDi2'],
   ];
-  assert.deepEqual(ZONES.slice(3).map(z => [z.id, z.nom, z.ancre]), attendu);
-  // La vue et le cadre du schéma visent la pièce de la pastille.
+  assert.deepEqual(ZONES.slice(3, 8).map(z => [z.id, z.nom, z.ancre]), attendu);
+  // La vue et le cadre du schéma visent la pièce de la pastille, au montage comme aux pneus (pastilles 4 à 9).
   for (const z of ZONES.slice(3)) {
     assert.equal(z.vue.cible, z.ancre, `${z.id} : vue.cible`);
     assert.equal(z.schema.centre, z.ancre, `${z.id} : schema.centre`);
   }
+});
+
+// La zone du lot 3, pastille 9 : les pneus et les valves (ateliers 3.1 à 3.6). Son ancre est sur la valve de la roue
+// avant, sans décalage à l'écran : la vue et le cadre du schéma visent la valve (test précédent).
+test('zone des pneus : nom, ancre sur la valve avant, pastille 9', () => {
+  assert.equal(ZONES.length, 9);
+  assert.deepEqual([ZONES[8].id, ZONES[8].nom, ZONES[8].ancre], ['pneus', 'Pneus et valves', 'valveAvant']);
+  assert.equal(parId.pneus.variante, undefined, 'pas de variante');
+  assert.equal('decalage' in parId.pneus, false, 'posée sur son ancre');
 });
 
 // decalage : [dx, dy] en pixels de l'écran, facultatif. app.js pose la pastille à ce décalage de la projection de son

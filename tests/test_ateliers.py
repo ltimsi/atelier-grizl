@@ -1052,11 +1052,14 @@ class TestTubeless(unittest.TestCase):
         self.assertEqual(len(ids), len(set(ids)))
         self.assertEqual(sorted(self.ch.resumes), ["ordre"])
 
-    def test_non_publie(self):
-        # Le chapitre est écrit, mais le lot 3 reste « à faire » : il n'est publié qu'à la tâche 3.
+    def test_publie(self):
+        # Le lot 3 est publié en relecture, avec ce chapitre et ses deux pièces 3D, sans « prevu » : sa catégorie
+        # montre ses ateliers.
         config = json.loads((RACINE / "build" / "lots.json").read_text(encoding="utf-8"))
         (lot,) = [l for l in config["lots"] if l["lot"] == 3]
-        self.assertEqual((lot["statut"], lot["parts"], lot["modeles"]), ("à faire", ["30-tubeless"], ["rim", "plug"]))
+        self.assertEqual((lot["statut"], lot["parts"], lot["modeles"]),
+                         ("en relecture", ["30-tubeless"], ["rim", "plug"]))
+        self.assertNotIn("prevu", lot)
 
     def test_ateliers_ids_types_zones(self):
         self.assertEqual([(a.id, a.num, a.type, a.zone) for a in self.ch.ateliers], [

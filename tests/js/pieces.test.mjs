@@ -384,11 +384,14 @@ const etendueZ = ms => {
   return [Math.min(...z), Math.max(...z)];
 };
 
-test('roues : les deux axes en zone axes (atelier 1.5), le reste sans zone, aucune variante', () => {
+test('roues : axes en zone axes (1.5), pneus et valves en zone pneus (3.1 à 3.6), le reste sans zone, sans variante', () => {
   const { maillages } = construire(roues);
-  for (const nom of ['axe avant', 'axe arrière']) assert.ok(parNom(maillages, nom).length > 0, `${nom} absent`);
+  for (const nom of ['axe avant', 'axe arrière', 'pneu', 'valve']) {
+    assert.ok(parNom(maillages, nom).length > 0, `${nom} absent`);
+  }
+  const zoneDe = { 'axe avant': 'axes', 'axe arrière': 'axes', pneu: 'pneus', valve: 'pneus' };
   for (const m of maillages) {
-    const attendue = ['axe avant', 'axe arrière'].includes(m.name) ? 'axes' : null;
+    const attendue = zoneDe[m.name] ?? null;
     assert.equal(m.userData.zone, attendue, `${m.name || m.userData.role} : zone ${m.userData.zone}`);
     assert.equal('variante' in m.userData, false);
   }

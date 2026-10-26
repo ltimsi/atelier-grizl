@@ -22,20 +22,21 @@
 //      aucune pastille ne touche son rectangle, en 3D comme en 2D. Dans les deux vues d'ensemble, celle du chargement (la
 //      3D, ou le schéma 2D sans WebGL) et celle du schéma 2D après son onglet, toutes les pastilles du bloc #zones-data
 //      de la page (celui qu'app.js lit) sont affichées et deux pastilles ont leurs centres à 30 px au moins (ECART_PASTILLES : elles ne se chevauchent pas).
-//      Un clic sur la pastille 2 rend active (aria-current) la carte « Étrier et plaquettes » de « Où intervenir », puis
-//      la pastille 3 celle des manettes, la pastille 4 celle du poste de pilotage, puis le bouton de la carte « Étrier
-//      et plaquettes » la sienne. Les pastilles 3 et 4 partent de la vue d'ensemble. Les pastilles sont cliquées à la
-//      souris là où elles sont, sans que le script fasse défiler la page ; le bouton aussi, une fois la page descendue
-//      jusqu'à lui, comme après avoir lu les cartes. Sur une seule colonne, une pastille ne fait pas défiler la page et le bouton d'une carte ramène l'image à
-//      l'écran (95 % au moins entre la barre du haut et le bas de l'écran) ; sur deux colonnes, la carte choisie est à
-//      l'écran. Ensuite, avec WebGL : la zone des disques, sans variante (#variante reste caché), puis la vue
-//      d'ensemble, pour le budget de triangles ; la variante de l'étrier (plaquettes sorties) ; l'onglet « Schéma 2D »,
-//      puis sa vue d'ensemble ; la fenêtre « Ce qui est approché », qui s'ouvre et se remplit. La légende du schéma 2D
-//      (#legende-2d) est visible en 2D (onglet « Schéma 2D », ou dès le chargement sans WebGL) et cachée en 3D ;
+//      Un clic sur la pastille 2 rend active (aria-current) la carte « Étrier et plaquettes » de « Où intervenir »,
+//      puis la pastille 3 celle des manettes, la pastille 4 celle du poste de pilotage, la pastille 9 celle des pneus
+//      et des valves, puis le bouton de la carte « Étrier et plaquettes » la sienne. Les pastilles 3, 4 et 9 partent de
+//      la vue d'ensemble. Les pastilles sont cliquées à la souris là où elles sont, sans que le script fasse défiler la
+//      page ; le bouton aussi, une fois la page descendue jusqu'à lui, comme après avoir lu les cartes. Sur une seule
+//      colonne, une pastille ne fait pas défiler la page et le bouton d'une carte ramène l'image à l'écran (95 % au
+//      moins entre la barre du haut et le bas de l'écran) ; sur deux colonnes, la carte choisie est à l'écran. Ensuite,
+//      avec WebGL : la zone des disques, sans variante (#variante reste caché), puis la vue d'ensemble, pour le budget
+//      de triangles ; la variante de l'étrier (plaquettes sorties) ; l'onglet « Schéma 2D », puis sa vue d'ensemble ;
+//      la fenêtre « Ce qui est approché », qui s'ouvre et se remplit. La légende du schéma 2D (#legende-2d) est visible
+//      en 2D (onglet « Schéma 2D », ou dès le chargement sans WebGL) et cachée en 3D ;
 //   3. anciennes ancres de la racine : index.html#freins-plaquettes et #freins-plaquettes arrivent sur
 //      freins/plaquettes/, #freins sur freins/, #freins-pl-2 sur freins/plaquettes/#freins-pl-2, avec la planche à
-//      l'écran sous la barre ; les liens du jour de la livraison #montage et #montage-position arrivent sur montage/ et
-//      montage/position/. La racine ne reste pas derrière Retour : Retour quitte le site ;
+//      l'écran sous la barre ; les liens du jour de la livraison #montage, #montage-position et #tubeless arrivent sur
+//      montage/, montage/position/ et tubeless/. La racine ne reste pas derrière Retour : Retour quitte le site ;
 //   4. catégorie freins/ : le filtre « Remplacer » laisse 1 carte visible, « Tout » les rend toutes ;
 //   5. atelier freins/plaquettes/ : le lien du fil d'Ariane, atteint par Tab, garde son anneau de focus entier (aucun
 //      parent ne le rogne). La pièce 3D (figure.v3d canvas, derrière l'onglet « Pièce en 3D ») est dessinée : la
@@ -112,6 +113,7 @@ const ANCIENNES_ANCRES = [
   ['#freins-pl-2', 'freins/plaquettes/#freins-pl-2'],
   ['#montage', 'montage/'],
   ['#montage-position', 'montage/position/'],
+  ['#tubeless', 'tubeless/'],
 ];
 // L'écart minimal des centres des pastilles de l'accueil dans la vue d'ensemble, en pixels CSS : une pastille fait
 // 30 px de large (00-head.html), deux pastilles plus proches se chevauchent. Leur nombre est celui des zones du bloc
@@ -548,9 +550,9 @@ async function controler(opts) {
             { timeout: 60000 }).catch(() => erreur('contrôle : accueil : aucune image 3D dessinée après ' + nom));
           await pause(PAUSE_ANIMATION);
         };
-        // Clique la pastille n (1 à 8) à la souris, là où elle est. Un clic de Playwright ferait d'abord défiler la
-        // page jusqu'à elle, et « la pastille ne fait pas défiler la page » ne se verrait plus. Si la pastille n'est
-        // pas à l'écran, l'image y est ramenée d'abord. Rend le défilement juste avant le clic, ou null.
+        // Clique la pastille n (de 1 au nombre de zones) à la souris, là où elle est. Un clic de Playwright ferait
+        // d'abord défiler la page jusqu'à elle, et « la pastille ne fait pas défiler la page » ne se verrait plus. Si la
+        // pastille n'est pas à l'écran, l'image y est ramenée d'abord. Rend le défilement juste avant le clic, ou null.
         const cliquerPastille = async n => {
           const viser = () => page.evaluate(k => {
             const b = document.querySelectorAll('#pins .zpin')[k];
@@ -668,6 +670,14 @@ async function controler(opts) {
         await agir('la pastille 4', async () => { y0 = await cliquerPastille(4); });
         if (y0 !== null) a.pastille4 = await choix('pastille 4', 'poste', 'Poste de pilotage', y0, false);
         await capturer(page, 'accueil-pastille-4.png');
+
+        // Pastille 9, la zone du lot 3, après la vue d'ensemble et depuis le haut : les pneus et les valves.
+        await agir('la vue d’ensemble', () => page.click('#vue-ensemble'));
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+        y0 = null;
+        await agir('la pastille 9', async () => { y0 = await cliquerPastille(9); });
+        if (y0 !== null) a.pastille9 = await choix('pastille 9', 'pneus', 'Pneus et valves', y0, false);
+        await capturer(page, 'accueil-pastille-9.png');
 
         // Le bouton de la carte « Étrier et plaquettes », comme après avoir lu les cartes : il est au milieu de
         // l'écran, et l'image en partie au-dessus.

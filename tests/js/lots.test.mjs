@@ -37,7 +37,7 @@ test('lots.md : une entrée par lot publié de build/lots.json, avec son titre e
   const doc = readFileSync(new URL('../../docs/lots.md', import.meta.url), 'utf8');
   const config = JSON.parse(readFileSync(new URL('../../build/lots.json', import.meta.url), 'utf8'));
   const publies = config.lots.filter(l => ['validé', 'en relecture'].includes(l.statut));
-  assert.deepEqual(publies.map(l => l.lot), [0, 1, 2]);
+  assert.deepEqual(publies.map(l => l.lot), [0, 1, 2, 3]);
   const titres = [...doc.matchAll(/^## Lot (\d+) · (.+)$/gm)].map(m => [Number(m[1]), m[2]]);
   assert.deepEqual(titres, publies.map(l => [l.lot, `${l.titre} · ${l.statut}`]));
   // L'entrée du lot 2 dit ce qu'il publie : son chapitre, ses cinq zones et ses quatre pièces 3D.
@@ -45,6 +45,12 @@ test('lots.md : une entrée par lot publié de build/lots.json, avec son titre e
   for (const attendu of ['11-montage', 'Poste de pilotage', 'Selle et tige', 'Axes des roues', 'Pédalier et pédales',
     'Dérailleur Di2', '`torque`', '`cockpit`', '`axle`', '`pedal`', 'scene-check']) {
     assert.ok(lot2.includes(attendu), `entrée du lot 2 : « ${attendu} » absent`);
+  }
+  // L'entrée du lot 3 : son chapitre, sa zone, ses deux pièces 3D, la limite de 3,0 bar et le contrôle des neuf
+  // pastilles.
+  const lot3 = doc.slice(doc.indexOf('## Lot 3 · '), doc.indexOf('\n## ', doc.indexOf('## Lot 3 · ') + 1));
+  for (const attendu of ['30-tubeless', 'Pneus et valves', '`rim`', '`plug`', '3,0 bar', 'scene-check', 'neuf pastilles']) {
+    assert.ok(lot3.includes(attendu), `entrée du lot 3 : « ${attendu} » absent`);
   }
   assert.ok(!/[\u2014\u2013]/.test(doc), 'tiret long dans lots.md');
 });

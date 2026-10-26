@@ -143,6 +143,11 @@ const FACE_MANIVELLE = 80; // côté transmission, juste au-delà de la face ext
 // dérailleur, sur sa face extérieure, sous le bloc arrière où transmission.js loge la batterie BT-DN320 : sur la
 // batterie, la pastille toucherait celle du disque arrière. Le nom batterieDi2 est celui du brief du lot 2.
 const SOUS_BATTERIE = Object.freeze([-20, -98, 98]);
+// Pneus et valves (lot 3) : la valve de la roue avant, en haut de la roue comme dans roues.js (sa place sur la photo
+// officielle), dans le plan de la roue, sous le siège du talon, là où elle sort du fond de la jante avec son écrou.
+// La pastille se pose sur la jante, contre le pneu, dans le haut de la roue avant, que les autres pastilles laissent
+// libre ; celle de la valve arrière tomberait sur la pastille du disque arrière. Placement de vue, pas une cote.
+const SOUS_SIEGE_VALVE = 28;
 
 const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
 const mul = (a, k) => [a[0] * k, a[1] * k];
@@ -219,6 +224,8 @@ export function points(geo = GEO) {
     teteAxeAvant: [FA[0], FA[1], -GAUCHE_AXE],
     manivelleDroite: [PR[0], PR[1], FACE_MANIVELLE], // le bout du bras, là où se visse la pédale
     batterieDi2: [RA[0] + SOUS_BATTERIE[0], RA[1] + SOUS_BATTERIE[1], SOUS_BATTERIE[2]],
+    // Zone des pneus et des valves.
+    valveAvant: [FA[0], FA[1] + g('diametreSiegeJante') / 2 - SOUS_SIEGE_VALVE, 0],
   };
 
   return { RA, FA, BB, HTt, HTb, STt, SPt, S0, S1, PR, PL, CF, CR, CROWN, dHT, dST, poulieHaute, poulieBasse, rayons, ancres };

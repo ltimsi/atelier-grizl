@@ -32,6 +32,9 @@ const DESSIN = Object.freeze({
   contreEcrou: 17,
   // Étrier, comme freins.js : le long du disque, en travers, et son centre au-delà de son point.
   etrier: Object.freeze({ long: 56, large: 32, avance: 6 }),
+  // Valve, comme roues.js : en haut de la roue (en degrés depuis l'avant), de sous le siège du talon jusqu'au bout de
+  // l'obus, sous le fond de la jante, en millimètres sous le siège ; son rayon.
+  valve: Object.freeze({ angle: 90, debut: 4, fin: 56.5, rayon: 3 }),
 });
 
 const f = n => Math.round(n * 10) / 10;
@@ -139,11 +142,13 @@ export function formesSchema(p, geo = GEO) {
 
   capsule(groupe('pedalier'), BB, PL, 14, 10, 'h'); // manivelle gauche
 
-  // ---- Roues ----
+  // ---- Roues : les pneus, puis les jantes, les rayons et les moyeux, puis les valves. Pneus et valves : la zone des
+  // pneus, comme dans la 3D (roues.js) ----
+  const gPneus = groupe('pneus');
+  for (const c of [RA, FA]) anneau(gPneus, c, geo.rayonPneu.v, siege, 'k');
   const gRoues = groupe();
   const rJante = siege - COTES_ROUES.hauteurJante.v, n = geo.nombreRayons.v;
   for (const c of [RA, FA]) {
-    anneau(gRoues, c, geo.rayonPneu.v, siege, 'k');
     cercle(gRoues, c, siege, 'n');
     cercle(gRoues, c, rJante, 't');
     for (let i = 0; i < n; i++) {
@@ -152,6 +157,10 @@ export function formesSchema(p, geo = GEO) {
       ajouter(gRoues, 'line', { x1: f(h[0]), y1: f(-h[1]), x2: f(r[0]), y2: f(-r[1]), class: 't' });
     }
     cercle(gRoues, c, DESSIN.moyeu, 'o');
+  }
+  const gValves = groupe('pneus'), V = DESSIN.valve;
+  for (const c of [RA, FA]) {
+    capsule(gValves, pol(c, siege - V.debut, V.angle), pol(c, siege - V.fin, V.angle), V.rayon, V.rayon, 'k');
   }
 
   // ---- Cadre et fourche, avec les valeurs de dessin de cadre.js ----

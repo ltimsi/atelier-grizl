@@ -79,9 +79,10 @@ test('scène : projection vers les pixels et visibilité des pastilles', () => {
 
 test('scène : zones lues sur les maillages de chaque pièce', () => {
   // Dans l'ordre où chaque pièce construit ses maillages : le poste monte la potence et le cintre avant les cocottes,
-  // posées sur le cintre.
+  // posées sur le cintre ; les roues posent leurs axes avant les pneus et les valves.
   const attendu = {
-    cadre: ['selle'], roues: ['axes'], freins: ['disques', 'etrier', 'manettes'], transmission: ['pedalier', 'derailleur'],
+    cadre: ['selle'], roues: ['axes', 'pneus'], freins: ['disques', 'etrier', 'manettes'],
+    transmission: ['pedalier', 'derailleur'],
     poste: ['poste', 'manettes'],
   };
   assert.deepEqual(PIECES.map(m => m.META.id), Object.keys(attendu));
@@ -110,22 +111,26 @@ test('scène : les zones du montage surlignent leurs pièces', () => {
   }
   for (const nom of ['tige de selle', 'tête de tige', 'rail de selle', 'selle']) assert.ok(noms.selle.has(nom), `selle : ${nom}`);
   assert.deepEqual([...noms.axes].sort(), ['axe arrière', 'axe avant']);
+  // Les pneus, crampons compris, et les valves des deux roues : la zone des ateliers 3.1 à 3.6.
+  assert.deepEqual([...noms.pneus].sort(), ['pneu', 'valve']);
   for (const nom of ['plateau', 'manivelle droite', 'manivelle gauche']) assert.ok(noms.pedalier.has(nom), `pédalier : ${nom}`);
   for (const nom of ['dérailleur', 'corps du dérailleur', 'batterie', 'galet']) {
     assert.ok(noms.derailleur.has(nom), `dérailleur : ${nom}`);
   }
-  // Ni la chaîne, ni la cassette, ni le boîtier, ni le cadre ne changent de zone.
-  for (const nom of ['chaîne', 'pignon 9', 'pignon 45', 'boîtier', 'patte arrière', 'patte avant', 'boîte de pédalier']) {
+  // Ni la chaîne, ni la cassette, ni le boîtier, ni le cadre ne changent de zone, ni les jantes, les rayons et les
+  // moyeux des roues.
+  for (const nom of ['chaîne', 'pignon 9', 'pignon 45', 'boîtier', 'patte arrière', 'patte avant', 'boîte de pédalier',
+    'jante', 'rayons', 'écrous de rayon', 'moyeu avant', 'moyeu arrière']) {
     assert.ok(!Object.values(noms).some(n => n.has(nom)), `${nom} : dans une zone`);
   }
 });
 
-// Une ancre du montage est sur sa pièce : à moins de SUR_LA_PIECE mm d'un sommet d'un maillage de sa zone. Une boîte
-// englobante ne suffirait pas : celle du poste couvre tout le cintre, et une ancre en l'air entre le cintre et la
-// potence y serait.
+// Une ancre du montage ou des pneus est sur sa pièce : à moins de SUR_LA_PIECE mm d'un sommet d'un maillage de sa
+// zone. Une boîte englobante ne suffirait pas : celle du poste couvre tout le cintre, et une ancre en l'air entre le
+// cintre et la potence y serait.
 const SUR_LA_PIECE = 15;
 
-test('scène : chaque pastille du montage est posée sur sa pièce, au plus près d’un sommet de sa zone', () => {
+test('scène : chaque pastille du montage et des pneus est sur sa pièce, au plus près d’un sommet de sa zone', () => {
   const { ancres } = points(GEO);
   const sommets = {};
   const v = new THREE.Vector3();

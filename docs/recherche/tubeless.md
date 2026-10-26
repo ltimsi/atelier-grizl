@@ -1,5 +1,7 @@
 # Chapitre « Tubeless et crevaisons » : la matière technique, Canyon Grizl CF 7 (DT Swiss Gravel LN, Continental Terra Adventure 45)
 
+> Note du 20 octobre 2026, écrite pour le Grizl CF 7, gardée comme historique : ses roues, ses jantes, ses pneus et leurs valeurs ne valent pas pour le Grizl CF 8 Di2. Pour le CF 8 Di2, le relevé du tubeless est `tubeless-cf8-di2.md` (26 octobre 2026).
+
 Chaque valeur est suivie de sa source. Quand une valeur n'apparaît sur aucune source fiable, j'ai écrit « non trouvé ».
 
 **Limite de la recherche.** Le quota de recherches web (partagé entre agents) a été épuisé en cours de travail. La fin a donc été faite uniquement par lecture d'URL déjà trouvées. Les calculateurs SRAM et Silca sont des applications JavaScript que mes outils ne peuvent pas exécuter.

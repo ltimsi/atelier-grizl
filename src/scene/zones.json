@@ -56,5 +56,12 @@
     "ancre": "batterieDi2",
     "vue": { "cible": "batterieDi2", "dir": [-0.5, 0.15, 1], "dist": 560 },
     "schema": { "centre": "batterieDi2", "largeur": 380 }
+  },
+  {
+    "id": "pneus",
+    "nom": "Pneus et valves",
+    "ancre": "valveAvant",
+    "vue": { "cible": "valveAvant", "dir": [0.3, 0.15, 1], "dist": 700 },
+    "schema": { "centre": "valveAvant", "largeur": 520 }
   }
 ]

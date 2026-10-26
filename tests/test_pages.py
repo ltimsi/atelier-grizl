@@ -1,4 +1,4 @@
-"""Tests de build/pages.py et de l'écriture du site par build/assemble.py : les 29 pages, leurs liens, le texte des
+"""Tests de build/pages.py et de l'écriture du site par build/assemble.py : les 35 pages, leurs liens, le texte des
 ateliers conservé, l'index de la recherche, la page Composants d'origine recopiée de la fiche, la page d'accueil et
 les blocs qu'elle reçoit (Où intervenir, D'origine puis à monter, Toutes les catégories).
 
@@ -26,10 +26,13 @@ CONFIG = json.loads((RACINE / "build" / "lots.json").read_text(encoding="utf-8")
 ZONES = json.loads((RACINE / "src" / "scene" / "zones.json").read_text(encoding="utf-8"))
 SLUGS = ["systeme", "disques", "plaquettes", "rodage", "centrage", "controles", "purge", "securite"]
 SLUGS_MONTAGE = ["avant", "deballer", "cintre", "selle", "roues", "pedales", "di2", "position", "controles"]
-PUBLIEES = ["montage", "freins"]  # les catégories publiées, dans l'ordre des chapitres : 1 Montage, 2 Freins
-A_VENIR = ["tubeless", "transmission", "accessoires", "revision"]
+SLUGS_TUBELESS = ["materiel", "passer", "liquide", "pression", "crevaison", "problemes"]
+# Les catégories publiées, dans l'ordre des chapitres : 1 Montage, 2 Freins, 3 Pneus et tubeless.
+PUBLIEES = ["montage", "freins", "tubeless"]
+A_VENIR = ["transmission", "accessoires", "revision"]
 REFERENCES = ["composants", "outils", "couples", "approche", "sources"]
 CHEMINS = ([""] + ["montage/"] + [f"montage/{s}/" for s in SLUGS_MONTAGE] + ["freins/"] + [f"freins/{s}/" for s in SLUGS]
+           + ["tubeless/"] + [f"tubeless/{s}/" for s in SLUGS_TUBELESS]
            + [f"{c}/" for c in A_VENIR] + [f"{r}/" for r in REFERENCES])
 MD = (RACINE / "docs" / "recherche" / "composants-origine.md").read_text(encoding="utf-8")
 COMPOSANTS = (RACINE / "src" / "parts" / "composants.html").read_text(encoding="utf-8")
@@ -247,9 +250,9 @@ class Site(unittest.TestCase):
 
 class TestPages(Site):
     def test_pages_generees(self):
-        # 29 pages : la racine, Montage à la livraison et ses 9 ateliers, Freins et ses 8 ateliers (l'ordre des
-        # chapitres), les 4 catégories à venir et les 5 références.
-        self.assertEqual(len(CHEMINS), 29)
+        # 35 pages : la racine, Montage à la livraison et ses 9 ateliers, Freins et ses 8 ateliers, Pneus et tubeless
+        # et ses 6 ateliers (l'ordre des chapitres), les 3 catégories à venir et les 5 références.
+        self.assertEqual(len(CHEMINS), 35)
         self.assertEqual([p.chemin for p in self.pages], CHEMINS)
         for cible in ("site", "artifact"):
             trouvees = sorted(p.relative_to(self.dossier / cible).as_posix()
@@ -260,7 +263,7 @@ class TestPages(Site):
     def test_fichiers_copies(self):
         attendus = {"js/recherche.js", "js/viewer.js", "js/site.js", "js/references.js", "js/m-rotor.js",
                     "js/m-caliper.js", "js/m-bleed.js", "js/m-torque.js", "js/m-cockpit.js", "js/m-axle.js",
-                    "js/m-pedal.js", "js/scene/app.js", "js/scene/zones.json"}
+                    "js/m-pedal.js", "js/m-rim.js", "js/m-plug.js", "js/scene/app.js", "js/scene/zones.json"}
         for cible in ("site", "artifact"):
             fichiers = self.sorties[cible][1]
             self.assertEqual(attendus - fichiers, set(), cible)
@@ -384,7 +387,7 @@ class TestPages(Site):
         self.assertNotIn("viewer.js", accueil)
         for slug, modele in (("freins/disques", "rotor"), ("freins/plaquettes", "caliper"), ("freins/purge", "bleed"),
                              ("montage/avant", "torque"), ("montage/cintre", "cockpit"), ("montage/roues", "axle"),
-                             ("montage/pedales", "pedal")):
+                             ("montage/pedales", "pedal"), ("tubeless/passer", "rim"), ("tubeless/crevaison", "plug")):
             html = self.html(f"{slug}/")
             for morceau in ('"three": "../../vendor/three/three.module.min.js"', 'src="../../js/viewer.js"',
                             f'src="../../js/m-{modele}.js"', 'src="../../js/scene/app.js"'):
@@ -398,7 +401,7 @@ class TestPages(Site):
             self.assertGreater(html.rfind("<script>", 0, garde), html.index('src="../../js/scene/app.js"'), slug)
             self.assertIn("window.AtelierViewer.start()", html[garde:html.index("</script>", garde)], slug)
         for chemin in ("freins/rodage/", "freins/systeme/", "freins/", "outils/", "montage/", "montage/deballer/",
-                       "montage/di2/"):
+                       "montage/di2/", "tubeless/", "tubeless/materiel/", "tubeless/pression/"):
             html = self.html(chemin)
             for absent in ("importmap", "viewer.js", "scene/app.js", "references.js", "zones-data", "liens-data",
                            "hasAttribute('data-app')"):
@@ -413,8 +416,8 @@ class TestPages(Site):
 
     def test_liens_du_jour_de_la_livraison(self):
         # Le plan de l'accueil : « Monter le vélo » mène à la catégorie Montage, « Charger le Di2 » à l'atelier 1.7,
-        # « Reporter ta position » à l'atelier 1.8. Chaque « Chapitre N » est un lien, aucun ne reste en texte gris ;
-        # « #tubeless », lot à venir, mène à sa page.
+        # « Passer en tubeless » à la catégorie Pneus et tubeless, publiée au lot 3, « Reporter ta position » à
+        # l'atelier 1.8. Chaque « Chapitre N » est un lien, aucun ne reste en texte gris.
         for cible in ("site", "artifact"):
             plan = un(self.arbre("", cible), "ol.plan")
             self.assertEqual([(a.get("href"), a.texte()) for a in dom.selectionner(plan, "a")],
@@ -464,6 +467,33 @@ class TestPages(Site):
                           self.html("montage/", cible), cible)
             position = un(self.arbre("montage/position/", cible), "article.atelier")
             self.assertEqual(position.get("id"), "montage-position", cible)
+
+    def test_tubeless_publie(self):
+        # « #tubeless », le lien « Chapitre 3 » du jour de la livraison, mène à tubeless/ par le bloc #liens-data, dans
+        # les deux cibles, et l'id de chaque atelier du chapitre 3 à la page de cet atelier. La page tubeless/ n'est plus
+        # « à venir » : c'est la catégorie publiée du lot 3, avec ses six ateliers, tous dans la zone 9.
+        for cible in ("site", "artifact"):
+            html = self.html("", cible)
+            liens = json.loads(re.search(r'<script type="application/json" id="liens-data">(.*?)</script>', html,
+                                         re.S).group(1))
+            self.assertEqual(liens["tubeless"], "tubeless/", cible)
+            for slug in SLUGS_TUBELESS:
+                self.assertEqual(liens[f"tubeless-{slug}"], f"tubeless/{slug}/", cible)
+            racine = self.arbre("tubeless/", cible)
+            self.assertEqual(un(racine, "p.lot-badge").texte(), "Lot 3 · en relecture", cible)
+            self.assertEqual(dom.selectionner(racine, "ul.prevu"), [], cible)
+            self.assertNotIn("à venir", un(racine, "main.page").texte(), cible)
+            self.assertEqual(un(racine, "h1").texte(), "Pneus et tubeless", cible)
+            cartes = dom.selectionner(racine, "a.carte")
+            self.assertEqual([c.get("href") for c in cartes], [f"{s}/" for s in SLUGS_TUBELESS], cible)
+            self.assertEqual([un(c, "span.num").texte() for c in cartes], [f"3.{n}" for n in range(1, 7)], cible)
+            self.assertEqual([un(c, "span.zone").texte() for c in cartes], ["Zone 9 · Pneus et valves"] * 6, cible)
+            self.assertIn('<a href="./" aria-current="page">Pneus et tubeless<span class="cnt">6</span></a>',
+                          self.html("tubeless/", cible), cible)
+            passer = un(self.arbre("tubeless/passer/", cible), "article.atelier")
+            self.assertEqual([passer.get(n) for n in ("id", "data-zone")], ["tubeless-passer", "pneus"], cible)
+            tete = un(self.arbre("tubeless/passer/", cible), "p.atelier-num")
+            self.assertEqual(tete.texte(), "Atelier 3.2 · Zone 9, Pneus et valves", cible)
 
     def test_page_categorie(self):
         html = self.html("freins/")
@@ -881,10 +911,10 @@ class TestPages(Site):
                                   f"{nom} : chiffre près de la clé Canyon : {ligne.strip()!r}")
 
     def test_pieces_3d_tubeless(self):
-        # Les pièces 3D des ateliers 3.2 (« rim ») et 3.5 (« plug »), lues dans le dépôt : le lot 3 n'est pas encore
-        # publié, la tâche qui le publie ajoute leurs copies servies. Chaque pastille, chaque commande et chaque geste du
-        # curseur est comparé mot pour mot à PASTILLES_3D_TUBELESS, ETIQUETTES_3D_TUBELESS, COMMANDES_3D_TUBELESS et
-        # ETAPES_3D_TPT1. Puis, sur tout le fichier, commentaires compris :
+        # Les pièces 3D des ateliers 3.2 (« rim ») et 3.5 (« plug »), dans le dépôt et telles que les deux cibles les
+        # servent (dist/site/js/ et dist/artifact/js/) : la pièce publiée est celle qu'on relit. Chaque pastille, chaque
+        # commande et chaque geste du curseur est comparé mot pour mot à PASTILLES_3D_TUBELESS, ETIQUETTES_3D_TUBELESS,
+        # COMMANDES_3D_TUBELESS et ETAPES_3D_TPT1. Puis, sur tout le fichier, commentaires compris :
         # - rien du CF 7 ni des brouillons (jante DT Swiss Gravel LN à crochets, pneu Continental à flancs ambrés, valve
         #   DT Swiss à 0,5 Nm, autres outils à mèches, liquide qui « colmate » autour de la mèche) ; « crochet » n'y
         #   est jamais écrit sans « sans » devant ;
@@ -911,60 +941,70 @@ class TestPages(Site):
         legende_3d = ("Touche un numéro pour repérer la pièce. Un numéro peut se dessiner par-dessus une pièce qui cache "
                       "la sienne : fais tourner la pièce, ou lis la liste numérotée sous la figure.")
         limite = "Jamais plus de 3,0\xa0bar dans le pneu, même pour talonner"
+        def copies(fichier):
+            """Le fichier du dépôt, puis ses copies servies par les deux cibles, avec le nom qu'en donne un échec."""
+            yield fichier, (RACINE / "src" / "js" / "models" / fichier).read_text(encoding="utf-8")
+            for cible in ("site", "artifact"):
+                yield f"{cible} {fichier}", (self.dossier / cible / "js" / fichier).read_text(encoding="utf-8")
+
         for fichier, (modele, atelier) in {"m-rim.js": ("rim", "tubeless-passer"),
                                            "m-plug.js": ("plug", "tubeless-crevaison")}.items():
             chemin = RACINE / "src" / "js" / "models" / fichier
             self.assertTrue(chemin.exists(), f"{fichier} absent")
-            texte = chemin.read_text(encoding="utf-8")
-            self.assertEqual(texte.count(f"AtelierModels.register('{modele}', {{"), 1, f"{fichier} : register")
-            pastilles = re.findall(r"text: '((?:[^'\\]|\\.)*)'", texte)
-            self.assertEqual(pastilles, PASTILLES_3D_TUBELESS[fichier], f"{fichier} : pastilles")
-            etiquettes = re.findall(r"\blabel: '((?:[^'\\]|\\.)*)'", texte)
-            self.assertEqual(etiquettes, ETIQUETTES_3D_TUBELESS[fichier], f"{fichier} : étiquettes des commandes")
-            for commande in COMMANDES_3D_TUBELESS[fichier]:
-                self.assertEqual(texte.count(commande), 1, f"{fichier} : commande {commande!r}")
-            liste = re.search(r"var LABELS = \[(.*?)\];", texte)
-            etapes = re.findall(r"'((?:[^'\\]|\\.)*)'", liste.group(1)) if liste else []
-            self.assertEqual(etapes, ETAPES_3D_TPT1 if modele == "plug" else [], f"{fichier} : gestes du curseur")
-            # Les valeurs : chaque nombre suivi d'une unité, dans une pastille ou un geste, est écrit dans le chapitre.
-            for libelle in pastilles + etapes:
-                for v in re.findall(r"(?:\d+(?:,\d+)? à )?\d+(?:,\d+)?\xa0(?:mm|ml|bar|pouce)\b", libelle):
-                    self.assertIn(plat(v), chapitre, f"{fichier} : {v!r} absent du chapitre : {libelle[:60]}")
-            figures = [f for f in dom.selectionner(par_id[atelier].section, "figure.v3d") if f.get("data-model") == modele]
-            self.assertEqual(len(figures), 1, f"{atelier} : figure {modele}")
-            legende = plat(un(figures[0], "figcaption").texte())
-            self.assertIn(legende_3d, legende, f"{atelier} : légende")
-            if modele == "rim":
-                self.assertEqual([p for p in pastilles if p.startswith(limite)], [PASTILLES_3D_TUBELESS[fichier][-1]])
-                self.assertIn(plat(limite), legende, "3,0 bar : phrase de la légende de 3.2")
-            else:
-                titres = [plat(un(li, "p.st-t").texte()) for li in dom.selectionner(par_id[atelier].section, "ol.steps > li")]
-                meches = [(i, t[len("Mèche : "):]) for i, t in enumerate(titres) if t.startswith("Mèche : ")]
-                self.assertEqual([t for _, t in meches], [plat(e[0].lower() + e[1:]) for e in ETAPES_3D_TPT1])
-                corps = [plat(li.texte()) for li in dom.selectionner(par_id[atelier].section, "ol.steps > li")]
-                for n, (i, _) in enumerate(meches, 1):
-                    self.assertIn(f"« {n}. ", corps[i], f"geste {n} de la notice")
-            # Tout le fichier, commentaires compris, les blancs ramenés à une espace : une phrase coupée en fin de ligne de
-            # commentaire est lue entière. assertFalse plutôt qu'assertNotIn : un échec nomme la valeur sans recopier
-            # tout le fichier.
-            lu = re.sub(r"\s+", " ", plat(texte))
-            for absent in absents:
-                self.assertFalse(absent in lu, f"{fichier} : {absent!r} présent")
-            for motif in motifs:
-                m = re.search(motif, lu)
-                self.assertIsNone(m, f"{fichier} : {m and lu[max(0, m.start() - 30):m.end() + 30]!r}")
-            for m in re.finditer(r"crochets?", lu, re.I):
-                self.assertEqual(lu[max(0, m.start() - 5):m.start()].lower(), "sans ",
-                                 f"{fichier} : {lu[max(0, m.start() - 30):m.end() + 10]!r}")
-            for m in re.finditer(r"\b(?:bars?|psi|kpa|atm)\b", lu, re.I):
-                self.assertTrue(lu[:m.start()].lower().endswith("jamais plus de 3,0 "),
-                                f"{fichier} : pression {lu[max(0, m.start() - 40):m.end()]!r}")
-            for n, jeton in enumerate(jetons, 1):
-                self.assertFalse(jeton in texte, f"{fichier} : jeton personnel n°{n}")
-            self.assertIsNone(re.search("[\u2014\u2013]", texte), f"{fichier} : tiret cadratin ou demi-cadratin")
-            entete = texte[:texte.index("*/")] if "*/" in texte else ""
-            for mot in ("approchée", "couleurs"):
-                self.assertIn(mot, entete, f"{fichier} : en-tête sans « {mot} »")
+            for nom, texte in copies(fichier):
+                self.assertEqual(texte.count(f"AtelierModels.register('{modele}', {{"), 1, f"{nom} : register")
+                pastilles = re.findall(r"text: '((?:[^'\\]|\\.)*)'", texte)
+                self.assertEqual(pastilles, PASTILLES_3D_TUBELESS[fichier], f"{nom} : pastilles")
+                etiquettes = re.findall(r"\blabel: '((?:[^'\\]|\\.)*)'", texte)
+                self.assertEqual(etiquettes, ETIQUETTES_3D_TUBELESS[fichier], f"{nom} : étiquettes des commandes")
+                for commande in COMMANDES_3D_TUBELESS[fichier]:
+                    self.assertEqual(texte.count(commande), 1, f"{nom} : commande {commande!r}")
+                liste = re.search(r"var LABELS = \[(.*?)\];", texte)
+                etapes = re.findall(r"'((?:[^'\\]|\\.)*)'", liste.group(1)) if liste else []
+                self.assertEqual(etapes, ETAPES_3D_TPT1 if modele == "plug" else [], f"{nom} : gestes du curseur")
+                # Les valeurs : chaque nombre suivi d'une unité, dans une pastille ou un geste, est écrit dans le
+                # chapitre.
+                for libelle in pastilles + etapes:
+                    for v in re.findall(r"(?:\d+(?:,\d+)? à )?\d+(?:,\d+)?\xa0(?:mm|ml|bar|pouce)\b", libelle):
+                        self.assertIn(plat(v), chapitre, f"{nom} : {v!r} absent du chapitre : {libelle[:60]}")
+                figures = [f for f in dom.selectionner(par_id[atelier].section, "figure.v3d")
+                           if f.get("data-model") == modele]
+                self.assertEqual(len(figures), 1, f"{atelier} : figure {modele}")
+                legende = plat(un(figures[0], "figcaption").texte())
+                self.assertIn(legende_3d, legende, f"{atelier} : légende")
+                if modele == "rim":
+                    self.assertEqual([p for p in pastilles if p.startswith(limite)],
+                                     [PASTILLES_3D_TUBELESS[fichier][-1]])
+                    self.assertIn(plat(limite), legende, "3,0 bar : phrase de la légende de 3.2")
+                else:
+                    titres = [plat(un(li, "p.st-t").texte())
+                              for li in dom.selectionner(par_id[atelier].section, "ol.steps > li")]
+                    meches = [(i, t[len("Mèche : "):]) for i, t in enumerate(titres) if t.startswith("Mèche : ")]
+                    self.assertEqual([t for _, t in meches], [plat(e[0].lower() + e[1:]) for e in ETAPES_3D_TPT1])
+                    corps = [plat(li.texte()) for li in dom.selectionner(par_id[atelier].section, "ol.steps > li")]
+                    for n, (i, _) in enumerate(meches, 1):
+                        self.assertIn(f"« {n}. ", corps[i], f"geste {n} de la notice")
+                # Tout le fichier, commentaires compris, les blancs ramenés à une espace : une phrase coupée en fin de
+                # ligne de commentaire est lue entière. assertFalse plutôt qu'assertNotIn : un échec nomme la valeur
+                # sans recopier tout le fichier.
+                lu = re.sub(r"\s+", " ", plat(texte))
+                for absent in absents:
+                    self.assertFalse(absent in lu, f"{nom} : {absent!r} présent")
+                for motif in motifs:
+                    m = re.search(motif, lu)
+                    self.assertIsNone(m, f"{nom} : {m and lu[max(0, m.start() - 30):m.end() + 30]!r}")
+                for m in re.finditer(r"crochets?", lu, re.I):
+                    self.assertEqual(lu[max(0, m.start() - 5):m.start()].lower(), "sans ",
+                                     f"{nom} : {lu[max(0, m.start() - 30):m.end() + 10]!r}")
+                for m in re.finditer(r"\b(?:bars?|psi|kpa|atm)\b", lu, re.I):
+                    self.assertTrue(lu[:m.start()].lower().endswith("jamais plus de 3,0 "),
+                                    f"{nom} : pression {lu[max(0, m.start() - 40):m.end()]!r}")
+                for n, jeton in enumerate(jetons, 1):
+                    self.assertFalse(jeton in texte, f"{nom} : jeton personnel n°{n}")
+                self.assertIsNone(re.search("[\u2014\u2013]", texte), f"{nom} : tiret cadratin ou demi-cadratin")
+                entete = texte[:texte.index("*/")] if "*/" in texte else ""
+                for mot in ("approchée", "couleurs"):
+                    self.assertIn(mot, entete, f"{nom} : en-tête sans « {mot} »")
 
     def test_disque_de_l_axe_comme_celui_du_chapitre_2(self):
         # Le disque de la pièce de l'axe (1.5) recopie celui de m-rotor.js (2.2, déjà en ligne) : mêmes fentes à cinq
@@ -1073,7 +1113,7 @@ class TestPages(Site):
             self.assertEqual(dom.selectionner(page, absent), [], absent)
         self.assertEqual([un(b, "h2").texte() for b in (elements(grille)[1], blocs[2], blocs[4])],
                          ["Où intervenir", "D’origine, puis à monter", "Toutes les catégories"])
-        self.assertEqual(len(dom.selectionner(blocs[2], "ul.a-remplacer > li")), 2)
+        self.assertEqual(len(dom.selectionner(blocs[2], "ul.a-remplacer > li")), 3)
         self.assertEqual(len(dom.selectionner(blocs[4], "div.cats > a.cat")), len(PUBLIEES) + len(A_VENIR))
         # L'introduction garde son texte : les caractéristiques, le jour de la livraison et la règle des sources.
         intro = blocs[3]
@@ -1206,9 +1246,12 @@ class TestRecherche(Site):
         self.assertIn({"k": "Catégorie", "t": "Freins", "u": "freins/"}, index)
         self.assertIn({"k": "Catégorie", "t": "Montage à la livraison", "u": "montage/"}, index)
         self.assertIn({"k": "Atelier 1.7", "t": "Charger et vérifier le Di2", "u": "montage/di2/"}, index)
+        self.assertIn({"k": "Catégorie", "t": "Pneus et tubeless", "u": "tubeless/"}, index)
+        self.assertIn({"k": "Atelier 3.2", "t": "Passer en tubeless", "u": "tubeless/passer/"}, index)
+        self.assertIn({"k": "Atelier 3.5", "t": "Crevaison en route", "u": "tubeless/crevaison/"}, index)
         self.assertIn({"k": "Lot 4 · à venir", "t": "Transmission", "u": "transmission/"}, index)
-        # Le lot 2 est publié : plus d'entrée « à venir » pour lui, ni pour la charge du Di2 retirée du lot 4.
-        self.assertFalse([e for e in index if e["k"] == "Lot 2 · à venir"])
+        # Les lots 2 et 3 sont publiés : plus d'entrée « à venir » pour eux, ni pour la charge du Di2 retirée du lot 4.
+        self.assertFalse([e for e in index if e["k"] in ("Lot 2 · à venir", "Lot 3 · à venir")])
         self.assertFalse([e for e in index if e["t"] == "Charger la batterie Di2 BT-DN320."])
         pieces = [e for e in index if e["k"] == "Pièce d’origine"]
         self.assertTrue(any("RD-M8250" in e["t"] for e in pieces))
@@ -1217,8 +1260,9 @@ class TestRecherche(Site):
         fiche = dom.analyser(COMPOSANTS)
         lignes = len(dom.selectionner(fiche, "tbody > tr")) + len(dom.selectionner(fiche, "ul.accessoires > li"))
         self.assertEqual(len(pieces), lignes)
-        # 45 étapes aux Freins, 89 au Montage (1.3 : 24, 1.4 : 14, 1.5 : 17, 1.6 : 15, 1.7 : 11, 1.8 : 8).
-        self.assertEqual(len([e for e in index if e["k"].startswith("Étape · ")]), 45 + 89)
+        # 45 étapes aux Freins, 89 au Montage (1.3 : 24, 1.4 : 14, 1.5 : 17, 1.6 : 15, 1.7 : 11, 1.8 : 8), 59 au
+        # tubeless (3.2 : 23, 3.3 : 9, 3.4 : 9, 3.5 : 18).
+        self.assertEqual(len([e for e in index if e["k"].startswith("Étape · ")]), 45 + 89 + 59)
         # Les ateliers passent en premier, avant les étapes et les outils.
         genres = [e["k"].split(" ")[0] for e in index]
         self.assertLess(genres.index("Atelier"), genres.index("Étape"))
@@ -1247,17 +1291,18 @@ class TestAccueil(unittest.TestCase):
         cls.chapitres = pages.chapitres_publies(CONFIG)
 
     def test_ou_intervenir(self):
-        # Huit cartes, dans l'ordre des pastilles : les trois zones des freins, puis les cinq du montage. Les ateliers
-        # sans zone (1.1, 1.2, 1.9) ne sont dans aucune.
+        # Neuf cartes, dans l'ordre des pastilles : les trois zones des freins, les cinq du montage, puis celle des
+        # pneus, avec les six ateliers du chapitre 3. Les ateliers sans zone (1.1, 1.2, 1.9) ne sont dans aucune.
         racine = dom.analyser(pages.cartes_des_zones(self.chapitres, ZONES))
         cartes = dom.selectionner(racine, "div.zone-carte")
         self.assertEqual([c.get("data-zone") for c in cartes],
-                         ["disques", "etrier", "manettes", "poste", "selle", "axes", "pedalier", "derailleur"])
+                         ["disques", "etrier", "manettes", "poste", "selle", "axes", "pedalier", "derailleur", "pneus"])
         self.assertEqual([un(c, "button.zone-btn").texte() for c in cartes],
                          ["Disques de frein", "Étrier et plaquettes", "Manettes et durites", "Poste de pilotage",
-                          "Selle et tige", "Axes des roues", "Pédalier et pédales", "Dérailleur Di2"])
+                          "Selle et tige", "Axes des roues", "Pédalier et pédales", "Dérailleur Di2", "Pneus et valves"])
         attendu = {"disques": ["2.2", "2.4"], "etrier": ["2.3", "2.5", "2.6"], "manettes": ["2.1", "2.7", "2.8"],
-                   "poste": ["1.3"], "selle": ["1.4", "1.8"], "axes": ["1.5"], "pedalier": ["1.6"], "derailleur": ["1.7"]}
+                   "poste": ["1.3"], "selle": ["1.4", "1.8"], "axes": ["1.5"], "pedalier": ["1.6"], "derailleur": ["1.7"],
+                   "pneus": ["3.1", "3.2", "3.3", "3.4", "3.5", "3.6"]}
         for n, (carte, zone) in enumerate(zip(cartes, ZONES), 1):
             self.assertEqual(un(carte, "span.zone-n").texte(), str(n))
             bouton = un(carte, "button.zone-btn")
@@ -1265,7 +1310,7 @@ class TestAccueil(unittest.TestCase):
             liens = dom.selectionner(carte, "a")
             self.assertEqual([un(a, "span.num").texte() for a in liens], attendu[zone["id"]])
             for a in liens:
-                self.assertRegex(a.get("href"), r"^(freins|montage)/[a-z0-9]+/$")
+                self.assertRegex(a.get("href"), r"^(freins|montage|tubeless)/[a-z0-9]+/$")
         disques = dom.selectionner(cartes[0], "a")[0]
         self.assertEqual(disques.get("href"), "freins/disques/")
         self.assertEqual([s.texte() for s in elements(disques)], ["2.2", "Déposer et reposer un disque", "Entretenir"])
@@ -1274,26 +1319,33 @@ class TestAccueil(unittest.TestCase):
         racine = dom.analyser(pages.pieces_a_remplacer(self.chapitres))
         lignes = dom.selectionner(racine, "ul.a-remplacer > li")
         # 2.2 dépose et repose le disque d'origine : se remplacent les pédales de 1.6, que le vélo n'a pas à la
-        # livraison, puis la pièce de 2.3, dans l'ordre des chapitres.
-        self.assertEqual(len(lignes), 2)
+        # livraison, la pièce de 2.3, puis les chambres à air éventuelles de 3.2, dans l'ordre des chapitres.
+        self.assertEqual(len(lignes), 3)
         self.assertEqual(un(lignes[0], ".vers").texte(), "Shimano PD-ME700 et cales SM-SH51")
         self.assertEqual(un(lignes[0], ".de").texte(), "à la place de : Aucune pédale, non fournies")
         self.assertEqual(un(lignes[0], "a").get("href"), "montage/pedales/")
         self.assertEqual(un(lignes[1], ".vers").texte(), "Shimano L05A-RF neuves")
         self.assertEqual(un(lignes[1], ".de").texte(), "à la place de : Plaquettes d’origine, L05A-RF attendues")
         self.assertEqual(un(lignes[1], "a").get("href"), "freins/plaquettes/")
+        self.assertEqual(un(lignes[2], ".vers").texte(), "Tubeless\xa0: valves, liquide Muc-Off")
+        self.assertEqual(un(lignes[2], ".de").texte(),
+                         "à la place de : Chambres à air si le vélo en est livré (à lire sur la pièce)")
+        self.assertEqual(un(lignes[2], "a").get("href"), "tubeless/passer/")
 
     def test_categories(self):
         racine = dom.analyser(pages.cartes_des_categories(CONFIG, self.chapitres))
         cartes = dom.selectionner(racine, "a.cat")
         self.assertEqual([c.get("href") for c in cartes], [f"{c}/" for c in PUBLIEES + A_VENIR])
-        self.assertEqual([c.classes() for c in cartes], [["cat"]] * 2 + [["cat", "soon"]] * 4)
+        self.assertEqual([c.classes() for c in cartes], [["cat"]] * 3 + [["cat", "soon"]] * 3)
         self.assertEqual(un(cartes[0], "span.label").texte(), "Lot 2 · en relecture")
         self.assertEqual(un(cartes[0], "h3").texte(), "Montage à la livraison")
         self.assertEqual(un(cartes[0], "p").texte(), "9 ateliers")
         self.assertEqual(un(cartes[1], "span.label").texte(), "Lot 1 · en relecture")
         self.assertEqual(un(cartes[1], "h3").texte(), "Freins")
         self.assertEqual(un(cartes[1], "p").texte(), "8 ateliers")
+        self.assertEqual(un(cartes[2], "span.label").texte(), "Lot 3 · en relecture")
+        self.assertEqual(un(cartes[2], "h3").texte(), "Pneus et tubeless")
+        self.assertEqual(un(cartes[2], "p").texte(), "6 ateliers")
         self.assertEqual(un(cartes[3], "span.label").texte(), "Lot 4 · à venir")
         self.assertEqual(un(cartes[3], "p").texte(), CONFIG["lots"][4]["prevu"][0])
 
