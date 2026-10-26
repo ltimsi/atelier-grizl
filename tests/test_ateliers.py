@@ -320,18 +320,7 @@ class Ateliers(unittest.TestCase):
                 self.assertEqual(dom.selectionner(dom.analyser(cote), "h3"), [], slug)
 
     def test_texte_conserve(self):
-        for a in self.chapitre.ateliers:
-            with self.subTest(a.slug):
-                gauche, droite = self.cols[a.slug]
-                sortie = dom.analyser(gauche + droite)
-                # Le numéro et la copie du premier couple, ajoutés au résumé d'une étape, s'intercalent entre son
-                # titre et son corps : ce sont des libellés d'interface, retirés avant de comparer.
-                for ajout in dom.selectionner(sortie, "summary > span.st-n") + dom.selectionner(sortie, "summary > span.nm"):
-                    ajout.retirer()
-                texte = sortie.texte()
-                for selecteur in ("p", "li", "h4", "td", "b", "summary", "figcaption"):
-                    for e in dom.selectionner(a.section, selecteur):
-                        self.assertIn(e.texte(), texte, f"{selecteur} : {e.texte()[:60]}")
+        verifier_texte_conserve(self, self.chapitre.ateliers)
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -375,6 +364,43 @@ def lignes_de(racine, questions=False):
 
 def aria_labels(racine):
     return [normaliser(e.get("aria-label")) for e in dom.selectionner(racine, "[aria-label]")]
+
+
+# Ce qu'aucun chapitre n'écrit : une monnaie, un chemin local, le nom du compte.
+DONNEES_GENERIQUES = ("CHF", "\u20ac", "/Users/", "ltimsi", "file:")
+
+
+def verifier_aucune_donnee(test, texte, html, en_plus=()):
+    """Aucun jeton générique ni personnel dans le texte lu ni dans le source d'un chapitre, espaces insécables
+    comprises. Les jetons personnels de Lamine (cotes, pressions, étude de position) ne sont jamais écrits dans un
+    fichier suivi par git : ils sont lus dans brouillons/jetons-personnels.txt, hors du dépôt, quand il existe. Un échec
+    ne répète pas le jeton : seul son rang dans le fichier."""
+    texte, html = texte.replace("\u00a0", " "), html.replace("\u00a0", " ")
+    for absent in DONNEES_GENERIQUES + tuple(en_plus):
+        test.assertNotIn(absent, texte, absent)
+        test.assertNotIn(absent, html, absent)
+    if JETONS.exists():
+        jetons = [l.strip() for l in JETONS.read_text(encoding="utf-8").splitlines()
+                  if l.strip() and not l.lstrip().startswith("#")]
+        test.assertTrue(jetons)
+        for n, absent in enumerate(jetons, 1):
+            test.assertFalse(absent in texte or absent in html, f"jeton personnel n°{n} de {JETONS.name}")
+
+
+def verifier_texte_conserve(test, ateliers_du_chapitre):
+    """Les deux colonnes de la page de chaque atelier gardent tout le texte du source. Le numéro et la copie du premier
+    couple, ajoutés au résumé d'une étape, s'intercalent entre son titre et son corps : ce sont des libellés
+    d'interface, retirés avant de comparer."""
+    for a in ateliers_du_chapitre:
+        with test.subTest(a.id):
+            gauche, droite = ateliers.colonnes(a)
+            sortie = dom.analyser(gauche + droite)
+            for ajout in dom.selectionner(sortie, "summary > span.st-n") + dom.selectionner(sortie, "summary > span.nm"):
+                ajout.retirer()
+            texte = sortie.texte()
+            for selecteur in ("p", "li", "h4", "td", "b", "summary", "figcaption"):
+                for e in dom.selectionner(a.section, selecteur):
+                    test.assertIn(e.texte(), texte, f"{selecteur} : {e.texte()[:60]}")
 
 
 class TestMontage(unittest.TestCase):
@@ -566,20 +592,8 @@ class TestMontage(unittest.TestCase):
             self.assertNotIn(absent, pedales, absent)
 
     def test_aucune_donnee_personnelle(self):
-        # Les jetons personnels de Lamine (cotes, pressions, étude de position) ne sont jamais écrits dans un fichier
-        # suivi par git : ils sont lus dans brouillons/jetons-personnels.txt, hors du dépôt, quand il existe.
+        verifier_aucune_donnee(self, self.texte_complet(), self.source)
         texte = self.texte_complet().replace("\u00a0", " ")
-        html = self.source.replace("\u00a0", " ")
-        for absent in ("CHF", "\u20ac", "/Users/", "ltimsi", "file:"):
-            self.assertNotIn(absent, texte, absent)
-            self.assertNotIn(absent, html, absent)
-        if JETONS.exists():
-            jetons = [l.strip() for l in JETONS.read_text(encoding="utf-8").splitlines()
-                      if l.strip() and not l.lstrip().startswith("#")]
-            self.assertTrue(jetons)
-            for n, absent in enumerate(jetons, 1):
-                # Le message ne répète pas le jeton : seul son rang dans le fichier.
-                self.assertFalse(absent in texte or absent in html, f"jeton personnel n°{n} de {JETONS.name}")
         # Ni commande ni prix : « recommande » reste permis.
         self.assertIsNone(re.search(r"\b(?:commandes?|prix)\b", texte, re.I))
         # Aucune pression hors des maximums des documents : 3,0 bar (Canyon), 4 bar (paire GR 30 CF, Schwalbe).
@@ -931,16 +945,7 @@ class TestMontage(unittest.TestCase):
 
     def test_texte_conserve(self):
         # Comme pour Freins : les deux colonnes de chaque page gardent tout le texte du source.
-        for a in self.ch.ateliers:
-            with self.subTest(a.id):
-                gauche, droite = ateliers.colonnes(a)
-                sortie = dom.analyser(gauche + droite)
-                for ajout in dom.selectionner(sortie, "summary > span.st-n") + dom.selectionner(sortie, "summary > span.nm"):
-                    ajout.retirer()
-                texte = sortie.texte()
-                for selecteur in ("p", "li", "h4", "td", "b", "summary", "figcaption"):
-                    for e in dom.selectionner(a.section, selecteur):
-                        self.assertIn(e.texte(), texte, f"{selecteur} : {e.texte()[:60]}")
+        verifier_texte_conserve(self, self.ch.ateliers)
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -955,14 +960,14 @@ _EN_LETTRES = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "eleven": 1
                "un": 1, "deux": 2, "trois": 3, "quatre": 4, "cinq": 5, "onze": 11}
 # Une pression écrite : un nombre ou une plage (« 1,9-2,2 », « 2.5 à 4.5 »), en chiffres ou en lettres (« four bars »),
 # puis bar ou psi, au besoin après le » d'une citation (« 3.0 » bar).
-PRESSION = re.compile(r"(?<![\d.,])(" + _N + r"|\b(?:" + "|".join(_EN_LETTRES) + r"))(?:[\s ]*(?:-|à|to)[\s ]*("
-                      + _N + r"))?[\s ]*(?:»[\s ]*)?(bars?|psi)\b", re.I)
-VOLUME = re.compile(r"(?<![\d.,])" + _N + r"[\s ]*(?:»[\s ]*)?ml\b", re.I)
+PRESSION = re.compile(r"(?<![\d.,])(" + _N + r"|\b(?:" + "|".join(_EN_LETTRES) + r"))(?:[\s\u00a0]*(?:-|à|to)[\s\u00a0]*("
+                      + _N + r"))?[\s\u00a0]*(?:»[\s\u00a0]*)?(bars?|psi)\b", re.I)
+VOLUME = re.compile(r"(?<![\d.,])" + _N + r"[\s\u00a0]*(?:»[\s\u00a0]*)?ml\b", re.I)
 LIMITE = {"bar": 3.0, "psi": 43.5}  # manuel Canyon des roues : « 3.0 » bar, « 43.5 » PSI pour 45 à 54 mm
 # Les documents des fabricants des pièces et du matériel de Lamine, et les vidéos de leurs chaînes : aucun autre site.
 OFFICIELS = {"www.canyon.com", "dma.canyon.com", "www.schwalbe.com", "www.topeak.com", "muc-off.com", "eu.muc-off.com",
              "d2a13k6araex7u.cloudfront.net", "www.youtube.com", "www.parktool.com"}
-S_APPLIQUE = "3,0 bar s'applique"
+S_APPLIQUE = "3,0\u00a0bar s'applique"
 
 
 def valeur(nombre):
@@ -1003,6 +1008,27 @@ class TestTubeless(unittest.TestCase):
 
     def lignes(self):
         return [texte_de(l) for l in lignes_tubeless(self.section)]
+
+    def paragraphes(self):
+        """Les lignes, mais une étape de plusieurs paragraphes compte pour autant d'unités : la règle des 3,0 bar
+        s'applique au paragraphe (« dont le même paragraphe dit 3,0 bar s'applique »), le titre allant avec le premier."""
+        unites = []
+        for ligne in lignes_tubeless(self.section):
+            corps = [e for e in elements(ligne) if e.tag == "p" and "st-t" not in e.classes()] if ligne.tag == "li" else []
+            if len(corps) > 1:
+                titre = [e for e in elements(ligne) if "st-t" in e.classes()]
+                unites += [(titre + [corps[0]])] + [[p] for p in corps[1:]]
+            else:
+                unites.append([ligne])
+        return unites
+
+    def textes_lus(self):
+        """Tout ce que le visiteur lit ou entend : les lignes, les aria-label, les titres h3, et les attributs data-de,
+        data-vers et title, que la page de l'atelier affiche."""
+        titres = [texte_de(h) for h in dom.selectionner(self.section, "h3")]
+        attributs = [normaliser(e.get(nom)) for nom in ("data-de", "data-vers", "title")
+                     for e in dom.selectionner(self.section, f"[{nom}]")]
+        return self.lignes() + aria_labels(self.section) + titres + attributs
 
     def etapes_de(self, ident):
         """Les étapes d'un atelier : (titre, corps), le corps sans le titre, comme le montre le mode pas à pas."""
@@ -1091,7 +1117,8 @@ class TestTubeless(unittest.TestCase):
         # 43,5 psi. Seule exception : une citation entre « », dans une ligne qui dit « 3,0 bar s'applique » et qui cite
         # le manuel Canyon des roues, la raison (la plus basse des sources, « always never exceed »).
         vues, citees = 0, 0
-        for texte in self.lignes() + aria_labels(self.section):
+        textes = [" ".join(texte_de(e) for e in u) for u in self.paragraphes()] + self.textes_lus()[len(self.lignes()):]
+        for texte in textes:
             for debut, haut, unite, _ in pressions(texte):
                 vues += 1
                 if haut <= LIMITE[unite]:
@@ -1102,11 +1129,12 @@ class TestTubeless(unittest.TestCase):
         self.assertGreaterEqual(vues, 40)
         self.assertGreaterEqual(citees, 10)
         raisons = 0
-        for ligne in lignes_tubeless(self.section):
-            if S_APPLIQUE in texte_de(ligne):
+        for unite in self.paragraphes():
+            texte = " ".join(texte_de(e) for e in unite)
+            if S_APPLIQUE in texte:
                 raisons += 1
-                self.assertTrue([a for a in dom.selectionner(ligne, "a.src") if MANUEL_ROUES in a.get("href")],
-                                texte_de(ligne)[:160])
+                liens = [a for e in unite for a in dom.selectionner(e, "a.src") if MANUEL_ROUES in a.get("href")]
+                self.assertTrue(liens, texte[:160])
         self.assertGreaterEqual(raisons, 6)
         # Les citations qui disent de gonfler davantage sont toutes citées, comme contradictions.
         texte = self.texte_complet()
@@ -1128,23 +1156,43 @@ class TestTubeless(unittest.TestCase):
                          [(4.5, "bar"), (2.2, "bar"), (4, "bar")])
         self.assertEqual(lues("45\xa0mm, 70 à 80\xa0ml, 3,0\xa0bars"), [(3.0, "bar")])
 
-    def test_reservoir_contre_pneu(self):  # Review Focus 2
-        # Le corps des étapes de la JoeBlow Booster distingue la pression du réservoir (la charge de 11 bar de Topeak)
-        # de celle du pneu, que tu surveilles au manomètre et que tu purges aussitôt au-delà de 3,0 bar.
+    def test_reservoir_contre_pneu(self):  # Review Focus 2, et I1 de la relecture du 26/10
+        # L'étape 12 charge le réservoir : sa charge de 11 bar n'est jamais la pression du pneu. À l'étape 13, au moment
+        # du passage sur INFLATE, l'aiguille montre encore cette charge (dessin de STEP 4 dans la notice) : tu attends
+        # qu'elle ne bouge plus, puis tu lis l'échelle en bar et tu purges au-delà de 3,0 bar. Vider le réservoir vient
+        # en fin de chantier, à l'étape 22.
         charge = self.corps("tubeless-passer", "Charge le réservoir")
         talon = self.corps("tubeless-passer", "Talonne")
-        for mot in ("Pump to 160\xa0psi / 11\xa0bar for best results.", "CHARGE", "Air Chamber", "réservoir",
+        roulage = self.corps("tubeless-passer", "Règle la pression de roulage")
+        for mot in ("Pump to 160 psi / 11 bar for best results.", "CHARGE", "Air Chamber", "réservoir",
                     "pas dans le pneu", "jamais celle de ton pneu", S_APPLIQUE, "always never exceed",
                     "DO NOT squeeze tire when engaging pump head.", "DO NOT turn Mode Selector to mid-point between modes."):
             self.assertIn(mot, charge, mot)
-        for mot in ("INFLATE", "manomètre", "pression du pneu", "3,0\xa0bar", "dégonfle aussitôt", "Air Release Button",
-                    "DO NOT exceed the maximum air pressure of your tubeless tire.", "non publiée",
-                    "déduction de ce site", "always never exceed", "DO NOT store pressurized air in Air Chamber"):
+        for mot in ("INFLATE", "l'aiguille montre encore la charge du réservoir", "« 160 psi / 11 bar »",
+                    "Ce n'est pas la pression de ton pneu\u00a0: dans le pneu, " + S_APPLIQUE,
+                    "attends que l'aiguille ne bouge plus",
+                    "Aiguille immobile, le manomètre donne la pression du pneu", "lecture de ce site",
+                    "Continue to pump to desired pressure immediately.", "Pump to desired pressure.", "échelle en bar",
+                    "« 43.5 » PSI", "Si l'aiguille immobile dépasse 3,0 bar", "Air Release Button",
+                    "always never exceed", "DO NOT exceed the maximum air pressure of your tubeless tire.", "non publiée"):
             self.assertIn(mot, talon, mot)
-        self.assertLess(talon.index("manomètre"), talon.index("dégonfle aussitôt"))
-        # 11 bar et 160 psi ne s'écrivent que dans la citation de Topeak, dans une ligne qui parle du réservoir.
+        # L'ordre du mode pas à pas : la charge vue au passage sur INFLATE, l'attente, puis la lecture et la purge.
+        ordre = [talon.index(m) for m in ("charge du réservoir", "ne bouge plus", "Aiguille immobile",
+                                          "Si l'aiguille immobile dépasse")]
+        self.assertEqual(ordre, sorted(ordre))
+        for absent in ("Regarde aussitôt le manomètre", "dégonfle aussitôt", "Topeak n'écrit pas ce que le manomètre",
+                       "DO NOT store pressurized air"):
+            self.assertNotIn(absent, talon, absent)
+        for mot in ("vide le réservoir", "DO NOT store pressurized air in Air Chamber when not in use."):
+            self.assertIn(mot, roulage, mot)
+        # Le relevé consigne ce que la notice dessine et écrit, à la source de cette étape.
+        for fait in ("aiguille en haut de l'échelle, vers « 160 » psi", "« HOW TO INFLATE NORMAL TIRES »",
+                     "« Pump to desired pressure. Press the Air Release Button", "de « 1 » à « 11 », marquée « BAR »",
+                     "Dabei entweicht die komprimierte Luft aus dem Zylinder in den Reifen."):
+            self.assertIn(fait, self.releve, fait)
+        # 11 bar et 160 psi ne s'écrivent que dans les citations de Topeak, dans des lignes qui parlent du réservoir.
         vues = 0
-        for texte in self.lignes() + aria_labels(self.section):
+        for texte in self.textes_lus():
             for debut, haut, unite, _ in pressions(texte):
                 if haut in (11, 160):
                     vues += 1
@@ -1240,7 +1288,7 @@ class TestTubeless(unittest.TestCase):
             self.assertIn(mot, materiel, mot)
         marques = r"(?:DT\s?Swiss|Schwalbe|Muc-Off|Stan[’']?s|Topeak|Park Tool|Canyon|Pirelli|Clik|Reserve|Silca|Zipp)"
         for motif in (r"valves?\s+(?:tubeless\s+)?" + marques, marques + r"\s+(?:tubeless\s+)?valves?", r"\bclik\b",
-                      r"TVVXA", r"\bStan[’']?s\b", r"0,5 Nm", r"Dynaplug", r"\bDART\b"):
+                      r"TVVXA", r"\bStan[’']?s\b", r"0,5\u00a0Nm", r"Dynaplug", r"\bDART\b"):
             self.assertIsNone(re.search(motif, texte, re.I), motif)
 
     def test_sans_ecarts_des_brouillons(self):
@@ -1260,7 +1308,7 @@ class TestTubeless(unittest.TestCase):
             "Ruban DT Swiss 27",  # mauvais ruban pour 27 mm
         ):
             self.assertNotIn(absent, texte, absent)
-        for motif in (r"\bTC\b", r"\bTR\b", r"\b[4578] h\b", r"\d bar (?:avant|arrière|à l'avant|à l'arrière)"):
+        for motif in (r"\bTC\b", r"\bTR\b", r"\b[4578]\u00a0h\b", r"\d\u00a0bar (?:avant|arrière|à l'avant|à l'arrière)"):
             self.assertIsNone(re.search(motif, texte), motif)
         cf7 = re.compile(r"(?<![0-9a-z#])CF[\s_-]*7(?![0-9])|4553", re.I)
         self.assertIsNone(cf7.search(texte))
@@ -1279,23 +1327,13 @@ class TestTubeless(unittest.TestCase):
         self.assertNotIn("ruban déjà posé", texte)
 
     def test_aucune_donnee_personnelle(self):
-        # Les jetons personnels de Lamine ne sont jamais écrits dans un fichier suivi par git : ils sont lus dans
-        # brouillons/jetons-personnels.txt, hors du dépôt, quand il existe, et jamais recopiés dans un message.
-        texte = self.texte_complet().replace(" ", " ")
-        html = self.source.replace(" ", " ")
-        for absent in ("CHF", "€", "/Users/", "ltimsi", "file:", "Lamine"):
-            self.assertNotIn(absent, texte, absent)
-            self.assertNotIn(absent, html, absent)
-        if JETONS.exists():
-            jetons = [l.strip() for l in JETONS.read_text(encoding="utf-8").splitlines()
-                      if l.strip() and not l.lstrip().startswith("#")]
-            self.assertTrue(jetons)
-            for n, absent in enumerate(jetons, 1):
-                self.assertFalse(absent in texte or absent in html, f"jeton personnel n°{n} de {JETONS.name}")
+        # Comme pour Montage, et le prénom de Lamine en plus : le site le tutoie sans le nommer.
+        verifier_aucune_donnee(self, self.texte_complet(), self.source, en_plus=("Lamine",))
+        texte = self.texte_complet().replace("\u00a0", " ")
         self.assertIsNone(re.search(r"\b(?:commandes?|prix|magasin|boutique)\b", texte, re.I))
         # Aucune pression calculée : chaque pression du chapitre est une valeur du relevé, avec son unité.
         dans_le_releve = {(n, u) for _, _, u, ns in pressions(self.releve) for n in ns}
-        for t in self.lignes() + aria_labels(self.section):
+        for t in self.textes_lus():
             for _, _, u, ns in pressions(t):
                 for n in ns:
                     self.assertIn((n, u), dans_le_releve, f"{n} {u} : {t[:120]}")
@@ -1322,7 +1360,8 @@ class TestTubeless(unittest.TestCase):
             "tubeless-pression": ("4\xa0bars/58PSI", "55\xa0PSI", "4.5", "5\xa0bar for road bikes", "four bars", "0\xa0Bar",
                                   "Coming soon", "rough guide"),
             "tubeless-crevaison": ("Please do not use CO2 cartridges", "Can be used with CO2", "snake", "anglais"),
-            "tubeless-problemes": ("Slightly over-inflate", "as hard and as fast"),
+            "tubeless-problemes": ("Slightly over-inflate", "as hard and as fast", "clean and deburr", "abrasives",
+                                   "ni ébavurage ni solvant"),
         }
         for ident, mots in attendu.items():
             with self.subTest(ident):
@@ -1351,12 +1390,40 @@ class TestTubeless(unittest.TestCase):
         tout = " ".join(texte_de(li) for li in points)
         for mot in ("chambres à air", "TUBELESS SEALANT QUANTITY", "obus démontable", "622x27TSS", "trou de valve",
                     "PRO", "45-622", "flèche", "plastique", "TJB-BST2", "TJB-BST3", "fill lines",
-                    "use within 2 years of purchase", "à retirer entièrement", "p.72", "30\xa0mm", "3,0\xa0bar"):
+                    "use within 2 years of purchase", "à retirer entièrement", "p.72", "s'il contient", "30\xa0mm",
+                    "3,0\xa0bar"):
             self.assertIn(mot, tout, mot)
+
+    def test_corrections_de_la_relecture(self):  # mineurs de la relecture du 26/10
+        # M1 : l'en-tête, seul sur la page de la catégorie, développe PDF.
+        self.assertIn("PDF (Portable Document Format)", texte_de(self.ch.tete))
+        # M3 : aucun corps d'étape n'est une citation anglaise seule, hors liens.
+        for a in self.ch.ateliers:
+            for li in dom.selectionner(a.section, "ol.steps > li"):
+                copie = dom.analyser("".join(e.html() for e in elements(li) if "st-t" not in e.classes()))
+                for lien in dom.selectionner(copie, "a.src"):
+                    lien.retirer()
+                francais = re.sub(r"[^A-Za-zÀ-ÿ]", "", re.sub(r"«[^»]*»", "", copie.texte()))
+                self.assertGreaterEqual(len(francais), 40, f"{a.num} : {texte_de(dom.selectionner(li, 'p.st-t')[0])}")
+        # M5 : traverser le ruban, regonfler après l'étape 15, le couple de l'axe avant.
+        self.assertIn("You can simply push the tubeless valve through the rim tape with the tip.",
+                      self.corps("tubeless-passer", "Pose la valve"))
+        regonfler = self.corps("tubeless-passer", "Remets l'obus")
+        for mot in ("sans charger le réservoir", "Pump to desired pressure.", "recommence aux étapes 12 et 13", "Proposition"):
+            self.assertIn(mot, regonfler, mot)
+        self.assertIn("au couple de 1.5", self.corps("tubeless-passer", "Remonte la roue"))
+        self.assertIn("sans lui, le sachet Muc-Off, roue remontée, étape 17", " ".join(self.par_id["tubeless-passer"].outils))
+        # M6 : regonfler en route se lit sur un manomètre.
+        self.assertIn("Mini-pompe avec manomètre (Proposition)", self.par_id["tubeless-crevaison"].outils)
+        for debut in ("Mèche\u00a0: regonfle", "Chambre\u00a0: gonfle"):
+            self.assertIn("lus sur son manomètre", self.corps("tubeless-crevaison", debut), debut)
+        # M7 : 3,0 bar vaut pour les pneus de 45 à 54 mm ; une autre largeur renvoie au tableau du manuel.
+        self.assertIn("avec un pneu d'une autre largeur, elle change", self.texte_atelier("tubeless-materiel"))
+        self.assertIn("ton pneu de 45\u00a0mm", texte_de(self.ch.tete))
 
     def test_typographie(self):
         texte = re.sub(r"<[^>]*>", " | ", self.source) + " | " + " | ".join(aria_labels(self.section))
-        self.assertIsNone(re.search("[—–]", self.source))
+        self.assertIsNone(re.search("[\u2014\u2013]", self.source))
         motif = r".{0,40}\d (?:Nm|mm|cm|bars?|psi|PSI|kg|ml|km|g|h|°C|%|miles|lbs)(?![\w·])"
         self.assertIsNone(re.search(motif, texte), re.search(motif, texte))
         # Une espace insécable avant « : ; ? ! » et à l'intérieur des guillemets, comme aux chapitres 1 et 2.
@@ -1386,16 +1453,7 @@ class TestTubeless(unittest.TestCase):
 
     def test_texte_conserve(self):
         # Comme pour Freins et Montage : les deux colonnes de chaque page gardent tout le texte du source.
-        for a in self.ch.ateliers:
-            with self.subTest(a.id):
-                gauche, droite = ateliers.colonnes(a)
-                sortie = dom.analyser(gauche + droite)
-                for ajout in dom.selectionner(sortie, "summary > span.st-n") + dom.selectionner(sortie, "summary > span.nm"):
-                    ajout.retirer()
-                texte = sortie.texte()
-                for selecteur in ("p", "li", "h4", "td", "b", "summary", "figcaption"):
-                    for e in dom.selectionner(a.section, selecteur):
-                        self.assertIn(e.texte(), texte, f"{selecteur} : {e.texte()[:60]}")
+        verifier_texte_conserve(self, self.ch.ateliers)
 
 
 if __name__ == "__main__":
