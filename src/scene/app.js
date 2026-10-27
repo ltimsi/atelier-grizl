@@ -19,9 +19,10 @@
 // (schema.pastilles). Une zone peut avoir un champ decalage, [dx, dy] en pixels de l'écran : sa pastille est posée à ce
 // décalage de son ancre, à toutes les largeurs (placeDePastille). Celle des axes a [0, 34] : elle est juste sous la tête
 // de l'axe avant, parce que la pastille de l'étrier se projette juste au-dessus du moyeu.
-// Défilement après le choix (montrerChoix) : sur deux colonnes, la carte vient à l'écran si elle n'y est pas. Sur une
-// seule, la scène est au-dessus des cartes : une pastille ne fait pas défiler la page, pour garder le vélo à l'écran,
-// et le bouton d'une carte ramène l'image.
+// Défilement après le choix (montrerChoix) : sur deux colonnes, la carte vient à l'écran si elle n'y est pas, par la
+// colonne « Où intervenir », qui défile seule (00-head.html) : l'image reste à l'écran. Sur une seule, la scène est
+// au-dessus des cartes : une pastille ne fait pas défiler la page, pour garder le vélo à l'écran, et le bouton d'une
+// carte ramène l'image.
 //
 // Sans la 3D, la liste « Ce qui est approché » vient des META des pièces : scene.js se charge sans three.js.
 //
@@ -127,14 +128,52 @@ export function choisirZone(id) {
   return true;
 }
 
-// Choisit la zone, puis fait défiler la page. Deux colonnes : la carte de la zone vient à l'écran si elle n'y est pas
-// en entier, après une pastille comme après un bouton. Une seule colonne : la scène est au-dessus des cartes ; une
+// Choisit la zone, puis fait défiler ce qu'il faut. Deux colonnes : la carte de la zone vient en entier à l'écran,
+// après une pastille comme après un bouton, par la colonne « Où intervenir » qui défile seule (montrerCarte) : l'image
+// du vélo, qui vient de viser la zone, reste à l'écran. Une seule colonne : la scène est au-dessus des cartes ; une
 // pastille ne fait pas défiler la page, pour garder le vélo à l'écran, et le bouton d'une carte (`depuisCarte`)
 // ramène l'image, son haut sous la barre.
 function montrerChoix(id, depuisCarte) {
   if (!choisirZone(id)) return;
-  if (!uneColonne()) montrer(ui.cartes.find(c => c.dataset.zone === id), 'nearest');
+  if (!uneColonne()) montrerCarte(ui.cartes.find(c => c.dataset.zone === id));
   else if (depuisCarte) montrer(ui.stage, 'start');
+}
+
+/**
+ * Deux colonnes : de combien faire défiler la colonne « Où intervenir », puis la page, pour qu'une carte soit en
+ * entier dans la partie visible de la colonne, entre le plus bas de son haut et de la barre du haut, et le plus haut
+ * de son bas et du bas de l'écran. La colonne défile d'abord ; la page ne défile que du reste, quand la colonne est au
+ * bout de son défilement (une colonne qui ne défile pas a un maximum de 0 : tout passe alors à la page). Vers le haut
+ * si la carte dépasse en haut ou si elle est plus haute que la partie visible (son haut en haut), vers le bas sinon.
+ * @param {{top: number, bottom: number}} carte Le rectangle de la carte, en pixels de la fenêtre.
+ * @param {{top: number, bottom: number}} colonne Celui de la colonne.
+ * @param {number} defile Le défilement de la colonne (scrollTop). @param {number} max Son défilement le plus grand.
+ * @param {number} haut Le bas de la barre du haut. @param {number} ecran La hauteur de la fenêtre.
+ * @returns {{colonne: number, page: number}} Le nouveau défilement de la colonne, et celui de la page, en plus (0 : rien).
+ */
+export function defilementDeCarte(carte, colonne, defile, max, haut, ecran) {
+  const h = Math.max(haut, colonne.top), b = Math.min(ecran, colonne.bottom);
+  if (carte.top >= h && carte.bottom <= b) return { colonne: defile, page: 0 };
+  const d = carte.top < h || carte.bottom - carte.top > b - h ? carte.top - h : carte.bottom - b;
+  const vise = Math.min(max, Math.max(0, defile + d));
+  return { colonne: vise, page: defile + d - vise };
+}
+
+// Deux colonnes : la carte vient à l'écran par le défilement de sa colonne, et la page ne défile que du reste
+// (defilementDeCarte). Doux, sauf si l'appareil demande moins de mouvement. Sans colonne, comme une autre partie de
+// la page (montrer).
+function montrerCarte(carte) {
+  const col = ui.colonne;
+  if (!carte || !col) {
+    montrer(carte, 'nearest');
+    return;
+  }
+  const haut = document.querySelector('.top')?.getBoundingClientRect().bottom ?? 0;
+  const plan = defilementDeCarte(carte.getBoundingClientRect(), col.getBoundingClientRect(), col.scrollTop,
+    Math.max(0, col.scrollHeight - col.clientHeight), haut, window.innerHeight);
+  const behavior = reduit() ? 'auto' : 'smooth';
+  if (plan.colonne !== col.scrollTop) col.scrollTo({ top: plan.colonne, behavior });
+  if (plan.page) window.scrollBy({ top: plan.page, behavior });
 }
 
 // Fait défiler la page jusqu'à l'élément, seulement s'il n'est pas en entier entre la barre du haut et le bas de
@@ -391,7 +430,7 @@ function demarrer() {
     alerte: $('#scene-alerte'),
     dialogue: $('#approche-liste'), contenu: $('#approche-contenu'),
     onglets: [...document.querySelectorAll('#scene .modes [role="tab"]')],
-    cartes: [...document.querySelectorAll('.zone-carte[data-zone]')],
+    colonne: $('.ou-intervenir'), cartes: [...document.querySelectorAll('.zone-carte[data-zone]')],
     boutons: [...document.querySelectorAll('button.zone-btn[data-zone]')],
     pins: [], W: 1, H: 1, visible: true, boucle: 0, vbPose: null, schema: null,
     moduleScene: import('./scene.js').catch(e => {

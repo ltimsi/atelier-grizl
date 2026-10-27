@@ -610,7 +610,7 @@ class TestMontage(unittest.TestCase):
         attendu = {
             "montage-cintre": ("2021", "4,5-5,5", "QSG V02"),  # couples de potence
             "montage-selle": ("2021", "5\xa0Nm", "6\xa0Nm"),  # collier
-            "montage-roues": ("12x148", "4\xa0bar", "3,0\xa0bar", "DT SWISS", "levier"),  # axes et pression
+            "montage-roues": ("12x148", "4 bars/58PSI", "3,0\xa0bar s'applique", "DT SWISS", "levier"),  # axes et pression
             "montage-deballer": ("Organza", "Boîte à outils Canyon"),  # contenu du carton
             "montage-controles": ("120\xa0kg", "130\xa0kg", "1CX"),  # charge totale
             "montage-pedales": ("XT",),  # pédale de la photo officielle
@@ -667,6 +667,25 @@ class TestMontage(unittest.TestCase):
         self.assertEqual((premiere.get("data-key"), chaque.get("data-key")), ("montage-premiere", "montage-chaque"))
         self.assertGreaterEqual(len(dom.selectionner(premiere, "li")), 4)
         self.assertGreaterEqual(len(dom.selectionner(chaque, "li")), 6)
+
+    def test_pression_maximale_comme_au_lot_3(self):
+        # Une pression au-dessus de 3,0 bar n'est écrite qu'entre « », comme au chapitre 3 (TestTubeless), dans une
+        # ligne qui dit « 3,0 bar s'applique » et cite le manuel Canyon des roues, la raison. En 1.5, la page de la paire
+        # GR 30 CF et la fiche du pneu annoncent 4 bar : elles sont citées, puis 3,0 bar s'applique.
+        vues = 0
+        for a in self.ch.ateliers:
+            for ligne in lignes_de(a.section):
+                texte = texte_de(ligne)
+                for debut, haut, unite, _ in pressions(texte):
+                    if haut <= LIMITE[unite]:
+                        continue
+                    vues += 1
+                    self.assertTrue(dans_une_citation(texte, debut), f"{a.id} : hors citation : {texte[debut:debut + 30]}")
+                    self.assertIn(S_APPLIQUE, texte, f"{a.id} : {texte[:160]}")
+                    liens = [x for x in dom.selectionner(ligne, "a.src") if MANUEL_ROUES in x.get("href")]
+                    self.assertTrue(liens, f"{a.id} : la raison, le manuel des roues, n'est pas citée : {texte[:160]}")
+        self.assertGreaterEqual(vues, 3)  # « 4 bars/58PSI » (deux valeurs) et « max. Bar: 4 Bar », en 1.5
+        self.assertNotIn("s'impose donc", self.texte_complet())
 
     def test_typographie(self):
         # Le texte du source, balises remplacées par un séparateur (deux cellules voisines ne se collent pas).
@@ -1095,7 +1114,7 @@ class TestTubeless(unittest.TestCase):
         attendu = {"tubeless-passer": ["rim"], "tubeless-crevaison": ["plug"]}
         mots = {"rim": ("GR 30 CF", "sans crochet", "27\xa0mm", "33\xa0mm", "30\xa0mm", "G-One RX", "45-622", "ruban",
                         "liquide", "Presta", "3,0\xa0bar", "approché"),
-                "plug": ("TPT-1", "alèse", "mi-longueur", "6,35\xa0mm", "0,25 pouce", "bague", "5 mèches", "approché")}
+                "plug": ("TPT-1", "alèse", "mi-longueur", "6,35\xa0mm", "0,25\xa0pouce", "bague", "5 mèches", "approché")}
         releve = self.releve.replace(",", ".")
         for a in self.ch.ateliers:
             with self.subTest(a.id):
@@ -1427,7 +1446,7 @@ class TestTubeless(unittest.TestCase):
     def test_typographie(self):
         texte = re.sub(r"<[^>]*>", " | ", self.source) + " | " + " | ".join(aria_labels(self.section))
         self.assertIsNone(re.search("[\u2014\u2013]", self.source))
-        motif = r".{0,40}\d (?:Nm|mm|cm|bars?|psi|PSI|kg|ml|km|g|h|°C|%|miles|lbs)(?![\w·])"
+        motif = r".{0,40}\d (?:Nm|mm|cm|bars?|psi|PSI|kg|ml|km|g|h|°C|%|miles|lbs|pouces?)(?![\w·])"
         self.assertIsNone(re.search(motif, texte), re.search(motif, texte))
         # Une espace insécable avant « : ; ? ! » et à l'intérieur des guillemets, comme aux chapitres 1 et 2.
         self.assertIsNone(re.search(r".{0,30}[^\s|] [:;?!»]", texte), re.search(r".{0,30}[^\s|] [:;?!»]", texte))

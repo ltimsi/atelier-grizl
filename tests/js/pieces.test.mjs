@@ -397,6 +397,27 @@ test('roues : axes en zone axes (1.5), pneus et valves en zone pneus (3.1 à 3.6
   }
 });
 
+// La valve est décrite une fois, dans roues.js (tubesValve et ANGLE_VALVE), pour la 3D et pour le schéma 2D.
+test('roues : chaque valve est faite des tubes de tubesValve, en haut de sa roue', () => {
+  const p = points(GEO), { maillages } = construire(roues);
+  const tubes = roues.tubesValve(GEO.diametreSiegeJante.v / 2);
+  assert.equal(roues.ANGLE_VALVE, 90, 'en haut de la roue, comme sur la photo officielle');
+  const valves = parNom(maillages, 'valve');
+  assert.equal(valves.length, 2 * tubes.length);
+  for (const cote of ['avant', 'arrière']) {
+    const axe = cote === 'avant' ? p.FA : p.RA;
+    const ms = valves.filter(m => roueDe(m, p) === cote);
+    assert.equal(ms.length, tubes.length, cote);
+    ms.forEach((m, i) => {
+      const r = sommets(m).map(v => auMoyeu(v, axe));
+      const [de, a] = [Math.max(tubes[i].de, tubes[i].a), Math.min(tubes[i].de, tubes[i].a)];
+      assert.ok(Math.abs(Math.max(...r) - de) < 0.1 && Math.abs(Math.min(...r) - a) < 0.1,
+        `${cote}, tube ${i} : de ${Math.min(...r)} à ${Math.max(...r)} au lieu de ${a} à ${de}`);
+      for (const v of sommets(m)) assert.ok(Math.abs(v.x - axe[0]) <= tubes[i].rayon + 1e-6, `${cote}, tube ${i} : en haut`);
+    });
+  }
+});
+
 test('budget : les rayons instanciés comptent pour toutes leurs instances', () => {
   const rayons = construire(roues).maillages.filter(m => m.isInstancedMesh && m.userData.role === 'spoke');
   assert.equal(rayons.length, 2, 'un jeu de rayons par roue');

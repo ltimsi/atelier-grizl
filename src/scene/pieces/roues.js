@@ -79,7 +79,7 @@ const RAYON_FLASQUE = 22.5; // cercle des trous de rayons sur les flasques
 const RAYON_PLAT = { mince: 0.65, large: 1.25 }; // demi-épaisseurs d'un rayon plat, le long du tour et le long de l'axe
 const CROISEMENT = 2; // rayons croisés deux fois
 const ANGLE_PREMIER_RAYON = 7.5; // en degrés depuis l'avant, lu sur la photo, comme la valve à quatre-vingt-dix degrés
-const ANGLE_VALVE = 90;
+export const ANGLE_VALVE = 90;
 // Moyeux : flasques gauche et droite, en z. Disques à gauche, cassette à droite.
 const MOYEUX = {
   avant: { flasques: [-22, 32] },
@@ -88,6 +88,22 @@ const MOYEUX = {
 
 const D2R = Math.PI / 180;
 const pol = (c, r, deg) => [c[0] + r * Math.cos(deg * D2R), c[1] + r * Math.sin(deg * D2R)];
+
+/**
+ * Les trois tubes d'une valve, du fond de la jante vers le moyeu : la tige, qui sort de sous le siège du talon,
+ * l'écrou contre la jante, puis l'obus au bout. En rayons depuis l'axe de la roue, à l'angle ANGLE_VALVE. Valeurs de
+ * dessin (META.approche) ; le schéma 2D dessine les mêmes tubes (schema2d.js).
+ * @param {number} siege Le rayon du siège du talon, la moitié de GEO.diametreSiegeJante.
+ * @returns {{de: number, a: number, rayon: number, seg: number}[]} seg : facettes du tube en 3D.
+ */
+export function tubesValve(siege) {
+  const bas = siege + FLANC - COTES.hauteurJante.v; // le fond de la jante, où entrent les rayons
+  return [
+    { de: siege - 4, a: bas - 22, rayon: 3, seg: 16 },
+    { de: bas + 0.5, a: bas - 4, rayon: 4.2, seg: 6 },
+    { de: bas - 22, a: bas - 31, rayon: 1.6, seg: 12 },
+  ];
+}
 
 /**
  * Ajoute au groupe des outils les deux axes, puis les deux roues : pneus et crampons, jantes, moyeux, rayons et écrous,
@@ -198,9 +214,7 @@ function roue(o, { c, flasques }, geo) {
   // Valve : tige qui sort du fond de jante vers le moyeu, écrou contre la jante, obus au bout.
   const v = r => [...pol(c, r, ANGLE_VALVE), 0];
   o.zone('pneus');
-  nom('valve')(o.tube(v(siege - 4), v(bas - 22), 3, 3, 'steel', { seg: 16 }));
-  nom('valve')(o.tube(v(bas + 0.5), v(bas - 4), 4.2, 4.2, 'steel', { seg: 6 }));
-  nom('valve')(o.tube(v(bas - 22), v(bas - 31), 1.6, 1.6, 'steel', { seg: 12 }));
+  for (const t of tubesValve(siege)) nom('valve')(o.tube(v(t.de), v(t.a), t.rayon, t.rayon, 'steel', { seg: t.seg }));
   o.zone(null);
 }
 

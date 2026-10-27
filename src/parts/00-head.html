@@ -463,6 +463,10 @@ html.pap-ouvert{overflow:hidden}
 .accueil-bloc > h2.label,.ou-intervenir > h2.label{color:var(--ink-nav)}
 /* « Où intervenir » : une carte par zone, son numéro comme la pastille du vélo, plein quand la zone est choisie */
 .ou-intervenir{gap:12px}
+/* Sur deux colonnes, la colonne des cartes reste sous la barre du haut, à la hauteur de l'écran, et défile seule, comme
+   la colonne de droite d'un atelier (.atelier-droite) : montrer une carte la fait défiler sans emporter l'image du vélo
+   (app.js, montrerCarte). Sur une colonne, elle redevient un bloc de la page. */
+.accueil-grille>.ou-intervenir{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--top-h) + 16px);max-height:calc(100vh - var(--top-h) - 32px);overflow-y:auto;scrollbar-width:thin;padding:2px}
 .zone-carte{display:flex;flex-direction:column;gap:6px;padding:12px 14px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);min-width:0;transition:border-color .15s,box-shadow .15s}
 .zone-carte[aria-current="true"]{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
 .zone-h{display:flex;align-items:center;gap:10px;min-width:0}
@@ -593,6 +597,7 @@ a.cat p{margin:0;font-size:.86rem;color:var(--ink-2)}
 @media (max-width:1100px){
   .atelier-cols,.categorie-cols,.accueil-grille{grid-template-columns:minmax(0,1fr)}
   .atelier-droite{position:static;max-height:none;overflow:visible}
+  .accueil-grille>.ou-intervenir{position:static;max-height:none;overflow:visible}
 }
 /* Sous 900 px : le menu passe derrière son bouton. Sans JavaScript (pas de classe « js »), il reste en tête de page. */
 @media (max-width:900px){

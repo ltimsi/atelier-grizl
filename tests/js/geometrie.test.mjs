@@ -358,24 +358,32 @@ test('registre des sources : les documents du montage que citent les pièces 3D 
 // Les documents du lot 3 que citent les pièces 3D des ateliers du tubeless (src/js/models/m-rim.js et m-plug.js),
 // hors Park Tool, qui n'entre pas au registre : la page Muc-Off du liquide (sa dose, dans la coupe de roue de 3.2), la
 // FAQ tubeless de Schwalbe (pas de cartouche de CO2) et l'article Canyon « Tubed vs tubeless » (le liquide sur les
-// petits trous), dans la mèche de 3.5. Leur adresse est celle du relevé du lot 3, et le chapitre les cite par elle.
+// petits trous), dans la mèche de 3.5. Chacun est relié à sa pièce par des repères stables : le nom du fabricant dans
+// le fichier, et une pastille de la pièce sur ce que le document justifie (les pastilles sont épinglées mot pour mot
+// par test_pieces_3d_tubeless, tests/test_pages.py), jamais par une phrase des commentaires. Leur adresse est celle du
+// relevé du lot 3, et le chapitre les cite par elle.
 test('registre des sources : les documents du tubeless que citent les pièces 3D des ateliers', () => {
   const lire = chemin => readFileSync(new URL(`../../${chemin}`, import.meta.url), 'utf8');
   const releve = lire('docs/recherche/tubeless-cf8-di2.md'), chapitre = lire('src/parts/30-tubeless.html');
-  const rim = lire('src/js/models/m-rim.js'), plug = lire('src/js/models/m-plug.js');
+  const piece = nom => {
+    const texte = lire(`src/js/models/${nom}.js`);
+    return { texte, pastilles: [...texte.matchAll(/text: '((?:[^'\\]|\\.)*)'/g)].map(m => m[1]) };
+  };
+  const rim = piece('m-rim'), plug = piece('m-plug');
   const attendus = {
-    'muc-off-road-gravel': [rim, /page Muc-Off du liquide/, /Muc-Off/,
+    'muc-off-road-gravel': [rim, 'Muc-Off', ['Muc-Off Road & Gravel', 'ml'],
       'https://muc-off.com/products/road-gravel-tubeless-sealant'],
-    'schwalbe-faq-tubeless': [plug, /CO2 \(Schwalbe\)/, /Schwalbe/, 'https://www.schwalbe.com/en/technology-faq/tubeless/'],
-    'canyon-tubed-vs-tubeless': [plug, /Canyon le dit le plus efficace sur les petits trous/, /Canyon/,
+    'schwalbe-faq-tubeless': [plug, 'Schwalbe', ['cartouche de CO2'], 'https://www.schwalbe.com/en/technology-faq/tubeless/'],
+    'canyon-tubed-vs-tubeless': [plug, 'Canyon', ['petits trous', '(Canyon)'],
       'https://www.canyon.com/en-ch/blog-content/advice/tubed-vs-tubeless-bike-tyre/b29052026.html'],
   };
-  for (const [id, [modele, cite, nom, url]] of Object.entries(attendus)) {
+  for (const [id, [modele, marque, reperes, url]] of Object.entries(attendus)) {
     assert.ok(SOURCES[id], `source absente : ${id}`);
     assert.equal(SOURCES[id].type, 'fiche', id);
     assert.equal(SOURCES[id].url, url, id);
-    assert.match(SOURCES[id].titre, nom, id);
-    assert.match(modele, cite, `${id} : la pièce 3D ne le cite plus`);
+    assert.ok(SOURCES[id].titre.startsWith(`${marque}, `), `${id} : titre`);
+    assert.ok(modele.texte.includes(marque), `${id} : la pièce ne nomme plus ${marque}`);
+    assert.ok(modele.pastilles.some(t => reperes.every(r => t.includes(r))), `${id} : aucune pastille sur ${reperes}`);
     assert.ok(releve.includes(url), `${id} : adresse absente du relevé du lot 3`);
     assert.ok(chapitre.includes(`href="${url}"`), `${id} : adresse absente du chapitre`);
   }

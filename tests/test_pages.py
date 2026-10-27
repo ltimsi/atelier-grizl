@@ -275,6 +275,13 @@ class Site(unittest.TestCase):
     def arbre(self, chemin, cible="site"):
         return dom.analyser(self.html(chemin, cible))
 
+    def copies(self, fichier):
+        """Une pièce 3D d'atelier : le fichier du dépôt, puis ses copies servies par les deux cibles, chacun avec le nom
+        qu'en donne un échec."""
+        yield fichier, (RACINE / "src" / "js" / "models" / fichier).read_text(encoding="utf-8")
+        for cible in ("site", "artifact"):
+            yield f"{cible} {fichier}", (self.dossier / cible / "js" / fichier).read_text(encoding="utf-8")
+
 
 class TestPages(Site):
     def test_pages_generees(self):
@@ -645,6 +652,12 @@ class TestPages(Site):
             self.assertEqual(tableau.html(), source, ident)
             # Le renvoi vers l'atelier d'où vient le tableau.
             self.assertEqual(dom.selectionner(un(section, "p.origine"), "a")[0].get("href"), origine)
+        # Un chapitre publié sans tableau de couples est nommé, avec un lien vers sa catégorie : le chapitre 3 n'en
+        # publie aucun (l'écrou de la valve se serre à la main), et le lecteur ne cherche pas en vain.
+        (sans,) = dom.selectionner(racine, "p.couples-sans")
+        self.assertEqual(sans.texte(), "Aucun couple de serrage dans le chapitre Pneus et tubeless.")
+        self.assertEqual([a.get("href") for a in dom.selectionner(sans, "a")], ["../tubeless/"])
+        self.assertNotIn("couples", self.chapitres["tubeless"].resumes)
 
     def tableau_des_freins(self, chemin):
         """Le tableau des couples des freins d'une page : celui de la page, ou celui de la section Freins de Couples."""
@@ -895,14 +908,8 @@ class TestPages(Site):
         absents = ("CF 7", "CF\xa07", "GRX 610", "RX610", "RX820 mécanique", "en croix", "SM-RT64", "Continental",
                    "Gravel LN")
 
-        def copies(fichier):
-            """Le fichier du dépôt, puis ses copies servies par les deux cibles, avec le nom qu'en donne un échec."""
-            yield fichier, (RACINE / "src" / "js" / "models" / fichier).read_text(encoding="utf-8")
-            for cible in ("site", "artifact"):
-                yield f"{cible} {fichier}", (self.dossier / cible / "js" / fichier).read_text(encoding="utf-8")
-
         for fichier, attendues in PASTILLES_3D_MONTAGE.items():
-            for nom, texte in copies(fichier):
+            for nom, texte in self.copies(fichier):
                 pastilles = re.findall(r"text: '((?:[^'\\]|\\.)*)'", texte)
                 self.assertEqual(pastilles, attendues, f"{nom} : pastilles")
                 etiquettes = re.findall(r"\blabel: '((?:[^'\\]|\\.)*)'", texte)
@@ -926,11 +933,11 @@ class TestPages(Site):
                     if fichier in ("m-pedal.js", "m-torque.js"):
                         self.assertIn("à lire sur l'outil", phrase, f"{nom} : {phrase!r}")
         # La PD-ME700 se serre à la clé plate de 15 mm : le six-pans de 8 mm du DM va à d'autres pédales.
-        for nom, pedale in copies("m-pedal.js"):
+        for nom, pedale in self.copies("m-pedal.js"):
             self.assertIsNone(re.search(r"(?<![\d,.])8[ \xa0]*mm", pedale), f"{nom} : « 8 mm » présent")
         # La clé dynamométrique ne dit rien d'autre de la clé Canyon : chaque ligne qui la nomme dit que sa plage est à
         # lire sur l'outil, et aucune ne porte de chiffre de couple ni de plage.
-        for nom, cle in copies("m-torque.js"):
+        for nom, cle in self.copies("m-torque.js"):
             lignes = [ligne for ligne in cle.replace("’", "'").splitlines() if "Canyon" in ligne]
             self.assertTrue(lignes, f"{nom} : la clé Canyon n'est pas nommée")
             for ligne in lignes:
@@ -986,17 +993,11 @@ class TestPages(Site):
                     f"var CENTRE = {{ L: {centre[1]}, W: {centre[2]}, h: {crampon}, rangees: {centre[3]} }};",
                     "var EPAULE = [" + ", ".join(f"{{ s: {s}, t: {u}, L: {l}, W: {w}, h: {h}, ang: {a} }}"
                                                  for s, u, l, w, h, a in epaule) + "];")
-        def copies(fichier):
-            """Le fichier du dépôt, puis ses copies servies par les deux cibles, avec le nom qu'en donne un échec."""
-            yield fichier, (RACINE / "src" / "js" / "models" / fichier).read_text(encoding="utf-8")
-            for cible in ("site", "artifact"):
-                yield f"{cible} {fichier}", (self.dossier / cible / "js" / fichier).read_text(encoding="utf-8")
-
         for fichier, (modele, atelier) in {"m-rim.js": ("rim", "tubeless-passer"),
                                            "m-plug.js": ("plug", "tubeless-crevaison")}.items():
             chemin = RACINE / "src" / "js" / "models" / fichier
             self.assertTrue(chemin.exists(), f"{fichier} absent")
-            for nom, texte in copies(fichier):
+            for nom, texte in self.copies(fichier):
                 self.assertEqual(texte.count(f"AtelierModels.register('{modele}', {{"), 1, f"{nom} : register")
                 pastilles = re.findall(r"text: '((?:[^'\\]|\\.)*)'", texte)
                 self.assertEqual(pastilles, PASTILLES_3D_TUBELESS[fichier], f"{nom} : pastilles")
@@ -1239,7 +1240,7 @@ class TestPages(Site):
 
     def test_plus_de_cf7(self):
         # Le site ne parle plus que du Grizl CF 8 Di2. Aucun fichier servi par les deux cibles, hors de three.js, ne
-        # garde le CF 7, sa fiche ou ses pièces : ni les 29 pages, ni l'index de la recherche, ni les pièces 3D des
+        # garde le CF 7, sa fiche ou ses pièces : ni les 35 pages, ni l'index de la recherche, ni les pièces 3D des
         # ateliers, ni les modules de la scène. Le menu, la description de chaque page et l'accueil nomment le CF 8 Di2.
         # « CF 7 » est cherché sans casse, avec ou sans espace (même insécable), tiret ou soulignement : « cf 7 »,
         # « CF7 », « grizl-cf-7 ». Les autres noms aussi, sans casse. Une couleur comme « #cf7a3b » n'est pas une trace.
@@ -1254,7 +1255,7 @@ class TestPages(Site):
             rendues, fichiers = self.sorties[cible]
             servis = sorted(f for f in fichiers if not f.startswith("vendor/"))
             for attendu in ["js/recherche.js", "js/m-rotor.js", "js/m-caliper.js", "js/m-bleed.js", "js/m-torque.js",
-                            "js/m-cockpit.js", "js/m-axle.js", "js/m-pedal.js",
+                            "js/m-cockpit.js", "js/m-axle.js", "js/m-pedal.js", "js/m-rim.js", "js/m-plug.js",
                             "js/scene/sources.js"] + [f"{c}index.html" for c in CHEMINS]:
                 self.assertIn(attendu, servis, cible)
             traces = []

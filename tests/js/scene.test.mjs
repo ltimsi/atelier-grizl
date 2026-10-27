@@ -15,6 +15,7 @@ import {
   PIECES, distanceEnsemble, positionVue, reculVue, versPixels, zonesDuGroupe, listerApproximations,
 } from '../../src/scene/scene.js';
 import { formesSchema, cadreVue, versPixelsSchema } from '../../src/scene/schema2d.js';
+import { ANGLE_VALVE, tubesValve } from '../../src/scene/pieces/roues.js';
 import { CF7 } from './cf7.mjs';
 
 const ZONES = JSON.parse(readFileSync(new URL('../../src/scene/zones.json', import.meta.url), 'utf8'));
@@ -78,8 +79,7 @@ test('scène : projection vers les pixels et visibilité des pastilles', () => {
 });
 
 test('scène : zones lues sur les maillages de chaque pièce', () => {
-  // Dans l'ordre où chaque pièce construit ses maillages : le poste monte la potence et le cintre avant les cocottes,
-  // posées sur le cintre ; les roues posent leurs axes avant les pneus et les valves.
+  // Les zones de chaque pièce, sans ordre : l'ordre où une pièce construit ses maillages n'est pas une règle.
   const attendu = {
     cadre: ['selle'], roues: ['axes', 'pneus'], freins: ['disques', 'etrier', 'manettes'],
     transmission: ['pedalier', 'derailleur'],
@@ -87,7 +87,7 @@ test('scène : zones lues sur les maillages de chaque pièce', () => {
   };
   assert.deepEqual(PIECES.map(m => m.META.id), Object.keys(attendu));
   for (const module of PIECES) {
-    assert.deepEqual(zonesDuGroupe(groupeDe(module)), attendu[module.META.id], module.META.id);
+    assert.deepEqual(new Set(zonesDuGroupe(groupeDe(module))), new Set(attendu[module.META.id]), module.META.id);
   }
 });
 
@@ -243,6 +243,45 @@ test('schéma : chaque zone de zones.json a ses formes, et aucune autre zone', (
   const zones = new Set(schema.groupes.map(g => g.zone).filter(Boolean));
   assert.deepEqual([...zones].sort(), ZONES.map(z => z.id).sort());
   for (const z of ZONES) assert.ok(formes.some(f => f.zone === z.id), `${z.id} sans forme`);
+});
+
+// Les quatre coins du corps d'une capsule (schema2d.js) : M p1, L p2, A … p3, L p4, en coordonnées du vélo (y vers le
+// haut). De p1 et p4 part le tube, en p2 et p3 il arrive.
+function corpsCapsule(f) {
+  const d = f.attrs.d, n = '(-?\\d+(?:\\.\\d+)?)';
+  const [m, l1, a, l2] = [new RegExp(`^M${n} ${n}`), new RegExp(`L${n} ${n}A`), new RegExp(`A[\\d.]+ [\\d.]+ 0 0 1 ${n} ${n}L`),
+    new RegExp(`L${n} ${n}A[\\d.]+ [\\d.]+ 0 0 1 -?[\\d.]+ -?[\\d.]+Z$`)].map(r => d.match(r));
+  return [m, l1, a, l2].map(q => [Number(q[1]), -Number(q[2])]);
+}
+const milieu = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+const dans = (q, [x, y]) => q.every((a, i) => {
+  const b = q[(i + 1) % q.length];
+  return (b[0] - a[0]) * (y - a[1]) - (b[1] - a[1]) * (x - a[0]) <= 1e-9;
+}) || q.every((a, i) => {
+  const b = q[(i + 1) % q.length];
+  return (b[0] - a[0]) * (y - a[1]) - (b[1] - a[1]) * (x - a[0]) >= -1e-9;
+});
+
+test('schéma : les pneus et les valves des deux roues dans la zone des pneus, valves tirées de roues.js', () => {
+  assert.deepEqual(formes.filter(f => f.nom === 'pneu').map(f => f.zone), ['pneus', 'pneus']);
+  const valves = formes.filter(f => f.nom === 'valve');
+  const tubes = tubesValve(GEO.diametreSiegeJante.v / 2);
+  assert.equal(tubes.length, 3, 'tige, écrou, obus');
+  assert.equal(valves.length, 2 * tubes.length, 'les tubes de la valve, à chaque roue');
+  valves.forEach((f, k) => {
+    assert.equal(f.zone, 'pneus');
+    // Le même tube que la 3D : de son rayon de départ à son rayon d'arrivée, à l'angle de la valve, de sa grosseur.
+    const c = k < tubes.length ? p.RA : p.FA, t = tubes[k % tubes.length];
+    const [p1, p2, p3, p4] = corpsCapsule(f);
+    const versRoue = (q, r) => Math.hypot(q[0] - c[0] - r * Math.cos(ANGLE_VALVE * D2R), q[1] - c[1] - r * Math.sin(ANGLE_VALVE * D2R));
+    assert.ok(versRoue(milieu(p1, p4), t.de) < 0.1, `valve ${k} : départ`);
+    assert.ok(versRoue(milieu(p2, p3), t.a) < 0.1, `valve ${k} : arrivée`);
+    proche(Math.hypot(p1[0] - p4[0], p1[1] - p4[1]) / 2, t.rayon, 0.1, `valve ${k} : grosseur`);
+  });
+  // L'ancre de la zone des pneus est sur la valve de la roue avant, dans le corps d'un de ses tubes.
+  const [x, y] = p.ancres.valveAvant;
+  assert.ok(valves.slice(tubes.length).some(f => dans(corpsCapsule(f), [x, y])), 'ancre hors des valves dessinées');
+  assert.ok(!valves.slice(0, tubes.length).some(f => dans(corpsCapsule(f), [x, y])), 'ancre sur la valve arrière');
 });
 
 test('schéma : coordonnées toutes finies', () => {

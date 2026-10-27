@@ -423,11 +423,13 @@ def page_outils(chapitres: dict[str, Chapitre]) -> Page:
 
 def page_couples(chapitres: dict[str, Chapitre]) -> Page:
     """Couples de serrage : les tableaux « couples » des chapitres publiés, une section par catégorie, chacun avec un
-    renvoi vers l'atelier où il est écrit."""
-    sections = []
+    renvoi vers l'atelier où il est écrit. Les chapitres publiés sans tableau sont nommés à la fin, avec un lien vers
+    leur catégorie : le lecteur sait qu'ils ne publient aucun couple."""
+    sections, sans = [], []
     for chapitre in chapitres.values():
         resumes = chapitre.resumes.get("couples", [])
         if not resumes:
+            sans.append(f'<a href="{relatif("couples/", f"{chapitre.id}/")}">{_e(_nom(chapitre))}</a>')
             continue
         morceaux = ['<section class="couples-cat">', f"<h2>{_e(_nom(chapitre))}</h2>"]
         for resume in resumes:
@@ -440,6 +442,10 @@ def page_couples(chapitres: dict[str, Chapitre]) -> Page:
         sections.append("\n".join(morceaux))
     if not sections:
         sections = ['<p class="muted">Aucun tableau de couples publié pour l’instant.</p>']
+    elif sans:
+        liste = sans[0] if len(sans) == 1 else ", ".join(sans[:-1]) + " et " + sans[-1]
+        sections.append(f'<p class="muted couples-sans">Aucun couple de serrage dans '
+                        f'{"le chapitre" if len(sans) == 1 else "les chapitres"} {liste}.</p>')
     entete = _en_tete("Couples de serrage", "Les tableaux de couples des catégories publiées, regroupés par catégorie.")
     return _reference("couples", "\n".join([entete, *sections]))
 

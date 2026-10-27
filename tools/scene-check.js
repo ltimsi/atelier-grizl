@@ -19,20 +19,27 @@
 //      ouverte par son onglet et doit se dessiner (sans WebGL : afficher son message). Puis la page est tout dépliée
 //      (chaque <details> ouvert, chaque figure des onglets montrée) et ne doit toujours pas défiler en largeur ;
 //   2. accueil : la scène est dessinée (sans WebGL : le schéma 2D, et la page le dit). L'aide de la scène a un fond, et
-//      aucune pastille ne touche son rectangle, en 3D comme en 2D. Dans les deux vues d'ensemble, celle du chargement (la
-//      3D, ou le schéma 2D sans WebGL) et celle du schéma 2D après son onglet, toutes les pastilles du bloc #zones-data
-//      de la page (celui qu'app.js lit) sont affichées et deux pastilles ont leurs centres à 30 px au moins (ECART_PASTILLES : elles ne se chevauchent pas).
-//      Un clic sur la pastille 2 rend active (aria-current) la carte « Étrier et plaquettes » de « Où intervenir »,
-//      puis la pastille 3 celle des manettes, la pastille 4 celle du poste de pilotage, la pastille 9 celle des pneus
-//      et des valves, puis le bouton de la carte « Étrier et plaquettes » la sienne. Les pastilles 3, 4 et 9 partent de
-//      la vue d'ensemble. Les pastilles sont cliquées à la souris là où elles sont, sans que le script fasse défiler la
-//      page ; le bouton aussi, une fois la page descendue jusqu'à lui, comme après avoir lu les cartes. Sur une seule
-//      colonne, une pastille ne fait pas défiler la page et le bouton d'une carte ramène l'image à l'écran (95 % au
-//      moins entre la barre du haut et le bas de l'écran) ; sur deux colonnes, la carte choisie est à l'écran. Ensuite,
-//      avec WebGL : la zone des disques, sans variante (#variante reste caché), puis la vue d'ensemble, pour le budget
-//      de triangles ; la variante de l'étrier (plaquettes sorties) ; l'onglet « Schéma 2D », puis sa vue d'ensemble ;
-//      la fenêtre « Ce qui est approché », qui s'ouvre et se remplit. La légende du schéma 2D (#legende-2d) est visible
-//      en 2D (onglet « Schéma 2D », ou dès le chargement sans WebGL) et cachée en 3D ;
+//      aucune pastille ne touche son rectangle, en 3D comme en 2D. Dans les deux vues d'ensemble, celle du chargement
+//      (la 3D, ou le schéma 2D sans WebGL) et celle du schéma 2D après son onglet, toutes les pastilles du bloc
+//      #zones-data de la page (celui qu'app.js lit) sont affichées et deux pastilles ont leurs centres à 30 px au moins
+//      (ECART_PASTILLES : elles ne se chevauchent pas). Un clic sur la pastille 2 rend active (aria-current) la carte
+//      « Étrier et plaquettes » de « Où intervenir », puis la pastille 3 celle des manettes, la pastille 4 celle du
+//      poste de pilotage, la pastille 9 celle des pneus et des valves, puis le bouton de la carte « Étrier et
+//      plaquettes » la sienne. Les pastilles 3, 4 et 9 partent de la vue d'ensemble. Les pastilles sont cliquées à la
+//      souris là où elles sont, sans que le script fasse défiler la page ; le bouton aussi, une fois la page descendue
+//      jusqu'à lui, comme après avoir lu les cartes. Sur une seule colonne, une pastille ne fait pas défiler la page et
+//      le bouton d'une carte ramène l'image à l'écran (95 % au moins entre la barre du haut et le bas de l'écran) ; sur
+//      deux colonnes, la carte choisie est en entier à l'écran, dans la partie visible de la colonne « Où intervenir »,
+//      qui défile seule, et après une pastille l'image reste à l'écran à moitié au moins (IMAGE_DEUX_COLONNES). Les
+//      vues de zone, en 3D puis dans le schéma 2D : chaque pastille du bloc #zones-data, cliquée depuis la vue
+//      d'ensemble, avec les contrôles de carte et d'image ci-dessus ; dans la vue de sa zone, la pastille choisie est
+//      affichée et ne touche ni l'aide ni un bouton de la scène (#approche, #vue-ensemble, #variante). Une autre
+//      pastille qui touche ces rectangles, ou deux pastilles à moins de 30 px, ne donnent qu'un avertissement
+//      (vuesDeZone), tant que les vues des manettes et des disques ne sont pas recadrées. Ensuite, avec WebGL : la zone
+//      des disques, sans variante (#variante reste caché), puis la vue d'ensemble, pour le budget de triangles ; la
+//      variante de l'étrier (plaquettes sorties) ; l'onglet « Schéma 2D », puis sa vue d'ensemble ; la fenêtre « Ce qui
+//      est approché », qui s'ouvre et se remplit. La légende du schéma 2D (#legende-2d) est visible en 2D (onglet
+//      « Schéma 2D », ou dès le chargement sans WebGL) et cachée en 3D ;
 //   3. anciennes ancres de la racine : index.html#freins-plaquettes et #freins-plaquettes arrivent sur
 //      freins/plaquettes/, #freins sur freins/, #freins-pl-2 sur freins/plaquettes/#freins-pl-2, avec la planche à
 //      l'écran sous la barre ; les liens du jour de la livraison #montage, #montage-position et #tubeless arrivent sur
@@ -61,7 +68,7 @@
 //
 // <sortie> reçoit aussi rapport.json : { erreurs, debordement, debordements, triangles, ancienFavori, webgl, mouvement,
 // sansJs, pages, accueil, anciennesAncres, categorie, atelier, recherche, absents, sansJavaScript, avertissements,
-// attendus, captures }.
+// vuesDeZone, attendus, captures }.
 //   erreurs : messages d'erreur de la console, erreurs de page, requêtes échouées ou en erreur HTTP, et contrôles qui
 //     échouent (préfixe « contrôle : »), chacun avec la page où il arrive ;
 //   debordement : la page a défilé en largeur à au moins une étape ; debordements dit où ;
@@ -71,6 +78,7 @@
 //   pages, accueil, anciennesAncres, categorie, atelier, recherche, absents, sansJavaScript : ce que chaque passe a
 //     relevé (null pour une passe qui n'a pas tourné) ;
 //   avertissements : avertissements de la console, sans doublon (le repli 2D en écrit un, voulu) ;
+//   vuesDeZone : les avertissements des vues de zone, une ligne chacun, recopiés dans la sortie du script ;
 //   attendus : ce que le contrôle provoque lui-même : erreurs du module servi en 404, et requêtes abandonnées
 //     (net::ERR_ABORTED) par la racine ouverte sur une ancienne ancre, qui part aussitôt ailleurs. Ailleurs, une
 //     requête abandonnée est une erreur.
@@ -119,6 +127,10 @@ const ANCIENNES_ANCRES = [
 // 30 px de large (00-head.html), deux pastilles plus proches se chevauchent. Leur nombre est celui des zones du bloc
 // #zones-data de la page d'accueil, celui qu'app.js lit.
 const ECART_PASTILLES = 30;
+// Sur deux colonnes, la part de l'image qui reste à l'écran au moins, entre la barre du haut et le bas de l'écran,
+// après le clic d'une pastille : la carte de la zone vient à l'écran par le défilement de la colonne « Où intervenir »
+// (00-head.html, app.js), pas en emportant le vélo que la caméra vient de viser.
+const IMAGE_DEUX_COLONNES = 0.5;
 const FAVORI = 'index.html#freins-plaquettes';
 const TITRE_ATELIER = 'Changer les plaquettes';
 const MODULES_ABSENTS = [['scene', 'js/scene/scene.js'], ['roues', 'js/scene/pieces/roues.js'], ['app', 'js/scene/app.js']];
@@ -219,7 +231,7 @@ async function controler(opts) {
   const rapport = {
     erreurs: [], debordement: false, debordements: [], triangles: 0, ancienFavori: null, webgl: !sansGl, mouvement,
     sansJs, pages: {}, accueil: null, anciennesAncres: null, categorie: null, atelier: null, recherche: null,
-    absents: null, sansJavaScript: null, avertissements: [], attendus: [], captures: [],
+    absents: null, sansJavaScript: null, avertissements: [], vuesDeZone: [], attendus: [], captures: [],
   };
   const erreur = s => { rapport.erreurs.push(s); };
   const controle = (ok, s) => {
@@ -512,9 +524,13 @@ async function controler(opts) {
           const haut = document.querySelector('.top')?.getBoundingClientRect().bottom ?? 0;
           const cartes = [...document.querySelectorAll('.zone-carte[data-zone]')];
           const actives = cartes.filter(c => c.getAttribute('aria-current') === 'true');
+          // À l'écran : en entier entre la barre du haut et le bas de l'écran, et dans la partie visible de la colonne
+          // « Où intervenir », qui défile seule sur deux colonnes (une carte cachée par son défilement n'est pas vue).
+          const col = document.querySelector('.ou-intervenir')?.getBoundingClientRect();
           const aLEcran = c => {
             const q = c.getBoundingClientRect();
-            return q.top >= haut - 1 && q.bottom <= window.innerHeight + 1;
+            return q.top >= Math.max(haut, col?.top ?? haut) - 1 &&
+              q.bottom <= Math.min(window.innerHeight, col?.bottom ?? window.innerHeight) + 1;
           };
           const alerte = document.getElementById('scene-alerte');
           return {
@@ -581,6 +597,12 @@ async function controler(opts) {
             `accueil, ${quoi} : carte active ${JSON.stringify(e.actives)} (« ${e.nomActif} ») au lieu de « ${nom} »`);
           if (!uneColonne) {
             controle(e.cartesALEcran.includes(zone), `accueil, ${quoi} : la carte « ${nom} » n’est pas à l’écran`);
+            // Deux colonnes : la carte vient à l'écran par le défilement de sa colonne ; l'image, qui vise la zone,
+            // reste à moitié au moins entre la barre du haut et le bas de l'écran.
+            if (!depuisCarte) {
+              controle(e.image >= IMAGE_DEUX_COLONNES,
+                `accueil, ${quoi} : l’image n’est qu’à ${Math.round(e.image * 100)} % à l’écran (deux colonnes)`);
+            }
           } else if (!depuisCarte) {
             controle(e.scrollY === y0, `accueil, ${quoi} : la page a défilé de ${y0} à ${e.scrollY} px (une colonne)`);
           } else {
@@ -646,6 +668,55 @@ async function controler(opts) {
             centres: r.centres.map(c => [c.n, Math.round(c.x), Math.round(c.y)]),
           };
         };
+        // Les vues de zone, en 3D ou dans le schéma 2D (`mode`) : chaque zone du bloc #zones-data, par sa pastille
+        // cliquée à la souris depuis la vue d'ensemble et le haut de la page. Avec choix : la carte de la zone devient
+        // active, et l'image reste à l'écran. Puis, dans la vue de la zone : la pastille choisie est affichée et ne
+        // touche ni l'aide ni un bouton de la scène (#approche, #vue-ensemble, #variante) ; c'est celle que l'on vient
+        // de toucher, une erreur sinon. Les autres pastilles affichées contre ces mêmes rectangles, et l'écart de
+        // ECART_PASTILLES entre deux pastilles, ne donnent que des avertissements (rapport.vuesDeZone), tant que les vues
+        // des manettes et des disques ne sont pas recadrées.
+        const vuesDeZone = async mode => {
+          const zones = await page.evaluate(() => JSON.parse(document.getElementById('zones-data').textContent)
+            .map(z => [z.id, z.nom]));
+          a.vues[mode] = {};
+          for (const [i, [id, nom]] of zones.entries()) {
+            const n = i + 1, quoi = `${mode === '3d' ? 'vue' : 'schéma 2D, vue'} de la zone ${n}`;
+            await agir('la vue d’ensemble', () => page.click('#vue-ensemble'), mode === '3d');
+            await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+            let y = null;
+            await agir(`la pastille ${n}`, async () => { y = await cliquerPastille(n); }, mode === '3d');
+            if (y === null) continue;
+            const c = await choix(quoi, id, nom, y, false);
+            const r = await page.evaluate(k => {
+              const vu = e => e && !e.hidden && e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden';
+              const obstacles = [['l’aide', '#scene-aide'], ['« Ce qui est approché »', '#approche'],
+                ['« Vue d’ensemble »', '#vue-ensemble'], ['la variante', '#variante']]
+                .map(([nomObstacle, sel]) => [nomObstacle, document.querySelector(sel)])
+                .filter(([, e]) => vu(e)).map(([nomObstacle, e]) => [nomObstacle, e.getBoundingClientRect()]);
+              const pins = [...document.querySelectorAll('#pins .zpin')].map((b, j) => ({ n: j + 1, b }))
+                .filter(({ b }) => vu(b)).map(({ n: m, b }) => ({ n: m, r: b.getBoundingClientRect() }));
+              const touche = (p, q) => p.left < q.right && p.right > q.left && p.top < q.bottom && p.bottom > q.top;
+              return {
+                choisie: pins.some(p => p.n === k),
+                sous: pins.flatMap(p => obstacles.filter(([, q]) => touche(p.r, q)).map(([o]) => [p.n, o])),
+                centres: pins.map(p => [p.n, p.r.left + p.r.width / 2, p.r.top + p.r.height / 2]),
+              };
+            }, n);
+            controle(r.choisie, `accueil, ${quoi} : la pastille ${n}, choisie, n’est pas affichée`);
+            for (const [m, o] of r.sous) {
+              if (m === n) erreur(`contrôle : accueil, ${quoi} : la pastille ${n}, choisie, touche ${o}`);
+              else rapport.vuesDeZone.push(`${quoi} : la pastille ${m} touche ${o}`);
+            }
+            for (let j = 0; j < r.centres.length; j++) for (let k = j + 1; k < r.centres.length; k++) {
+              const [p, q] = [r.centres[j], r.centres[k]];
+              const d = Math.round(Math.hypot(p[1] - q[1], p[2] - q[2]) * 10) / 10;
+              if (d < ECART_PASTILLES) rapport.vuesDeZone.push(`${quoi} : pastilles ${p[0]} et ${q[0]} à ${d} px`);
+            }
+            a.vues[mode][id] = { image: c.image, scrollAvant: c.scrollAvant, scrollApres: c.scrollApres,
+              affichees: r.centres.map(p => p[0]), sous: r.sous };
+            if (id === 'pneus') await capturer(page, `accueil-${mode}-zone-${n}.png`, { sel: '#scene' });
+          }
+        };
         a.ensemble = await controlerPastilles(sansGl ? 'schéma 2D, vue d’ensemble' : 'vue d’ensemble', true);
         await capturer(page, 'accueil-scene.png', { sel: '#scene' });
 
@@ -678,6 +749,10 @@ async function controler(opts) {
         await agir('la pastille 9', async () => { y0 = await cliquerPastille(9); });
         if (y0 !== null) a.pastille9 = await choix('pastille 9', 'pneus', 'Pneus et valves', y0, false);
         await capturer(page, 'accueil-pastille-9.png');
+
+        // Les vues de zone de la 3D, chaque pastille cliquée depuis la vue d'ensemble.
+        a.vues = {};
+        if (!sansGl) await vuesDeZone('3d');
 
         // Le bouton de la carte « Étrier et plaquettes », comme après avoir lu les cartes : il est au milieu de
         // l'écran, et l'image en partie au-dessus.
@@ -730,6 +805,9 @@ async function controler(opts) {
         await agir('la vue d’ensemble du schéma 2D', () => page.click('#vue-ensemble'), false);
         a.ensemble2d = await controlerPastilles('schéma 2D, vue d’ensemble', true);
         await capturer(page, 'accueil-2d-ensemble.png', { sel: '#scene' });
+        // Les vues de zone du schéma 2D, comme celles de la 3D.
+        await vuesDeZone('2d');
+        await agir('la vue d’ensemble du schéma 2D', () => page.click('#vue-ensemble'), false);
         if (!sansGl) await agir('l’onglet 3D réaliste', () => page.click('#mode-reel'));
 
         // La fenêtre « Ce qui est approché » s'ouvre et se remplit.
@@ -1121,7 +1199,7 @@ async function controler(opts) {
     erreurs: rapport.erreurs, debordements: rapport.debordements, triangles: rapport.triangles,
     ancienFavori: rapport.ancienFavori, webgl: rapport.webgl, mouvement: rapport.mouvement, sansJs: rapport.sansJs,
     pages: Object.keys(rapport.pages).length, captures: rapport.captures.length,
-    avertissements: rapport.avertissements.length, attendus: rapport.attendus.length,
+    avertissements: rapport.avertissements.length, attendus: rapport.attendus.length, vuesDeZone: rapport.vuesDeZone,
   }, null, 2));
   console.log(echecs.length ? 'ÉCHEC : ' + echecs.join(' ; ') : 'OK');
   process.exitCode = echecs.length ? 1 : 0;

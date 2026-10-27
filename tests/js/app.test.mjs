@@ -9,7 +9,7 @@ import * as app from '../../src/scene/app.js';
 import * as scene from '../../src/scene/scene.js';
 
 const CODE = readFileSync(new URL('../../src/scene/app.js', import.meta.url), 'utf8');
-const { approximationsSansScene, chargerLibs, choisirZone, placeDePastille } = app;
+const { approximationsSansScene, chargerLibs, choisirZone, placeDePastille, defilementDeCarte } = app;
 
 test('approximationsSansScene : les META de chaque pièce, sans zone, puis la géométrie', () => {
   const liste = approximationsSansScene(scene);
@@ -62,6 +62,30 @@ test('placeDePastille : la place projetée de l’ancre, plus le décalage de la
   assert.deepEqual(placeDePastille({ x: 0, y: 0, visible: false }, { decalage: [3, -4] }), { x: 3, y: -4, visible: false });
 });
 
+// Deux colonnes : la colonne « Où intervenir » défile seule (00-head.html), et la page ne défile que du reste, quand
+// la carte ne peut pas venir en entier dans la partie visible de la colonne. Rects en pixels de la fenêtre ; haut : le
+// bas de la barre du haut ; ecran : la hauteur de la fenêtre.
+test('defilementDeCarte : la colonne d’abord, la page seulement du reste', () => {
+  const colonne = { top: 100, bottom: 900 }; // la partie visible : de 100 à 700 (bas de l'écran)
+  const plan = (carte, defile, max) => defilementDeCarte(carte, colonne, defile, max, 60, 700);
+  // Déjà en entier dans la partie visible : rien ne bouge.
+  assert.deepEqual(plan({ top: 200, bottom: 400 }, 50, 600), { colonne: 50, page: 0 });
+  // Sous le bas de l'écran (mais dans la colonne) : la colonne défile jusqu'à ce que le bas de la carte soit au bas
+  // de l'écran, la page ne bouge pas.
+  assert.deepEqual(plan({ top: 750, bottom: 850 }, 0, 600), { colonne: 150, page: 0 });
+  // Au-dessus du haut de la colonne : la colonne remonte, le haut de la carte au haut de la colonne.
+  assert.deepEqual(plan({ top: -100, bottom: 50 }, 400, 600), { colonne: 200, page: 0 });
+  // Plus haute que la partie visible : son haut au haut de la colonne.
+  assert.deepEqual(plan({ top: 800, bottom: 1500 }, 0, 2000), { colonne: 700, page: 0 });
+  // La colonne est au bout : la page défile du reste, et de rien de plus.
+  assert.deepEqual(plan({ top: 900, bottom: 1100 }, 300, 500), { colonne: 500, page: 200 });
+  // Une colonne qui ne défile pas (max 0) : tout passe à la page, comme avant la colonne défilante.
+  assert.deepEqual(plan({ top: 750, bottom: 850 }, 0, 0), { colonne: 0, page: 150 });
+  // La barre du haut passe sur la colonne : la partie visible commence sous la barre.
+  assert.deepEqual(defilementDeCarte({ top: 30, bottom: 200 }, { top: 0, bottom: 800 }, 100, 600, 60, 700),
+    { colonne: 70, page: 0 });
+});
+
 test('poserPastilles passe chaque place par placeDePastille : le décalage d’une zone vaut en 3D comme en 2D', () => {
   // Le test ci-dessus ne vérifie que le calcul. Sans cet appel, la zone des axes reprendrait sa place d’ancre, sous
   // la pastille des disques (scene-check le voit, mais seulement dans le navigateur).
@@ -86,8 +110,9 @@ test('aide du schéma 2D : une ligne courte, comme l’aide de la 3D, qui tient 
   assert.ok(aide2d.length <= aide3d.length, `aide 2D de ${aide2d.length} caractères, plus longue que l’aide 3D`);
 });
 
-test('app.js : la fiche et l’historique sont partis, seuls quatre calculs restent exportés', () => {
-  assert.deepEqual(Object.keys(app).sort(), ['approximationsSansScene', 'chargerLibs', 'choisirZone', 'placeDePastille']);
+test('app.js : la fiche et l’historique sont partis, seuls cinq calculs restent exportés', () => {
+  assert.deepEqual(Object.keys(app).sort(),
+    ['approximationsSansScene', 'chargerLibs', 'choisirZone', 'defilementDeCarte', 'placeDePastille']);
   for (const nom of ['atelierDuClic', 'ouvrirAtelier', 'ouvrirZone', 'atelierDeLEntree', 'ancreDe', 'lignesPieces',
     'notesDeZone', 'idDuHash']) {
     assert.equal(nom in app, false, `${nom} encore exporté`);
@@ -133,6 +158,7 @@ class Faux {
   replaceChildren(...e) { this.enfants = e; }
   getBoundingClientRect() { return this.rect; }
   scrollIntoView(options) { this.defilements.push(options); }
+  scrollTo(options) { this.defilements.push(options); this.scrollTop = options.top; }
   getContext() { return null; }
   focus() {}
 }
@@ -147,9 +173,12 @@ let copies = 0;
 async function pageFactice(t) {
   const el = Object.fromEntries(['#scene', '#scene-stage', '#plan', '#gl', '#variante', '#scene-aide', '#key',
     '#scene-statut', '#scene-alerte', '#approche-liste', '#approche-contenu', '#pins', '#scene .modes', '#vue-ensemble',
-    '#approche', '.top'].map(s => [s, new Faux()]));
+    '#approche', '.top', '.ou-intervenir'].map(s => [s, new Faux()]));
   el['#zones-data'] = Object.assign(new Faux(), { textContent: JSON.stringify(ZONES) });
   el['.top'].rect = { top: 0, bottom: 60 };
+  // La colonne « Où intervenir », sur deux colonnes : de 100 px à 900 px, 600 px de défilement possibles.
+  Object.assign(el['.ou-intervenir'], { rect: { top: 100, bottom: 900 }, scrollTop: 0, scrollHeight: 1400, clientHeight: 800 });
+  const pageDefile = [];
   const onglets = ['2d', 'simple', 'reel'].map(mode => new Faux({ mode }));
   const cartes = ZONES.map(z => new Faux({ zone: z.id }));
   const boutons = ZONES.map(z => new Faux({ zone: z.id }));
@@ -165,6 +194,7 @@ async function pageFactice(t) {
       createElement: () => new Faux(),
     },
     window: globalThis, innerHeight: 800, addEventListener() {}, requestAnimationFrame: () => 1,
+    scrollBy: options => pageDefile.push(options),
     matchMedia: q => ({ matches: medias[q] === true }),
   };
   const avant = Object.fromEntries(Object.keys(globaux).map(k => [k, Object.getOwnPropertyDescriptor(globalThis, k)]));
@@ -183,7 +213,7 @@ async function pageFactice(t) {
     await new Promise(r => setTimeout(r, 10));
   }
   assert.ok(el['#scene'].classList.contains('sans-rendu'), 'le démarrage de la page factice n’a pas fini');
-  return { module, el, cartes, boutons, pins: el['#pins'].enfants, medias, doc: globaux.document };
+  return { module, el, cartes, boutons, pins: el['#pins'].enfants, medias, doc: globaux.document, pageDefile };
 }
 
 test('app.js : une seule colonne se lit avec la requête de la feuille de style', () => {
@@ -191,6 +221,26 @@ test('app.js : une seule colonne se lit avec la requête de la feuille de style'
   const tete = readFileSync(new URL('../../src/parts/00-head.html', import.meta.url), 'utf8');
   const bloc = tete.split(`@media ${MEDIA}{`)[1]?.split('}')[0] ?? '';
   assert.match(bloc, /\.accueil-grille/, 'la grille de l’accueil ne passe pas à une colonne avec cette requête');
+});
+
+// Le motif de .atelier-droite (00-head.html) : sur deux colonnes, la colonne « Où intervenir » reste sous la barre du
+// haut, à la hauteur de l'écran, et défile seule ; sur une colonne, elle redevient un bloc de la page.
+test('00-head.html : la colonne « Où intervenir » est collante et défile seule sur deux colonnes, pas sur une', () => {
+  const tete = readFileSync(new URL('../../src/parts/00-head.html', import.meta.url), 'utf8');
+  const regle = (texte, sel) => texte.match(new RegExp(`(?:^|[}\\s])${sel.replace(/[.>]/g, m => `\\${m}`)}\\{([^}]*)\\}`))?.[1] ?? '';
+  const droite = regle(tete, '.atelier-droite');
+  const colonne = regle(tete, '.accueil-grille>.ou-intervenir');
+  for (const propriete of ['position:sticky', 'overflow-y:auto']) {
+    assert.ok(droite.includes(propriete), `.atelier-droite : ${propriete}`);
+    assert.ok(colonne.includes(propriete), `.ou-intervenir : ${propriete} absent`);
+  }
+  // Même haut et même hauteur que la colonne de droite d'un atelier.
+  for (const propriete of ['top', 'max-height']) {
+    assert.equal(colonne.match(new RegExp(`${propriete}:([^;]+)`))?.[1], droite.match(new RegExp(`${propriete}:([^;]+)`))?.[1], propriete);
+  }
+  const bloc = tete.split(`@media ${MEDIA}{`)[1]?.split('\n}')[0] ?? '';
+  assert.match(bloc, /\.accueil-grille>\.ou-intervenir\{position:static;max-height:none;overflow:visible\}/,
+    'sur une colonne, la colonne n’est pas rendue à la page');
 });
 
 test('choisirZone sur une page : zone inconnue refusée, zone connue choisie, sans défilement', async t => {
@@ -223,28 +273,38 @@ test('choisirZone sur une page : zone inconnue refusée, zone connue choisie, sa
 });
 
 test('pastilles et boutons de carte : défilement selon une ou deux colonnes', async t => {
-  const { el, cartes, boutons, pins, medias } = await pageFactice(t);
-  const stage = el['#scene-stage'];
-  const vider = () => { for (const e of [...cartes, stage]) e.defilements = []; };
+  const { el, cartes, boutons, pins, medias, pageDefile } = await pageFactice(t);
+  const stage = el['#scene-stage'], colonne = el['.ou-intervenir'];
+  const vider = () => { for (const e of [...cartes, stage, colonne]) e.defilements = []; pageDefile.length = 0; };
   const hors = { top: 900, bottom: 1040 }, dedans = { top: 200, bottom: 340 };
 
-  // Deux colonnes : la carte de la zone vient à l'écran si elle n'y est pas en entier, rien sinon.
+  // Deux colonnes : la carte de la zone vient en entier dans la partie visible de la colonne « Où intervenir » (de
+  // son haut, 100 px, au bas de l'écran, 800 px), par le défilement de la colonne seule. Ni la page ni l'image ne
+  // bougent, et la carte n'appelle pas scrollIntoView, qui ferait défiler la page aussi.
   cartes[2].rect = hors;
   pins[2].cliquer();
-  assert.deepEqual(cartes[2].defilements, [{ block: 'nearest', behavior: 'auto' }]);
+  assert.deepEqual(colonne.defilements, [{ top: 240, behavior: 'auto' }]);
+  assert.deepEqual([pageDefile, cartes[2].defilements, stage.defilements], [[], [], []]);
   assert.equal(cartes[2].getAttribute('aria-current'), 'true');
   vider();
   cartes[1].rect = dedans;
   boutons[1].cliquer();
-  assert.deepEqual(cartes[1].defilements, []);
-  assert.deepEqual(stage.defilements, []);
+  assert.deepEqual([colonne.defilements, pageDefile, cartes[1].defilements, stage.defilements], [[], [], [], []]);
+  // La colonne au bout de son défilement : la page défile du reste seulement.
+  vider();
+  colonne.scrollTop = 500;
+  pins[2].cliquer();
+  assert.deepEqual(colonne.defilements, [{ top: 600, behavior: 'auto' }]);
+  assert.deepEqual(pageDefile, [{ top: 140, behavior: 'auto' }]);
+  colonne.scrollTop = 0;
 
-  // Une seule colonne : une pastille choisit la zone sans faire défiler la page.
+  // Une seule colonne : une pastille choisit la zone sans faire défiler la page, ni la colonne.
   medias[MEDIA] = true;
   vider();
   pins[2].cliquer();
   assert.equal(cartes[2].getAttribute('aria-current'), 'true');
-  assert.deepEqual([...cartes, stage].map(e => e.defilements.length), [...cartes, stage].map(() => 0));
+  assert.deepEqual([...cartes, stage, colonne].map(e => e.defilements.length), [...cartes, stage, colonne].map(() => 0));
+  assert.deepEqual(pageDefile, []);
   // Le bouton d'une carte ramène l'image, son haut sous la barre, si elle n'est pas en entier à l'écran.
   stage.rect = { top: -500, bottom: -180 };
   boutons[1].cliquer();
