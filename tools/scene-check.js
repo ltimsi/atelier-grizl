@@ -33,9 +33,10 @@
 //      qui défile seule, et après une pastille l'image reste à l'écran à moitié au moins (IMAGE_DEUX_COLONNES). Les
 //      vues de zone, en 3D puis dans le schéma 2D : chaque pastille du bloc #zones-data, cliquée depuis la vue
 //      d'ensemble, avec les contrôles de carte et d'image ci-dessus ; dans la vue de sa zone, la pastille choisie est
-//      affichée et ne touche ni l'aide ni un bouton de la scène (#approche, #vue-ensemble, #variante). Une autre
-//      pastille qui touche ces rectangles, ou deux pastilles à moins de 30 px, ne donnent qu'un avertissement
-//      (vuesDeZone), tant que les vues des manettes et des disques ne sont pas recadrées. Ensuite, avec WebGL : la zone
+//      affichée et ne touche ni l'aide ni un bouton de la scène (#approche, #vue-ensemble, #variante) ; aucune autre
+//      pastille affichée ne touche ces rectangles, et deux pastilles affichées ont leurs centres à 30 px au moins
+//      (ECART_PASTILLES). Chaque écart est une erreur, depuis que les vues des manettes et des disques sont recadrées
+//      (zones.json, relecture finale du lot 3). Ensuite, avec WebGL : la zone
 //      des disques, sans variante (#variante reste caché), puis la vue d'ensemble, pour le budget de triangles ; la
 //      variante de l'étrier (plaquettes sorties) ; l'onglet « Schéma 2D », puis sa vue d'ensemble ; la fenêtre « Ce qui
 //      est approché », qui s'ouvre et se remplit. La légende du schéma 2D (#legende-2d) est visible en 2D (onglet
@@ -68,7 +69,7 @@
 //
 // <sortie> reçoit aussi rapport.json : { erreurs, debordement, debordements, triangles, ancienFavori, webgl, mouvement,
 // sansJs, pages, accueil, anciennesAncres, categorie, atelier, recherche, absents, sansJavaScript, avertissements,
-// vuesDeZone, attendus, captures }.
+// attendus, captures }.
 //   erreurs : messages d'erreur de la console, erreurs de page, requêtes échouées ou en erreur HTTP, et contrôles qui
 //     échouent (préfixe « contrôle : »), chacun avec la page où il arrive ;
 //   debordement : la page a défilé en largeur à au moins une étape ; debordements dit où ;
@@ -78,7 +79,6 @@
 //   pages, accueil, anciennesAncres, categorie, atelier, recherche, absents, sansJavaScript : ce que chaque passe a
 //     relevé (null pour une passe qui n'a pas tourné) ;
 //   avertissements : avertissements de la console, sans doublon (le repli 2D en écrit un, voulu) ;
-//   vuesDeZone : les avertissements des vues de zone, une ligne chacun, recopiés dans la sortie du script ;
 //   attendus : ce que le contrôle provoque lui-même : erreurs du module servi en 404, et requêtes abandonnées
 //     (net::ERR_ABORTED) par la racine ouverte sur une ancienne ancre, qui part aussitôt ailleurs. Ailleurs, une
 //     requête abandonnée est une erreur.
@@ -231,7 +231,7 @@ async function controler(opts) {
   const rapport = {
     erreurs: [], debordement: false, debordements: [], triangles: 0, ancienFavori: null, webgl: !sansGl, mouvement,
     sansJs, pages: {}, accueil: null, anciennesAncres: null, categorie: null, atelier: null, recherche: null,
-    absents: null, sansJavaScript: null, avertissements: [], vuesDeZone: [], attendus: [], captures: [],
+    absents: null, sansJavaScript: null, avertissements: [], attendus: [], captures: [],
   };
   const erreur = s => { rapport.erreurs.push(s); };
   const controle = (ok, s) => {
@@ -672,9 +672,9 @@ async function controler(opts) {
         // cliquée à la souris depuis la vue d'ensemble et le haut de la page. Avec choix : la carte de la zone devient
         // active, et l'image reste à l'écran. Puis, dans la vue de la zone : la pastille choisie est affichée et ne
         // touche ni l'aide ni un bouton de la scène (#approche, #vue-ensemble, #variante) ; c'est celle que l'on vient
-        // de toucher, une erreur sinon. Les autres pastilles affichées contre ces mêmes rectangles, et l'écart de
-        // ECART_PASTILLES entre deux pastilles, ne donnent que des avertissements (rapport.vuesDeZone), tant que les vues
-        // des manettes et des disques ne sont pas recadrées.
+        // de toucher, une erreur sinon. Les autres pastilles affichées ne touchent pas non plus ces rectangles, et deux
+        // pastilles affichées sont à ECART_PASTILLES au moins l'une de l'autre : une erreur sinon. L'écart le plus serré
+        // de chaque vue est relevé (a.vues).
         const vuesDeZone = async mode => {
           const zones = await page.evaluate(() => JSON.parse(document.getElementById('zones-data').textContent)
             .map(z => [z.id, z.nom]));
@@ -704,16 +704,17 @@ async function controler(opts) {
             }, n);
             controle(r.choisie, `accueil, ${quoi} : la pastille ${n}, choisie, n’est pas affichée`);
             for (const [m, o] of r.sous) {
-              if (m === n) erreur(`contrôle : accueil, ${quoi} : la pastille ${n}, choisie, touche ${o}`);
-              else rapport.vuesDeZone.push(`${quoi} : la pastille ${m} touche ${o}`);
+              erreur(`contrôle : accueil, ${quoi} : la pastille ${m}${m === n ? ', choisie,' : ''} touche ${o}`);
             }
+            let ecartMin = null;
             for (let j = 0; j < r.centres.length; j++) for (let k = j + 1; k < r.centres.length; k++) {
               const [p, q] = [r.centres[j], r.centres[k]];
               const d = Math.round(Math.hypot(p[1] - q[1], p[2] - q[2]) * 10) / 10;
-              if (d < ECART_PASTILLES) rapport.vuesDeZone.push(`${quoi} : pastilles ${p[0]} et ${q[0]} à ${d} px`);
+              if (!ecartMin || d < ecartMin.ecart) ecartMin = { ecart: d, pastilles: [p[0], q[0]] };
+              if (d < ECART_PASTILLES) erreur(`contrôle : accueil, ${quoi} : pastilles ${p[0]} et ${q[0]} à ${d} px`);
             }
             a.vues[mode][id] = { image: c.image, scrollAvant: c.scrollAvant, scrollApres: c.scrollApres,
-              affichees: r.centres.map(p => p[0]), sous: r.sous };
+              affichees: r.centres.map(p => p[0]), sous: r.sous, ecartMin };
             if (id === 'pneus') await capturer(page, `accueil-${mode}-zone-${n}.png`, { sel: '#scene' });
           }
         };
@@ -1199,7 +1200,7 @@ async function controler(opts) {
     erreurs: rapport.erreurs, debordements: rapport.debordements, triangles: rapport.triangles,
     ancienFavori: rapport.ancienFavori, webgl: rapport.webgl, mouvement: rapport.mouvement, sansJs: rapport.sansJs,
     pages: Object.keys(rapport.pages).length, captures: rapport.captures.length,
-    avertissements: rapport.avertissements.length, attendus: rapport.attendus.length, vuesDeZone: rapport.vuesDeZone,
+    avertissements: rapport.avertissements.length, attendus: rapport.attendus.length,
   }, null, 2));
   console.log(echecs.length ? 'ÉCHEC : ' + echecs.join(' ; ') : 'OK');
   process.exitCode = echecs.length ? 1 : 0;

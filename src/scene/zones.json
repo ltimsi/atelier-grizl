@@ -3,8 +3,8 @@
     "id": "disques",
     "nom": "Disques de frein",
     "ancre": "disqueArriere",
-    "vue": { "cible": "disqueArriere", "dir": [-0.25, 0.18, -1], "dist": 760 },
-    "schema": { "centre": "disqueArriere", "largeur": 560 }
+    "vue": { "cible": "disqueArriere", "dir": [-0.25, 0.4, -1], "dist": 760 },
+    "schema": { "centre": "disqueArriere", "largeur": 840 }
   },
   {
     "id": "etrier",
@@ -18,7 +18,7 @@
     "id": "manettes",
     "nom": "Manettes et durites",
     "ancre": "cocotteGauche",
-    "vue": { "cible": "cocotteGauche", "dir": [0.75, 0.45, -1], "dist": 900 },
+    "vue": { "cible": "cocotteGauche", "dir": [0.75, 0.65, -1], "dist": 600 },
     "schema": { "centre": "cocotteGauche", "largeur": 480 }
   },
   {
