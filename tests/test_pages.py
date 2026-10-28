@@ -1328,9 +1328,9 @@ class TestRecherche(Site):
         fiche = dom.analyser(COMPOSANTS)
         lignes = len(dom.selectionner(fiche, "tbody > tr")) + len(dom.selectionner(fiche, "ul.accessoires > li"))
         self.assertEqual(len(pieces), lignes)
-        # 45 étapes aux Freins, 89 au Montage (1.3 : 24, 1.4 : 14, 1.5 : 17, 1.6 : 15, 1.7 : 11, 1.8 : 8), 59 au
-        # tubeless (3.2 : 23, 3.3 : 9, 3.4 : 9, 3.5 : 18).
-        self.assertEqual(len([e for e in index if e["k"].startswith("Étape · ")]), 45 + 89 + 59)
+        # 45 étapes aux Freins, 89 au Montage (1.3 : 24, 1.4 : 14, 1.5 : 17, 1.6 : 15, 1.7 : 11, 1.8 : 8), 61 au
+        # tubeless (3.2 : 25, son talonnage en trois étapes, 3.3 : 9, 3.4 : 9, 3.5 : 18).
+        self.assertEqual(len([e for e in index if e["k"].startswith("Étape · ")]), 45 + 89 + 61)
         # Les ateliers passent en premier, avant les étapes et les outils.
         genres = [e["k"].split(" ")[0] for e in index]
         self.assertLess(genres.index("Atelier"), genres.index("Étape"))

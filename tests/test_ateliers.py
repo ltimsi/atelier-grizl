@@ -1189,11 +1189,17 @@ class TestTubeless(unittest.TestCase):
     def test_reservoir_contre_pneu(self):  # Review Focus 2, et I1 de la relecture du 26/10
         # L'étape 12 charge le réservoir : sa charge de 11 bar n'est jamais la pression du pneu. À l'étape 13, au moment
         # du passage sur INFLATE, l'aiguille montre encore cette charge (dessin de STEP 4 dans la notice) : tu attends
-        # qu'elle ne bouge plus, puis tu lis l'échelle en bar et tu purges au-delà de 3,0 bar. Vider le réservoir vient
-        # en fin de chantier, à l'étape 22.
-        charge = self.corps("tubeless-passer", "Charge le réservoir")
+        # qu'elle ne bouge plus ; à l'étape 14, tu lis l'échelle en bar et tu purges au-delà de 3,0 bar ; l'étape 15 dit
+        # de ne jamais gonfler plus fort (N5 de la relecture finale : l'ancienne étape 13 coupée en trois). Vider le
+        # réservoir vient en fin de chantier, à l'étape 24.
+        charge = self.corps("tubeless-passer", "Ouvre la valve, puis charge le réservoir")
         talon = self.corps("tubeless-passer", "Talonne")
+        lecture = self.corps("tubeless-passer", "Lis le manomètre en bar")
+        echec = self.corps("tubeless-passer", "S'il ne talonne pas")
         roulage = self.corps("tubeless-passer", "Règle la pression de roulage")
+        titres = [t for t, _ in self.etapes_de("tubeless-passer")]
+        rangs = [i for i, t in enumerate(titres) if t.startswith(("Talonne", "Lis le manomètre", "S'il ne talonne pas"))]
+        self.assertEqual(rangs, [12, 13, 14], titres)
         for mot in ("Pump to 160\u00a0psi / 11\u00a0bar for best results.", "CHARGE", "Air Chamber", "réservoir",
                     "pas dans le pneu", "jamais celle de ton pneu", S_APPLIQUE, "always never exceed",
                     "DO NOT squeeze tire when engaging pump head.", "DO NOT turn Mode Selector to mid-point between modes."):
@@ -1201,22 +1207,25 @@ class TestTubeless(unittest.TestCase):
         for mot in ("INFLATE", "l'aiguille montre encore la charge du réservoir", "«\u00a0160\u00a0psi / 11\u00a0bar\u00a0»",
                     "Ce n'est pas la pression de ton pneu\u00a0: dans le pneu, " + S_APPLIQUE,
                     "Proposition\u00a0: ne touche pas au bouton de purge pendant la bouffée, attends que l'aiguille ne bouge "
-                    "plus.",
+                    "plus."):
+            self.assertIn(mot, talon, mot)
+        for mot in ("Tant que l'aiguille montre la charge du réservoir, ce n'est pas ton pneu",
                     "Aiguille immobile, valve ouverte, le manomètre donne la pression du pneu", "lecture de ce site",
                     "Continue to pump to desired pressure immediately.", "Pump to desired pressure.", "échelle en bar",
                     "«\u00a043.5\u00a0» PSI", "Si l'aiguille immobile dépasse 3,0\u00a0bar", "Air Release Button",
                     "appuie sur le bouton de purge, «\u00a0Air Release Button\u00a0», jusqu'à 3,0\u00a0bar au plus",
                     "always never exceed", "DO NOT exceed the maximum air pressure of your tubeless tire.", "non publiée"):
-            self.assertIn(mot, talon, mot)
-        # L'ordre du mode pas à pas : la charge vue au passage sur INFLATE, l'attente sans purger, puis la lecture, et
-        # la purge elle-même, jusqu'à 3,0 bar au plus (N4 de la seconde relecture de la tâche 1).
-        ordre = [talon.index(m) for m in ("charge du réservoir", "ne touche pas au bouton de purge", "ne bouge plus",
-                                          "Aiguille immobile", "Si l'aiguille immobile dépasse",
-                                          "appuie sur le bouton de purge", "jusqu'à 3,0\u00a0bar au plus")]
+            self.assertIn(mot, lecture, mot)
+        # L'ordre du mode pas à pas : la charge vue au passage sur INFLATE et l'attente sans purger (étape 13), puis la
+        # lecture et la purge elle-même, jusqu'à 3,0 bar au plus (étape 14) (N4 de la seconde relecture de la tâche 1).
+        ordre = [talon.index(m) for m in ("charge du réservoir", "ne touche pas au bouton de purge", "ne bouge plus")]
+        self.assertEqual(ordre, sorted(ordre))
+        ordre = [lecture.index(m) for m in ("Aiguille immobile", "Si l'aiguille immobile dépasse",
+                                            "appuie sur le bouton de purge", "jusqu'à 3,0\u00a0bar au plus")]
         self.assertEqual(ordre, sorted(ordre))
         for absent in ("Regarde aussitôt le manomètre", "dégonfle aussitôt", "Topeak n'écrit pas ce que le manomètre",
                        "DO NOT store pressurized air", "en haut du cadran"):
-            self.assertNotIn(absent, talon, absent)
+            self.assertNotIn(absent, talon + lecture + echec, absent)
         for mot in ("vide le réservoir", "DO NOT store pressurized air in Air Chamber when not in use."):
             self.assertIn(mot, roulage, mot)
         # Le relevé consigne ce que la notice dessine et écrit, à la source de cette étape.
@@ -1251,8 +1260,8 @@ class TestTubeless(unittest.TestCase):
             self.assertIn(fait, self.releve, fait)
         # L'étape 12 : le geste entier, avec sa source, avant d'engager la tête de pompe.
         (charge,) = [li for li in dom.selectionner(self.par_id["tubeless-passer"].section, "ol.steps > li")
-                     if texte_de(dom.selectionner(li, "p.st-t")[0]).startswith("Charge le réservoir")]
-        corps = self.corps("tubeless-passer", "Charge le réservoir")
+                     if texte_de(dom.selectionner(li, "p.st-t")[0]).startswith("Ouvre la valve")]
+        corps = self.corps("tubeless-passer", "Ouvre la valve")
         for mot in ("desserre à la main son écrou moleté", moletee, "Sclaverand-Ventil (auch Presta-Ventil",
                     "Also the thin top pin can be easily bent", "The rim nut fixes the valve in the rim.",
                     "pas l'écrou de jante", "lecture de ce site", "à lire sur la notice"):
@@ -1266,12 +1275,13 @@ class TestTubeless(unittest.TestCase):
         for ident in ("tubeless-passer", "tubeless-liquide", "tubeless-pression", "tubeless-crevaison"):
             for titre, c in self.etapes_de(ident):
                 francais = re.sub(r"«[^»]*»", "", titre + " " + c)
-                if gonfle.search(francais) or titre.startswith(("Charge le réservoir", "Règle la pression de roulage")):
+                if gonfle.search(francais) or titre.startswith(("Ouvre la valve", "Lis le manomètre",
+                                                                 "Règle la pression de roulage")):
                     vues.append((ident, titre))
                     self.assertIn("écrou moleté", c, f"{ident} : {titre}")
                     self.assertTrue("Before inflating, the knurled nut must be loosened." in c or "étape 12" in c
                                     or "étapes 12" in c, f"{ident} : {titre}")
-        self.assertEqual([i for i, _ in vues], ["tubeless-passer"] * 6 + ["tubeless-liquide"] + ["tubeless-pression"] * 2
+        self.assertEqual([i for i, _ in vues], ["tubeless-passer"] * 8 + ["tubeless-liquide"] + ["tubeless-pression"] * 2
                          + ["tubeless-crevaison"] * 2, vues)
         # Le verrouillage, une fois la tête retirée : Proposition pour le moment, Schwalbe pour le geste.
         roulage = self.corps("tubeless-passer", "Règle la pression de roulage")
@@ -1282,7 +1292,11 @@ class TestTubeless(unittest.TestCase):
         for mot in ("la valve est peut-être restée fermée", "l'aiguille montre encore le réservoir", "lecture de ce site",
                     "étape 12", "3.6"):
             self.assertIn(mot, talon, mot)
-        self.assertLess(talon.index("restée fermée"), talon.index("Aiguille immobile, valve ouverte"))
+        # La lecture du manomètre vient à l'étape suivante, une fois la valve ouverte.
+        etapes = self.etapes_de("tubeless-passer")
+        (i,) = [k for k, (t, _) in enumerate(etapes) if t.startswith("Talonne")]
+        self.assertIn("Aiguille immobile, valve ouverte", etapes[i + 1][1])
+        self.assertIn("Contrôle aussi l'écrou moleté de la valve (étape 12)", self.corps("tubeless-passer", "S'il ne talonne"))
         # 3.6 : la cause, avec la citation et sa source.
         (q,) = [x for x in dom.selectionner(self.par_id["tubeless-problemes"].section, "div.q")
                 if texte_de(dom.selectionner(x, "b")[0]) == "Le pneu ne talonne pas"]
@@ -1294,14 +1308,15 @@ class TestTubeless(unittest.TestCase):
     def test_corrections_de_la_relecture_finale(self):  # mineurs de la relecture finale et points parqués
         # M1 : la dose lue sur le ruban de la vidéo cède à celle du liquide, Muc-Off, à l'étape 17.
         ruban = self.corps("tubeless-passer", "Contrôle le ruban")
-        for mot in ("c'est la dose Muc-Off qui s'applique (étape 17)",
+        for mot in ("c'est la dose Muc-Off qui s'applique (étape 19)",
                     "You can usually find this information on the packaging of your respective sealant."):
             self.assertIn(mot, ruban, mot)
         # M2 : 3.3 regonfle un pneu dégonflé complètement : lecture en bar, et 3.2 s'il a déjanté.
         (li,) = [x for x in dom.selectionner(self.par_id["tubeless-liquide"].section, "ol.steps > li")
                  if texte_de(dom.selectionner(x, "p.st-t")[0]).startswith("Remets l'obus")]
         corps = self.corps("tubeless-liquide", "Remets l'obus")
-        for mot in ("échelle en bar", "S'il a déjanté pendant le dégonflage de l'étape 2", "recommence aux étapes 12 et 13"):
+        for mot in ("échelle en bar", "S'il a déjanté pendant le dégonflage de l'étape 2",
+                    "recommence le talonnage, étapes 12 à 15"):
             self.assertIn(mot, corps, mot)
         self.assertTrue([a for a in dom.selectionner(li, "a") if a.get("href") == "#tubeless-passer"])
         # M3 : le dégraissant de l'étape 8 est dans la liste du chantier.
@@ -1309,7 +1324,7 @@ class TestTubeless(unittest.TestCase):
                       self.par_id["tubeless-passer"].outils)
         # M8 : la précision du manomètre n'est pas publiée, à l'étape 13 et à l'étape 22.
         talon = self.corps("tubeless-passer", "Talonne")
-        self.assertIn("sa précision est non publiée", talon)
+        self.assertIn("sa précision est non publiée", self.corps("tubeless-passer", "Lis le manomètre"))
         self.assertIn("précision non publiée", self.corps("tubeless-passer", "Règle la pression de roulage"))
         # N3 : l'aiguille du dessin de STEP 4 est en bout d'échelle, pas en haut du cadran.
         self.assertIn("en bout d'échelle, vers", talon)
@@ -1319,6 +1334,96 @@ class TestTubeless(unittest.TestCase):
         self.assertNotIn("Ébavurer est un geste abrasif", self.texte_complet())
         self.assertNotIn("Ébavurer est un geste abrasif", self.releve)
         self.assertNotIn("magasin des", self.releve)  # M10
+
+    def test_talonnage_lisible_pas_a_pas(self):  # N5 de la relecture finale
+        # Le mode pas à pas se lit de loin, les mains dans la roue : le talonnage tient en trois étapes d'au plus
+        # 1 500 caractères de corps, chacune avec son titre d'action, et aucune étape de 3.2 ne dépasse 2 000
+        # caractères (l'étape 12, la plus longue, porte le geste entier de l'écrou moleté).
+        etapes = self.etapes_de("tubeless-passer")
+        self.assertEqual(len(etapes), 25)
+        trois = [(t, c) for t, c in etapes if t.startswith(("Talonne", "Lis le manomètre", "S'il ne talonne pas"))]
+        self.assertEqual([t for t, _ in trois], [
+            "Talonne en mode INFLATE, jamais plus de 3,0\u00a0bar",
+            "Lis le manomètre en bar, purge jusqu'à 3,0\u00a0bar au plus",
+            "S'il ne talonne pas\u00a0: pas plus fort, pas de cartouche, dégonfle et contrôle"])
+        for t, c in trois:
+            self.assertLessEqual(len(c), 1500, t)
+        for t, c in etapes:
+            self.assertLessEqual(len(c), 2000, t)
+
+    # Chaque renvoi à une étape de 3.2, dans tout le chapitre : le passage qui le porte, et le début du titre de chaque
+    # étape visée, qui doit nommer l'action dont parle le renvoi. Une étape ajoutée ou retirée dans 3.2 décale les
+    # numéros : le titre ne correspond plus, et le test échoue.
+    RENVOIS_3_2 = (
+        ("tubeless-materiel", "à lire sur la pièce (3.2, étape 4)", {4: "Note ce que tu trouves"}),
+        ("tubeless-materiel", "à constater sur la pièce (3.2, étape 4)", {4: "Note ce que tu trouves"}),
+        ("tubeless-passer", "La roue, à l'étape 1 (1.5)", {1: "Dépose la roue"}),
+        ("tubeless-passer", "roue remontée, étape 19)", {19: "Injecte"}),
+        ("tubeless-passer", "un nettoyant Muc-Off de l'étape 8", {8: "Pneu neuf"}),
+        ("tubeless-passer", "passe à l'étape 2.", {2: "Dégonfle complètement"}),
+        ("tubeless-passer", "c'est la dose Muc-Off qui s'applique (étape 19)", {19: "Injecte"}),
+        ("tubeless-passer", "passe à l'étape 7.", {7: "Pose la valve"}),
+        ("tubeless-passer", "l'écrou de jante, serré à la main (étape 7)", {7: "Pose la valve, écrou serré à la main"}),
+        ("tubeless-passer", "contrôle-le (étape 12)", {12: "Ouvre la valve"}),
+        ("tubeless-passer", "la consigne d'échec de Topeak (étape 15)", {15: "S'il ne talonne pas"}),
+        ("tubeless-passer", "ce n'est pas ton pneu (étape 13)", {13: "Talonne"}),
+        ("tubeless-passer", "l'écrou moleté est desserré depuis l'étape 12", {12: "Ouvre la valve"}),
+        ("tubeless-passer", "l'écrou moleté de la valve (étape 12)", {12: "Ouvre la valve"}),
+        ("tubeless-passer", "remonte-la d'abord (étape 23)", {23: "Remonte la roue"}),
+        ("tubeless-passer", "desserre l'écrou moleté de la valve, comme à l'étape 12", {12: "Ouvre la valve"}),
+        ("tubeless-passer", "l'échelle en bar comme à l'étape 14, sans cartouche", {14: "Lis le manomètre en bar"}),
+        ("tubeless-passer", "pendant le dégonflage de l'étape 17", {17: "Dégonfle complètement et retire l'obus"}),
+        ("tubeless-passer", "recommence le talonnage, étapes 12 à 15.", {12: "Ouvre la valve", 15: "S'il ne talonne pas"}),
+        ("tubeless-passer", "écrou moleté desserré comme à l'étape 12, sans", {12: "Ouvre la valve"}),
+        ("tubeless-passer", "Écrou moleté desserré pour gonfler, comme à l'étape 12.", {12: "Ouvre la valve"}),
+        ("tubeless-passer", "l'échelle en bar comme à l'étape 14, précision", {14: "Lis le manomètre en bar"}),
+        ("tubeless-passer", "puis revissé, comme aux étapes 12 et 24.",
+         {12: "Ouvre la valve", 24: "Règle la pression de roulage"}),
+        ("tubeless-passer", "talonne sans cartouche (étapes 12 et 13)", {12: "Ouvre la valve", 13: "Talonne"}),
+        ("tubeless-passer", "s'applique (étape 10)", {10: "Pose le second talon"}),
+        ("tubeless-passer", "Le changement du ruban, étape 6.", {6: "Ruban à changer"}),
+        ("tubeless-passer", "La dépose et la pose des roues, étapes 1 et 23.", {1: "Dépose la roue", 23: "Remonte la roue"}),
+        ("tubeless-passer", "la limite de ta jante (étape 13)", {13: "Talonne en mode INFLATE, jamais plus de 3,0\u00a0bar"}),
+        ("tubeless-liquide", "(3.2, étape 19)", {19: "Injecte"}),
+        ("tubeless-liquide", "comme en 3.2, étapes 12 et 24", {12: "Ouvre la valve", 24: "Règle la pression de roulage"}),
+        ("tubeless-liquide", "comme à l'étape 14 de 3.2", {14: "Lis le manomètre en bar"}),
+        ("tubeless-liquide", "recommence le talonnage, étapes 12 à 15 de 3.2",
+         {12: "Ouvre la valve", 15: "S'il ne talonne pas"}),
+        ("tubeless-pression", "(3.2, étapes 12 et 24)", {12: "Ouvre la valve", 24: "Règle la pression de roulage"}),
+        ("tubeless-pression", "(3.2, étapes 12 et 24)", {12: "Ouvre la valve", 24: "Règle la pression de roulage"}),
+        ("tubeless-crevaison", "(3.2, étapes 12 et 24)", {12: "Ouvre la valve", 24: "Règle la pression de roulage"}),
+        ("tubeless-crevaison", "(3.2, étape 12)", {12: "Ouvre la valve"}),
+        ("tubeless-problemes", "(3.2, étape 13)", {13: "Talonne"}),
+        ("tubeless-problemes", "Vois aussi 3.2, étape 15.", {15: "S'il ne talonne pas"}),
+    )
+
+    def test_renvois_aux_etapes_de_3_2(self):  # N5 de la relecture finale : la renumérotation
+        titres = [t for t, _ in self.etapes_de("tubeless-passer")]
+        for ident, passage, cibles in self.RENVOIS_3_2:
+            with self.subTest(passage):
+                fois = len([r for r in self.RENVOIS_3_2 if r[:2] == (ident, passage)])
+                self.assertGreaterEqual(self.texte_atelier(ident).count(passage), fois, passage)
+                for n, debut in cibles.items():
+                    self.assertLessEqual(n, len(titres))
+                    self.assertTrue(titres[n - 1].startswith(debut), f"étape {n} de 3.2 : « {titres[n - 1]} »")
+        # Chaque renvoi du chapitre est dans la liste, et vise une étape qui existe (les plages comprises). Dans 3.2,
+        # « étape N » vise 3.2 ; ailleurs, seuls « 3.2, étape N » et « étape N de 3.2 » la visent.
+        dans_3_2 = re.compile(r"\bétapes? (\d+)(?: (?:et|à) (\d+))?")
+        ailleurs = re.compile(r"3\.2, étapes? (\d+)(?: (?:et|à) (\d+))?|\bétapes? (\d+)(?: (?:et|à) (\d+))? de 3\.2\b")
+        for a in self.ch.ateliers:
+            texte = self.texte_atelier(a.id)
+            trouves = list((dans_3_2 if a.id == "tubeless-passer" else ailleurs).finditer(texte))
+            listes = [r for r in self.RENVOIS_3_2 if r[0] == a.id]
+            # Les mêmes numéros, autant de fois : un renvoi changé ou ajouté hors de la liste fait échouer le test.
+            self.assertEqual(sorted(tuple(int(g) for g in m.groups() if g) for m in trouves),
+                             sorted(tuple(sorted(c)) for _, _, c in listes), f"{a.id} : {[m.group(0) for m in trouves]}")
+            for m in trouves:
+                nombres = [int(g) for g in m.groups() if g]
+                for n in range(min(nombres), max(nombres) + 1) if " à " in m.group(0) else nombres:
+                    self.assertTrue(1 <= n <= len(titres), f"{a.id} : {m.group(0)}")
+        # Le lot 2 ne renvoie à aucune étape de 3.2.
+        montage = (RACINE / "src" / "parts" / "11-montage.html").read_text(encoding="utf-8")
+        self.assertIsNone(re.search(r"tubeless-passer\">3\.2</a>, étape", montage))
 
     def test_valeur_avec_source_officielle(self):  # Review Focus 3
         # Toute ligne qui porte un span.nm, une pression ou une dose en ml porte un a.src officiel autre que Park Tool,
@@ -1361,16 +1466,19 @@ class TestTubeless(unittest.TestCase):
         # sont dans les corps des étapes de 3.2 (et de 3.5 pour le CO2), pas seulement dans un encadré.
         etapes = self.etapes_de("tubeless-passer")
         gonfler = [(t, c) for t, c in etapes
-                   if re.search(r"(?<!dé)gonfle|talonne|réservoir|pression|fuites|ligne du pneu|roule", t, re.I)]
+                   if re.search(r"(?<!dé)gonfle|talonne|réservoir|manomètre|pression|fuites|ligne du pneu|roule", t, re.I)]
         self.assertGreaterEqual(len(gonfler), 7, [t for t, _ in etapes])
         for t, c in gonfler:
             self.assertIn("3,0\xa0bar", c, t)
-        talon = self.corps("tubeless-passer", "Talonne")
+        # Le talonnage tient en trois étapes (N5 de la relecture finale) : la troisième porte, dans son corps, le
+        # surgonflage cité en contradiction, le CO2 et la consigne d'échec.
+        talon = self.corps("tubeless-passer", "S'il ne talonne pas")
         for mot in ("always never exceed", S_APPLIQUE, "Slightly over-inflate the tire for a short time",
                     "Inflate the tire to at least the maximum pressure on the label.", "pump as hard and as fast as you can",
                     "CO2 (dioxyde de carbone)", "Please do not use CO2 cartridges for inflation.",
                     "If a floor pump fails, use a tubeless inflator, CO2 cartridge, or compressor.", "la plus prudente",
-                    "ne gonfle jamais plus fort", "3.6"):
+                    "ne gonfle jamais plus fort", "3.6",
+                    "If inflation fails, deflate tire and check tire installation, rim and valve."):
             self.assertIn(mot, talon, mot)
         for debut, mots in {
             "Démonte": ("Do not use metal tools to install or remove tubeless tyres.", "Use plastic tyre lever if necessary."),
@@ -1529,12 +1637,13 @@ class TestTubeless(unittest.TestCase):
         self.assertIn("You can simply push the tubeless valve through the rim tape with the tip.",
                       self.corps("tubeless-passer", "Pose la valve"))
         regonfler = self.corps("tubeless-passer", "Remets l'obus")
-        for mot in ("sans charger le réservoir", "Pump to desired pressure.", "recommence aux étapes 12 et 13", "Proposition"):
+        for mot in ("sans charger le réservoir", "Pump to desired pressure.", "recommence le talonnage, étapes 12 à 15",
+                    "Proposition"):
             self.assertIn(mot, regonfler, mot)
         # N2 de la seconde relecture de la tâche 1 : le couple est celui que donne 1.5, pas « 1.5 » lu comme un couple.
         self.assertIn("au couple donné en 1.5", self.corps("tubeless-passer", "Remonte la roue"))
         self.assertNotIn("au couple de 1.5", self.texte_complet())
-        self.assertIn("sans lui, le sachet Muc-Off, roue remontée, étape 17", " ".join(self.par_id["tubeless-passer"].outils))
+        self.assertIn("sans lui, le sachet Muc-Off, roue remontée, étape 19", " ".join(self.par_id["tubeless-passer"].outils))
         # M6 : regonfler en route se lit sur un manomètre.
         self.assertIn("Mini-pompe avec manomètre (Proposition)", self.par_id["tubeless-crevaison"].outils)
         for debut in ("Mèche\u00a0: regonfle", "Chambre\u00a0: gonfle"):
