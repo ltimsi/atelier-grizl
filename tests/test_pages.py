@@ -189,12 +189,14 @@ COMMANDES_3D_TUBELESS = {
         "controls: [{ type: 'range', label: 'Notice TPT-1', min: 1, max: 8, step: 1, value: 6,",
         # Le compteur du curseur reste court, pour que le curseur garde sa largeur ; le geste entier va sur une ligne qui
         # revient à la ligne, sous la barre des commandes (rien au-dessus du curseur ne change de hauteur d'un cran à
-        # l'autre), et n'est jamais coupé.
-        "format: function (v) { geste(v); return 'Étape ' + v + ' / 8'; },",
-        "ligne.textContent = 'Étape ' + v + ' de la notice\xa0: ' + LABELS[v - 1];",
+        # l'autre), et n'est jamais coupé. Le compteur compte les gestes de la notice, pas les étapes de 3.5 (M5 de la
+        # relecture finale) : le geste n est l'étape n + 1 de la page, ce que la ligne dit aussi. Le style de la ligne
+        # est la classe .v3d-geste de 00-head.html (M7), pas du CSS en ligne.
+        "format: function (v) { geste(v); return 'Geste ' + v + ' / 8'; },",
+        "ligne.textContent = 'Geste ' + v + ' de la notice, étape ' + (v + 1) + ' de 3.5\xa0: ' + LABELS[v - 1];",
+        "ligne = document.createElement('p'); ligne.className = 'v3d-geste';",
         "if (barre && barre !== ligne && barre.nextElementSibling !== ligne) barre.insertAdjacentElement('afterend', ligne);",
         "if (!placee) { placee = true; geste(sT); }",
-        "white-space:normal",
     ],
 }
 # Les déclarations de chaque en-tête : chaque puce nommée est là, dit ce qu'elle approche (« approché », « dessin »), et
@@ -979,6 +981,11 @@ class TestPages(Site):
         legende_3d = ("Touche un numéro pour repérer la pièce. Un numéro peut se dessiner par-dessus une pièce qui cache "
                       "la sienne : fais tourner la pièce, ou lis la liste numérotée sous la figure.")
         limite = "Jamais plus de 3,0\xa0bar dans le pneu, même pour talonner"
+        # La ligne du geste, sous la barre de la mèche : sa classe dans 00-head.html, qui revient à la ligne.
+        tete = (RACINE / "src" / "parts" / "00-head.html").read_text(encoding="utf-8")
+        regle = re.search(r"^\.v3d-geste\{([^}]*)\}$", tete, re.M)
+        self.assertIsNotNone(regle, "00-head.html : règle .v3d-geste")
+        self.assertIn("white-space:normal", regle.group(1))
         # Les crampons de la scène de l'accueil, recopiés dans les deux pièces (des IIFE autonomes) : une valeur changée
         # dans l'un des trois fichiers fait échouer le test.
         roues = (RACINE / "src" / "scene" / "pieces" / "roues.js").read_text(encoding="utf-8")
@@ -997,6 +1004,25 @@ class TestPages(Site):
                                            "m-plug.js": ("plug", "tubeless-crevaison")}.items():
             chemin = RACINE / "src" / "js" / "models" / fichier
             self.assertTrue(chemin.exists(), f"{fichier} absent")
+            # Le chapitre, lu une fois par modèle (les copies servies sont comparées aux mêmes listes plus bas) : la
+            # figure et sa légende, la pastille des 3,0 bar, et les gestes du curseur, titres des étapes « Mèche ».
+            figures = [f for f in dom.selectionner(par_id[atelier].section, "figure.v3d") if f.get("data-model") == modele]
+            self.assertEqual(len(figures), 1, f"{atelier} : figure {modele}")
+            legende = plat(un(figures[0], "figcaption").texte())
+            self.assertIn(legende_3d, legende, f"{atelier} : légende")
+            if modele == "rim":
+                self.assertEqual([p for p in PASTILLES_3D_TUBELESS[fichier] if p.startswith(limite)],
+                                 [PASTILLES_3D_TUBELESS[fichier][-1]])
+                self.assertIn(plat(limite), legende, "3,0 bar : phrase de la légende de 3.2")
+            else:
+                titres = [plat(un(li, "p.st-t").texte()) for li in dom.selectionner(par_id[atelier].section, "ol.steps > li")]
+                meches = [(i, t[len("Mèche : "):]) for i, t in enumerate(titres) if t.startswith("Mèche : ")]
+                self.assertEqual([t for _, t in meches], [plat(e[0].lower() + e[1:]) for e in ETAPES_3D_TPT1])
+                # Le geste n de la notice est l'étape n + 1 de 3.5, comme le dit la ligne sous le curseur.
+                self.assertEqual([i + 1 for i, _ in meches], list(range(2, 10)))
+                corps = [plat(li.texte()) for li in dom.selectionner(par_id[atelier].section, "ol.steps > li")]
+                for n, (i, _) in enumerate(meches, 1):
+                    self.assertIn(f"« {n}. ", corps[i], f"geste {n} de la notice")
             for nom, texte in self.copies(fichier):
                 self.assertEqual(texte.count(f"AtelierModels.register('{modele}', {{"), 1, f"{nom} : register")
                 pastilles = re.findall(r"text: '((?:[^'\\]|\\.)*)'", texte)
@@ -1017,23 +1043,9 @@ class TestPages(Site):
                 for libelle in pastilles + etapes:
                     for v in re.findall(r"(?:\d+(?:,\d+)? à )?\d+(?:,\d+)?\xa0(?:mm|ml|bar|pouce)\b", libelle):
                         self.assertIn(plat(v), chapitre, f"{nom} : {v!r} absent du chapitre : {libelle[:60]}")
-                figures = [f for f in dom.selectionner(par_id[atelier].section, "figure.v3d")
-                           if f.get("data-model") == modele]
-                self.assertEqual(len(figures), 1, f"{atelier} : figure {modele}")
-                legende = plat(un(figures[0], "figcaption").texte())
-                self.assertIn(legende_3d, legende, f"{atelier} : légende")
-                if modele == "rim":
-                    self.assertEqual([p for p in pastilles if p.startswith(limite)],
-                                     [PASTILLES_3D_TUBELESS[fichier][-1]])
-                    self.assertIn(plat(limite), legende, "3,0 bar : phrase de la légende de 3.2")
-                else:
-                    titres = [plat(un(li, "p.st-t").texte())
-                              for li in dom.selectionner(par_id[atelier].section, "ol.steps > li")]
-                    meches = [(i, t[len("Mèche : "):]) for i, t in enumerate(titres) if t.startswith("Mèche : ")]
-                    self.assertEqual([t for _, t in meches], [plat(e[0].lower() + e[1:]) for e in ETAPES_3D_TPT1])
-                    corps = [plat(li.texte()) for li in dom.selectionner(par_id[atelier].section, "ol.steps > li")]
-                    for n, (i, _) in enumerate(meches, 1):
-                        self.assertIn(f"« {n}. ", corps[i], f"geste {n} de la notice")
+                # Aucun style en ligne : la mise en forme vit dans 00-head.html.
+                self.assertNotIn("cssText", texte, f"{nom} : style en ligne")
+                self.assertIsNone(re.search(r"\.style\.\w+\s*=", texte), f"{nom} : style en ligne")
                 # Tout le fichier, commentaires compris, les blancs ramenés à une espace : une phrase coupée en fin de
                 # ligne de commentaire est lue entière. assertFalse plutôt qu'assertNotIn : un échec nomme la valeur
                 # sans recopier tout le fichier.

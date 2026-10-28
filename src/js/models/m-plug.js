@@ -12,7 +12,8 @@
    trou maximale du TPT-1 n'est pas publiée. Le liquide : Canyon le dit le plus efficace sur les petits trous, un trou
    plus grand pouvant demander une mèche ou une chambre à air.
    Curseur « Notice TPT-1 », de 1 à 8 : chaque cran montre le geste de la notice qui porte ce numéro. Son compteur dit
-   « Étape n / 8 » ; le geste entier s'écrit sur une ligne sous la barre des commandes, qui revient à la ligne.
+   « Geste n / 8 », le numéro de la notice ; le geste entier s'écrit sur une ligne sous la barre des commandes, qui
+   revient à la ligne, avec le numéro de l'étape de 3.5 (le geste n de la notice y est l'étape n + 1).
    Vue éclatée : le capuchon, tant qu'il est dessiné, s'éloigne encore de l'outil, et la bague de maintien s'écarte
    de l'aiguille.
    Formes approchées (aucune photo ni cote du TPT-1 n'est relevée ; seule cote publiée, les 6,35 mm de bouts visibles,
@@ -486,7 +487,7 @@
           else aFork.position.set(FAR[0], FAR[1], FAR[2]);  // la fourche est sortie de la mèche
         } else { aTail.position.set(FAR[0], FAR[1], FAR[2]); aFork.position.set(FAR[0], FAR[1], FAR[2]); }
       }
-      /* Le compteur du curseur reste court (« Étape 4 / 8 ») : un texte long écraserait le curseur, que la barre
+      /* Le compteur du curseur reste court (« Geste 4 / 8 ») : un texte long écraserait le curseur, que la barre
          partage avec les boutons. Le geste entier s'écrit sur une ligne à lui, sous la barre des commandes, qui revient
          à la ligne : « jamais plus de 3,0 bar » du geste 8 n'est jamais coupé, et rien au-dessus du curseur ne change de
          hauteur d'un cran à l'autre. La barre est l'élément qui suit la pièce (la visionneuse l'y pose). format() est
@@ -497,10 +498,9 @@
         var stage = api.viewer && api.viewer.stage, barre = stage && stage.nextElementSibling;
         if (!ligne) {
           ligne = document.createElement('p'); ligne.className = 'v3d-geste'; ligne.setAttribute('aria-live', 'polite');
-          ligne.style.cssText = 'margin:0;padding:8px 12px;border-top:1px solid var(--line-2);font-family:var(--f-mono);font-size:.76rem;line-height:1.45;color:var(--acc);white-space:normal';
         }
         if (barre && barre !== ligne && barre.nextElementSibling !== ligne) barre.insertAdjacentElement('afterend', ligne);
-        ligne.textContent = 'Étape ' + v + ' de la notice : ' + LABELS[v - 1];
+        ligne.textContent = 'Geste ' + v + ' de la notice, étape ' + (v + 1) + ' de 3.5 : ' + LABELS[v - 1];
       }
       var s = 6, sT = 6, lastE = -1;
       apply(pose(s));
@@ -523,7 +523,7 @@
           { obj: aProv, p: [0, 0, 0], text: 'Réparation provisoire : remplace le pneu dès que possible (notice Park Tool)' }
         ],
         controls: [{ type: 'range', label: 'Notice TPT-1', min: 1, max: 8, step: 1, value: 6,
-          format: function (v) { geste(v); return 'Étape ' + v + ' / 8'; },
+          format: function (v) { geste(v); return 'Geste ' + v + ' / 8'; },
           onChange: function (v) { sT = v; if (reduce) { s = sT; apply(pose(s)); } api.dirty(); } }],
         onFrame: function (dt) {
           if (!placee) { placee = true; geste(sT); }

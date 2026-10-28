@@ -44,7 +44,10 @@
   var DEG = Math.PI / 180;
 
   AtelierModels.register('rim', {
-    camera: { yaw: 1.0, pitch: 0.14, dist: 212, target: [-12, 300, -2], min: 80, max: 700 },
+    /* Caméra reculée et visée plus haut : les pastilles du sommet de la coupe (12 et 13) ne touchent plus l'aide de la
+       visionneuse (« Glisse sur le côté pour tourner »), de 360 à 1440 px de large, et l'obus (pastille 9) reste dans
+       l'image. */
+    camera: { yaw: 1.0, pitch: 0.14, dist: 250, target: [-12, 312, -2], min: 80, max: 700 },
     explodeLabel: 'Vue éclatée',
     build: function (ctx) {
       var THREE = ctx.THREE, H = ctx.H, M = ctx.M;
