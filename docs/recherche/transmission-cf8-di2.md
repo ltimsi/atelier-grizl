@@ -153,7 +153,23 @@ DM-MACN001, https://si.shimano.com/en/dm/MACN001/Confirm_chain_length : « Refer
 
 1. « Join the chain at the largest sprocket. » ; « In order to check the length at the rear of the cassette, join the two ends of the chain at the rear of the cassette as shown in the figure. »
 2. « With the zero point of the chain established on the rear of the largest sprocket, the proper final chain length is determined by adding a certain number of links to this resulting chain length. The number of links is dependent on the chain connection method. See the figures. »
-3. Figures « QUICK-LINK » : « QUICK-LINK + 5 links » et « QUICK-LINK + 6 links ». Figures « Connecting pin » : « 6 links » et « 7 links ». Les deux figures de chaque paire diffèrent par la façon dont les bouts se terminent au point zéro ; laquelle correspond à ta chaîne se lit en comparant ta chaîne à la figure (lecture des couleurs de la figure non certaine dans ce relevé).
+3. Figures « QUICK-LINK » : « QUICK-LINK + 5 links » et « QUICK-LINK + 6 links ». Figures « Connecting pin » : « 6 links » et « 7 links ». Les deux figures de chaque paire diffèrent par la façon dont les bouts se terminent au point zéro.
+
+**Lecture des figures QUICK-LINK, 30/10/2026, seconde passe.** Page HTML ouverte dans le navigateur intégré, sans PDF. Les figures sont des dessins SVG intégrés à la page ; ce relevé les a agrandis à l'écran et a lu la place et la couleur de chaque maillon dans le dessin même.
+
+Ce que montrent les figures :
+- **Deux couleurs, sans légende.** Les maillons sont orange (#FCD68C) ou bleu clair (#DFF2FC), en alternance. L'attache est grise.
+- **Les bouts libres** sont bleu clair, avec un trou vide. L'attache vient s'y engager (« Insert the QUICK-LINK pins between the inner links from both sides », DM-MACN001, 4.4 ci-dessous). Lecture de ce relevé : **bleu clair = maillon intérieur, orange = maillon extérieur**.
+- **La disposition.** Au point zéro (le point noir, derrière le grand pignon), un brin de la chaîne arrive par le pignon et continue tout droit, à plat : ce sont les maillons à ajouter, numérotés 1, 2, 3… à partir du point zéro. Chaque numéro est sous un seul maillon, intérieur ou extérieur, en alternance. Juste sous le point zéro, l'autre bout de la chaîne est un maillon bleu clair, intérieur, à bout libre, dans les deux figures.
+- **« QUICK-LINK + 5 links ».** Le dernier maillon du brin qui arrive au point zéro, côté pignon, est orange (extérieur). Les maillons 1, 3 et 5 sont bleu clair (intérieurs), 2 et 4 orange (extérieurs). Le 5e, le dernier, est intérieur.
+- **« QUICK-LINK + 6 links ».** Le dernier maillon du brin qui arrive au point zéro est bleu clair (intérieur). Les maillons 1, 3 et 5 sont orange (extérieurs), 2, 4 et 6 bleu clair (intérieurs). Le 6e, le dernier, est intérieur.
+
+Lecture de ce relevé :
+- **La règle.** 5 maillons quand le maillon qui arrive au point zéro est extérieur, 6 quand il est intérieur. Dans les deux cas, la chaîne finit par deux maillons intérieurs, que relie l'attache.
+- **Le comptage.** Un « link » de la figure est un seul maillon, intérieur ou extérieur. L'attache est comptée à part (« QUICK-LINK + »).
+- **Ce que Shimano ne dit pas** : si un nombre de maillons d'une chaîne fermée compte l'attache. Non publié.
+
+Les figures « Connecting pin » n'ont pas été relues ainsi : la CN-M8100 se ferme par une attache (4.1, plus bas).
 4. « For full suspension bikes, check the length of the chain with the suspension in its fully extended, uncompressed position. » Ne concerne pas le Grizl, sans suspension arrière.
 
 Ce que le DM ne dit pas : si la chaîne passe dans le dérailleur pendant la mesure (**non précisé**), et le plateau (la phrase ne parle que du pignon ; ton pédalier n'a qu'un plateau de 40). Park Tool, pour les pignons de 42 dents et plus, mesure sans passer par le dérailleur : « Without passing through the rear derailleur, route the chain over the front ring and the largest rear spocket. » (sic) (https://www.parktool.com/en-us/blog/repair-help/chain-length-sizing, geste seulement).
@@ -189,7 +205,7 @@ Règles, https://si.shimano.com/en/dm/MACN001/TO_ENSURE_SAFETY : « Do not reuse
 
 DM-MACN001, https://si.shimano.com/en/dm/MACN001/Removing_quick_link : « Remove the QUICK-LINK. » ; « Slide both sides of the QUICK-LINK to remove. » Figure : pince « TL-CN10 ». Même manuel : « A SHIMANO original tool is required to remove the QUICK-LINK. Consult your place of purchase or a distributor. » Article Shimano : « A QUICK-LINK should only be opened using the original SHIMANO chain tool TL-CN10. »
 
-Ta pince Park Tool MLP-1.2, fiche https://www.parktool.com/en-us/product/master-link-pliers-mlp-1-2 : « Compatible with 5-to-13-speed derailleur chains that use a master link, including SRAM® eTap® AXS®, Shimano® XTR® 12-speed, and Campagnolo® Ekar 13-speed. » Voir Contradictions.
+Ta pince Park Tool MLP-1.2, fiche https://www.parktool.com/en-us/product/master-link-pliers-mlp-1-2 : « Compatible with 5-to-13-speed derailleur chains that use a master link, including SRAM® eTap® AXS®, Shimano® XTR® 12-speed, and Campagnolo® Ekar 13-speed. » Voir Contradictions. Le geste, sur la même page, relue le 30/10/2026 avec curl (texte de présentation ; le prix affiché n'est pas recopié) : « Simply insert the specially-shaped jaws into the master link. Then squeeze the handles to open or pull the handles to close the link. » Une notice PDF existe (https://www.parktool.com/assets/doc/product/MLP-1.2_instructions.pdf), non lue.
 
 ### 4.6 Outils de ce point
 
@@ -204,6 +220,8 @@ Shimano : TL-CN10 (attache), TL-CN29 ou TL-CN35 (dérive-chaîne). Tes outils Pa
 2. « Warning: When removing the lock ring, wear gloves and eye protection, and gradually apply force. A sudden release of resistance on the lock ring may cause serious injury. »
 3. « Keep TL-LR021 perpendicular to the smallest sprocket during use. »
 4. « Remove the cassette from the freewheel body unit. »
+
+Sens de dépose : le texte ne le dit pas. Figure de la rubrique « 9-45T » (dessin SVG de la page, relu à l'écran le 30/10/2026) : la clé à molette coiffe le TL-LR021 au centre de la cassette, son manche part vers la gauche, et une flèche pousse le bout du manche vers le bas. Le fouet TL-SR24 part vers le haut et la droite, sans flèche. La cassette est vue de face, petit pignon vers le lecteur. Lecture de ce relevé : sur la figure, l'outil tourne dans le sens inverse des aiguilles d'une montre.
 
 **Pose**, https://si.shimano.com/en/dm/MACS010/installation_cassette_sprocket, rubrique « 9-45T » :
 1. « Place all of the sprockets other than the smallest sprocket on the freewheel body unit. » ; « Place the sprockets in descending order from the largest sprocket. » ; « Align the wide groove section of the freewheel body unit with the wide convex section of the cassette. » ; « The marked side of the sprockets must be facing outward. »
@@ -441,7 +459,7 @@ Liste tirée des brouillons du 20/10 (`brouillons/parts/10-avant.html:46` à `:6
 - Des attaches SM-CN910-12 neuves : une à chaque changement de chaîne (« be sure to replace the QUICK-LINK with a new one as well »), et une de secours.
 - La pince Shimano TL-CN10, si Lamine suit Shimano plutôt que Park pour l'attache (Contradictions, point 3).
 - Des embouts au carré de 3/8 de pouce pour la TW-6.2 : six-pans de 5 (axe B du dérailleur, vis de la manivelle gauche) ; six-pans de 8 (vis de la patte UDH, seulement pour poser une patte neuve). Le site prévoit déjà un embout de 6 et une tête de clé plate de 15 (`src/parts/11-montage.html:38`).
-- Des gants et des lunettes de protection : Shimano les demande pour le contre-écrou (« wear gloves and eye protection ») et pour l'entretien (« Wear approved eye protection »).
+- Des gants et des lunettes de protection : Shimano les demande pour le contre-écrou (« wear gloves and eye protection ») et pour l'entretien. Source de cette seconde phrase, trouvée le 30/10/2026 : DM-MACN001, https://si.shimano.com/en/dm/MACN001/TO_ENSURE_SAFETY, « Wear approved eye protection while performing maintenance tasks such as replacing components. »
 - Un chiffon non pelucheux pour MOTOREX (« lint-free cloth ») ; le « Bike Protect » que Muc-Off cite après son dégraissant, si Lamine suit Muc-Off.
 - L'application E-TUBE PROJECT Cyclist sur le téléphone.
 - **Travail d'atelier, pas d'achat à prévoir pour un débutant** : outils de boîtier TL-BB12 et TL-BB13 ; contrôle de la patte au TL-RD11 (ou au DAG-3 de Park, qui ne nomme pas l'UDH) ; mise à jour des manettes par SM-PCE02 ; outil de capuchon TL-FC16 ou TL-FC18, seulement pour déposer la manivelle.
