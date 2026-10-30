@@ -13,7 +13,8 @@
    « Étape n / 12 » ; le titre entier de l'étape s'écrit sur une ligne sous la barre des commandes, qui revient à la
    ligne, comme pour la mèche de 3.5. Le fouet est là aux étapes FOUET, l'outil aux étapes OUTIL ; le 9 dents est déposé
    aux étapes SANS_9 (à l'étape 5, il sort de quelques millimètres) ; la cassette est sortie du corps aux étapes DEHORS ;
-   les repères s'allument à l'étape 10. Au serrage (étape 11), le fouet n'est pas dessiné : le texte du DM ne le cite pas.
+   les repères s'allument à l'étape 10. Chaque étape ne montre que ses pastilles, six au plus (PASTILLES, numéros des
+   pastilles dans l'ordre du fichier) : la liste sous la figure suit l'étape. Au serrage (étape 11), le fouet n'est pas dessiné : le texte du DM ne le cite pas.
    Le sens de dépose n'est pas écrit dans le texte du DM ; le chapitre le lit sur sa figure (4.5, étape 5) : vu de face,
    l'outil tourne dans le sens inverse des aiguilles d'une montre. Le contre-écrou et l'outil sortent donc en tournant
    dans ce sens (rotation de dessin, d'un peu plus d'un sixième de tour), et le 9 dents revient en sens inverse à la
@@ -203,8 +204,7 @@
       var hex = H.mesh(anneau(hexPts, [cercle(6.2, 32)], 12, 0.5), mTool, outil, [X0 + 19.2, 0, 0]);
       var aOutil = new THREE.Object3D(); aOutil.position.set(X0 + 7, 15.3, 0); outil.add(aOutil);
       var aHex = new THREE.Object3D(); aHex.position.set(X0 + 19.2, 0, 14.4 * Math.cos(TAU / 12)); outil.add(aHex);
-      var aGants = new THREE.Object3D(); aGants.position.set(X0 + 25.3, -8.5, -6); outil.add(aGants);
-
+      
       /* ---------- Fouet : manche et chaîne sur le 15 dents (forme générique, voir l'en-tête) ---------- */
       var wFouet = new THREE.Group(), fouet = new THREE.Group(); root.add(wFouet); wFouet.add(fouet);
       var pf = pignon(PIGNON_FOUET), XF = xk(pf.k), RF = Rp(PIGNON_FOUET), dF = TAU / PIGNON_FOUET;
@@ -233,7 +233,8 @@
       /* ---------- Repères des pastilles ---------- */
       var a45 = new THREE.Object3D(); a45.position.set(xk(10) + EP / 2, (Rp(39) + 2.4) * Math.cos(0.45), (Rp(39) + 2.4) * Math.sin(0.45)); portes[0].g.add(a45);
       var aFaces = new THREE.Object3D(); aFaces.position.set(xk(11) + EP / 2, 0.92 * Rp(45) * Math.cos(Math.PI * 0.82), 0.92 * Rp(45) * Math.sin(Math.PI * 0.82)); portes[0].g.add(aFaces);
-      var aNeuf = new THREE.Object3D(); aNeuf.position.set(xk(0) + EP / 2, 19.5 * Math.cos(2.45), 19.5 * Math.sin(2.45)); neuf.g.add(aNeuf);
+      var aNeuf = new THREE.Object3D(); aNeuf.position.set(xk(0) + EP / 2, 19.5 * Math.cos(-2.45), 19.5 * Math.sin(-2.45)); neuf.g.add(aNeuf);
+      var aGants = new THREE.Object3D(); aGants.position.set(xk(0) + EP / 2, 19.5 * Math.cos(-0.75), 19.5 * Math.sin(-0.75)); neuf.g.add(aGants);
       var P_ENTR = [entretoises[1].position.x, 0, 21], aEntr = new THREE.Object3D(); pignon(21).g.add(aEntr);
 
       /* ---------- Poses : la pose au cran n montre l'étape n ; entre deux crans, le passage ---------- */
@@ -247,7 +248,7 @@
         Object.keys(a).forEach(function (q) { st[q] = lerp(a[q], b[q], t); });
         return st;
       }
-      function apply(st) {
+      function poserEtat(st) {
         var x9 = st.dev * 8 + st.neuf * 30, tour = Math.min(1, st.dev + st.neuf) * 1.2;   // vu de +x : sens inverse des aiguilles d'une montre
         neuf.g.position.set(x9, st.neuf * 96, 0); neuf.g.rotation.x = tour;
         outil.visible = st.outil > 0.01;
@@ -264,8 +265,17 @@
         var dedans = st.dehors > 0.5 || (api.viewer && api.viewer.ex > 0.5);
         aLarge.position.fromArray(dedans ? P_LARGE : FAR); aEntr.position.fromArray(dedans ? P_ENTR : FAR);
       }
+      /* les pastilles de chaque étape, par leur numéro dans l'ordre du fichier, six au plus */
+      var PASTILLES = [[1, 3, 5], [1, 3, 10], [1, 3, 9], [1, 7, 9], [1, 8, 9, 10], [1, 2, 6], [1, 5, 6], [1, 5], [1, 3, 4], [1, 3, 4], [1, 3, 8], [1, 3, 5]];
+      var pins = null, pret = false, etapePins = 0;
+      function pinsDe(n) { return PASTILLES[n - 1].map(function (i) { return pins[i - 1]; }); }
+      function apply(s) {
+        poserEtat(pose(s));
+        var n = clamp(Math.round(s), 1, ETAPES.length);
+        if (n !== etapePins) { etapePins = n; if (pret) api.setPins(pinsDe(n)); }
+      }
       var s = 4, sT = 4, lastEx = 0;
-      apply(pose(s));
+      apply(s);
 
       /* Le compteur du curseur reste court (« Étape 4 / 12 ») ; le titre entier de l'étape s'écrit sur une ligne à lui,
          sous la barre des commandes, qui revient à la ligne (classe .v3d-geste de 00-head.html), posée à la première
@@ -286,33 +296,36 @@
       pignons.forEach(function (p) { if (!p.porte && p.k > 0) parts.push({ obj: p.w, off: [(8 - p.k) * 4, 0, 0] }); });
       parts.push({ obj: neuf.w, off: [40, 0, 0] }, { obj: wOutil, off: [64, 0, 0] }, { obj: wFouet, off: [0, 40 * dirM[0], 40 * dirM[1]] });
 
+      pins = [
+        { obj: a45, p: [0, 0, 0], text: 'Cassette Shimano CS-M8200-12 9-45 : douze pignons, « 9-11-13-15-17-19-21-24-28-33-39-45T »' },
+        { obj: aLarge, p: [0, 0, 0], text: 'Corps de roue libre MICRO SPLINE : la rainure large du corps en face de la partie large de la cassette' },
+        { obj: aNeuf, p: [0, 0, 0], text: 'Le 9 dents fait corps avec le contre-écrou : serre-le à 30-50 Nm (Shimano) ; Canyon dessine 40 Nm, une valeur dans la plage Shimano' },
+        { obj: reperes[1], p: [0.06, 1.2, 0], text: 'Repères des 9, 11 et 13 dents alignés ; les lettres gravées sont dans l’encadré « Repères et entretoises »' },
+        { obj: aFaces, p: [0, 0, 0], text: 'Pignons enfilés du plus grand au plus petit, faces marquées dehors, puis le 9 dents' },
+        { obj: aEntr, p: [0, 0, 0], text: 'Entretoises : trois, une fine et deux épaisses, de 0,95 millimètre et de 1,95 millimètre ; leur place est à lire sur la figure du DM et sur la pièce' },
+        { obj: aOutil, p: [0, 0, 0], text: 'Outil de contre-écrou Shimano TL-LR021 (prévu) : garde-le bien perpendiculaire au 9 dents' },
+        { obj: aHex, p: [0, 0, 0], text: 'Six-pans du TL-LR021 : tourne-le avec une clé réglable ; sa taille et une prise pour ta TW-6.2 sont à lire sur l’outil' },
+        { obj: aFouet, p: [0, 0, 0], text: 'Fouet Park Tool SR-12.2 (prévu), ou Shimano TL-SR24 : sur un pignon plus petit que celui du milieu ; plus près des rayons, il ne tient pas' },
+        { obj: aGants, p: [0, 0, 0], text: 'Gants et lunettes de protection avant de forcer : le contre-écrou peut céder d’un coup ; force peu à peu' }
+      ];
+      pret = true;
+
       return {
         group: root,
         parts: parts,
-        pins: [
-          { obj: a45, p: [0, 0, 0], text: 'Cassette Shimano CS-M8200-12 9-45 : douze pignons, « 9-11-13-15-17-19-21-24-28-33-39-45T »' },
-          { obj: aLarge, p: [0, 0, 0], text: 'Corps de roue libre MICRO SPLINE : la rainure large du corps en face de la partie large de la cassette' },
-          { obj: aNeuf, p: [0, 0, 0], text: 'Le 9 dents fait corps avec le contre-écrou : serre-le à 30-50 Nm (Shimano) ; Canyon dessine 40 Nm, une valeur dans la plage Shimano' },
-          { obj: reperes[1], p: [0.06, 1.2, 0], text: 'Repères des 9, 11 et 13 dents alignés ; les lettres gravées sont dans l’encadré « Repères et entretoises »' },
-          { obj: aFaces, p: [0, 0, 0], text: 'Pignons enfilés du plus grand au plus petit, faces marquées dehors, puis le 9 dents' },
-          { obj: aEntr, p: [0, 0, 0], text: 'Entretoises : trois, une fine et deux épaisses, de 0,95 millimètre et de 1,95 millimètre ; leur place est à lire sur la figure du DM et sur la pièce' },
-          { obj: aOutil, p: [0, 0, 0], text: 'Outil de contre-écrou Shimano TL-LR021 (prévu) : garde-le bien perpendiculaire au 9 dents' },
-          { obj: aHex, p: [0, 0, 0], text: 'Six-pans du TL-LR021 : tourne-le avec une clé réglable ; sa taille et une prise pour ta TW-6.2 sont à lire sur l’outil' },
-          { obj: aFouet, p: [0, 0, 0], text: 'Fouet Park Tool SR-12.2 (prévu), ou Shimano TL-SR24 : sur un pignon plus petit que celui du milieu ; plus près des rayons, il ne tient pas' },
-          { obj: aGants, p: [0, 0, 0], text: 'Gants et lunettes de protection avant de forcer : le contre-écrou peut céder d’un coup ; force peu à peu' }
-        ],
+        pins: pinsDe(sT),
         controls: [{ type: 'range', label: 'Pas à pas', min: 1, max: 12, step: 1, value: 4,
           format: function (v) { geste(v); return 'Étape ' + v + ' / 12'; },
-          onChange: function (v) { sT = v; if (reduce) { s = sT; apply(pose(s)); } api.dirty(); } }],
+          onChange: function (v) { sT = v; if (reduce) { s = sT; apply(s); } api.dirty(); } }],
         onFrame: function (dt) {
           if (!placee) { placee = true; geste(sT); }
           var ex = api.viewer ? api.viewer.ex : 0;
-          if ((ex > 0.5) !== (lastEx > 0.5)) { lastEx = ex; apply(pose(s)); }
+          if ((ex > 0.5) !== (lastEx > 0.5)) { lastEx = ex; apply(s); }
           lastEx = ex;
           if (s === sT) return false;
           var sp = (dt || 0.016) / 1.1 * (1 + 0.6 * Math.max(0, Math.abs(sT - s) - 1));
           s = sT > s ? Math.min(sT, s + sp) : Math.max(sT, s - sp);
-          apply(pose(s)); return true;
+          apply(s); return true;
         }
       };
     }

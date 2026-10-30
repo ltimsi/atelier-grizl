@@ -266,11 +266,11 @@ PASTILLES_3D_TRANSMISSION = {
         'Gants et lunettes de protection avant de forcer\xa0: le contre-écrou peut céder d’un coup\xa0; force peu à peu',
     ],
     'm-derailleur.js': [
-        'Dérailleur Shimano RD-M8250-GS, Deore XT Di2 sans fil, ni fil ni port E-TUBE\xa0: une capacité de 36 dents, '
-        'l’écart entre ton 9 et ton 45 dents',
+        'Dérailleur Shimano RD-M8250-GS, Deore XT Di2 sans fil\xa0: ni fil ni port E-TUBE dans la liste de ses pièces, '
+        'donc pas de port E-TUBE (déduction de ce site)\xa0; une capacité de 36 dents, l’écart entre ton 9 et ton 45 dents',
         'Batterie Shimano BT-DN320 dans son support, «\xa0Battery holder\xa0», sur le dérailleur\xa0: dépose, pose et charge '
         'en 1.7',
-        'Levier du support de batterie\xa0: le seul levier de ton dérailleur',
+        'Levier du support de batterie\xa0: le seul levier de la liste des pièces de Shimano',
         'Bouton de fonction\xa0: roue arrêtée, tiens-le de 2 à 5 secondes, jusqu’au voyant jaune fixe, pour le mode '
         'réglage\xa0; 0,5\xa0s ou plus pour revenir au mode normal',
         'Voyant, «\xa0LED\xa0»\xa0: jaune fixe en mode réglage, éteint au mode normal\xa0; s’il clignote en bleu, tu as '
@@ -289,7 +289,7 @@ PASTILLES_3D_TRANSMISSION = {
     ],
 }
 ETIQUETTES_3D_TRANSMISSION = {
-    'm-chain.js': ['Usure, 4.3', 'Attache, 4.4', 'Pas à pas', 'Allongée de 0,5\xa0%'],
+    'm-chain.js': ['Usure, 4.3', 'Attache, 4.4', 'Pas à pas', 'Allongée de 0,5\xa0% (exagérée 8 fois)'],
     'm-cassette.js': ['Pas à pas'],
     'm-derailleur.js': ['Pas à pas'],
 }
@@ -334,12 +334,14 @@ COMMANDES_3D_TRANSMISSION = {
         "{ type: 'segmented', value: 'attache', options: [{ value: 'usure', label: 'Usure, 4.3' }, { value: 'attache', "
         "label: 'Attache, 4.4' }],",
         "{ type: 'range', label: 'Pas à pas', min: 1, max: 5, step: 1, value: 5,",
-        "{ type: 'toggle', label: 'Allongée de 0,5\xa0%', value: false, onChange: usee }",
+        "{ type: 'toggle', label: 'Allongée de 0,5\xa0% (exagérée 8 fois)', value: false, onChange: usee }",
         "function numero(v) { return mode === 'usure' ? v : v + 5; }",
         "format: function (v) { geste(v); return 'Étape ' + numero(v) + ' / ' + (mode === 'usure' ? 5 : 12); },",
         "ligne.textContent = 'Étape ' + numero(v) + ' de ' + (mode === 'usure' ? '4.3' : '4.4') + '\xa0: ' + "
         "(mode === 'usure' ? ETAPES_USURE : ETAPES_ATTACHE)[v - 1];",
-        "api.setPins(mode === 'usure' ? pins.slice(0, 5) : [pins[0]].concat(pins.slice(5)));",
+        "var PASTILLES = { usure: [[1, 2], [1, 3], [1, 4], [1, 4], [1, 5]], attache: [[1, 10], [1, 10], [1, 6, 8], [1, 9], "
+        "[1, 7]] };",
+        "if (mode + n !== clePins) { clePins = mode + n; if (pret) api.setPins(pinsDe(n)); }",
     ],
     'm-cassette.js': [
         "controls: [{ type: 'range', label: 'Pas à pas', min: 1, max: 12, step: 1, value: 4,",
@@ -356,7 +358,7 @@ COMMANDES_3D_TRANSMISSION = {
 LIGNE_3D_TRANSMISSION = (
     "ligne = document.createElement('p'); ligne.className = 'v3d-geste'; ligne.setAttribute('aria-live', 'polite');",
     "if (barre && barre !== ligne && barre.nextElementSibling !== ligne) barre.insertAdjacentElement('afterend', ligne);",
-    "if (!placee) { placee = true; geste(sT); }",
+    "if (!placee) { placee = true; geste(sT);",
 )
 # Ce que dessine chaque étape, épinglé : le côté et le sens de l'attache (plaque extérieure à +z, flèche vers +x, l'avant
 # du brin du haut), le crochet du CC-3.2 sur le maillon intérieur I0 ; les outils et le 9 dents de chaque étape de 4.5 ;
@@ -371,6 +373,11 @@ DESSIN_3D_TRANSMISSION = {
         "var O1 = outer(1, 2), O5 = outer(5, 6), O7 = outer(7, 8);",
         "var XHOOK = RR + 0.02 + FW;",
         "marks.push(H.mesh(gMark, mEngr, g, [0, 0, Z_OUT1 - 0.005]));",
+        # le second côté de l'attache est retourné ; le crochet du CC-3.2 est contre le rouleau 1 ; la bascule de
+        # l'usure n'est montrée qu'en mode 4.3, avec le CC-3.2
+        "qB.rotation.y = Math.PI;",
+        "toolPivot.position.set(xr(1, p, 0), RR + st.lift, 0);",
+        "b.hidden = mode !== 'usure';",
     ),
     'm-cassette.js': (
         "var FOUET = [3, 4, 5];",
@@ -386,6 +393,10 @@ DESSIN_3D_TRANSMISSION = {
         "outil.rotation.x = tour;",
         "var sieges = [], TH0 = -dF - dF / 2;",
         "var THM = TH0 - 0.25, dirM = [Math.cos(THM), Math.sin(THM)]",
+        # les pastilles de chaque étape (numéros dans l'ordre du fichier), six au plus
+        "var PASTILLES = [[1, 3, 5], [1, 3, 10], [1, 3, 9], [1, 7, 9], [1, 8, 9, 10], [1, 2, 6], [1, 5, 6], [1, 5], "
+        "[1, 3, 4], [1, 3, 4], [1, 3, 8], [1, 3, 5]];",
+        "if (n !== etapePins) { etapePins = n; if (pret) api.setPins(pinsDe(n)); }",
     ),
     'm-derailleur.js': (
         "var CIBLE = [13, 13, 13, 45, 9, 24, 24, 28, 24, 24, 24, 45, 9];",
@@ -394,7 +405,31 @@ DESSIN_3D_TRANSMISSION = {
         # dents (TIP au-dessus du rayon primitif).
         "function jeu(R) { return R >= R13 ? lerp(JEU_13, R_PLAQUE + TIP - RG, (R - R13) / (R45 - R13)) : "
         "JEU_13 + (R13 - R) * 0.4; }",
+        # le voyant : jaune fixe et lumineux aux étapes JAUNE, éteint sinon
+        "voyant.material = lerp(a.jaune, b.jaune, f) > 0.5 ? mLedJaune : mLedOff;",
+        "mLedJaune = S(0xffd21a, 0.1, 0.3, { emissive: 0xffc400, emissiveIntensity: 1.4 });",
+        # à l'étape 8, la chape va vers le 28 dents, la chaîne reste sur le 24
+        "if (n === 8) { tc = indice(24); t = lerp(tc, t, VERS_28); }",
+        "poser(mouvement(lerp(a.t, b.t, f)), lerp(a.tc, b.tc, f));",
+        # la pièce allumée à chaque étape, et l'objet qu'elle allume
+        "var ALLUME = { 2: 'butee', 3: 'axe', 4: 'visB', 7: 'bouton', 10: 'bouton', 12: 'basse', 13: 'haute' };",
+        "var allumes = { butee: [plaqueButee], axe: [axeTete], visB: [visB.userData.tete], bouton: [bouton], "
+        "basse: [visBasse.userData.tete], haute: [visHaute.userData.tete] };",
+        # la pastille du 24 dents, sur le 24 dents
+        "a24.position.set(-Rp(24) - TIP, 0, zk(indice(24)) + 0.8);",
+        # les pastilles de chaque étape (numéros dans l'ordre du fichier), six au plus
+        "var PASTILLES = [[1, 2, 3, 14], [1, 7, 14], [1, 6, 14], [1, 8, 11, 12], [1, 11, 12], [1, 11, 12, 13], "
+        "[1, 4, 5, 13], [1, 5, 11, 13], [1, 5, 11, 13], [1, 4, 5, 13], [1, 11, 12, 13], [1, 9, 11, 12], "
+        "[1, 10, 11, 12]];",
+        "if (n !== etapePins) { etapePins = n; if (pret) api.setPins(pinsDe(n)); }",
     ),
+}
+# L'objet de chaque pastille, dans l'ordre du fichier : une pastille passée sur une autre pièce échoue.
+OBJETS_3D_TRANSMISSION = {
+    'm-chain.js': ['marks[1]', 'stamp', 'toolInner', 'toolInner', 'toolInner', 'qA', 'qA', 'qA.userData.fleche', 'qA', 'I1'],
+    'm-cassette.js': ['a45', 'aLarge', 'aNeuf', 'reperes[1]', 'aFaces', 'aEntr', 'aOutil', 'aHex', 'aFouet', 'aGants'],
+    'm-derailleur.js': ['aCorps', 'aBatt', 'levier', 'bouton', 'voyant', 'axeB', 'plaqueButee', 'visB', 'visBasse',
+                        'visHaute', 'galetHaut', 'galetBas', 'a24', 'aPatte'],
 }
 # Les déclarations de chaque en-tête : chaque puce nommée est là, dit ce qu'elle approche (« approché », « dessin »), et
 # porte les mots demandés.
@@ -443,6 +478,34 @@ def textes_perdus(section, html):
     """Les textes des blocs de la section source qui ne sont pas dans la page de l'atelier."""
     texte = texte_de_l_atelier(html)
     return [f"{s} : {e.texte()[:70]}" for s in BLOCS for e in dom.selectionner(section, s) if e.texte() not in texte]
+
+
+def jetons_personnels():
+    """Les jetons personnels de Lamine, lus hors du dépôt (brouillons/ est ignoré par git), s'il existe."""
+    chemin = RACINE / "brouillons" / "jetons-personnels.txt"
+    return [l.strip() for l in chemin.read_text(encoding="utf-8").splitlines()
+            if l.strip() and not l.lstrip().startswith("#")] if chemin.exists() else []
+
+
+def verifier_piece_3d(test, nom, texte, declarations, jetons):
+    """Ce que respecte toute pièce 3D d'atelier, sur tout le fichier, commentaires compris : aucun jeton personnel (un
+    échec ne dit que son rang), aucun tiret cadratin ni demi-cadratin, aucun style en ligne (la mise en forme vit dans
+    00-head.html) ; « approchée » et « couleurs » dans l'en-tête, et chaque puce de `declarations` une fois, qui dit ce
+    qu'elle approche (« approché », « dessin ») et porte les mots demandés."""
+    for n, jeton in enumerate(jetons, 1):
+        test.assertFalse(jeton in texte, f"{nom} : jeton personnel n°{n}")
+    test.assertIsNone(re.search("[\u2014\u2013]", texte), f"{nom} : tiret cadratin ou demi-cadratin")
+    test.assertNotIn("cssText", texte, f"{nom} : style en ligne")
+    test.assertIsNone(re.search(r"\.style\.\w+\s*=", texte), f"{nom} : style en ligne")
+    entete = texte[:texte.index("*/")] if "*/" in texte else ""
+    for mot in ("approchée", "couleurs"):
+        test.assertIn(mot, entete, f"{nom} : en-tête sans « {mot} »")
+    puces = [re.sub(r"\s+", " ", p.replace("’", "'").replace("\xa0", " ")) for p in re.split(r"\n\s*- ", entete)[1:]]
+    for cle, mots in declarations.items():
+        trouvees = [p for p in puces if p.startswith(cle) and p[len(cle):len(cle) + 1] in (" ", ",")]
+        test.assertEqual(len(trouvees), 1, f"{nom} : déclaration « {cle} » de l'en-tête")
+        for mot in ("approch|dessin",) + mots:
+            test.assertRegex(trouvees[0], mot, f"{nom} : déclaration « {cle} » sans « {mot} »")
 
 
 class Site(unittest.TestCase):
@@ -1210,9 +1273,7 @@ class TestPages(Site):
         source = (RACINE / "src" / "parts" / "30-tubeless.html").read_text(encoding="utf-8")
         par_id = {a.id: a for a in ateliers.relever_chapitre(source).ateliers}
         chapitre = plat(source)
-        jetons = RACINE / "brouillons" / "jetons-personnels.txt"  # hors du dépôt : brouillons/ est ignoré par git
-        jetons = [l.strip() for l in jetons.read_text(encoding="utf-8").splitlines()
-                  if l.strip() and not l.lstrip().startswith("#")] if jetons.exists() else []
+        jetons = jetons_personnels()
         absents = ("Gravel LN", "Continental", "Terra Adventure", "à crochet", "DT Swiss", "Dynaplug", "DART", "Stan's",
                    "bacon", "skinwall", "ambré", "colmate", "surgonfl", "over-inflate", "maximum du flanc", "plus fort",
                    "type Park Tool", "Lamine", "/Users/", "ltimsi", "CHF", "€")
@@ -1284,9 +1345,6 @@ class TestPages(Site):
                 for libelle in pastilles + etapes:
                     for v in re.findall(r"(?:\d+(?:,\d+)? à )?\d+(?:,\d+)?\xa0(?:mm|ml|bar|pouce)\b", libelle):
                         self.assertIn(plat(v), chapitre, f"{nom} : {v!r} absent du chapitre : {libelle[:60]}")
-                # Aucun style en ligne : la mise en forme vit dans 00-head.html.
-                self.assertNotIn("cssText", texte, f"{nom} : style en ligne")
-                self.assertIsNone(re.search(r"\.style\.\w+\s*=", texte), f"{nom} : style en ligne")
                 # Tout le fichier, commentaires compris, les blancs ramenés à une espace : une phrase coupée en fin de
                 # ligne de commentaire est lue entière. assertFalse plutôt qu'assertNotIn : un échec nomme la valeur
                 # sans recopier tout le fichier.
@@ -1302,18 +1360,7 @@ class TestPages(Site):
                 for m in re.finditer(r"(?<![^\W\d_])(?:bars?|psi|kpa|mpa|atm\w*)(?![^\W\d_])", lu, re.I):
                     self.assertTrue(lu[:m.start()].lower().endswith("jamais plus de 3,0 "),
                                     f"{nom} : pression {lu[max(0, m.start() - 40):m.end()]!r}")
-                for n, jeton in enumerate(jetons, 1):
-                    self.assertFalse(jeton in texte, f"{nom} : jeton personnel n°{n}")
-                self.assertIsNone(re.search("[\u2014\u2013]", texte), f"{nom} : tiret cadratin ou demi-cadratin")
-                entete = texte[:texte.index("*/")] if "*/" in texte else ""
-                for mot in ("approchée", "couleurs"):
-                    self.assertIn(mot, entete, f"{nom} : en-tête sans « {mot} »")
-                puces = [re.sub(r"\s+", " ", plat(p)) for p in re.split(r"\n\s*- ", entete)[1:]]
-                for cle, mots in DECLARATIONS_3D_TUBELESS[fichier].items():
-                    trouvees = [p for p in puces if p.startswith(cle) and p[len(cle):len(cle) + 1] in (" ", ",")]
-                    self.assertEqual(len(trouvees), 1, f"{nom} : déclaration « {cle} » de l'en-tête")
-                    for mot in ("approch|dessin",) + mots:
-                        self.assertRegex(trouvees[0], mot, f"{nom} : déclaration « {cle} » sans « {mot} »")
+                verifier_piece_3d(self, nom, texte, DECLARATIONS_3D_TUBELESS[fichier], jetons)
 
     def test_pieces_3d_transmission(self):
         # Les pièces 3D des ateliers 4.3 et 4.4 (« chain »), 4.5 (« cassette ») et 4.6 (« derailleur ») : le fichier du
@@ -1345,9 +1392,7 @@ class TestPages(Site):
         self.assertEqual({a: len(t) for a, t in titres.items()},
                          {"transmission-usure": 5, "transmission-chaine": 12, "transmission-cassette": 12,
                           "transmission-reglage": 13})
-        jetons = RACINE / "brouillons" / "jetons-personnels.txt"  # hors du dépôt : brouillons/ est ignoré par git
-        jetons = [l.strip() for l in jetons.read_text(encoding="utf-8").splitlines()
-                  if l.strip() and not l.lstrip().startswith("#")] if jetons.exists() else []
+        jetons = jetons_personnels()
         absents = ("RX822", "RX610", "CS-M7100", "câble", "molette", "stabilisateur", "8-10", "16-17", "TL-FC36",
                    "GRX 610", "Shadow RD+", "gaine", "ON/OFF", "TL-LR15", "FR-5.2H", "10-45", "10-51", "4/5", "Y0GY",
                    "DM-GARD010", "DM-MACS001", "pression", "Lamine", "/Users/", "ltimsi", "CHF", "€")
@@ -1400,6 +1445,8 @@ class TestPages(Site):
                 self.assertEqual(len(re.findall(r"\btext['\"]?\s*:", texte)), len(pastilles), f"{nom} : pastille écrite autrement")
                 etiquettes = re.findall(r"\blabel: '((?:[^'\\]|\\.)*)'", texte)
                 self.assertEqual(etiquettes, ETIQUETTES_3D_TRANSMISSION[fichier], f"{nom} : étiquettes des commandes")
+                self.assertEqual(re.findall(r"\{ obj: ([\w.\[\]]+), p: ", texte), OBJETS_3D_TRANSMISSION[fichier],
+                                 f"{nom} : objets des pastilles")
                 gestes = []
                 for liste, (_, _, attendus) in ETAPES_3D_TRANSMISSION[fichier].items():
                     m = re.search(r"var %s = \[(.*?)\];" % liste, texte)
@@ -1441,20 +1488,7 @@ class TestPages(Site):
                 for litteral in re.findall(r"fillText\('((?:[^'\\]|\\.)*)'", texte) + pastilles + gestes + etiquettes:
                     for marque in marquages:
                         self.assertNotIn(marque, litteral, f"{nom} : marquage inventé {marque!r}")
-                for n, jeton in enumerate(jetons, 1):
-                    self.assertFalse(jeton in texte, f"{nom} : jeton personnel n°{n}")
-                self.assertIsNone(re.search("[—–]", texte), f"{nom} : tiret cadratin ou demi-cadratin")
-                self.assertNotIn("cssText", texte, f"{nom} : style en ligne")
-                self.assertIsNone(re.search(r"\.style\.\w+\s*=", texte), f"{nom} : style en ligne")
-                entete = texte[:texte.index("*/")] if "*/" in texte else ""
-                for mot in ("approchée", "couleurs"):
-                    self.assertIn(mot, entete, f"{nom} : en-tête sans « {mot} »")
-                puces = [re.sub(r"\s+", " ", plat(p)) for p in re.split(r"\n\s*- ", entete)[1:]]
-                for cle, mots in DECLARATIONS_3D_TRANSMISSION[fichier].items():
-                    trouvees = [p for p in puces if p.startswith(cle) and p[len(cle):len(cle) + 1] in (" ", ",")]
-                    self.assertEqual(len(trouvees), 1, f"{nom} : déclaration « {cle} » de l'en-tête")
-                    for mot in ("approch|dessin",) + mots:
-                        self.assertRegex(trouvees[0], mot, f"{nom} : déclaration « {cle} » sans « {mot} »")
+                verifier_piece_3d(self, nom, texte, DECLARATIONS_3D_TRANSMISSION[fichier], jetons)
         # Ce que dessine chaque étape, recoupé avec les titres du chapitre.
         def entiers(nom, liste):
             m = re.search(r"var %s = \[([\d, ]+)\];" % liste, lus[nom])
@@ -1499,8 +1533,31 @@ class TestPages(Site):
         self.assertIn("sens inverse des aiguilles d'une montre", plat(depose.texte()))
         releve = (RACINE / "docs" / "recherche" / "transmission-cf8-di2.md").read_text(encoding="utf-8")
         self.assertIn("Le fouet TL-SR24 part vers le haut et la droite", releve)
-        # La chaîne : les gestes de 4.4 commencent à l'étape 6, ce que dit numero().
-        self.assertEqual(ETAPES_3D_TRANSMISSION['m-chain.js']['ETAPES_ATTACHE'][1] - 1, 5)
+        # Les pastilles de chaque étape : une liste par étape, six pastilles au plus, chaque pastille du fichier montrée
+        # à une étape au moins (tests/js/modeles-transmission.test.mjs vérifie, pièce construite, celles qu'une étape doit
+        # montrer).
+        for fichier, atelier in (("m-cassette.js", cassette), ("m-derailleur.js", reglage)):
+            m = re.search(r"var PASTILLES = (\[\[[\d, \[\]]+\]\]);", lus[fichier])
+            self.assertIsNotNone(m, f"{fichier} : PASTILLES")
+            listes = json.loads(m.group(1))
+            self.assertEqual(len(listes), len(titres[atelier]), f"{fichier} : une liste par étape")
+            self.assertTrue(all(1 <= len(l) <= 6 for l in listes), f"{fichier} : six pastilles au plus")
+            self.assertEqual(set().union(*map(set, listes)), set(range(1, len(PASTILLES_3D_TRANSMISSION[fichier]) + 1)),
+                             f"{fichier} : chaque pastille à une étape")
+        # La chaîne : une liste par cran dans chaque mode, la première pastille partout, les pastilles 2 à 5 en 4.3 et 6 à
+        # 10 en 4.4, chacune montrée à un cran au moins.
+        m = re.search(r"var PASTILLES = \{ usure: (\[\[[\d, \[\]]+\]\]), attache: (\[\[[\d, \[\]]+\]\]) \};", lus["m-chain.js"])
+        self.assertIsNotNone(m, "m-chain.js : PASTILLES")
+        for listes, attendues in ((json.loads(m.group(1)), set(range(1, 6))), (json.loads(m.group(2)), {1, *range(6, 11)})):
+            self.assertEqual(len(listes), 5)
+            self.assertTrue(all(l[0] == 1 and 1 <= len(l) <= 6 for l in listes))
+            self.assertEqual(set().union(*map(set, listes)), attendues)
+        # La pièce allumée à chaque étape de 4.6 est celle que nomme son titre.
+        allume = dict(re.findall(r"(\d+): '(\w+)'", re.search(r"var ALLUME = \{([^}]*)\};", lus["m-derailleur.js"]).group(1)))
+        noms = {"butee": "plaque de butée", "axe": "axe B", "visB": "règle la vis B", "bouton": "mode", "basse": "Butée basse",
+                "haute": "Butée haute"}
+        for n, piece in allume.items():
+            self.assertIn(noms[piece], titres[reglage][int(n) - 1], f"étape {n} : {piece}")
 
     def test_disque_de_l_axe_comme_celui_du_chapitre_2(self):
         # Le disque de la pièce de l'axe (1.5) recopie celui de m-rotor.js (2.2, déjà en ligne) : mêmes fentes à cinq

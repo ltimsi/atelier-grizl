@@ -11,8 +11,11 @@
    Bascule « Usure, 4.3 » ou « Attache, 4.4 » : le curseur « Pas à pas » suit les étapes 1 à 5 de 4.3, le geste du
    CC-3.2, ou les étapes 6 à 10 de 4.4, la coupe et l'attache. Son compteur reste court, « Étape n / N », n le numéro de
    l'étape dans le chapitre et N le nombre d'étapes de l'atelier ; le titre entier de l'étape s'écrit sur une ligne sous
-   la barre des commandes, qui revient à la ligne, comme pour la mèche de 3.5. Bascule « Allongée de 0,5 % » : la chaîne
-   s'allonge, et l'autre bout du CC-3.2 entre entre deux rouleaux. Chaque atelier a sa vue et ses pastilles.
+   la barre des commandes, qui revient à la ligne, comme pour la mèche de 3.5. Bascule « Allongée de 0,5 % (exagérée
+   8 fois) », en mode 4.3 seulement : la chaîne s'allonge, et l'autre bout du CC-3.2 entre entre deux rouleaux ; son
+   libellé dit l'exagération du dessin. En mode 4.4, où le CC-3.2 n'est pas dessiné, la bascule est cachée et la chaîne
+   revient neuve. Chaque atelier a sa vue ; chaque cran ne montre que la première pastille et celles de son étape
+   (PASTILLES, numéros des pastilles dans l'ordre du fichier) : la liste sous la figure suit le cran.
    Vue éclatée : les deux moitiés de la chaîne s'écartent, les deux côtés de l'attache sortent de part et d'autre de la
    chaîne, le CC-3.2 se lève.
    Formes approchées (Shimano et Park Tool ne publient les cotes ni des maillons ni de l'indicateur) :
@@ -217,9 +220,8 @@
         Object.keys(a).forEach(function (n) { st[n] = lerp(a[n], b[n], t); });
         return st;
       }
-      var thC = contact(pitch()), cur = null;
+      var thC = contact(pitch());
       function apply(st) {
-        cur = st;
         var p = pitch(), g = mode === 'usure' ? 0 : st.g;
         for (var q = 0; q < NR; q++) rollers[q].position.set(xr(q, p, g), 0, 0);
         links.forEach(function (l) { l.obj.position.set((xr(l.a, p, g) + xr(l.b, p, g)) / 2, 0, 0); });
@@ -227,6 +229,7 @@
         qA.position.set(open * 1.0 - aside * 5, aside * 13, aside * 5);
         qB.position.set(-open * 1.0 + aside * 9, aside * 17, -aside * 5);
         toolHolder.visible = mode === 'usure';
+        montrerPastilles();
         if (mode === 'usure') {
           toolPivot.position.set(xr(1, p, 0), RR + st.lift, 0);
           toolPivot.rotation.z = st.th + st.c * thC;
@@ -251,26 +254,45 @@
         ligne.textContent = 'Étape ' + numero(v) + ' de ' + (mode === 'usure' ? '4.3' : '4.4') + ' : ' + (mode === 'usure' ? ETAPES_USURE : ETAPES_ATTACHE)[v - 1];
       }
       var s = 5, sT = 5;
+      /* les pastilles de chaque cran, par leur numéro dans l'ordre du fichier : la première, puis celles de l'étape */
+      var PASTILLES = { usure: [[1, 2], [1, 3], [1, 4], [1, 4], [1, 5]], attache: [[1, 10], [1, 10], [1, 6, 8], [1, 9], [1, 7]] };
+      var pins = null, pret = false, clePins = '';
+      function pinsDe(n) { return PASTILLES[mode][n - 1].map(function (i) { return pins[i - 1]; }); }
+      function montrerPastilles() {
+        var n = clamp(Math.round(s), 1, 5);
+        if (mode + n !== clePins) { clePins = mode + n; if (pret) api.setPins(pinsDe(n)); }
+      }
       apply(pose(s));
 
       /* ---------- Pastilles : la première est commune, puis celles de 4.3, puis celles de 4.4 ---------- */
-      var pins = [
+      pins = [
         { obj: marks[1], p: [1.2, 0.2, 0.05], text: 'Chaîne Shimano CN-M8100, face marquée dehors, vers toi quand tu te tiens côté transmission' },
         { obj: stamp, p: [-7.5, 0, 0.05], text: 'Indicateur d’usure Park Tool CC-3.2, côté 0.5 : celui des chaînes de 11 et 12 vitesses' },
         { obj: toolInner, p: [0, 2.2, 0.66], text: 'Bout en crochet : sur un maillon à plaques intérieures, pour mesurer contre le rouleau, pas contre les plaques' },
         { obj: toolInner, p: [LT, 2.2, 0.66], text: 'Autre bout : s’il n’entre pas, ta chaîne n’a pas atteint 0,5 % d’usure ; s’il entre, elle s’est allongée de 0,5 % depuis qu’elle était neuve' },
         { obj: toolInner, p: [LT / 2 - 14, HF + TB, 0.66], text: 'S’il entre, Proposition : fais confirmer l’usure à une jauge Shimano par un mécanicien ; le critère du fabricant de ta chaîne prime' },
-        { obj: qA, p: [0.4, 3.9, Z_OUT1 + 0.05], text: 'Attache rapide SM-CN910-12 neuve : une chaîne neuve, une attache neuve ; jette toujours une attache déposée' },
+        { obj: qA, p: [-3.6, 3.9, Z_OUT1 + 0.05], text: 'Attache rapide SM-CN910-12 neuve : une chaîne neuve, une attache neuve ; jette toujours une attache déposée' },
         { obj: qA, p: [-HALF, 0, Z_OUT1 + 0.15], text: 'Goupilles de l’attache entre les deux maillons intérieurs, une de chaque côté : engagées à fond, des deux côtés' },
         { obj: qA.userData.fleche, p: [3.4, 0, 0.05], text: 'Flèche de l’attache dans le sens où tourne la manivelle quand tu pédales, vue de face' },
         { obj: qA, p: [HALF, -3.9, Z_OUT1 + 0.05], text: 'Fais glisser les deux côtés de l’attache pour la fermer ou l’ouvrir, à ta pince Park Tool MLP-1.2 ; Shimano demande sa TL-CN10' },
         { obj: I1, p: [-1.5, -3.1, Z_IN1 + 0.05], text: 'Bouts coupés au CT-3.3 : un maillon intérieur à chaque bout ; ne coupe jamais à l’endroit d’une attache' }
       ];
+      pret = true;
       function usee(v) { wT = v ? 1 : 0; if (reduce) { w = wT; thC = contact(pitch()); apply(pose(s)); } api.dirty(); }
+      /* la bascule de l'usure n'a de sens qu'avec le CC-3.2 : cachée en mode 4.4, la chaîne y revient neuve */
+      function boutonUsure() {
+        var vw = api.viewer, bs = vw ? vw.fig.querySelectorAll('.v3d-bar button') : [];
+        for (var i = 0; i < bs.length; i++) if (bs[i].textContent === controles[2].label) return bs[i];
+        return null;
+      }
+      function montrerBascule() {
+        var b = boutonUsure(); if (!b) return;
+        b.hidden = mode !== 'usure';
+        if (b.hidden && wT) { b.setAttribute('aria-pressed', 'false'); usee(false); }
+      }
       function setMode(v) {
         if (v === mode) return;
-        mode = v; s = sT;
-        api.setPins(mode === 'usure' ? pins.slice(0, 5) : [pins[0]].concat(pins.slice(5)));
+        mode = v; s = sT; montrerBascule();
         var vw = api.viewer; vueT = VUES[v];
         if (vw) {
           vw.cam0 = Object.assign({}, vw.cam0, { target: vw.cam0.target.slice(), dist: vueT.dist });
@@ -284,17 +306,17 @@
         { type: 'range', label: 'Pas à pas', min: 1, max: 5, step: 1, value: 5,
           format: function (v) { geste(v); return 'Étape ' + numero(v) + ' / ' + (mode === 'usure' ? 5 : 12); },
           onChange: function (v) { sT = v; if (reduce) { s = sT; apply(pose(s)); } api.dirty(); } },
-        { type: 'toggle', label: 'Allongée de 0,5 %', value: false, onChange: usee }
+        { type: 'toggle', label: 'Allongée de 0,5 % (exagérée 8 fois)', value: false, onChange: usee }
       ];
 
       return {
         group: root,
         parts: [{ obj: segL, off: [-7, 0, 0] }, { obj: segR, off: [7, 0, 0] }, { obj: wA, off: [0, 2.5, 12] }, { obj: wB, off: [0, -2.5, -12] }, { obj: toolHolder, off: [0, 15, 0] }],
-        pins: [pins[0]].concat(pins.slice(5)),
+        pins: pinsDe(sT),
         controls: controles,
         onFrame: function (dt) {
           var anim = false, vw = api.viewer;
-          if (!placee) { placee = true; geste(sT); }
+          if (!placee) { placee = true; geste(sT); montrerBascule(); }
           if (w !== wT) {
             var dw = (dt || 0.016) / 0.7;
             w = wT > w ? Math.min(wT, w + dw) : Math.max(wT, w - dw);

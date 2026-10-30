@@ -5,17 +5,20 @@
    « Low sprocket Max. 45T », « Top sprocket Max. 9T Min. 9T », galets « Teeth 13T », « UDH standard ✔ »,
    « Built-in battery ✔ ») ; les pièces que nomme le DM-MARD011 pour le RD-M8250 : bouton de fonction, voyant (« LED »),
    galet du haut (« Guide pulley ») et du bas (« Tension pulley »), support de batterie et son levier, vis B, vis de
-   butée basse et haute, axe B, plaque de butée contre la butée de tension B ; ni fil, ni port E-TUBE, aucun autre
-   levier. L'axe B se serre à 10-12 Nm (clé de 5 mm) ; la vis B et les butées se règlent à la clé de 2 mm ; la vis B
+   butée basse et haute, axe B, plaque de butée contre la butée de tension B. Cette liste ne nomme ni fil ni port
+   E-TUBE, que Shimano ne nomme que pour d'autres dérailleurs : ce site en déduit que le tien n'en a pas ; son seul
+   levier est celui du support de batterie. L'axe B se serre à 10-12 Nm (clé de 5 mm) ; la vis B et les butées se règlent à la clé de 2 mm ; la vis B
    sur le 45 dents, le contour de la plaque extérieure de la chape au niveau de la pointe de la plus haute dent ; le
    mode réglage sur le 24 dents (cinquième pignon en partant du plus grand, déduction du chapitre), voyant jaune fixe.
    Curseur « Pas à pas », de 1 à 13 : chaque cran montre l'étape de 4.6 qui porte ce numéro. Son compteur reste court,
    « Étape n / 13 » ; le titre entier de l'étape s'écrit sur une ligne sous la barre des commandes, qui revient à la
    ligne, comme pour la mèche de 3.5. CIBLE donne le pignon de chaque étape : avant le réglage, le 13 dents, celui où la
-   photo officielle montre la chaîne (comme la scène de l'accueil) ; à l'étape 8, le galet va vers le 28 dents jusqu'au
-   léger bruit, la chaîne restant sur le 24 ; à l'étape 5, le dérailleur est dessiné sur le 9 dents, au bout du passage
-   des vitesses. Le voyant est jaune fixe aux étapes JAUNE, éteint sinon. La pièce de l'étape s'allume : plaque de
-   butée, axe B, vis B, bouton de fonction, vis de butée.
+   photo officielle montre la chaîne (comme la scène de l'accueil) ; à l'étape 8, la chape va à 55 % (VERS_28) du
+   chemin vers le 28 dents, jusqu'au léger bruit, et la chaîne reste sur le 24, qui reste allumé ; à l'étape 5, le
+   dérailleur est dessiné sur le 9 dents, au bout du passage des vitesses. Le voyant est jaune fixe aux étapes JAUNE,
+   éteint sinon. La pièce de l'étape s'allume : plaque de butée, axe B, vis B, bouton de fonction, vis de butée.
+   Chaque étape ne montre que ses pastilles, six au plus (PASTILLES, numéros des pastilles dans l'ordre du fichier) :
+   la liste sous la figure suit l'étape.
    Vue éclatée : le support de batterie sort vers l'arrière et la batterie en sort, l'axe B sort de la patte, la
    plaque extérieure de la chape et les galets s'écartent.
    Formes approchées (Shimano ne publie pas les cotes du dérailleur) :
@@ -25,9 +28,11 @@
    - batterie : la BT-DN320 dans son support, sur le haut du corps, à l'arrière, comme dans la scène ; place, logement,
      levier et taille approchés, la photo officielle ne les montre pas ;
    - bouton de fonction et voyant : place et taille approchées, sur la face extérieure du haut du corps ;
-   - axe B et patte : la patte SRAM UDH en forme approchée, l'axe B à six-pans creux de 5 mm, la plaque de butée et la
-     butée de tension B en forme et en place approchées ;
-   - vis B et vis de butée : têtes à six-pans creux de 2 mm, place approchée ; leurs marquages ne sont pas dessinés ;
+   - axe B et patte : la patte SRAM UDH en forme approchée ; l'axe B à tête ronde de forme et de taille approchées,
+     son six-pans creux dessiné à la clé de 5 mm, en creux sombre ; la plaque de butée et la butée de tension B en forme
+     et en place approchées ;
+   - vis B et vis de butée : têtes rondes de forme et de taille approchées, six-pans creux dessinés à la clé de 2 mm ;
+     place approchée ; leurs marquages ne sont pas dessinés ;
    - chape et galets : galets de 13 dents (fiche) au pas de 12,7 mm de la scène, écart des galets et angle de la chape
      au 13 dents repris de la scène ; plaques, moyeux et vis approchés ; la plaque extérieure monte au-dessus du galet
      du haut pour montrer le réglage de la vis B ;
@@ -102,12 +107,13 @@
         return H.mesh(g, mat, parent, [0, 0, (z0 + z1) / 2]);
       }
       function cylZ(r, z0, z1, mat, parent, x, y, seg) { return H.cyl(r, z1 - z0, 'z', mat, parent, [x || 0, y || 0, (z0 + z1) / 2], seg || 24); }
-      /* vis à tête cylindrique et six-pans creux, axe selon y local */
+      /* vis à tête cylindrique et six-pans creux de la clé de 2 mm (rayon du cercle des sommets : 2 / √3), axe selon y
+         local */
       function vis(rTete, hTete, rCorps, lCorps, parent, mat) {
         var g = new THREE.Group(); parent.add(g);
         H.cyl(rCorps, lCorps, 'y', mBolt, g, [0, -lCorps / 2, 0], 12);
         var t = H.cyl(rTete, hTete, 'y', mat || mBolt, g, [0, hTete / 2, 0], 20);
-        H.mesh(new THREE.CylinderGeometry(rTete * 0.48, rTete * 0.48, 0.3, 6), mCover, g, [0, hTete + 0.01, 0]);
+        H.mesh(new THREE.CylinderGeometry(2 / Math.sqrt(3), 2 / Math.sqrt(3), 0.6, 6), mCover, g, [0, hTete - 0.25, 0]);
         g.userData.tete = t; return g;
       }
 
@@ -116,7 +122,8 @@
       var pignons = DENTS.map(function (n, k) {
         var sh = H.shape(H.gearPts(n, Rp(n) - 1.5, Rp(n) + TIP, { tip: 0.32, flank: 0.12 }));
         sh.holes.push(H.path(H.circlePts(n >= 28 ? 34 : 17.6, 48)));
-        return H.mesh(H.extrude(sh, 1.6, { curve: 6 }), M.ghost, root, [0, 0, zk(k)]);
+        var m = H.mesh(H.extrude(sh, 1.6, { curve: 6 }), M.ghost, root, [0, 0, zk(k)]); m.name = 'pignon ' + n;
+        return m;
       });
       cylZ(6, zk(11) - 8, 90, M.steelDark, root, 0, 0, 24);
 
@@ -133,10 +140,12 @@
       profil(hull([].concat(circ(8, -6, -14), circ(6, -26, -26), circ(7, 4, -26))), 93.6, 95.2, 0.5, [], bK, mCover);
       /* plaque de butée, contre la butée de tension B de la patte */
       var plaqueButee = H.box(7, 3, 6, mPlate, bK, [L([6, -21])[0], L([6, -21])[1] - 3.5, 74.2]);
-      /* axe B : six-pans creux de 5 mm, dans son support de vue éclatée */
+      /* axe B : tête ronde et six-pans creux de la clé de 5 mm (rayon du cercle des sommets : 5 / √3), dans son support
+         de vue éclatée */
       var wAxe = new THREE.Group(); bK.add(wAxe);
       var axeB = new THREE.Group(); wAxe.add(axeB);
-      H.mesh(H.lathe([[3.1, 0], [6.4, 0], [6.8, 0.8], [6.8, 5.6], [6.2, 6.4], [3.1, 6.4], [3.1, 0]], 32), mBolt, axeB).rotation.x = Math.PI / 2;
+      H.mesh(H.lathe([[0, 0], [6.4, 0], [6.8, 0.8], [6.8, 5.6], [6.2, 6.4], [0, 6.4]], 32), mBolt, axeB).rotation.x = Math.PI / 2;
+      H.cyl(5 / Math.sqrt(3), 0.6, 'z', mCover, axeB, [0, 0, 6.15], 6);
       H.cyl(4.2, 30, 'z', mBolt, axeB, [0, 0, -15], 16);
       axeB.position.set(0, 0, 94.2);
       var axeTete = axeB.children[0];
@@ -150,10 +159,11 @@
       var support = H.mesh(H.extrude(H.roundRect(36, 30, 5, CB[0], CB[1]), 18, { bevel: 1.2, bevelSize: 1.2, curve: 6 }), mHolder, wSupport, [0, 0, 87]);
       var wBatt = new THREE.Group(); wSupport.add(wBatt);
       var batterie = H.mesh(H.extrude(H.roundRect(30, 24, 3, CB[0] - 4.5, CB[1]), 14, { bevel: 0.6, bevelSize: 0.6, curve: 6 }), mBatt, wBatt, [0, 0, 87]);
-      var levier = H.mesh(H.extrude(H.roundRect(9, 5, 1.6, CB[0] - 10, CB[1] + 9), 2, { bevel: 0.4, bevelSize: 0.4 }), mCover, wSupport, [0, 0, 97.2]);
+      var levier = H.mesh(H.extrude(H.roundRect(9, 5, 1.6, CB[0] + 8, CB[1] + 9), 2, { bevel: 0.4, bevelSize: 0.4 }), mCover, wSupport, [0, 0, 97.2]);
       /* bouton de fonction et voyant, sur la face extérieure */
-      var bouton = cylZ(3.4, 94.4, 96.2, mButton, bK, -6, -37, 28);
-      var voyant = H.mesh(new THREE.SphereGeometry(1.6, 20, 12, 0, TAU, 0, Math.PI / 2), mLedOff, bK, [6, -31, 94.6]);
+      var bouton = cylZ(3.4, 94.4, 96.2, mButton, bK, -8, -40, 28);
+      var voyant = H.mesh(new THREE.SphereGeometry(1.6, 20, 12, 0, TAU, 0, Math.PI / 2), mLedOff, bK, [12, -22, 94.6]);
+      voyant.name = 'voyant';
       voyant.rotation.x = Math.PI / 2;
 
       /* ---------- Biellettes : deux plaques tendues entre le haut et le bas du corps, recalculées à chaque pose ---------- */
@@ -226,17 +236,21 @@
       }
       var M4 = new THREE.Matrix4(), QZ = new THREE.Quaternion(), EZ = new THREE.Vector3(0, 0, 1), SC = new THREE.Vector3(1, 1, 1), PV = new THREE.Vector3();
       var XCOUPE = 150;
-      function chaine(rc, zc, G, T) {
+      function chaine(rc, zc, zChape, G, T) {
         var rr = Rp(DENTS_PLATEAU), O = [0, 0];
         var a1 = tangente(BB, rr, 1, O, rc, 1), a2 = tangente(O, rc, 1, G, RG, -1), a3 = tangente(G, RG, -1, T, RG, 1), a4 = tangente(T, RG, 1, BB, rr, 1);
         var pts = [];
         var u = (a1[0][0] - XCOUPE) / (a1[0][0] - a1[1][0]); pts.push([XCOUPE, a1[0][1] + (a1[1][1] - a1[0][1]) * u, 0], [a1[1][0], a1[1][1], 0]);
-        arc(pts, O, rc, 1, a1[1], a2[0], 1); pts.push([a2[1][0], a2[1][1], 1]);
+        arc(pts, O, rc, 1, a1[1], a2[0], 3); pts.push([a2[1][0], a2[1][1], 1]);
         arc(pts, G, RG, -1, a2[1], a3[0], 1); pts.push([a3[1][0], a3[1][1], 1]);
         arc(pts, T, RG, 1, a3[1], a4[0], 1);
         var u2 = (XCOUPE - a4[0][0]) / (a4[1][0] - a4[0][0]); pts.push([XCOUPE, a4[0][1] + (a4[1][1] - a4[0][1]) * u2, 2]);
-        /* plan de la chaîne : celui du pignon au dérailleur, vers la ligne de chaîne du plateau devant */
-        function zDe(p) { return p[2] === 1 ? zc : zc + (LIGNE - zc) * clamp(p[0] / BB[0], 0, 1); }
+        /* plan de la chaîne : celui du pignon sur le pignon (3) et devant lui (0), celui de la chape dans la chape (1) et
+           derrière elle (2), vers la ligne de chaîne du plateau devant */
+        function zDe(p) {
+          var z0 = p[2] === 1 || p[2] === 2 ? zChape : zc;
+          return p[2] === 1 || p[2] === 3 ? z0 : z0 + (LIGNE - z0) * clamp(p[0] / BB[0], 0, 1);
+        }
         var pins = [pts[0]], cur = pts[0], si = 1;
         while (si < pts.length && pins.length < NMAX + 1) {
           var p = pts[si], d = Math.hypot(p[0] - cur[0], p[1] - cur[1]);
@@ -294,7 +308,7 @@
         mesh.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), d.normalize());
         mesh.scale.set(len, 1, 1);
       }
-      function poser(m) {
+      function poser(m, tc) {
         bK.rotation.z = m.beta;
         pK.position.set(m.piv[0], m.piv[1], m.zc); pK.rotation.z = m.beta;
         cage.position.set(m.piv[0], m.piv[1], m.zc); cage.rotation.z = m.beta + m.a;
@@ -303,28 +317,34 @@
         lien(lienExt, monde(bK, bOuter), monde(pK, [P_LIEN[0], P_LIEN[1], PZ - 6]));
         lien(lienInt, monde(bK, bInner), monde(pK, [P_LIEN[0] + 6, P_LIEN[1] - 10, PZ - 14]));
         var G = monde(cage, [GL[0], GL[1], 0]), T = monde(cage, [TL[0], TL[1], 0]);
-        chaine(m.R, m.zc, G, T);
-        var kc = Math.round(m.t);
+        chaine(rayon(tc), Z9 - tc * ECART, m.zc, G, T);
+        var kc = Math.round(tc);
         pignons.forEach(function (p, k) { p.material = k === kc ? M.highlight : M.ghost; });
       }
 
       /* ---------- Poses des étapes ---------- */
       function indice(n) { return DENTS.indexOf(n); }
       function cle(n) {
-        var t = indice(CIBLE[n - 1]);
-        if (n === 8) t = lerp(indice(24), indice(28), VERS_28);
-        return { t: t, jaune: JAUNE.indexOf(n) >= 0 ? 1 : 0 };
+        var t = indice(CIBLE[n - 1]), tc = t;
+        if (n === 8) { tc = indice(24); t = lerp(tc, t, VERS_28); }   // la chape va vers le 28, la chaîne reste sur le 24
+        return { t: t, tc: tc, jaune: JAUNE.indexOf(n) >= 0 ? 1 : 0 };
       }
       var allumes = { butee: [plaqueButee], axe: [axeTete], visB: [visB.userData.tete], bouton: [bouton], basse: [visBasse.userData.tete], haute: [visHaute.userData.tete] };
       var materiaux = new Map();
       Object.keys(allumes).forEach(function (q) { allumes[q].forEach(function (o) { materiaux.set(o, o.material); }); });
       function apply(s) {
         var k = clamp(Math.floor(s), 1, ETAPES.length), f = sstep(s - k), a = cle(k), b = cle(Math.min(ETAPES.length, k + 1));
-        poser(mouvement(lerp(a.t, b.t, f)));
+        poser(mouvement(lerp(a.t, b.t, f)), lerp(a.tc, b.tc, f));
         voyant.material = lerp(a.jaune, b.jaune, f) > 0.5 ? mLedJaune : mLedOff;
         var on = ALLUME[Math.round(s)];
         Object.keys(allumes).forEach(function (q) { allumes[q].forEach(function (o) { o.material = q === on ? M.highlight : materiaux.get(o); }); });
+        var n = clamp(Math.round(s), 1, ETAPES.length);
+        if (n !== etapePins) { etapePins = n; if (pret) api.setPins(pinsDe(n)); }
       }
+      /* les pastilles de chaque étape, par leur numéro dans l'ordre du fichier, six au plus */
+      var PASTILLES = [[1, 2, 3, 14], [1, 7, 14], [1, 6, 14], [1, 8, 11, 12], [1, 11, 12], [1, 11, 12, 13], [1, 4, 5, 13], [1, 5, 11, 13], [1, 5, 11, 13], [1, 4, 5, 13], [1, 11, 12, 13], [1, 9, 11, 12], [1, 10, 11, 12]];
+      var pins = null, pret = false, etapePins = 0;
+      function pinsDe(n) { return PASTILLES[n - 1].map(function (i) { return pins[i - 1]; }); }
       var s = 7, sT = 7;
       apply(s);
 
@@ -344,28 +364,31 @@
       /* ---------- Repères des pastilles ---------- */
       var aCorps = new THREE.Object3D(); aCorps.position.set(-36, -38, 94.4); bK.add(aCorps);
       var aBatt = new THREE.Object3D(); aBatt.position.set(CB[0] - 19.6, CB[1] - 2, 94); wBatt.add(aBatt);
-      var a24 = new THREE.Object3D(); a24.position.set(-Rp(24) - TIP, 0, zk(7) + 0.8); root.add(a24);
+      var a24 = new THREE.Object3D(); a24.position.set(-Rp(24) - TIP, 0, zk(indice(24)) + 0.8); a24.name = 'repère du 24 dents'; root.add(a24);
       var aPatte = new THREE.Object3D(); aPatte.position.set(10, 6, 72); wPatte.add(aPatte);
+
+      pins = [
+        { obj: aCorps, p: [0, 0, 0], text: 'Dérailleur Shimano RD-M8250-GS, Deore XT Di2 sans fil : ni fil ni port E-TUBE dans la liste de ses pièces, donc pas de port E-TUBE (déduction de ce site) ; une capacité de 36 dents, l’écart entre ton 9 et ton 45 dents' },
+        { obj: aBatt, p: [0, 0, 0], text: 'Batterie Shimano BT-DN320 dans son support, « Battery holder », sur le dérailleur : dépose, pose et charge en 1.7' },
+        { obj: levier, p: [CB[0] + 8, CB[1] + 9, 1.2], text: 'Levier du support de batterie : le seul levier de la liste des pièces de Shimano' },
+        { obj: bouton, p: [0, 0, 1], text: 'Bouton de fonction : roue arrêtée, tiens-le de 2 à 5 secondes, jusqu’au voyant jaune fixe, pour le mode réglage ; 0,5 s ou plus pour revenir au mode normal' },
+        { obj: voyant, p: [0, 1.6, 0], text: 'Voyant, « LED » : jaune fixe en mode réglage, éteint au mode normal ; s’il clignote en bleu, tu as relâché trop tôt' },
+        { obj: axeB, p: [0, 0, 6.6], text: 'Axe B sur la patte SRAM UDH : serré à 10-12 Nm, clé six-pans de 5 mm, à ta TW-6.2' },
+        { obj: plaqueButee, p: [2, -1.5, 3.2], text: 'Plaque de butée du dérailleur contre la butée de tension B, sans jour ; l’axe B entre droit dans la patte' },
+        { obj: visB, p: [0, 2.6, 0], text: 'Vis B, clé de 2 mm : sur le 45 dents, le contour de la plaque extérieure de la chape au niveau de la pointe de la plus haute dent ; aucun écart en millimètres n’est publié' },
+        { obj: visBasse, p: [0, 2.4, 0], text: 'Vis de butée basse, clé de 2 mm : sur le 45 dents, visse-la jusqu’à ce qu’elle touche juste sa butée' },
+        { obj: visHaute, p: [0, 2.4, 0], text: 'Vis de butée haute, clé de 2 mm : sur le 9 dents, visse-la jusqu’à ce qu’elle touche juste sa butée' },
+        { obj: galetHaut, p: [-RG - 2.2, 0, 1.2], text: 'Galet du haut, « Guide pulley », 13 dents : en mode réglage, il dépasse puis revient à chaque appui ; juge sa place dérailleur arrêté' },
+        { obj: galetBas, p: [0, -RG - 2.2, 1.2], text: 'Galet du bas, « Tension pulley », 13 dents : les galets n’ont pas de sens de rotation' },
+        { obj: a24, p: [0, 0, 0], text: 'Cinquième pignon en partant du plus grand : le 24 dents ; le quatrième, le 28 dents (déduction de ce site)' },
+        { obj: aPatte, p: [0, 0, 0], text: 'Patte SRAM UDH : une patte tordue empêche tout réglage ; son contrôle est un travail d’atelier (4.7)' }
+      ];
+      pret = true;
 
       return {
         group: root,
         parts: [{ obj: wSupport, off: [-30, 0, 6] }, { obj: wBatt, off: [-22, 0, 0] }, { obj: wAxe, off: [0, 0, 26] }, { obj: wPlaqueExt, off: [0, 0, 22] }, { obj: wGalets, off: [0, 0, 11] }, { obj: wPatte, off: [0, 0, -16] }],
-        pins: [
-          { obj: aCorps, p: [0, 0, 0], text: 'Dérailleur Shimano RD-M8250-GS, Deore XT Di2 sans fil, ni fil ni port E-TUBE : une capacité de 36 dents, l’écart entre ton 9 et ton 45 dents' },
-          { obj: aBatt, p: [0, 0, 0], text: 'Batterie Shimano BT-DN320 dans son support, « Battery holder », sur le dérailleur : dépose, pose et charge en 1.7' },
-          { obj: levier, p: [CB[0] - 10, CB[1] + 9, 1.2], text: 'Levier du support de batterie : le seul levier de ton dérailleur' },
-          { obj: bouton, p: [0, 0, 1], text: 'Bouton de fonction : roue arrêtée, tiens-le de 2 à 5 secondes, jusqu’au voyant jaune fixe, pour le mode réglage ; 0,5 s ou plus pour revenir au mode normal' },
-          { obj: voyant, p: [0, 1.6, 0], text: 'Voyant, « LED » : jaune fixe en mode réglage, éteint au mode normal ; s’il clignote en bleu, tu as relâché trop tôt' },
-          { obj: axeB, p: [0, 0, 6.6], text: 'Axe B sur la patte SRAM UDH : serré à 10-12 Nm, clé six-pans de 5 mm, à ta TW-6.2' },
-          { obj: plaqueButee, p: [2, -1.5, 3.2], text: 'Plaque de butée du dérailleur contre la butée de tension B, sans jour ; l’axe B entre droit dans la patte' },
-          { obj: visB, p: [0, 2.6, 0], text: 'Vis B, clé de 2 mm : sur le 45 dents, le contour de la plaque extérieure de la chape au niveau de la pointe de la plus haute dent ; aucun écart en millimètres n’est publié' },
-          { obj: visBasse, p: [0, 2.4, 0], text: 'Vis de butée basse, clé de 2 mm : sur le 45 dents, visse-la jusqu’à ce qu’elle touche juste sa butée' },
-          { obj: visHaute, p: [0, 2.4, 0], text: 'Vis de butée haute, clé de 2 mm : sur le 9 dents, visse-la jusqu’à ce qu’elle touche juste sa butée' },
-          { obj: galetHaut, p: [0, RG + 2.2, 1.2], text: 'Galet du haut, « Guide pulley », 13 dents : en mode réglage, il dépasse puis revient à chaque appui ; juge sa place dérailleur arrêté' },
-          { obj: galetBas, p: [0, -RG - 2.2, 1.2], text: 'Galet du bas, « Tension pulley », 13 dents : les galets n’ont pas de sens de rotation' },
-          { obj: a24, p: [0, 0, 0], text: 'Cinquième pignon en partant du plus grand : le 24 dents ; le quatrième, le 28 dents (déduction de ce site)' },
-          { obj: aPatte, p: [0, 0, 0], text: 'Patte SRAM UDH : une patte tordue empêche tout réglage ; son contrôle est un travail d’atelier (4.7)' }
-        ],
+        pins: pinsDe(sT),
         controls: [{ type: 'range', label: 'Pas à pas', min: 1, max: 13, step: 1, value: 7,
           format: function (v) { geste(v); return 'Étape ' + v + ' / 13'; },
           onChange: function (v) { sT = v; if (reduce) { s = sT; apply(s); } api.dirty(); } }],
