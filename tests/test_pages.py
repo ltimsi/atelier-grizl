@@ -221,6 +221,194 @@ CONSTANTES_3D_TUBELESS = {
 AFFECTATIONS_3D_TUBELESS = {'m-rim.js': ("SIEGE", "HAUTEUR", "DEMI_INT", "DEMI_EXT", "DEMI_PNEU", "HAUT", "BAS"),
                             'm-plug.js': ("A", "TAIL", "TIP4", "MOTIF")}
 
+# Pièces 3D du lot 4 (ateliers 4.3 à 4.6) : même règle que les lots 2 et 3. Leurs valeurs sont celles du chapitre
+# src/parts/40-transmission.html, qu'elles répètent : CN-M8100 et attache SM-CN910-12 neuve, flèche dans le sens de
+# rotation de la manivelle ; CC-3.2, côté 0.5, et ses 0,5 % ; CS-M8200-12 9-45 et son 9 dents à contre-écrou intégré,
+# 30-50 Nm chez Shimano, 40 Nm chez Canyon ; RD-M8250-GS, axe B à 10-12 Nm (clé de 5 mm), vis B et butées à la clé de
+# 2 mm, galets de 13 dents, mode réglage sur le 24 dents, voyant jaune fixe. Chaque curseur suit les étapes d'un
+# atelier : ses gestes sont les titres de ces étapes, dans leur ordre.
+PASTILLES_3D_TRANSMISSION = {
+    'm-chain.js': [
+        'Chaîne Shimano CN-M8100, face marquée dehors, vers toi quand tu te tiens côté transmission',
+        'Indicateur d’usure Park Tool CC-3.2, côté 0.5\xa0: celui des chaînes de 11 et 12 vitesses',
+        'Bout en crochet\xa0: sur un maillon à plaques intérieures, pour mesurer contre le rouleau, pas contre les '
+        'plaques',
+        'Autre bout\xa0: s’il n’entre pas, ta chaîne n’a pas atteint 0,5\xa0% d’usure\xa0; s’il entre, elle s’est '
+        'allongée de 0,5\xa0% depuis qu’elle était neuve',
+        'S’il entre, Proposition\xa0: fais confirmer l’usure à une jauge Shimano par un mécanicien\xa0; le critère du '
+        'fabricant de ta chaîne prime',
+        'Attache rapide SM-CN910-12 neuve\xa0: une chaîne neuve, une attache neuve\xa0; jette toujours une attache '
+        'déposée',
+        'Goupilles de l’attache entre les deux maillons intérieurs, une de chaque côté\xa0: engagées à fond, des deux '
+        'côtés',
+        'Flèche de l’attache dans le sens où tourne la manivelle quand tu pédales, vue de face',
+        'Fais glisser les deux côtés de l’attache pour la fermer ou l’ouvrir, à ta pince Park Tool MLP-1.2\xa0; Shimano '
+        'demande sa TL-CN10',
+        'Bouts coupés au CT-3.3\xa0: un maillon intérieur à chaque bout\xa0; ne coupe jamais à l’endroit d’une attache',
+    ],
+    'm-cassette.js': [
+        'Cassette Shimano CS-M8200-12 9-45\xa0: douze pignons, «\xa09-11-13-15-17-19-21-24-28-33-39-45T\xa0»',
+        'Corps de roue libre MICRO SPLINE\xa0: la rainure large du corps en face de la partie large de la cassette',
+        'Le 9 dents fait corps avec le contre-écrou\xa0: serre-le à 30-50\xa0Nm (Shimano)\xa0; Canyon dessine 40\xa0Nm, '
+        'une valeur dans la plage Shimano',
+        'Repères des 9, 11 et 13 dents alignés\xa0; les lettres gravées sont dans l’encadré «\xa0Repères et '
+        'entretoises\xa0»',
+        'Pignons enfilés du plus grand au plus petit, faces marquées dehors, puis le 9 dents',
+        'Entretoises\xa0: trois, une fine et deux épaisses, de 0,95 millimètre et de 1,95 millimètre\xa0; leur place est '
+        'à lire sur la figure du DM et sur la pièce',
+        'Outil de contre-écrou Shimano TL-LR021 (prévu)\xa0: garde-le bien perpendiculaire au 9 dents',
+        'Six-pans du TL-LR021\xa0: tourne-le avec une clé réglable\xa0; sa taille et une prise pour ta TW-6.2 sont à lire '
+        'sur l’outil',
+        'Fouet Park Tool SR-12.2 (prévu), ou Shimano TL-SR24\xa0: sur un pignon plus petit que celui du milieu\xa0; plus '
+        'près des rayons, il ne tient pas',
+        'Gants et lunettes de protection avant de forcer\xa0: le contre-écrou peut céder d’un coup\xa0; force peu à peu',
+    ],
+    'm-derailleur.js': [
+        'Dérailleur Shimano RD-M8250-GS, Deore XT Di2 sans fil, ni fil ni port E-TUBE\xa0: une capacité de 36 dents, '
+        'l’écart entre ton 9 et ton 45 dents',
+        'Batterie Shimano BT-DN320 dans son support, «\xa0Battery holder\xa0», sur le dérailleur\xa0: dépose, pose et charge '
+        'en 1.7',
+        'Levier du support de batterie\xa0: le seul levier de ton dérailleur',
+        'Bouton de fonction\xa0: roue arrêtée, tiens-le de 2 à 5 secondes, jusqu’au voyant jaune fixe, pour le mode '
+        'réglage\xa0; 0,5\xa0s ou plus pour revenir au mode normal',
+        'Voyant, «\xa0LED\xa0»\xa0: jaune fixe en mode réglage, éteint au mode normal\xa0; s’il clignote en bleu, tu as '
+        'relâché trop tôt',
+        'Axe B sur la patte SRAM UDH\xa0: serré à 10-12\xa0Nm, clé six-pans de 5\xa0mm, à ta TW-6.2',
+        'Plaque de butée du dérailleur contre la butée de tension B, sans jour\xa0; l’axe B entre droit dans la patte',
+        'Vis B, clé de 2\xa0mm\xa0: sur le 45 dents, le contour de la plaque extérieure de la chape au niveau de la pointe '
+        'de la plus haute dent\xa0; aucun écart en millimètres n’est publié',
+        'Vis de butée basse, clé de 2\xa0mm\xa0: sur le 45 dents, visse-la jusqu’à ce qu’elle touche juste sa butée',
+        'Vis de butée haute, clé de 2\xa0mm\xa0: sur le 9 dents, visse-la jusqu’à ce qu’elle touche juste sa butée',
+        'Galet du haut, «\xa0Guide pulley\xa0», 13 dents\xa0: en mode réglage, il dépasse puis revient à chaque appui\xa0; '
+        'juge sa place dérailleur arrêté',
+        'Galet du bas, «\xa0Tension pulley\xa0», 13 dents\xa0: les galets n’ont pas de sens de rotation',
+        'Cinquième pignon en partant du plus grand\xa0: le 24 dents\xa0; le quatrième, le 28 dents (déduction de ce site)',
+        'Patte SRAM UDH\xa0: une patte tordue empêche tout réglage\xa0; son contrôle est un travail d’atelier (4.7)',
+    ],
+}
+ETIQUETTES_3D_TRANSMISSION = {
+    'm-chain.js': ['Usure, 4.3', 'Attache, 4.4', 'Pas à pas', 'Allongée de 0,5\xa0%'],
+    'm-cassette.js': ['Pas à pas'],
+    'm-derailleur.js': ['Pas à pas'],
+}
+# Les gestes de chaque curseur : les titres des étapes de l'atelier, mot pour mot et dans leur ordre (apostrophes
+# typographiques dans les pièces). (liste du fichier, atelier, première et dernière étape couvertes)
+ETAPES_3D_TRANSMISSION = {
+    'm-chain.js': {
+        'ETAPES_USURE': ('transmission-usure', 1, [
+            'Prends le côté 0.5 de ton CC-3.2', 'Accroche le crochet sur un maillon à plaques intérieures',
+            'Essaie d’engager l’autre bout', 'Lis le résultat d’après Park Tool', 'Décide avec le critère Shimano']),
+        'ETAPES_ATTACHE': ('transmission-chaine', 6, [
+            'Coupe au CT-3.3, un maillon intérieur à chaque bout', 'Passe la chaîne dans la chape, côté corps du dérailleur',
+            'Pose l’attache SM-CN910-12 neuve, flèche dans le sens de rotation', 'Ferme l’attache à la MLP-1.2',
+            'Contrôle que l’attache est engagée à fond']),
+    },
+    'm-cassette.js': {
+        'ETAPES': ('transmission-cassette', 1, [
+            'Dépose la roue arrière', 'Mets des gants et des lunettes de protection', 'Place le fouet sur un petit pignon',
+            'Engage le TL-LR021, bien perpendiculaire', 'Dévisse le contre-écrou peu à peu, gants et lunettes',
+            'Sors la cassette et repère les entretoises', 'Nettoie les pignons au détergent neutre',
+            'Enfile les pignons du plus grand au plus petit, sans le 9 dents', 'Pose le 9 dents, parties larges alignées',
+            'Aligne les repères des 9, 11 et 13 dents', 'Serre le contre-écrou à 30-50\xa0Nm',
+            'Remonte la roue et passe les vitesses']),
+    },
+    'm-derailleur.js': {
+        'ETAPES': ('transmission-reglage', 1, [
+            'Dans E-TUBE PROJECT Cyclist\xa0: type GS et mode E-BIKE coupé, puis déconnecte',
+            'Contrôle la plaque de butée contre la butée de vis B', 'Serre l’axe B à 10-12\xa0Nm',
+            'Passe sur le 45 dents et règle la vis B', 'Passe toutes les vitesses',
+            'Passe sur le 24 dents, le cinquième en partant du plus grand',
+            'Roue arrêtée, entre en mode réglage\xa0: voyant jaune fixe',
+            'Appuie sur X en tournant la manivelle, jusqu’au léger bruit sur le 28 dents', 'Appuie 5 fois sur Y',
+            'Reviens au mode normal\xa0: voyant éteint', 'Passe chaque vitesse\xa0: aucun bruit',
+            'Butée basse\xa0: sur le 45 dents, visse jusqu’au contact', 'Butée haute\xa0: sur le 9 dents, visse jusqu’au contact']),
+    },
+}
+# Les commandes, mot pour mot : le compteur reste court (« Étape n / N », N le nombre d'étapes de l'atelier, n le numéro
+# de l'étape dans le chapitre) ; le geste entier va sur la ligne p.v3d-geste qui revient à la ligne, comme pour la
+# mèche (m-plug.js).
+COMMANDES_3D_TRANSMISSION = {
+    'm-chain.js': [
+        "{ type: 'segmented', value: 'attache', options: [{ value: 'usure', label: 'Usure, 4.3' }, { value: 'attache', "
+        "label: 'Attache, 4.4' }],",
+        "{ type: 'range', label: 'Pas à pas', min: 1, max: 5, step: 1, value: 5,",
+        "{ type: 'toggle', label: 'Allongée de 0,5\xa0%', value: false, onChange: usee }",
+        "function numero(v) { return mode === 'usure' ? v : v + 5; }",
+        "format: function (v) { geste(v); return 'Étape ' + numero(v) + ' / ' + (mode === 'usure' ? 5 : 12); },",
+        "ligne.textContent = 'Étape ' + numero(v) + ' de ' + (mode === 'usure' ? '4.3' : '4.4') + '\xa0: ' + "
+        "(mode === 'usure' ? ETAPES_USURE : ETAPES_ATTACHE)[v - 1];",
+        "api.setPins(mode === 'usure' ? pins.slice(0, 5) : [pins[0]].concat(pins.slice(5)));",
+    ],
+    'm-cassette.js': [
+        "controls: [{ type: 'range', label: 'Pas à pas', min: 1, max: 12, step: 1, value: 4,",
+        "format: function (v) { geste(v); return 'Étape ' + v + ' / 12'; },",
+        "ligne.textContent = 'Étape ' + v + ' de 4.5\xa0: ' + ETAPES[v - 1];",
+    ],
+    'm-derailleur.js': [
+        "controls: [{ type: 'range', label: 'Pas à pas', min: 1, max: 13, step: 1, value: 7,",
+        "format: function (v) { geste(v); return 'Étape ' + v + ' / 13'; },",
+        "ligne.textContent = 'Étape ' + v + ' de 4.6\xa0: ' + ETAPES[v - 1];",
+    ],
+}
+# La ligne du geste, commune aux trois pièces : créée une fois, posée juste après la barre des commandes.
+LIGNE_3D_TRANSMISSION = (
+    "ligne = document.createElement('p'); ligne.className = 'v3d-geste'; ligne.setAttribute('aria-live', 'polite');",
+    "if (barre && barre !== ligne && barre.nextElementSibling !== ligne) barre.insertAdjacentElement('afterend', ligne);",
+    "if (!placee) { placee = true; geste(sT); }",
+)
+# Ce que dessine chaque étape, épinglé : le côté et le sens de l'attache (plaque extérieure à +z, flèche vers +x, l'avant
+# du brin du haut), le crochet du CC-3.2 sur le maillon intérieur I0 ; les outils et le 9 dents de chaque étape de 4.5 ;
+# le pignon visé et le voyant de chaque étape de 4.6.
+DESSIN_3D_TRANSMISSION = {
+    'm-chain.js': (
+        "H.mesh(gQuick, mQuick, g, [0, 0, (Z_OUT0 + Z_OUT1) / 2]);",
+        "s.moveTo(-3.6, -0.5); s.lineTo(0.9, -0.5); s.lineTo(0.9, -1.45); s.lineTo(3.6, 0); s.lineTo(0.9, 1.45); "
+        "s.lineTo(0.9, 0.5); s.lineTo(-3.6, 0.5); s.lineTo(-3.6, -0.5);",
+        "var fleche = H.mesh(new THREE.ExtrudeGeometry(s, { depth: 0.04, bevelEnabled: false }), mEngr, g, [-0.4, 0, Z_OUT1 - 0.005]);",
+        "var I0 = inner(0, 1), I1 = inner(2, 3), I2 = inner(4, 5), I3 = inner(6, 7), I4 = inner(8, 9);",
+        "var O1 = outer(1, 2), O5 = outer(5, 6), O7 = outer(7, 8);",
+        "var XHOOK = RR + 0.02 + FW;",
+        "marks.push(H.mesh(gMark, mEngr, g, [0, 0, Z_OUT1 - 0.005]));",
+    ),
+    'm-cassette.js': (
+        "var FOUET = [3, 4, 5];",
+        "var OUTIL = [4, 5, 11];",
+        "var SANS_9 = [6, 7, 8];",
+        "var DEHORS = [6, 7];",
+        "var PIGNON_FOUET = 15;",
+        # Le sens de dépose que le chapitre lit sur la figure du DM : vu de face (+x), l'outil tourne dans le sens
+        # inverse des aiguilles d'une montre, une rotation positive autour de x ; le manche du fouet part vers le haut
+        # (+y) et la droite (-z) de la cassette vue de face, comme sur la figure.
+        "tour = Math.min(1, st.dev + st.neuf) * 1.2;",
+        "neuf.g.position.set(x9, st.neuf * 96, 0); neuf.g.rotation.x = tour;",
+        "outil.rotation.x = tour;",
+        "var sieges = [], TH0 = -dF - dF / 2;",
+        "var THM = TH0 - 0.25, dirM = [Math.cos(THM), Math.sin(THM)]",
+    ),
+    'm-derailleur.js': (
+        "var CIBLE = [13, 13, 13, 45, 9, 24, 24, 28, 24, 24, 24, 45, 9];",
+        "var JAUNE = [7, 8, 9];",
+        # La vis B : au 45 dents, le haut de la plaque extérieure (à R_PLAQUE du galet du haut) affleure la pointe des
+        # dents (TIP au-dessus du rayon primitif).
+        "function jeu(R) { return R >= R13 ? lerp(JEU_13, R_PLAQUE + TIP - RG, (R - R13) / (R45 - R13)) : "
+        "JEU_13 + (R13 - R) * 0.4; }",
+    ),
+}
+# Les déclarations de chaque en-tête : chaque puce nommée est là, dit ce qu'elle approche (« approché », « dessin »), et
+# porte les mots demandés.
+DECLARATIONS_3D_TRANSMISSION = {
+    'm-chain.js': {'chaîne': ('fiche',), 'marquage': ('à lire',), 'attache': (), 'flèche': ('déduction',),
+                   'indicateur CC-3.2': ('0.5',), 'usure': ('exagéré',), 'couleurs': ()},
+    'm-cassette.js': {'pignons': ('scène',), 'araignée': (), 'contre-écrou': (), 'repères': (),
+                      'entretoises': ('à lire sur la figure du DM',), 'corps de roue libre': (), 'moyeu': (),
+                      'outil TL-LR021': ('à lire sur l', ), 'fouet': ('sens',), 'couleurs': ()},
+    'm-derailleur.js': {'corps': ('photo officielle',), 'batterie': (), 'bouton de fonction et voyant': (),
+                        'axe B et patte': (), 'vis B et vis de butée': (), 'chape et galets': (), 'mouvement': (),
+                        'cassette': (), 'chaîne': (), 'couleurs': ()},
+}
+# Les couples permis dans chaque fichier, commentaires compris : ceux du chapitre pour la pièce, rien d'autre.
+COUPLES_3D_TRANSMISSION = {'m-chain.js': set(), 'm-cassette.js': {"30-50", "40"}, 'm-derailleur.js': {"10-12"}}
+
 
 def elements(parent):
     return [e for e in parent.enfants if isinstance(e, dom.Element)]
@@ -1073,6 +1261,193 @@ class TestPages(Site):
                     self.assertEqual(len(trouvees), 1, f"{nom} : déclaration « {cle} » de l'en-tête")
                     for mot in ("approch|dessin",) + mots:
                         self.assertRegex(trouvees[0], mot, f"{nom} : déclaration « {cle} » sans « {mot} »")
+
+    def test_pieces_3d_transmission(self):
+        # Les pièces 3D des ateliers 4.3 et 4.4 (« chain »), 4.5 (« cassette ») et 4.6 (« derailleur ») : le fichier du
+        # dépôt et, dès que le lot 4 est publié, ses copies servies par les deux cibles (dist/site/js/ et
+        # dist/artifact/js/). Chaque pastille, chaque commande et chaque geste des curseurs est comparé mot pour mot à
+        # PASTILLES_3D_TRANSMISSION, ETIQUETTES_3D_TRANSMISSION, COMMANDES_3D_TRANSMISSION et ETAPES_3D_TRANSMISSION ;
+        # les gestes sont les titres des étapes du chapitre, dans leur ordre. Puis, sur tout le fichier, commentaires
+        # compris :
+        # - rien du CF 7 ni des brouillons : ni RD-RX822 à câble, molette, serre-câble ou stabilisateur, ni CS-M7100 en
+        #   10-45 ou 10-51, ni TL-LR15, FR-5.2H ou TL-FC36, ni fixation à 8-10 Nm, plateau à 16-17 Nm ou « +4/+5 » ;
+        # - aucun couple sinon ceux du chapitre pour la pièce (COUPLES_3D_TRANSMISSION), toujours écrits « Nm », et aucune
+        #   pression ;
+        # - aucune donnée personnelle, aucun tiret cadratin ni demi-cadratin, aucun style en ligne ;
+        # - « approchée » et les couleurs dans chaque en-tête, et chaque puce de DECLARATIONS_3D_TRANSMISSION ; les valeurs
+        #   reprises de la scène de l'accueil (dents de la cassette, pas de la chaîne, écart des pignons, dents des
+        #   galets) affectées une seule fois ; ce que dessine chaque étape (DESSIN_3D_TRANSMISSION), recoupé avec les
+        #   titres des étapes.
+        # Les valeurs viennent du chapitre : chaque nombre suivi d'une unité, dans une pastille, un geste ou une étiquette,
+        # y est écrit, avec une espace insécable avant l'unité ; chaque légende dit que les numéros se dessinent
+        # par-dessus les pièces cachées.
+        def plat(t):
+            return t.replace("’", "'").replace("\xa0", " ")
+        source = (RACINE / "src" / "parts" / "40-transmission.html").read_text(encoding="utf-8")
+        par_id = {a.id: a for a in ateliers.relever_chapitre(source).ateliers}
+        chapitre = plat(source)
+        titres = {a: [plat(un(li, "p.st-t").texte()) for li in dom.selectionner(par_id[a].section, "ol.steps > li")]
+                  for a in ("transmission-usure", "transmission-chaine", "transmission-cassette", "transmission-reglage")}
+        # Le nombre d'étapes de chaque atelier, que redit le compteur « Étape n / N ».
+        self.assertEqual({a: len(t) for a, t in titres.items()},
+                         {"transmission-usure": 5, "transmission-chaine": 12, "transmission-cassette": 12,
+                          "transmission-reglage": 13})
+        jetons = RACINE / "brouillons" / "jetons-personnels.txt"  # hors du dépôt : brouillons/ est ignoré par git
+        jetons = [l.strip() for l in jetons.read_text(encoding="utf-8").splitlines()
+                  if l.strip() and not l.lstrip().startswith("#")] if jetons.exists() else []
+        absents = ("RX822", "RX610", "CS-M7100", "câble", "molette", "stabilisateur", "8-10", "16-17", "TL-FC36",
+                   "GRX 610", "Shadow RD+", "gaine", "ON/OFF", "TL-LR15", "FR-5.2H", "10-45", "10-51", "4/5", "Y0GY",
+                   "DM-GARD010", "DM-MACS001", "pression", "Lamine", "/Users/", "ltimsi", "CHF", "€")
+        motifs = (r"(?i)CF[\s_-]*7(?!\d)", r"(?<![\d,.])8 ?(?:-|à) ?10(?![\d,.])", r"(?<![\d,.])6 ?(?:-|à) ?7 ?N",
+                  r"(?<![\d,.])16 ?(?:-|à) ?17(?![\d,.])", r"\+ ?4 ?/ ?\+? ?5", r"4 ou 5 maillons", r"(?i)\bclutch\b",
+                  r"(?i)\bcable\b", r"(?i)\bbarrel\b")
+        # Un marquage inventé sur une pièce : ni « 12S » sur la chaîne, ni « 0.75 » sur le CC-3.2 (seul « 0.5 » est publié).
+        marquages = ("12S", "0.75", "0,75")
+        legende_3d = ("Touche un numéro pour repérer la pièce. Un numéro peut se dessiner par-dessus une pièce qui cache "
+                      "la sienne : fais tourner la pièce, ou lis la liste numérotée sous la figure.")
+        valeur = re.compile(r"(?:\d+(?:,\d+)?(?:-| à | et ))?\d+(?:,\d+)?[ \xa0](?:Nm|mm|millimètres?|%|dents|secondes|s"
+                            r"|vitesses|maillons|crans)(?!\w)")
+        couple = re.compile(r"(\d+(?:[,.]\d+)?(?: ?(?:-|à) ?\d+(?:[,.]\d+)?)?) ?(?:N ?[·.]? ?m\b|newton)", re.I)
+        # Les valeurs de la scène de l'accueil, recopiées dans les pièces (des IIFE autonomes) : une valeur changée dans
+        # l'un des fichiers fait échouer le test.
+        scene = (RACINE / "src" / "scene" / "pieces" / "transmission.js").read_text(encoding="utf-8")
+        geo = (RACINE / "src" / "scene" / "geometrie.js").read_text(encoding="utf-8")
+        dents = re.search(r"^export const DENTS_CASSETTE = Object\.freeze\(\[([\d, ]+)\]\);", scene, re.M).group(1)
+        pas = re.search(r"^  pasChaine: apr\(([\d.]+),", geo, re.M).group(1)
+        ecart = re.search(r"^  ecartPignons: apr\(([\d.]+),", geo, re.M).group(1)
+        galet = re.search(r"^  dentsPoulie: pub\((\d+),", geo, re.M).group(1)
+        dessine = re.search(r"^  dentsPignonDessine: apr\((\d+),", geo, re.M).group(1)
+        reprises = {'m-chain.js': (f"var PAS = {pas};",),
+                    'm-cassette.js': (f"var DENTS = [{dents}];", f"var PAS = {pas}, ECART = {ecart};"),
+                    'm-derailleur.js': (f"var DENTS = [{dents}];",
+                                        f"var PAS = {pas}, ECART = {ecart}, DENTS_GALET = {galet};")}
+        affectees = {'m-chain.js': ("PAS",), 'm-cassette.js': ("DENTS", "PAS", "ECART"),
+                     'm-derailleur.js': ("DENTS", "PAS", "ECART", "DENTS_GALET")}
+        publie = "transmission" in self.chapitres
+        lus = {}
+        for fichier, (modele, atelier) in {"m-chain.js": ("chain", "transmission-chaine"),
+                                           "m-cassette.js": ("cassette", "transmission-cassette"),
+                                           "m-derailleur.js": ("derailleur", "transmission-reglage")}.items():
+            chemin = RACINE / "src" / "js" / "models" / fichier
+            self.assertTrue(chemin.exists(), f"{fichier} absent")
+            figures = [f for f in dom.selectionner(par_id[atelier].section, "figure.v3d") if f.get("data-model") == modele]
+            self.assertEqual(len(figures), 1, f"{atelier} : figure {modele}")
+            self.assertIn(legende_3d, plat(un(figures[0], "figcaption").texte()), f"{atelier} : légende")
+            # Les gestes du curseur sont les titres des étapes de l'atelier, à partir de la première couverte.
+            for liste, (a, premiere, attendus) in ETAPES_3D_TRANSMISSION[fichier].items():
+                self.assertEqual([plat(e) for e in attendus], titres[a][premiere - 1:premiere - 1 + len(attendus)],
+                                 f"{fichier} : {liste}")
+            sources = list(self.copies(fichier)) if publie else [(fichier, chemin.read_text(encoding="utf-8"))]
+            for nom, texte in sources:
+                lus[nom] = texte
+                self.assertEqual(texte.count(f"AtelierModels.register('{modele}', {{"), 1, f"{nom} : register")
+                self.assertEqual(texte.count("explodeLabel: 'Vue éclatée'"), 1, f"{nom} : vue éclatée")
+                pastilles = re.findall(r"text: '((?:[^'\\]|\\.)*)'", texte)
+                self.assertEqual(pastilles, PASTILLES_3D_TRANSMISSION[fichier], f"{nom} : pastilles")
+                self.assertEqual(len(re.findall(r"\btext['\"]?\s*:", texte)), len(pastilles), f"{nom} : pastille écrite autrement")
+                etiquettes = re.findall(r"\blabel: '((?:[^'\\]|\\.)*)'", texte)
+                self.assertEqual(etiquettes, ETIQUETTES_3D_TRANSMISSION[fichier], f"{nom} : étiquettes des commandes")
+                gestes = []
+                for liste, (_, _, attendus) in ETAPES_3D_TRANSMISSION[fichier].items():
+                    m = re.search(r"var %s = \[(.*?)\];" % liste, texte)
+                    gestes += re.findall(r"'((?:[^'\\]|\\.)*)'", m.group(1)) if m else []
+                    self.assertEqual(re.findall(r"'((?:[^'\\]|\\.)*)'", m.group(1)) if m else [], attendus,
+                                     f"{nom} : gestes de {liste}")
+                self.assertEqual(len(re.findall(r"\bvar ETAPES\w*\s*=", texte)), len(ETAPES_3D_TRANSMISSION[fichier]),
+                                 f"{nom} : liste de gestes en trop")
+                for commande in (*COMMANDES_3D_TRANSMISSION[fichier], *LIGNE_3D_TRANSMISSION,
+                                 *DESSIN_3D_TRANSMISSION[fichier], *reprises[fichier]):
+                    self.assertEqual(texte.count(commande), 1, f"{nom} : commande ou constante {commande!r}")
+                for nom_constante in affectees[fichier]:
+                    self.assertEqual(len(re.findall(r"(?<![\w.])%s\s*=(?!=)" % nom_constante, texte)), 1,
+                                     f"{nom} : {nom_constante} affectée plus d'une fois")
+                # Les valeurs et leur typographie, dans chaque libellé affiché.
+                for libelle in pastilles + gestes + etiquettes:
+                    for v in valeur.findall(libelle):
+                        self.assertIn(plat(v), chapitre, f"{nom} : {v!r} absent du chapitre : {libelle[:60]}")
+                    self.assertIsNone(re.search(r"\d (?:Nm|mm|%|s)(?!\w)", libelle), f"{nom} : espace avant l'unité : {libelle[:60]}")
+                    self.assertIsNone(re.search(r"[^\s\xa0] [:;?!»]|« ", libelle), f"{nom} : espace ordinaire : {libelle[:60]}")
+                    self.assertNotIn("'", libelle, f"{nom} : apostrophe droite : {libelle[:60]}")
+                # Les couples : ceux du chapitre pour la pièce, dans les pastilles, et aucun autre dans tout le fichier.
+                lu = re.sub(r"\s+", " ", plat(texte))
+                self.assertEqual(set(couple.findall(lu)), COUPLES_3D_TRANSMISSION[fichier], f"{nom} : couples")
+                self.assertEqual({c for p in pastilles for c in couple.findall(plat(p))}, COUPLES_3D_TRANSMISSION[fichier],
+                                 f"{nom} : couples des pastilles")
+                self.assertNotIn("N·m", texte, f"{nom} : « N·m » au lieu de « Nm »")
+                # Aucune pression : ni unité, en chiffres ou seule (une classe CSS comme « v3d-bar » n'en est pas une), ni mot
+                # qui en parle.
+                m = re.search(r"(?<![\w-])(?:bars?|psi|kpa|mpa|atm|atmosphères?)(?![\w-])|gonfl|manomètre", lu, re.I)
+                self.assertIsNone(m, f"{nom} : pression {m and lu[max(0, m.start() - 30):m.end()]!r}")
+                # assertFalse plutôt qu'assertNotIn : un échec nomme la valeur sans recopier tout le fichier.
+                for absent in absents:
+                    self.assertFalse(absent.lower() in lu.lower(), f"{nom} : {absent!r} présent")
+                for motif in motifs:
+                    m = re.search(motif, lu)
+                    self.assertIsNone(m, f"{nom} : {m and lu[max(0, m.start() - 30):m.end() + 30]!r}")
+                # Les marquages dessinés (textes des décalques) et les libellés.
+                for litteral in re.findall(r"fillText\('((?:[^'\\]|\\.)*)'", texte) + pastilles + gestes + etiquettes:
+                    for marque in marquages:
+                        self.assertNotIn(marque, litteral, f"{nom} : marquage inventé {marque!r}")
+                for n, jeton in enumerate(jetons, 1):
+                    self.assertFalse(jeton in texte, f"{nom} : jeton personnel n°{n}")
+                self.assertIsNone(re.search("[—–]", texte), f"{nom} : tiret cadratin ou demi-cadratin")
+                self.assertNotIn("cssText", texte, f"{nom} : style en ligne")
+                self.assertIsNone(re.search(r"\.style\.\w+\s*=", texte), f"{nom} : style en ligne")
+                entete = texte[:texte.index("*/")] if "*/" in texte else ""
+                for mot in ("approchée", "couleurs"):
+                    self.assertIn(mot, entete, f"{nom} : en-tête sans « {mot} »")
+                puces = [re.sub(r"\s+", " ", plat(p)) for p in re.split(r"\n\s*- ", entete)[1:]]
+                for cle, mots in DECLARATIONS_3D_TRANSMISSION[fichier].items():
+                    trouvees = [p for p in puces if p.startswith(cle) and p[len(cle):len(cle) + 1] in (" ", ",")]
+                    self.assertEqual(len(trouvees), 1, f"{nom} : déclaration « {cle} » de l'en-tête")
+                    for mot in ("approch|dessin",) + mots:
+                        self.assertRegex(trouvees[0], mot, f"{nom} : déclaration « {cle} » sans « {mot} »")
+        # Ce que dessine chaque étape, recoupé avec les titres du chapitre.
+        def entiers(nom, liste):
+            m = re.search(r"var %s = \[([\d, ]+)\];" % liste, lus[nom])
+            self.assertIsNotNone(m, f"{nom} : {liste}")
+            return [int(x) for x in m.group(1).split(",")]
+
+        def etape(atelier, debut):
+            return next(i for i, t in enumerate(titres[atelier], 1) if t.startswith(debut))
+        cassette = "transmission-cassette"
+        self.assertEqual(entiers("m-cassette.js", "FOUET"),
+                         list(range(etape(cassette, "Place le fouet"), etape(cassette, "Sors la cassette"))))
+        self.assertEqual(entiers("m-cassette.js", "OUTIL"),
+                         [etape(cassette, "Engage le TL-LR021"), etape(cassette, "Dévisse"), etape(cassette, "Serre")])
+        self.assertEqual(entiers("m-cassette.js", "SANS_9"),
+                         list(range(etape(cassette, "Sors la cassette"), etape(cassette, "Pose le 9 dents"))))
+        self.assertEqual(entiers("m-cassette.js", "DEHORS"),
+                         list(range(etape(cassette, "Sors la cassette"), etape(cassette, "Enfile les pignons"))))
+        pignon_fouet = int(re.search(r"var PIGNON_FOUET = (\d+);", lus["m-cassette.js"]).group(1))
+        tous = [int(x) for x in dents.split(",")]
+        self.assertIn(pignon_fouet, tous)
+        self.assertTrue(tous[0] < pignon_fouet < tous[len(tous) // 2 - 1], "fouet : pignon plus petit que celui du milieu")
+        reglage = "transmission-reglage"
+        cible = entiers("m-derailleur.js", "CIBLE")
+        self.assertEqual(len(cible), len(titres[reglage]))
+        for i, t in enumerate(titres[reglage]):
+            m = re.search(r"sur le (\d+) dents", t)
+            if m:
+                self.assertEqual(cible[i], int(m.group(1)), t)
+        sur_24 = etape(reglage, "Passe sur le 24 dents")
+        self.assertEqual(cible[sur_24 - 1], 24)
+        # Le mode réglage se fait sur le 24 dents : la chaîne y reste, et le galet y revient (Y cinq fois).
+        for debut in ("Roue arrêtée", "Appuie 5 fois", "Reviens au mode normal", "Passe chaque vitesse"):
+            self.assertEqual(cible[etape(reglage, debut) - 1], 24, debut)
+        # Avant le réglage, la chaîne est sur le pignon de la scène de l'accueil, celui de la photo officielle.
+        self.assertEqual(cible[:etape(reglage, "Passe sur le 45 dents") - 1], [int(dessine)] * 3)
+        self.assertEqual(entiers("m-derailleur.js", "JAUNE"),
+                         list(range(etape(reglage, "Roue arrêtée"), etape(reglage, "Reviens au mode normal"))))
+        self.assertIn("voyant jaune fixe", titres[reglage][etape(reglage, "Roue arrêtée") - 1])
+        self.assertIn("voyant éteint", titres[reglage][etape(reglage, "Reviens au mode normal") - 1])
+        # Le sens de dépose dessiné est celui que le chapitre lit sur la figure du DM (4.5, étape 5).
+        depose = dom.selectionner(par_id[cassette].section, "ol.steps > li")[etape(cassette, "Dévisse") - 1]
+        self.assertIn("sens inverse des aiguilles d'une montre", plat(depose.texte()))
+        releve = (RACINE / "docs" / "recherche" / "transmission-cf8-di2.md").read_text(encoding="utf-8")
+        self.assertIn("Le fouet TL-SR24 part vers le haut et la droite", releve)
+        # La chaîne : les gestes de 4.4 commencent à l'étape 6, ce que dit numero().
+        self.assertEqual(ETAPES_3D_TRANSMISSION['m-chain.js']['ETAPES_ATTACHE'][1] - 1, 5)
 
     def test_disque_de_l_axe_comme_celui_du_chapitre_2(self):
         # Le disque de la pièce de l'axe (1.5) recopie celui de m-rotor.js (2.2, déjà en ligne) : mêmes fentes à cinq
