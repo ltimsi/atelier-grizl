@@ -1,4 +1,4 @@
-"""Tests de build/pages.py et de l'écriture du site par build/assemble.py : les 35 pages, leurs liens, le texte des
+"""Tests de build/pages.py et de l'écriture du site par build/assemble.py : les 44 pages, leurs liens, le texte des
 ateliers conservé, l'index de la recherche, la page Composants d'origine recopiée de la fiche, la page d'accueil et
 les blocs qu'elle reçoit (Où intervenir, D'origine puis à monter, Toutes les catégories).
 
@@ -27,12 +27,14 @@ ZONES = json.loads((RACINE / "src" / "scene" / "zones.json").read_text(encoding=
 SLUGS = ["systeme", "disques", "plaquettes", "rodage", "centrage", "controles", "purge", "securite"]
 SLUGS_MONTAGE = ["avant", "deballer", "cintre", "selle", "roues", "pedales", "di2", "position", "controles"]
 SLUGS_TUBELESS = ["materiel", "passer", "liquide", "pression", "crevaison", "problemes"]
-# Les catégories publiées, dans l'ordre des chapitres : 1 Montage, 2 Freins, 3 Pneus et tubeless.
-PUBLIEES = ["montage", "freins", "tubeless"]
-A_VENIR = ["transmission", "accessoires", "revision"]
+SLUGS_TRANSMISSION = ["di2", "nettoyer", "usure", "chaine", "cassette", "reglage", "patte", "pedalier", "depannage"]
+# Les catégories publiées, dans l'ordre des chapitres : 1 Montage, 2 Freins, 3 Pneus et tubeless, 4 Transmission.
+PUBLIEES = ["montage", "freins", "tubeless", "transmission"]
+A_VENIR = ["accessoires", "revision"]
 REFERENCES = ["composants", "outils", "couples", "approche", "sources"]
 CHEMINS = ([""] + ["montage/"] + [f"montage/{s}/" for s in SLUGS_MONTAGE] + ["freins/"] + [f"freins/{s}/" for s in SLUGS]
            + ["tubeless/"] + [f"tubeless/{s}/" for s in SLUGS_TUBELESS]
+           + ["transmission/"] + [f"transmission/{s}/" for s in SLUGS_TRANSMISSION]
            + [f"{c}/" for c in A_VENIR] + [f"{r}/" for r in REFERENCES])
 MD = (RACINE / "docs" / "recherche" / "composants-origine.md").read_text(encoding="utf-8")
 COMPOSANTS = (RACINE / "src" / "parts" / "composants.html").read_text(encoding="utf-8")
@@ -475,9 +477,10 @@ class Site(unittest.TestCase):
 
 class TestPages(Site):
     def test_pages_generees(self):
-        # 35 pages : la racine, Montage à la livraison et ses 9 ateliers, Freins et ses 8 ateliers, Pneus et tubeless
-        # et ses 6 ateliers (l'ordre des chapitres), les 3 catégories à venir et les 5 références.
-        self.assertEqual(len(CHEMINS), 35)
+        # 44 pages : la racine, Montage à la livraison et ses 9 ateliers, Freins et ses 8 ateliers, Pneus et tubeless
+        # et ses 6 ateliers, Transmission et ses 9 ateliers (l'ordre des chapitres), les 2 catégories à venir et les 5
+        # références.
+        self.assertEqual(len(CHEMINS), 44)
         self.assertEqual([p.chemin for p in self.pages], CHEMINS)
         for cible in ("site", "artifact"):
             trouvees = sorted(p.relative_to(self.dossier / cible).as_posix()
@@ -488,7 +491,8 @@ class TestPages(Site):
     def test_fichiers_copies(self):
         attendus = {"js/recherche.js", "js/viewer.js", "js/site.js", "js/references.js", "js/m-rotor.js",
                     "js/m-caliper.js", "js/m-bleed.js", "js/m-torque.js", "js/m-cockpit.js", "js/m-axle.js",
-                    "js/m-pedal.js", "js/m-rim.js", "js/m-plug.js", "js/scene/app.js", "js/scene/zones.json"}
+                    "js/m-pedal.js", "js/m-rim.js", "js/m-plug.js", "js/m-chain.js", "js/m-cassette.js",
+                    "js/m-derailleur.js", "js/scene/app.js", "js/scene/zones.json"}
         for cible in ("site", "artifact"):
             fichiers = self.sorties[cible][1]
             self.assertEqual(attendus - fichiers, set(), cible)
@@ -612,7 +616,9 @@ class TestPages(Site):
         self.assertNotIn("viewer.js", accueil)
         for slug, modele in (("freins/disques", "rotor"), ("freins/plaquettes", "caliper"), ("freins/purge", "bleed"),
                              ("montage/avant", "torque"), ("montage/cintre", "cockpit"), ("montage/roues", "axle"),
-                             ("montage/pedales", "pedal"), ("tubeless/passer", "rim"), ("tubeless/crevaison", "plug")):
+                             ("montage/pedales", "pedal"), ("tubeless/passer", "rim"), ("tubeless/crevaison", "plug"),
+                             ("transmission/chaine", "chain"), ("transmission/cassette", "cassette"),
+                             ("transmission/reglage", "derailleur")):
             html = self.html(f"{slug}/")
             for morceau in ('"three": "../../vendor/three/three.module.min.js"', 'src="../../js/viewer.js"',
                             f'src="../../js/m-{modele}.js"', 'src="../../js/scene/app.js"'):
@@ -626,7 +632,8 @@ class TestPages(Site):
             self.assertGreater(html.rfind("<script>", 0, garde), html.index('src="../../js/scene/app.js"'), slug)
             self.assertIn("window.AtelierViewer.start()", html[garde:html.index("</script>", garde)], slug)
         for chemin in ("freins/rodage/", "freins/systeme/", "freins/", "outils/", "montage/", "montage/deballer/",
-                       "montage/di2/", "tubeless/", "tubeless/materiel/", "tubeless/pression/"):
+                       "montage/di2/", "tubeless/", "tubeless/materiel/", "tubeless/pression/", "transmission/",
+                       "transmission/usure/", "transmission/pedalier/"):
             html = self.html(chemin)
             for absent in ("importmap", "viewer.js", "scene/app.js", "references.js", "zones-data", "liens-data",
                            "hasAttribute('data-app')"):
@@ -720,6 +727,43 @@ class TestPages(Site):
             tete = un(self.arbre("tubeless/passer/", cible), "p.atelier-num")
             self.assertEqual(tete.texte(), "Atelier 3.2 · Zone 9, Pneus et valves", cible)
 
+    def test_transmission_publie(self):
+        # « #transmission », le lien « chapitre 4 » de l'atelier 1.7, mène à transmission/ par le bloc #liens-data,
+        # dans les deux cibles, et l'id de chaque atelier du chapitre 4 à la page de cet atelier. La page transmission/
+        # n'est plus « à venir » : c'est la catégorie publiée du lot 4, avec ses neuf ateliers : la chaîne et la
+        # cassette (4.2 à 4.5) dans la zone 10, le pédalier (4.8) dans la zone 7, le reste dans celle du dérailleur.
+        zones = {"di2": "Zone 8 · Dérailleur Di2", "nettoyer": "Zone 10 · Chaîne et cassette",
+                 "usure": "Zone 10 · Chaîne et cassette", "chaine": "Zone 10 · Chaîne et cassette",
+                 "cassette": "Zone 10 · Chaîne et cassette", "reglage": "Zone 8 · Dérailleur Di2",
+                 "patte": "Zone 8 · Dérailleur Di2", "pedalier": "Zone 7 · Pédalier et pédales",
+                 "depannage": "Zone 8 · Dérailleur Di2"}
+        for cible in ("site", "artifact"):
+            html = self.html("", cible)
+            liens = json.loads(re.search(r'<script type="application/json" id="liens-data">(.*?)</script>', html,
+                                         re.S).group(1))
+            self.assertEqual(liens["transmission"], "transmission/", cible)
+            for slug in SLUGS_TRANSMISSION:
+                self.assertEqual(liens[f"transmission-{slug}"], f"transmission/{slug}/", cible)
+            racine = self.arbre("transmission/", cible)
+            self.assertEqual(un(racine, "p.lot-badge").texte(), "Lot 4 · en relecture", cible)
+            self.assertEqual(dom.selectionner(racine, "ul.prevu"), [], cible)
+            self.assertNotIn("à venir", un(racine, "main.page").texte(), cible)
+            self.assertEqual(un(racine, "h1").texte(), "Transmission", cible)
+            cartes = dom.selectionner(racine, "a.carte")
+            self.assertEqual([c.get("href") for c in cartes], [f"{s}/" for s in SLUGS_TRANSMISSION], cible)
+            self.assertEqual([un(c, "span.num").texte() for c in cartes], [f"4.{n}" for n in range(1, 10)], cible)
+            self.assertEqual([un(c, "span.zone").texte() for c in cartes], [zones[s] for s in SLUGS_TRANSMISSION],
+                             cible)
+            self.assertIn('<a href="./" aria-current="page">Transmission<span class="cnt">9</span></a>',
+                          self.html("transmission/", cible), cible)
+            cassette = un(self.arbre("transmission/cassette/", cible), "article.atelier")
+            self.assertEqual([cassette.get(n) for n in ("id", "data-zone")], ["transmission-cassette", "chaine"], cible)
+            tete = un(self.arbre("transmission/cassette/", cible), "p.atelier-num")
+            self.assertEqual(tete.texte(), "Atelier 4.5 · Zone 10, Chaîne et cassette", cible)
+            # Le lien « chapitre 4 » de 1.7 mène à la catégorie, plus à une page « à venir ».
+            di2 = self.html("montage/di2/", cible)
+            self.assertIn('au <a href="../../transmission/">chapitre 4</a>.', di2, cible)
+
     def test_page_categorie(self):
         html = self.html("freins/")
         racine = dom.analyser(html)
@@ -800,13 +844,14 @@ class TestPages(Site):
                 self.assertEqual(assemble.controles(html), [], f"{cible} {chemin}")
 
     def test_page_a_venir(self):
-        lot = next(l for l in CONFIG["lots"] if l["lot"] == 4)
-        racine = self.arbre("transmission/")
-        self.assertEqual(un(racine, "h1").texte(), "Transmission")
-        self.assertEqual(un(racine, "p.lot-badge").texte(), "Lot 4 · à venir")
+        lot = next(l for l in CONFIG["lots"] if l["lot"] == 5)
+        racine = self.arbre("accessoires/")
+        self.assertEqual(un(racine, "h1").texte(), "Accessoires des trajets")
+        self.assertEqual(un(racine, "p.lot-badge").texte(), "Lot 5 · à venir")
         self.assertEqual([li.texte() for li in dom.selectionner(un(racine, "ul.prevu"), "li")], lot["prevu"])
-        self.assertEqual(un(racine, "nav.crumbs").texte(), "Ateliers/Transmission")
-        self.assertIn('<a class="soon" href="./" aria-current="page">Transmission', self.html("transmission/"))
+        self.assertEqual(un(racine, "nav.crumbs").texte(), "Ateliers/Accessoires des trajets")
+        self.assertIn('<a class="soon" href="./" aria-current="page">Accessoires des trajets',
+                      self.html("accessoires/"))
 
     def test_page_outils(self):
         racine = self.arbre("outils/")
@@ -824,19 +869,27 @@ class TestPages(Site):
         self.assertEqual(faible, ["2.3 Changer les plaquettes", "2.7 Purger les freins"])
 
     def test_page_couples(self):
-        # Une section par catégorie publiée, dans l'ordre des chapitres : Montage à la livraison (1.1), puis Freins (2.1).
-        # Le tableau des Freins n'a pas de lien « #id » : il est recopié tel quel. Celui du Montage renvoie à 1.5 par
-        # « #montage-roues », réécrit vers la page de l'atelier.
+        # Une section par catégorie publiée qui a un tableau de couples, dans l'ordre des chapitres : Montage à la
+        # livraison (1.1), Freins (2.1), puis Transmission (4.1). Le tableau des Freins n'a pas de lien « #id » : il est
+        # recopié tel quel. Celui du Montage renvoie à 1.5 par « #montage-roues », réécrit vers la page de l'atelier ;
+        # celui de la Transmission à ses ateliers et à 1.1 et 1.6, chaque lien réécrit de même.
         racine = self.arbre("couples/")
         sections = dom.selectionner(racine, "section.couples-cat")
         categories = [("Montage à la livraison", "montage", "../montage/avant/", {"#montage-roues": "../montage/roues/"}),
-                      ("Freins", "freins", "../freins/systeme/", {})]
+                      ("Freins", "freins", "../freins/systeme/", {}),
+                      ("Transmission", "transmission", "../transmission/di2/",
+                       {"#transmission-reglage": "../transmission/reglage/",
+                        "#transmission-cassette": "../transmission/cassette/",
+                        "#transmission-pedalier": "../transmission/pedalier/",
+                        "#montage-pedales": "../montage/pedales/", "#montage-avant": "../montage/avant/",
+                        "#transmission-patte": "../transmission/patte/"})]
         self.assertEqual(len(sections), len(categories))
         for section, (titre, ident, origine, liens) in zip(sections, categories):
             self.assertEqual(un(section, "h2").texte(), titre)
             (tableau,) = dom.selectionner(section, '[data-resume="couples"]')
             source = self.chapitres[ident].resumes["couples"][0].html()
-            self.assertEqual(re.findall(r'href="(#[^"]+)"', source), list(liens), ident)
+            # Les liens « #id » du tableau, chacun une fois, dans l'ordre de leur première apparition.
+            self.assertEqual(list(dict.fromkeys(re.findall(r'href="(#[^"]+)"', source))), list(liens), ident)
             for avant, apres in liens.items():
                 source = source.replace(f'href="{avant}"', f'href="{apres}"')
             self.assertEqual(tableau.html(), source, ident)
@@ -1264,8 +1317,8 @@ class TestPages(Site):
 
     def test_pieces_3d_transmission(self):
         # Les pièces 3D des ateliers 4.3 et 4.4 (« chain »), 4.5 (« cassette ») et 4.6 (« derailleur ») : le fichier du
-        # dépôt et, dès que le lot 4 est publié, ses copies servies par les deux cibles (dist/site/js/ et
-        # dist/artifact/js/). Chaque pastille, chaque commande et chaque geste des curseurs est comparé mot pour mot à
+        # dépôt et ses copies servies par les deux cibles (dist/site/js/ et dist/artifact/js/), le lot 4 étant publié :
+        # la pièce publiée est celle qu'on relit. Chaque pastille, chaque commande et chaque geste des curseurs est comparé mot pour mot à
         # PASTILLES_3D_TRANSMISSION, ETIQUETTES_3D_TRANSMISSION, COMMANDES_3D_TRANSMISSION et ETAPES_3D_TRANSMISSION ;
         # les gestes sont les titres des étapes du chapitre, dans leur ordre. Puis, sur tout le fichier, commentaires
         # compris :
@@ -1323,7 +1376,7 @@ class TestPages(Site):
                                         f"var PAS = {pas}, ECART = {ecart}, DENTS_GALET = {galet};")}
         affectees = {'m-chain.js': ("PAS",), 'm-cassette.js': ("DENTS", "PAS", "ECART"),
                      'm-derailleur.js': ("DENTS", "PAS", "ECART", "DENTS_GALET")}
-        publie = "transmission" in self.chapitres
+        self.assertIn("transmission", self.chapitres, "lot 4 non publié")
         lus = {}
         for fichier, (modele, atelier) in {"m-chain.js": ("chain", "transmission-chaine"),
                                            "m-cassette.js": ("cassette", "transmission-cassette"),
@@ -1337,7 +1390,7 @@ class TestPages(Site):
             for liste, (a, premiere, attendus) in ETAPES_3D_TRANSMISSION[fichier].items():
                 self.assertEqual([plat(e) for e in attendus], titres[a][premiere - 1:premiere - 1 + len(attendus)],
                                  f"{fichier} : {liste}")
-            sources = list(self.copies(fichier)) if publie else [(fichier, chemin.read_text(encoding="utf-8"))]
+            sources = list(self.copies(fichier))
             for nom, texte in sources:
                 lus[nom] = texte
                 self.assertEqual(texte.count(f"AtelierModels.register('{modele}', {{"), 1, f"{nom} : register")
@@ -1556,7 +1609,7 @@ class TestPages(Site):
             self.assertEqual(dom.selectionner(page, absent), [], absent)
         self.assertEqual([un(b, "h2").texte() for b in (elements(grille)[1], blocs[2], blocs[4])],
                          ["Où intervenir", "D’origine, puis à monter", "Toutes les catégories"])
-        self.assertEqual(len(dom.selectionner(blocs[2], "ul.a-remplacer > li")), 3)
+        self.assertEqual(len(dom.selectionner(blocs[2], "ul.a-remplacer > li")), 4)
         self.assertEqual(len(dom.selectionner(blocs[4], "div.cats > a.cat")), len(PUBLIEES) + len(A_VENIR))
         # L'introduction garde son texte : les caractéristiques, le jour de la livraison et la règle des sources.
         intro = blocs[3]
@@ -1692,9 +1745,13 @@ class TestRecherche(Site):
         self.assertIn({"k": "Catégorie", "t": "Pneus et tubeless", "u": "tubeless/"}, index)
         self.assertIn({"k": "Atelier 3.2", "t": "Passer en tubeless", "u": "tubeless/passer/"}, index)
         self.assertIn({"k": "Atelier 3.5", "t": "Crevaison en route", "u": "tubeless/crevaison/"}, index)
-        self.assertIn({"k": "Lot 4 · à venir", "t": "Transmission", "u": "transmission/"}, index)
-        # Les lots 2 et 3 sont publiés : plus d'entrée « à venir » pour eux, ni pour la charge du Di2 retirée du lot 4.
-        self.assertFalse([e for e in index if e["k"] in ("Lot 2 · à venir", "Lot 3 · à venir")])
+        self.assertIn({"k": "Catégorie", "t": "Transmission", "u": "transmission/"}, index)
+        self.assertIn({"k": "Atelier 4.4", "t": "Remplacer la chaîne", "u": "transmission/chaine/"}, index)
+        self.assertIn({"k": "Atelier 4.5", "t": "Démonter et remonter la cassette", "u": "transmission/cassette/"}, index)
+        self.assertIn({"k": "Lot 5 · à venir", "t": "Accessoires des trajets", "u": "accessoires/"}, index)
+        # Les lots 2, 3 et 4 sont publiés : plus d'entrée « à venir » pour eux, ni pour la charge du Di2 retirée du
+        # lot 4.
+        self.assertFalse([e for e in index if e["k"] in ("Lot 2 · à venir", "Lot 3 · à venir", "Lot 4 · à venir")])
         self.assertFalse([e for e in index if e["t"] == "Charger la batterie Di2 BT-DN320."])
         pieces = [e for e in index if e["k"] == "Pièce d’origine"]
         self.assertTrue(any("RD-M8250" in e["t"] for e in pieces))
@@ -1704,8 +1761,9 @@ class TestRecherche(Site):
         lignes = len(dom.selectionner(fiche, "tbody > tr")) + len(dom.selectionner(fiche, "ul.accessoires > li"))
         self.assertEqual(len(pieces), lignes)
         # 45 étapes aux Freins, 89 au Montage (1.3 : 24, 1.4 : 14, 1.5 : 17, 1.6 : 15, 1.7 : 11, 1.8 : 8), 61 au
-        # tubeless (3.2 : 25, son talonnage en trois étapes, 3.3 : 9, 3.4 : 9, 3.5 : 18).
-        self.assertEqual(len([e for e in index if e["k"].startswith("Étape · ")]), 45 + 89 + 61)
+        # tubeless (3.2 : 25, son talonnage en trois étapes, 3.3 : 9, 3.4 : 9, 3.5 : 18), 53 à la transmission (4.2 : 11,
+        # 4.3 : 5, 4.4 : 12, 4.5 : 12, 4.6 : 13).
+        self.assertEqual(len([e for e in index if e["k"].startswith("Étape · ")]), 45 + 89 + 61 + 53)
         # Les ateliers passent en premier, avant les étapes et les outils.
         genres = [e["k"].split(" ")[0] for e in index]
         self.assertLess(genres.index("Atelier"), genres.index("Étape"))
@@ -1734,18 +1792,23 @@ class TestAccueil(unittest.TestCase):
         cls.chapitres = pages.chapitres_publies(CONFIG)
 
     def test_ou_intervenir(self):
-        # Neuf cartes, dans l'ordre des pastilles : les trois zones des freins, les cinq du montage, puis celle des
-        # pneus, avec les six ateliers du chapitre 3. Les ateliers sans zone (1.1, 1.2, 1.9) ne sont dans aucune.
+        # Dix cartes, dans l'ordre des pastilles : les trois zones des freins, les cinq du montage, celle des pneus,
+        # avec les six ateliers du chapitre 3, puis celle de la chaîne et de la cassette, avec quatre ateliers du
+        # chapitre 4. Les autres ateliers du chapitre 4 rejoignent le pédalier (4.8) et le dérailleur Di2 (4.1, 4.6,
+        # 4.7, 4.9). Les ateliers sans zone (1.1, 1.2, 1.9) ne sont dans aucune.
         racine = dom.analyser(pages.cartes_des_zones(self.chapitres, ZONES))
         cartes = dom.selectionner(racine, "div.zone-carte")
         self.assertEqual([c.get("data-zone") for c in cartes],
-                         ["disques", "etrier", "manettes", "poste", "selle", "axes", "pedalier", "derailleur", "pneus"])
+                         ["disques", "etrier", "manettes", "poste", "selle", "axes", "pedalier", "derailleur", "pneus",
+                          "chaine"])
         self.assertEqual([un(c, "button.zone-btn").texte() for c in cartes],
                          ["Disques de frein", "Étrier et plaquettes", "Manettes et durites", "Poste de pilotage",
-                          "Selle et tige", "Axes des roues", "Pédalier et pédales", "Dérailleur Di2", "Pneus et valves"])
+                          "Selle et tige", "Axes des roues", "Pédalier et pédales", "Dérailleur Di2", "Pneus et valves",
+                          "Chaîne et cassette"])
         attendu = {"disques": ["2.2", "2.4"], "etrier": ["2.3", "2.5", "2.6"], "manettes": ["2.1", "2.7", "2.8"],
-                   "poste": ["1.3"], "selle": ["1.4", "1.8"], "axes": ["1.5"], "pedalier": ["1.6"], "derailleur": ["1.7"],
-                   "pneus": ["3.1", "3.2", "3.3", "3.4", "3.5", "3.6"]}
+                   "poste": ["1.3"], "selle": ["1.4", "1.8"], "axes": ["1.5"], "pedalier": ["1.6", "4.8"],
+                   "derailleur": ["1.7", "4.1", "4.6", "4.7", "4.9"], "pneus": ["3.1", "3.2", "3.3", "3.4", "3.5", "3.6"],
+                   "chaine": ["4.2", "4.3", "4.4", "4.5"]}
         for n, (carte, zone) in enumerate(zip(cartes, ZONES), 1):
             self.assertEqual(un(carte, "span.zone-n").texte(), str(n))
             bouton = un(carte, "button.zone-btn")
@@ -1753,7 +1816,7 @@ class TestAccueil(unittest.TestCase):
             liens = dom.selectionner(carte, "a")
             self.assertEqual([un(a, "span.num").texte() for a in liens], attendu[zone["id"]])
             for a in liens:
-                self.assertRegex(a.get("href"), r"^(freins|montage|tubeless)/[a-z0-9]+/$")
+                self.assertRegex(a.get("href"), r"^(freins|montage|tubeless|transmission)/[a-z0-9]+/$")
         disques = dom.selectionner(cartes[0], "a")[0]
         self.assertEqual(disques.get("href"), "freins/disques/")
         self.assertEqual([s.texte() for s in elements(disques)], ["2.2", "Déposer et reposer un disque", "Entretenir"])
@@ -1762,8 +1825,9 @@ class TestAccueil(unittest.TestCase):
         racine = dom.analyser(pages.pieces_a_remplacer(self.chapitres))
         lignes = dom.selectionner(racine, "ul.a-remplacer > li")
         # 2.2 dépose et repose le disque d'origine : se remplacent les pédales de 1.6, que le vélo n'a pas à la
-        # livraison, la pièce de 2.3, puis les chambres à air éventuelles de 3.2, dans l'ordre des chapitres.
-        self.assertEqual(len(lignes), 3)
+        # livraison, la pièce de 2.3, les chambres à air éventuelles de 3.2, puis la chaîne de 4.4, dans l'ordre des
+        # chapitres.
+        self.assertEqual(len(lignes), 4)
         self.assertEqual(un(lignes[0], ".vers").texte(), "Shimano PD-ME700 et cales SM-SH51")
         self.assertEqual(un(lignes[0], ".de").texte(), "à la place de : Aucune pédale, non fournies")
         self.assertEqual(un(lignes[0], "a").get("href"), "montage/pedales/")
@@ -1774,12 +1838,15 @@ class TestAccueil(unittest.TestCase):
         self.assertEqual(un(lignes[2], ".de").texte(),
                          "à la place de : Chambres à air si le vélo en est livré (à lire sur la pièce)")
         self.assertEqual(un(lignes[2], "a").get("href"), "tubeless/passer/")
+        self.assertEqual(un(lignes[3], ".vers").texte(), "CN-M8100 neuve et attache SM-CN910-12 neuve")
+        self.assertEqual(un(lignes[3], ".de").texte(), "à la place de : CN-M8100 usée")
+        self.assertEqual(un(lignes[3], "a").get("href"), "transmission/chaine/")
 
     def test_categories(self):
         racine = dom.analyser(pages.cartes_des_categories(CONFIG, self.chapitres))
         cartes = dom.selectionner(racine, "a.cat")
         self.assertEqual([c.get("href") for c in cartes], [f"{c}/" for c in PUBLIEES + A_VENIR])
-        self.assertEqual([c.classes() for c in cartes], [["cat"]] * 3 + [["cat", "soon"]] * 3)
+        self.assertEqual([c.classes() for c in cartes], [["cat"]] * 4 + [["cat", "soon"]] * 2)
         self.assertEqual(un(cartes[0], "span.label").texte(), "Lot 2 · en relecture")
         self.assertEqual(un(cartes[0], "h3").texte(), "Montage à la livraison")
         self.assertEqual(un(cartes[0], "p").texte(), "9 ateliers")
@@ -1789,8 +1856,11 @@ class TestAccueil(unittest.TestCase):
         self.assertEqual(un(cartes[2], "span.label").texte(), "Lot 3 · en relecture")
         self.assertEqual(un(cartes[2], "h3").texte(), "Pneus et tubeless")
         self.assertEqual(un(cartes[2], "p").texte(), "6 ateliers")
-        self.assertEqual(un(cartes[3], "span.label").texte(), "Lot 4 · à venir")
-        self.assertEqual(un(cartes[3], "p").texte(), CONFIG["lots"][4]["prevu"][0])
+        self.assertEqual(un(cartes[3], "span.label").texte(), "Lot 4 · en relecture")
+        self.assertEqual(un(cartes[3], "h3").texte(), "Transmission")
+        self.assertEqual(un(cartes[3], "p").texte(), "9 ateliers")
+        self.assertEqual(un(cartes[4], "span.label").texte(), "Lot 5 · à venir")
+        self.assertEqual(un(cartes[4], "p").texte(), CONFIG["lots"][5]["prevu"][0])
 
     def test_marques_remplacees(self):
         modele = "<p>avant</p>\n<!--OU-INTERVENIR-->\n<!--A-REMPLACER-->\n<!--CATEGORIES-->\n<p>après</p>"

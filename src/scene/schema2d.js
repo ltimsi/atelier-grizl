@@ -181,8 +181,9 @@ export function formesSchema(p, geo = GEO) {
   const gAxes = groupe('axes');
   for (const c of [RA, FA]) cercle(gAxes, c, COTES_ROUES.diametreAxe.v / 2, 'k');
 
-  // ---- Cassette, plateau, chaîne ----
-  const gCassette = groupe();
+  // ---- Cassette, plateau, chaîne. La cassette et la chaîne : la zone de la chaîne, comme dans la 3D (transmission.js) ;
+  // le plateau : celle du pédalier ----
+  const gCassette = groupe('chaine');
   DENTS_CASSETTE.forEach((dents, k) => {
     cercle(gCassette, RA, rayonPrimitif(dents, pas) + 2.5, k === 0 || k === DENTS_CASSETTE.length - 1 ? 'n' : 't');
   });
@@ -190,7 +191,7 @@ export function formesSchema(p, geo = GEO) {
   const gPlateau = groupe('pedalier');
   chemin(gPlateau, engrenage(BB, geo.dentsPlateau.v, rayons.plateau + 4.5, rayons.plateau - 2), 'o');
   cercle(gPlateau, BB, COTES_TRANSMISSION.entraxe.v / 2, 'n');
-  const gChaine = groupe();
+  const gChaine = groupe('chaine');
   const chaine = cheminChaine(p);
   chemin(gChaine, chaine, 'ch');
   chemin(gChaine, chaine, 'ch2');

@@ -749,20 +749,26 @@ test('transmission : le boîtier lit la largeur de boîte de GEO, 43,25 mm de ch
   for (const f of faces) assert.ok(Math.abs(f - GEO.largeurBoite.v / 2) < 0.01, `cuvette contre la boîte en ${f}`);
 });
 
-test('transmission : pédalier et dérailleur dans leurs zones (ateliers 1.6 et 1.7), le reste sans zone', () => {
+test('transmission : pédalier, chaîne et cassette, dérailleur dans leurs zones (1.6, 4.2 à 4.5, 1.7), le boîtier sans zone', () => {
   // Le pédalier : plateau, araignée et manivelles, leur axe et le capuchon ; les cuvettes du boîtier, pressées dans le
-  // cadre, n'en sont pas. Le dérailleur entier, avec sa batterie BT-DN320. Cassette et chaîne restent sans zone.
+  // cadre, n'en sont pas. La chaîne et la cassette entière (ses douze pignons, son araignée et la bague du petit
+  // pignon) : la zone 10, celle des ateliers 4.2 à 4.5 ; le plateau reste au pédalier. Le dérailleur entier, avec sa
+  // batterie BT-DN320.
   const pedalier = ['plateau', 'manivelle droite', 'manivelle gauche', 'capuchon', 'axe de pédalier'];
+  const chaine = ['chaîne', ...transmission.DENTS_CASSETTE.map(n => `pignon ${n}`), 'araignée de cassette',
+    'bague du petit pignon'];
   const derailleur = ['dérailleur', 'corps du dérailleur', 'batterie', 'galet'];
   const { maillages } = construire(transmission);
-  for (const nom of [...pedalier, ...derailleur, 'boîtier', 'chaîne']) {
+  for (const nom of [...pedalier, ...chaine, ...derailleur, 'boîtier']) {
     assert.ok(parNom(maillages, nom).length > 0, `${nom} absent`);
   }
+  const zoneDe = nom => pedalier.includes(nom) ? 'pedalier' : chaine.includes(nom) ? 'chaine'
+    : derailleur.includes(nom) ? 'derailleur' : null;
   for (const m of maillages) {
-    const attendue = pedalier.includes(m.name) ? 'pedalier' : derailleur.includes(m.name) ? 'derailleur' : null;
-    assert.equal(m.userData.zone, attendue, `${m.name || m.userData.role} : zone ${m.userData.zone}`);
+    assert.equal(m.userData.zone, zoneDe(m.name), `${m.name || m.userData.role} : zone ${m.userData.zone}`);
     assert.equal('variante' in m.userData, false);
   }
+  assert.deepEqual(parNom(maillages, 'boîtier').map(m => m.userData.zone), [null, null], 'cuvettes du boîtier');
 });
 
 test('transmission : plateau de 40 dents sur la ligne de chaîne de la FC-RX820-1', () => {

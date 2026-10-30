@@ -268,6 +268,10 @@ test('choisirZone sur une page : zone inconnue refusée, zone connue choisie, sa
   assert.equal(module.choisirZone('pneus'), true);
   assert.deepEqual(cartes.map(c => c.getAttribute('aria-current')), seule('pneus', 'true', null));
   assert.deepEqual(pins.map(p => p.getAttribute('aria-pressed')), seule('pneus', 'true', 'false'));
+  // La zone du lot 4, la pastille 10 : la chaîne et la cassette.
+  assert.equal(module.choisirZone('chaine'), true);
+  assert.deepEqual(cartes.map(c => c.getAttribute('aria-current')), seule('chaine', 'true', null));
+  assert.deepEqual(pins.map(p => p.getAttribute('aria-pressed')), seule('chaine', 'true', 'false'));
   // choisirZone seul ne fait jamais défiler la page.
   for (const e of [...cartes, el['#scene-stage']]) assert.deepEqual(e.defilements, []);
 });

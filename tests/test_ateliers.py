@@ -988,7 +988,7 @@ class TestMontage(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------------------------------------------
-# Chapitre 3, Pneus et tubeless : relu depuis son fragment, hors publication (le lot 3 reste « à faire »)
+# Chapitre 3, Pneus et tubeless : relu depuis son fragment (lot 3, publié en relecture)
 # ---------------------------------------------------------------------------------------------------------------
 
 TUBELESS = RACINE / "src" / "parts" / "30-tubeless.html"
@@ -1682,7 +1682,7 @@ class TestTubeless(PasAPas, unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------------------------------------------
-# Chapitre 4, Transmission : relu depuis son fragment, hors publication (le lot 4 reste « à faire »)
+# Chapitre 4, Transmission : relu depuis son fragment (lot 4, publié en relecture)
 # ---------------------------------------------------------------------------------------------------------------
 
 TRANSMISSION = RACINE / "src" / "parts" / "40-transmission.html"
@@ -1752,12 +1752,14 @@ class TestTransmission(PasAPas, unittest.TestCase):
                     "Nm (newton-mètre)", "travaux d'atelier"):
             self.assertIn(mot, tete, mot)
 
-    def test_non_publie(self):
-        # Le lot 4 reste « à faire » : la tâche 3 le publiera, avec la zone de la chaîne et les trois pièces 3D.
+    def test_publie(self):
+        # Le lot 4 est publié en relecture, avec ce chapitre et ses trois pièces 3D (la pièce « crank » du brouillon
+        # n'en est plus), sans « prevu » : sa catégorie montre ses ateliers.
         config = json.loads((RACINE / "build" / "lots.json").read_text(encoding="utf-8"))
         (lot,) = [l for l in config["lots"] if l["lot"] == 4]
-        self.assertEqual((lot["statut"], lot["parts"], lot["categorie"]["id"]),
-                         ("à faire", ["40-transmission"], "transmission"))
+        self.assertEqual((lot["statut"], lot["parts"], lot["categorie"]["id"], lot["modeles"]),
+                         ("en relecture", ["40-transmission"], "transmission", ["chain", "cassette", "derailleur"]))
+        self.assertNotIn("prevu", lot)
 
     def test_ateliers_ids_types_zones(self):
         self.assertEqual([(a.id, a.num, a.type, a.zone) for a in self.ch.ateliers], [

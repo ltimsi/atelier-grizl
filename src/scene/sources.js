@@ -217,6 +217,27 @@ export const SOURCES = Object.freeze({
     type: 'fiche',
   }),
 
+  // Shimano : relevé de la transmission du 30 octobre 2026 (docs/recherche/transmission-cf8-di2.md), cités par les
+  // pièces 3D des ateliers 4.3 à 4.6 : la chaîne, la cassette et le dérailleur
+  'shimano-dm-macn001': Object.freeze({
+    titre: 'Shimano DM-MACN001-08, manuel revendeur des chaînes 12 vitesses : face marquée, coupe, attache QUICK-LINK ' +
+      'et sa pince TL-CN10 (anglais)',
+    url: `${SHIMANO_DM}/en/dm/MACN001`,
+    type: 'manuel',
+  }),
+  'shimano-ev-cs-m8200-12': Object.freeze({
+    titre: 'Shimano EV CS-M8200-12-5110, vue éclatée de la cassette CS-M8200-12 : pignons, entretoises, outils ' +
+      'TL-LR021 et TL-SR24',
+    url: `${SHIMANO_DM}/en/ev/CS-M8200-12-5110`,
+    type: 'manuel',
+  }),
+  'shimano-dm-mard011': Object.freeze({
+    titre: 'Shimano DM-MARD011-07, manuel revendeur du dérailleur Di2 RD-M8250, de sa batterie et de son chargeur : ' +
+      'noms des pièces, pose, réglage (anglais)',
+    url: `${SHIMANO_DM}/en/dm/MARD011`,
+    type: 'manuel',
+  }),
+
   // Shimano : relevé du montage du 24 octobre 2026 (docs/recherche/montage-cf8-di2.md), cité par la pièce 3D de la
   // pédale (atelier 1.6)
   'shimano-dm-mapd001': Object.freeze({

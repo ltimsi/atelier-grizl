@@ -148,6 +148,13 @@ const SOUS_BATTERIE = Object.freeze([-20, -98, 98]);
 // La pastille se pose sur la jante, contre le pneu, dans le haut de la roue avant, que les autres pastilles laissent
 // libre ; celle de la valve arrière tomberait sur la pastille du disque arrière. Placement de vue, pas une cote.
 const SOUS_SIEGE_VALVE = 28;
+// Chaîne et cassette (lot 4) : depuis l'axe de la roue arrière, en avant, vers le bas et côté transmission. Sur le grand
+// pignon de 45 dents de la cassette (transmission.js), au bord de sa denture, devant et sous l'axe, dans le plan de ce
+// pignon. Sur le brin inférieur de la chaîne, la pastille passerait sous les boutons de la scène dans les vues des
+// disques et des manettes ; sur la cassette, posée sur son ancre, elle serait à moins de trente pixels de celles du
+// disque arrière et du dérailleur à 360 px de large. Elle est donc décalée à l'écran vers l'avant (decalage de
+// zones.json), dans le creux entre la cassette, le plateau et les deux brins de la chaîne. Placement de vue, pas une cote.
+const BORD_CASSETTE = Object.freeze([76, -44, 21]);
 
 const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
 const mul = (a, k) => [a[0] * k, a[1] * k];
@@ -226,6 +233,8 @@ export function points(geo = GEO) {
     batterieDi2: [RA[0] + SOUS_BATTERIE[0], RA[1] + SOUS_BATTERIE[1], SOUS_BATTERIE[2]],
     // Zone des pneus et des valves.
     valveAvant: [FA[0], FA[1] + g('diametreSiegeJante') / 2 - SOUS_SIEGE_VALVE, 0],
+    // Zone de la chaîne et de la cassette.
+    bordCassette: [RA[0] + BORD_CASSETTE[0], RA[1] + BORD_CASSETTE[1], BORD_CASSETTE[2]],
   };
 
   return { RA, FA, BB, HTt, HTb, STt, SPt, S0, S1, PR, PL, CF, CR, CROWN, dHT, dST, poulieHaute, poulieBasse, rayons, ancres };

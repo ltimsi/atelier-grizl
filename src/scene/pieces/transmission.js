@@ -12,9 +12,9 @@
 // capuchon du pivot de la chape, le galet bas et le brin de chaîne entre les galets. La chaîne y est sur le treize dents.
 // La cassette : son petit pignon et sa bague de blocage ne font qu'une pièce (« The smallest sprocket and the lock ring
 // are combined into a single part », manuel Shimano DM-MACS010, shimano-dm-macs010).
-// Zones : plateau, araignée, manivelles, leur axe et le capuchon en zone 'pedalier' (atelier 1.6, les pédales se vissent
-// au bout des manivelles) ; le dérailleur et sa batterie en zone 'derailleur' (atelier 1.7). Cuvettes du boîtier,
-// cassette et chaîne sans zone.
+// Zones : plateau, araignée, manivelles, leur axe et le capuchon en zone 'pedalier' (ateliers 1.6 et 4.8, les pédales
+// se vissent au bout des manivelles) ; la cassette entière et la chaîne en zone 'chaine' (ateliers 4.2 à 4.5) ; le
+// dérailleur et sa batterie en zone 'derailleur' (ateliers 1.7, 4.1, 4.6, 4.7 et 4.9). Cuvettes du boîtier sans zone.
 // Un seul import : cheminChaine, du module pur geometrie.js. three.js arrive par les outils.
 import { cheminChaine } from '../geometrie.js';
 
@@ -40,7 +40,7 @@ export const DENTS_CASSETTE = Object.freeze([9, 11, 13, 15, 17, 19, 21, 24, 28, 
 export const META = Object.freeze({
   id: 'transmission',
   nom: 'Pédalier GRX FC-RX820-1, boîtier BB72, cassette XT CS-M8200, chaîne Shimano XT et dérailleur XT Di2 RD-M8250',
-  zone: null, // le pédalier en zone 'pedalier', le dérailleur en zone 'derailleur', le reste sans zone
+  zone: null, // le pédalier, la cassette et la chaîne, le dérailleur dans leurs zones ; le boîtier sans zone
   sources: Object.freeze([
     FICHE,
     'canyon-4556-en',
@@ -144,8 +144,8 @@ function enveloppe(cercles) {
 
 /**
  * Ajoute au groupe des outils le pédalier, le boîtier, la cassette, la chaîne et le dérailleur avec sa batterie.
- * Le pédalier est en zone 'pedalier' (sans les cuvettes du boîtier), le dérailleur en zone 'derailleur', le reste sans
- * zone ; les outils en ressortent sans zone.
+ * Le pédalier est en zone 'pedalier' (sans les cuvettes du boîtier), la cassette et la chaîne en zone 'chaine', le
+ * dérailleur en zone 'derailleur', les cuvettes du boîtier sans zone ; les outils en ressortent sans zone.
  * Noms des maillages que vérifient les tests : pignon 9 à pignon 45, plateau, manivelle droite, manivelle gauche,
  * chaîne, galet, boîtier, dérailleur, corps du dérailleur, batterie. Les autres : araignée de cassette, bague du petit
  * pignon, axe de pédalier, capuchon.
@@ -166,6 +166,7 @@ export function construire(o, p, geo) {
   pedalier(o, p, geo, plans.avant);
   o.zone(null);
   boitier(o, p, geo);
+  o.zone('chaine');
   cassette(o, p, pas, zPignon);
   chaine(o, p, pas, plans);
   o.zone('derailleur');

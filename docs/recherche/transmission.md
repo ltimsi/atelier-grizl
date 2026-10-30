@@ -1,5 +1,7 @@
 # Matière technique : chapitres « Transmission » et « Entretien courant », Canyon Grizl CF 7 (GRX 1x12 mécanique)
 
+> Note du 20 octobre 2026, écrite pour le Grizl CF 7, gardée comme historique : sa transmission mécanique à câble, ses pièces et leurs valeurs ne valent pas pour le Grizl CF 8 Di2. Pour le CF 8 Di2, le relevé de la transmission est `transmission-cf8-di2.md` (30 octobre 2026).
+
 Deux limites ont réduit la recherche :
 - **Budget de recherche épuisé.** La limite de recherches web a été atteinte en cours de travail. Je n'ai donc pas pu chercher les sources Motorex, Muc-Off, le manuel Canyon ni les vidéos officielles Shimano. Une relance permettrait de compléter ces points.
 - **Site Shimano fermé.** Les fiches produit bike.shimano.com étaient en maintenance jusqu'au 21/10/2026 à 12:00 heure du Japon (JST).

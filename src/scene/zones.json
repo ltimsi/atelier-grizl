@@ -63,5 +63,13 @@
     "ancre": "valveAvant",
     "vue": { "cible": "valveAvant", "dir": [0.3, 0.15, 1], "dist": 700 },
     "schema": { "centre": "valveAvant", "largeur": 520 }
+  },
+  {
+    "id": "chaine",
+    "nom": "Chaîne et cassette",
+    "ancre": "bordCassette",
+    "decalage": [20, 5],
+    "vue": { "cible": "bordCassette", "dir": [0.3, 0.2, 1], "dist": 1000 },
+    "schema": { "centre": "bordCassette", "largeur": 720 }
   }
 ]

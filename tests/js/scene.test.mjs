@@ -16,6 +16,7 @@ import {
 } from '../../src/scene/scene.js';
 import { formesSchema, cadreVue, versPixelsSchema } from '../../src/scene/schema2d.js';
 import { ANGLE_VALVE, tubesValve } from '../../src/scene/pieces/roues.js';
+import { DENTS_CASSETTE, COTES as COTES_TRANSMISSION } from '../../src/scene/pieces/transmission.js';
 import { CF7 } from './cf7.mjs';
 
 const ZONES = JSON.parse(readFileSync(new URL('../../src/scene/zones.json', import.meta.url), 'utf8'));
@@ -82,7 +83,7 @@ test('scène : zones lues sur les maillages de chaque pièce', () => {
   // Les zones de chaque pièce, sans ordre : l'ordre où une pièce construit ses maillages n'est pas une règle.
   const attendu = {
     cadre: ['selle'], roues: ['axes', 'pneus'], freins: ['disques', 'etrier', 'manettes'],
-    transmission: ['pedalier', 'derailleur'],
+    transmission: ['pedalier', 'chaine', 'derailleur'],
     poste: ['poste', 'manettes'],
   };
   assert.deepEqual(PIECES.map(m => m.META.id), Object.keys(attendu));
@@ -117,37 +118,61 @@ test('scène : les zones du montage surlignent leurs pièces', () => {
   for (const nom of ['dérailleur', 'corps du dérailleur', 'batterie', 'galet']) {
     assert.ok(noms.derailleur.has(nom), `dérailleur : ${nom}`);
   }
-  // Ni la chaîne, ni la cassette, ni le boîtier, ni le cadre ne changent de zone, ni les jantes, les rayons et les
-  // moyeux des roues.
-  for (const nom of ['chaîne', 'pignon 9', 'pignon 45', 'boîtier', 'patte arrière', 'patte avant', 'boîte de pédalier',
+  // La chaîne et la cassette entière : la zone des ateliers 4.2 à 4.5. Le plateau reste au pédalier.
+  assert.deepEqual([...noms.chaine].sort(), ['araignée de cassette', 'bague du petit pignon', 'chaîne',
+    ...DENTS_CASSETTE.map(n => `pignon ${n}`)].sort());
+  assert.ok(!noms.chaine.has('plateau') && noms.pedalier.has('plateau'), 'plateau : zone du pédalier');
+  // Ni le boîtier ni le cadre ne changent de zone, ni les jantes, les rayons et les moyeux des roues.
+  for (const nom of ['boîtier', 'patte arrière', 'patte avant', 'boîte de pédalier',
     'jante', 'rayons', 'écrous de rayon', 'moyeu avant', 'moyeu arrière']) {
     assert.ok(!Object.values(noms).some(n => n.has(nom)), `${nom} : dans une zone`);
   }
 });
 
-// Une ancre du montage ou des pneus est sur sa pièce : à moins de SUR_LA_PIECE mm d'un sommet d'un maillage de sa
-// zone. Une boîte englobante ne suffirait pas : celle du poste couvre tout le cintre, et une ancre en l'air entre le
-// cintre et la potence y serait.
+// Une ancre du montage, des pneus ou de la chaîne est sur sa pièce : à moins de SUR_LA_PIECE mm d'un sommet d'un
+// maillage de sa zone. Une boîte englobante ne suffirait pas : celle du poste couvre tout le cintre, et une ancre en
+// l'air entre le cintre et la potence y serait. Un maillage instancié (les maillons de la chaîne, les crampons des
+// pneus) compte instance par instance, à sa place.
 const SUR_LA_PIECE = 15;
 
-test('scène : chaque pastille du montage et des pneus est sur sa pièce, au plus près d’un sommet de sa zone', () => {
-  const { ancres } = points(GEO);
+// Les sommets de chaque zone, en coordonnées du vélo, avec le nom de leur maillage : [x, y, z, nom].
+function sommetsParZone() {
   const sommets = {};
-  const v = new THREE.Vector3();
+  const v = new THREE.Vector3(), m = new THREE.Matrix4();
   for (const module of PIECES) {
     const groupe = groupeDe(module);
     groupe.updateMatrixWorld(true);
     groupe.traverse(o => {
       if (!o.isMesh || !o.userData.zone) return;
       const pos = o.geometry.attributes.position, liste = (sommets[o.userData.zone] ??= []);
-      for (let i = 0; i < pos.count; i++) liste.push(v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld).toArray());
+      const instances = o.isInstancedMesh ? o.count : 1;
+      for (let k = 0; k < instances; k++) {
+        if (o.isInstancedMesh) {
+          o.getMatrixAt(k, m); // getMatrixAt ne rend rien : il remplit m
+          m.premultiply(o.matrixWorld);
+        } else m.copy(o.matrixWorld);
+        for (let i = 0; i < pos.count; i++) liste.push([...v.fromBufferAttribute(pos, i).applyMatrix4(m).toArray(), o.name]);
+      }
     });
   }
+  return sommets;
+}
+const auPlusPres = (sommets, a) => sommets.reduce((b, q) => {
+  const d = Math.hypot(q[0] - a[0], q[1] - a[1], q[2] - a[2]);
+  return d < b.d ? { d, nom: q[3] } : b;
+}, { d: Infinity, nom: null });
+
+test('scène : chaque pastille du montage, des pneus et de la chaîne est sur sa pièce, au plus près d’un sommet de sa zone', () => {
+  const { ancres } = points(GEO);
+  const sommets = sommetsParZone();
   for (const z of ZONES.slice(3)) {
-    const a = ancres[z.ancre];
-    const d = Math.min(...sommets[z.id].map(q => Math.hypot(q[0] - a[0], q[1] - a[1], q[2] - a[2])));
+    const { d } = auPlusPres(sommets[z.id], ancres[z.ancre]);
     assert.ok(d <= SUR_LA_PIECE, `${z.ancre} à ${d.toFixed(1)} mm de la zone ${z.id}`);
   }
+  // L'ancre de la zone 10 est sur le grand pignon de la cassette, au bord de sa denture.
+  const { d, nom } = auPlusPres(sommets.chaine, ancres.bordCassette);
+  assert.equal(nom, `pignon ${DENTS_CASSETTE[DENTS_CASSETTE.length - 1]}`, 'le sommet le plus proche');
+  assert.ok(d <= 5, `bordCassette à ${d.toFixed(1)} mm du grand pignon`);
 });
 
 test('scène : chaque zone de zones.json a des maillages, aucun maillage hors des zones', () => {
@@ -282,6 +307,23 @@ test('schéma : les pneus et les valves des deux roues dans la zone des pneus, v
   const [x, y] = p.ancres.valveAvant;
   assert.ok(valves.slice(tubes.length).some(f => dans(corpsCapsule(f), [x, y])), 'ancre hors des valves dessinées');
   assert.ok(!valves.slice(0, tubes.length).some(f => dans(corpsCapsule(f), [x, y])), 'ancre sur la valve arrière');
+});
+
+test('schéma : la cassette et la chaîne dans la zone 10, le plateau au pédalier, l’ancre dans la cassette dessinée', () => {
+  // Les cercles des douze pignons et celui du contre-écrou, puis les deux traits de la chaîne : rien d'autre.
+  const chaine = formes.filter(f => f.zone === 'chaine');
+  assert.deepEqual(chaine.map(f => f.tag), [...Array(DENTS_CASSETTE.length + 1).fill('circle'), 'path', 'path']);
+  assert.deepEqual(chaine.filter(f => f.tag === 'path').map(f => f.attrs.class), ['ch', 'ch2']);
+  for (const f of chaine.filter(f => f.tag === 'circle')) {
+    assert.deepEqual([Number(f.attrs.cx), -Number(f.attrs.cy)], [p.RA[0], p.RA[1]], 'cercle centré sur l’axe arrière');
+  }
+  // Le plateau reste dans la zone du pédalier : le cercle de ses vis, centré sur le boîtier.
+  assert.ok(formes.some(f => f.zone === 'pedalier' && f.tag === 'circle' && Number(f.attrs.cx) === Math.round(p.BB[0] * 10) / 10
+    && Number(f.attrs.r) === COTES_TRANSMISSION.entraxe.v / 2), 'cercle des vis du plateau hors du pédalier');
+  // L'ancre est dans le cercle du grand pignon et hors de celui du pignon suivant : sur le grand pignon, comme en 3D.
+  const r = chaine.filter(f => f.tag === 'circle').map(f => Number(f.attrs.r)).sort((a, b) => b - a);
+  const [x, y] = p.ancres.bordCassette, d = Math.hypot(x - p.RA[0], y - p.RA[1]);
+  assert.ok(d < r[0] && d > r[1], `ancre à ${d.toFixed(1)} mm de l’axe : hors du grand pignon dessiné`);
 });
 
 test('schéma : coordonnées toutes finies', () => {

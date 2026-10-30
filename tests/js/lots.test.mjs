@@ -37,7 +37,7 @@ test('lots.md : une entrée par lot publié de build/lots.json, avec son titre e
   const doc = readFileSync(new URL('../../docs/lots.md', import.meta.url), 'utf8');
   const config = JSON.parse(readFileSync(new URL('../../build/lots.json', import.meta.url), 'utf8'));
   const publies = config.lots.filter(l => ['validé', 'en relecture'].includes(l.statut));
-  assert.deepEqual(publies.map(l => l.lot), [0, 1, 2, 3]);
+  assert.deepEqual(publies.map(l => l.lot), [0, 1, 2, 3, 4]);
   const titres = [...doc.matchAll(/^## Lot (\d+) · (.+)$/gm)].map(m => [Number(m[1]), m[2]]);
   assert.deepEqual(titres, publies.map(l => [l.lot, `${l.titre} · ${l.statut}`]));
   // L'entrée du lot 2 dit ce qu'il publie : son chapitre, ses cinq zones et ses quatre pièces 3D.
@@ -52,5 +52,13 @@ test('lots.md : une entrée par lot publié de build/lots.json, avec son titre e
   for (const attendu of ['30-tubeless', 'Pneus et valves', '`rim`', '`plug`', '3,0 bar', 'scene-check', 'neuf pastilles']) {
     assert.ok(lot3.includes(attendu), `entrée du lot 3 : « ${attendu} » absent`);
   }
+  // L'entrée du lot 4 : son chapitre, sa zone, ses trois pièces 3D, le couple de fixation du dérailleur, l'outil de
+  // la cassette et le contrôle des dix pastilles.
+  const lot4 = doc.slice(doc.indexOf('## Lot 4 · '), doc.indexOf('\n## ', doc.indexOf('## Lot 4 · ') + 1));
+  for (const attendu of ['40-transmission', 'Chaîne et cassette', '`chain`', '`cassette`', '`derailleur`', '10-12 Nm',
+    'TL-LR021', 'scene-check', 'dix pastilles']) {
+    assert.ok(lot4.includes(attendu), `entrée du lot 4 : « ${attendu} » absent`);
+  }
+  assert.ok(!/\bcrank\b/.test(lot4), 'entrée du lot 4 : la pièce crank du brouillon');
   assert.ok(!/[\u2014\u2013]/.test(doc), 'tiret long dans lots.md');
 });

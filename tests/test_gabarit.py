@@ -15,13 +15,15 @@ import gabarit  # noqa: E402
 
 CONFIG = json.loads((RACINE / "build" / "lots.json").read_text(encoding="utf-8"))
 CHAPITRES = {nom: ateliers.relever_chapitre((RACINE / "src" / "parts" / f"{fichier}.html").read_text(encoding="utf-8"))
-             for nom, fichier in (("freins", "20-freins"), ("montage", "11-montage"), ("tubeless", "30-tubeless"))}
+             for nom, fichier in (("freins", "20-freins"), ("montage", "11-montage"), ("tubeless", "30-tubeless"),
+                                  ("transmission", "40-transmission"))}
 SLUGS = ["systeme", "disques", "plaquettes", "rodage", "centrage", "controles", "purge", "securite"]
 SLUGS_MONTAGE = ["avant", "deballer", "cintre", "selle", "roues", "pedales", "di2", "position", "controles"]
 SLUGS_TUBELESS = ["materiel", "passer", "liquide", "pression", "crevaison", "problemes"]
-# Les catégories publiées, dans l'ordre des chapitres : 1 Montage, 2 Freins, 3 Pneus et tubeless.
-PUBLIEES = ["montage", "freins", "tubeless"]
-A_VENIR = ["transmission", "accessoires", "revision"]
+SLUGS_TRANSMISSION = ["di2", "nettoyer", "usure", "chaine", "cassette", "reglage", "patte", "pedalier", "depannage"]
+# Les catégories publiées, dans l'ordre des chapitres : 1 Montage, 2 Freins, 3 Pneus et tubeless, 4 Transmission.
+PUBLIEES = ["montage", "freins", "tubeless", "transmission"]
+A_VENIR = ["accessoires", "revision"]
 REFERENCES = ["composants", "outils", "couples", "approche", "sources"]
 TOUS_LES_SCRIPTS = dict(zones=True, liens=True, three=True, modeles=["caliper"], app=True, references=True,
                         garde_fou=True)
@@ -59,13 +61,8 @@ class TestLots(unittest.TestCase):
 
     def test_prevu(self):
         # Un lot publié n'a plus de « prevu » : sa catégorie montre ses ateliers.
-        for numero in (0, 1, 2, 3):
+        for numero in (0, 1, 2, 3, 4):
             self.assertNotIn("prevu", self.lot(numero), f"lot {numero}")
-        # Lot 4 : le réglage du dérailleur Di2 du Grizl CF 8 Di2 rejoint la transmission, et le kit de transmission
-        # mécanique de l'ancien vélo disparaît. La charge de la batterie Di2 BT-DN320 est dans le lot 2 (atelier 1.7).
-        self.assertEqual(self.lot(4)["prevu"], [
-            "Chaîne : usure, nettoyage, lubrification.",
-            "Régler le dérailleur Di2."])
         # Lot 5 : la liste Tailfin seule. UDH est développé à sa première apparition, comme dans le relevé.
         self.assertEqual(self.lot(5)["prevu"], [
             "Porte-bagages Tailfin, son adaptateur UDH (patte de dérailleur universelle de SRAM) et son axe "
@@ -79,7 +76,7 @@ class TestLots(unittest.TestCase):
 
     def test_statuts(self):
         self.assertEqual([(l["lot"], l["statut"]) for l in CONFIG["lots"]],
-                         [(n, "en relecture") for n in range(0, 4)] + [(n, "à faire") for n in range(4, 7)])
+                         [(n, "en relecture") for n in range(0, 5)] + [(n, "à faire") for n in range(5, 7)])
 
     def test_lot_2_publie(self):
         # Le lot 2 publie le chapitre 11-montage (il n'y a pas de fragment 10-avant) et ses quatre pièces 3D.
@@ -97,6 +94,17 @@ class TestLots(unittest.TestCase):
         self.assertEqual(lot["parts"], ["30-tubeless"])
         self.assertEqual(lot["modeles"], ["rim", "plug"])
         for chemin in ("src/parts/30-tubeless.html", "src/js/models/m-rim.js", "src/js/models/m-plug.js"):
+            self.assertTrue((RACINE / chemin).is_file(), chemin)
+
+    def test_lot_4_publie(self):
+        # Le lot 4 publie le chapitre 40-transmission et ses trois pièces 3D : la chaîne, la cassette et le dérailleur.
+        # La pièce « crank » du brouillon n'en est plus : le pédalier n'a pas de pièce 3D d'atelier (4.8 est une fiche).
+        lot = self.lot(4)
+        self.assertEqual(lot["statut"], "en relecture")
+        self.assertEqual(lot["parts"], ["40-transmission"])
+        self.assertEqual(lot["modeles"], ["chain", "cassette", "derailleur"])
+        for chemin in ("src/parts/40-transmission.html", "src/js/models/m-chain.js", "src/js/models/m-cassette.js",
+                       "src/js/models/m-derailleur.js"):
             self.assertTrue((RACINE / chemin).is_file(), chemin)
 
 
@@ -128,7 +136,9 @@ class TestMenu(unittest.TestCase):
         self.assertEqual(re.findall(r'<span class="num">(2\.\d)</span>', m), [f"2.{n}" for n in range(1, 9)])
         self.assertIn('<a href="../../">Mon vélo</a>', m)
         self.assertIn('<a href="../">Freins<span class="cnt">8</span></a>', m)
-        self.assertIn('<a class="soon" href="../../transmission/">Transmission<span class="cnt">lot 4</span></a>', m)
+        self.assertIn('<a href="../../transmission/">Transmission<span class="cnt">9</span></a>', m)
+        self.assertIn('<a class="soon" href="../../accessoires/">Accessoires des trajets<span class="cnt">lot 5</span></a>',
+                      m)
 
     def test_menu_replie(self):
         m = self.menu("outils/")
@@ -137,7 +147,7 @@ class TestMenu(unittest.TestCase):
         self.assertIn('<a href="./" aria-current="page">Outils</a>', m)
         self.assertEqual(m.count('aria-current="page"'), 1)
         # La catégorie dépliée est celle de la page, pas une autre.
-        self.assertNotIn('class="sub-nav"', self.menu("transmission/", "transmission"))
+        self.assertNotIn('class="sub-nav"', self.menu("accessoires/", "accessoires"))
 
     def test_menu_categorie(self):
         m = self.menu("freins/", "freins")
@@ -154,10 +164,13 @@ class TestMenu(unittest.TestCase):
         self.assertNotIn('class="soon" href="montage/"', m)
         self.assertIn('<a href="tubeless/">Pneus et tubeless<span class="cnt">6</span></a>', m)
         self.assertNotIn('class="soon" href="tubeless/"', m)
+        self.assertIn('<a href="transmission/">Transmission<span class="cnt">9</span></a>', m)
+        self.assertNotIn('class="soon" href="transmission/"', m)
 
     def test_menu_a_venir_courant(self):
-        m = self.menu("transmission/", "transmission")
-        self.assertIn('<a class="soon" href="./" aria-current="page">Transmission<span class="cnt">lot 4</span></a>', m)
+        m = self.menu("accessoires/", "accessoires")
+        self.assertIn('<a class="soon" href="./" aria-current="page">Accessoires des trajets<span class="cnt">lot 5</span>'
+                      '</a>', m)
         self.assertEqual(m.count('aria-current="page"'), 1)
 
     def test_groupes(self):
@@ -173,11 +186,13 @@ class TestMenu(unittest.TestCase):
                                   "Sources"])
 
     def test_liens_relatifs_qui_menent_aux_bonnes_pages(self):
-        ateliers_ = {"freins": SLUGS, "montage": SLUGS_MONTAGE, "tubeless": SLUGS_TUBELESS}
+        ateliers_ = {"freins": SLUGS, "montage": SLUGS_MONTAGE, "tubeless": SLUGS_TUBELESS,
+                     "transmission": SLUGS_TRANSMISSION}
         cibles = [""] + PUBLIEES + [f"{c}/{s}" for c in PUBLIEES for s in ateliers_[c]] + A_VENIR + REFERENCES
         for chemin, categorie in [("", None), ("freins/", "freins"), ("freins/plaquettes/", "freins"),
                                   ("montage/", "montage"), ("montage/di2/", "montage"), ("tubeless/", "tubeless"),
                                   ("tubeless/crevaison/", "tubeless"), ("transmission/", "transmission"),
+                                  ("transmission/cassette/", "transmission"), ("accessoires/", "accessoires"),
                                   ("approche/", None)]:
             m = self.menu(chemin, categorie)
             hrefs = liens(m)
@@ -201,12 +216,13 @@ class TestMenu(unittest.TestCase):
         # p.ch-num ; les catégories à venir gardent l'ordre des lots.
         lots = {l["lot"]: l for l in CONFIG["lots"]}
         self.assertEqual([gabarit.numero_de_chapitre(lots[n]) for n in (1, 2, 3, 4, 5, 6)], [2, 1, 3, 4, 5, 8])
-        for n in (1, 2, 3):
+        for n in (1, 2, 3, 4):
             fragment = (RACINE / "src" / "parts" / f"{lots[n]['parts'][0]}.html").read_text(encoding="utf-8")
             self.assertIn(f'<p class="ch-num">Chapitre {gabarit.numero_de_chapitre(lots[n])} ·', fragment)
         m = self.menu("")
         self.assertLess(m.index('href="montage/"'), m.index('href="freins/"'))
         self.assertLess(m.index('href="freins/"'), m.index('href="tubeless/"'))
+        self.assertLess(m.index('href="tubeless/"'), m.index('href="transmission/"'))
         publies, a_venir = gabarit.categories(CONFIG)
         self.assertEqual([l["categorie"]["id"] for l in publies], PUBLIEES)
         self.assertEqual([l["categorie"]["id"] for l in a_venir], A_VENIR)
@@ -380,7 +396,7 @@ class TestDocument(unittest.TestCase):
         self.assertIn(f'Version {CONFIG["version"]} du ', d)
         self.assertNotIn("<!--VERSION-->", d)
         self.assertNotIn("<!--SCRIPTS-->", d)
-        self.assertIn("Lots 0, 1, 2 et 3 en relecture.", d)
+        self.assertIn("Lots 0, 1, 2, 3 et 4 en relecture.", d)
 
     def test_scripts_minimaux(self):
         d = self.doc("freins/plaquettes/")
@@ -459,10 +475,10 @@ class TestDocument(unittest.TestCase):
         config = json.loads(json.dumps(CONFIG))
         config["lots"][1]["statut"] = "validé"
         pied = gabarit.document(page("outils/", "Outils"), config, CHAPITRES, "site")
-        self.assertIn("Lot 1 validé. Lots 0, 2 et 3 en relecture. Les catégories en pointillés", pied)
+        self.assertIn("Lot 1 validé. Lots 0, 2, 3 et 4 en relecture. Les catégories en pointillés", pied)
         config["lots"][0]["statut"] = "validé"
         pied = gabarit.document(page("outils/", "Outils"), config, CHAPITRES, "site")
-        self.assertIn("Lots 0 et 1 validés. Lots 2 et 3 en relecture. Les catégories en pointillés", pied)
+        self.assertIn("Lots 0 et 1 validés. Lots 2, 3 et 4 en relecture. Les catégories en pointillés", pied)
 
     def test_aucun_tiret_long(self):
         for chemin, cible in [("", "site"), ("freins/plaquettes/", "site"), ("", "artifact")]:
@@ -485,8 +501,9 @@ class TestLiensAnciens(unittest.TestCase):
         self.assertEqual(liens_anciens["freins-pl-2"], "freins/plaquettes/#freins-pl-2")
         self.assertEqual(liens_anciens["freins-mk-5"], "freins/purge/#freins-mk-5")
         self.assertEqual(liens_anciens["ck-freins-apres-3"], "freins/controles/#ck-freins-apres-3")
-        # Chaque ancien id de src/parts/20-freins.html, 11-montage.html et 30-tubeless.html a une nouvelle adresse.
-        for fichier in ("20-freins", "11-montage", "30-tubeless"):
+        # Chaque ancien id de src/parts/20-freins.html, 11-montage.html, 30-tubeless.html et 40-transmission.html a une
+        # nouvelle adresse.
+        for fichier in ("20-freins", "11-montage", "30-tubeless", "40-transmission"):
             source = (RACINE / "src" / "parts" / f"{fichier}.html").read_text(encoding="utf-8")
             for ident in re.findall(r'\sid="([^"]+)"', source):
                 self.assertIn(ident, liens_anciens, fichier)
@@ -501,6 +518,11 @@ class TestLiensAnciens(unittest.TestCase):
         self.assertEqual(liens_anciens["tubeless"], "tubeless/")
         for slug in SLUGS_TUBELESS:
             self.assertEqual(liens_anciens[f"tubeless-{slug}"], f"tubeless/{slug}/")
+        # « #transmission », le lien « chapitre 4 » de l'atelier 1.7, ouvre la catégorie publiée, et l'id de chaque
+        # atelier du chapitre 4 la page de cet atelier.
+        self.assertEqual(liens_anciens["transmission"], "transmission/")
+        for slug in SLUGS_TRANSMISSION:
+            self.assertEqual(liens_anciens[f"transmission-{slug}"], f"transmission/{slug}/")
 
     def test_pas_de_chemin_absolu(self):
         for adresse in gabarit.liens_anciens(CONFIG, CHAPITRES).values():
@@ -520,6 +542,16 @@ class TestFragments(unittest.TestCase):
             self.assertNotIn(ancien, pied)
         self.assertIn("La page n’a pas pu se charger en entier. Les ateliers restent accessibles par le menu et par "
                       "« Où intervenir ».", pied)
+
+    def test_marque_a_lire_sans_debordement(self):
+        # Une marque « à lire sur la pièce » (.verif) reste d'un seul tenant, mais une marque plus large que la ligne
+        # entière passe à la ligne dans sa boîte au lieu de faire défiler la page : « à lire sur la figure du DM et sur
+        # la pièce » (atelier 4.5) débordait de 4 px à 360 px de large avec white-space:nowrap (scene-check du lot 4).
+        regle = re.search(r"^\.verif\{([^}]*)\}$", self.lire("00-head"), re.M)
+        self.assertIsNotNone(regle, "00-head.html : règle .verif")
+        for attendu in ("display:inline-block", "max-width:calc(100% - .5em)"):
+            self.assertIn(attendu, regle.group(1))
+        self.assertNotIn("nowrap", regle.group(1))
 
     def test_fragments_sans_tiret_long(self):
         for nom in ("00-head", "99-foot"):

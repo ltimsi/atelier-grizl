@@ -17,9 +17,9 @@ test('ancres connues', () => {
   }
 });
 
-test('zones attendues : les trois des freins, les cinq du montage, puis celle des pneus', () => {
+test('zones attendues : les trois des freins, les cinq du montage, celle des pneus, puis celle de la chaîne', () => {
   assert.deepEqual(ZONES.map(z => z.id),
-    ['disques', 'etrier', 'manettes', 'poste', 'selle', 'axes', 'pedalier', 'derailleur', 'pneus']);
+    ['disques', 'etrier', 'manettes', 'poste', 'selle', 'axes', 'pedalier', 'derailleur', 'pneus', 'chaine']);
 });
 
 test('zones du montage : noms et ancres, pastilles 4 à 8', () => {
@@ -31,7 +31,8 @@ test('zones du montage : noms et ancres, pastilles 4 à 8', () => {
     ['derailleur', 'Dérailleur Di2', 'batterieDi2'],
   ];
   assert.deepEqual(ZONES.slice(3, 8).map(z => [z.id, z.nom, z.ancre]), attendu);
-  // La vue et le cadre du schéma visent la pièce de la pastille, au montage comme aux pneus (pastilles 4 à 9).
+  // La vue et le cadre du schéma visent la pièce de la pastille, au montage, aux pneus et à la chaîne (pastilles 4 à
+  // 10).
   for (const z of ZONES.slice(3)) {
     assert.equal(z.vue.cible, z.ancre, `${z.id} : vue.cible`);
     assert.equal(z.schema.centre, z.ancre, `${z.id} : schema.centre`);
@@ -41,17 +42,34 @@ test('zones du montage : noms et ancres, pastilles 4 à 8', () => {
 // La zone du lot 3, pastille 9 : les pneus et les valves (ateliers 3.1 à 3.6). Son ancre est sur la valve de la roue
 // avant, sans décalage à l'écran : la vue et le cadre du schéma visent la valve (test précédent).
 test('zone des pneus : nom, ancre sur la valve avant, pastille 9', () => {
-  assert.equal(ZONES.length, 9);
   assert.deepEqual([ZONES[8].id, ZONES[8].nom, ZONES[8].ancre], ['pneus', 'Pneus et valves', 'valveAvant']);
   assert.equal(parId.pneus.variante, undefined, 'pas de variante');
   assert.equal('decalage' in parId.pneus, false, 'posée sur son ancre');
 });
 
+// La zone du lot 4, pastille 10 : la chaîne et la cassette (ateliers 4.2 à 4.5). Son ancre est sur le bord du grand
+// pignon de la cassette (geometrie.js), sans variante ; la vue et le cadre du schéma visent cette ancre (test précédent).
+test('zone de la chaîne et de la cassette : nom, ancre sur le bord de la cassette, pastille 10', () => {
+  assert.equal(ZONES.length, 10);
+  assert.deepEqual([ZONES[9].id, ZONES[9].nom, ZONES[9].ancre], ['chaine', 'Chaîne et cassette', 'bordCassette']);
+  assert.equal(parId.chaine.variante, undefined, 'pas de variante');
+});
+
 // decalage : [dx, dy] en pixels de l'écran, facultatif. app.js pose la pastille à ce décalage de la projection de son
-// ancre, en 3D comme en 2D, à toutes les largeurs. Seule la zone des axes en a un : sa pastille est juste sous la tête
-// de l'axe avant, parce que la pastille de l'étrier se projette juste au-dessus du moyeu.
-test('décalage des pastilles : seule celle des axes, vers le bas, assez pour l’écart de 30 px avec l’étrier', () => {
-  assert.deepEqual(ZONES.filter(z => 'decalage' in z).map(z => z.id), ['axes']);
+// ancre, en 3D comme en 2D, à toutes les largeurs. Deux zones en ont un. Celle des axes : sa pastille est juste sous la
+// tête de l'axe avant, parce que la pastille de l'étrier se projette juste au-dessus du moyeu. Celle de la chaîne : sa
+// pastille est juste devant la cassette, parce que les pastilles du disque arrière et du dérailleur se projettent
+// au-dessus et derrière son ancre (geometrie.js). L'écart de 30 px qui en résulte, à chaque largeur, est contrôlé par
+// tools/scene-check.js.
+test('décalage des pastilles : celle des axes vers le bas, celle de la chaîne vers l’avant, près de leur pièce', () => {
+  assert.deepEqual(ZONES.filter(z => 'decalage' in z).map(z => z.id), ['axes', 'chaine']);
+  const c = parId.chaine.decalage;
+  assert.equal(c.length, 2);
+  assert.ok(c.every(Number.isFinite), 'deux nombres');
+  assert.ok(c[0] > 0 && Math.abs(c[1]) < c[0], `décalage ${c} : vers l’avant, plus qu’en hauteur`);
+  assert.ok(Math.hypot(...c) <= 25, `décalage de ${Math.hypot(...c).toFixed(1)} px : la pastille s’éloigne de la cassette`);
+  assert.ok(ancres.disqueArriere[1] > ancres.bordCassette[1] && ancres.batterieDi2[0] < ancres.bordCassette[0],
+    'le disque arrière au-dessus de l’ancre, le dérailleur derrière');
   const d = parId.axes.decalage;
   assert.equal(d.length, 2);
   assert.ok(d.every(Number.isFinite), 'deux nombres');

@@ -35,14 +35,10 @@
     {
       "lot": 4,
       "titre": "Transmission",
-      "statut": "à faire",
+      "statut": "en relecture",
       "categorie": {"id": "transmission", "menu": "Transmission"},
-      "prevu": [
-        "Chaîne : usure, nettoyage, lubrification.",
-        "Régler le dérailleur Di2."
-      ],
       "parts": ["40-transmission"],
-      "modeles": ["chain", "cassette", "derailleur", "crank"]
+      "modeles": ["chain", "cassette", "derailleur"]
     },
     {
       "lot": 5,
