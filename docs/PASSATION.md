@@ -199,7 +199,7 @@ Pour le tubeless, la liste de l'atelier 3.1 « Ce que tu as » (`tubeless/materi
   - les autres contradictions du relevé, signalées sur les pages : version du pneu, largeur du ruban, dose de liquide pour un pneu de 45 mm, CO2 ;
   - aucune pression n'est calculée pour Lamine : 3.4 renvoie aux tableaux publiés, sans son poids ;
   - la valve Presta : son écrou moleté se desserre avant de gonfler et se revisse à la main après (Schwalbe) ; pour une valve tubeless, sa notice fait foi, à lire à la livraison ;
-  - le manomètre du JoeBlow Booster : sa précision n'est publiée ni par la notice ni par la page de Topeak, et la limite de 3,0 bar se lit sur ce cadran. La relecture finale propose de ne pas viser la limite elle-même : une Proposition, sans chiffre, à décider par Lamine avant de l'écrire dans le chapitre.
+  - le manomètre du JoeBlow Booster : sa précision n'est publiée ni par la notice ni par la page de Topeak, et la limite de 3,0 bar se lit sur ce cadran. Lamine a décidé le 30/10/2026 d'ajouter une Proposition, sans chiffre : ne pas viser la limite de 3,0 bar elle-même, rester nettement en dessous (3.2 et 3.4).
 - **Lot 4** (la charge de la batterie BT-DN320 et les piles CR1632 des manettes sont dans l'atelier 1.7, au lot 2) :
   - patte de dérailleur UDH, la patte universelle de SRAM : présence et état ;
   - chaîne : référence, nombre de maillons et attache QUICK-LINK ; Canyon propose en pièces d'usure la CN-M8100 de 138 maillons et l'attache SM-CN910 ;
