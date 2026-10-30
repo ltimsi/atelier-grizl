@@ -6,8 +6,8 @@
    « Built-in battery ✔ ») ; les pièces que nomme le DM-MARD011 pour le RD-M8250 : bouton de fonction, voyant (« LED »),
    galet du haut (« Guide pulley ») et du bas (« Tension pulley »), support de batterie et son levier, vis B, vis de
    butée basse et haute, axe B, plaque de butée contre la butée de tension B. Cette liste ne nomme ni fil ni port
-   E-TUBE, que Shimano ne nomme que pour d'autres dérailleurs : ce site en déduit que le tien n'en a pas ; son seul
-   levier est celui du support de batterie. L'axe B se serre à 10-12 Nm (clé de 5 mm) ; la vis B et les butées se règlent à la clé de 2 mm ; la vis B
+   E-TUBE, que Shimano ne nomme que pour d'autres dérailleurs : ce site en déduit que le tien n'en a pas ; le seul
+   levier de la liste est celui du support de batterie. L'axe B se serre à 10-12 Nm (clé de 5 mm) ; la vis B et les butées se règlent à la clé de 2 mm ; la vis B
    sur le 45 dents, le contour de la plaque extérieure de la chape au niveau de la pointe de la plus haute dent ; le
    mode réglage sur le 24 dents (cinquième pignon en partant du plus grand, déduction du chapitre), voyant jaune fixe.
    Curseur « Pas à pas », de 1 à 13 : chaque cran montre l'étape de 4.6 qui porte ce numéro. Son compteur reste court,
@@ -18,7 +18,9 @@
    dérailleur est dessiné sur le 9 dents, au bout du passage des vitesses. Le voyant est jaune fixe aux étapes JAUNE,
    éteint sinon. La pièce de l'étape s'allume : plaque de butée, axe B, vis B, bouton de fonction, vis de butée.
    Chaque étape ne montre que ses pastilles, six au plus (PASTILLES, numéros des pastilles dans l'ordre du fichier) :
-   la liste sous la figure suit l'étape.
+   la liste sous la figure suit l'étape ; en vue éclatée, où la batterie sort de son support, celles de la batterie et
+   du levier s'y ajoutent (ECLATEE). La caméra par défaut laisse le haut de la scène à l'aide de la visionneuse
+   (« Glisse sur le côté pour tourner »), sur deux lignes à 375 px de large.
    Vue éclatée : le support de batterie sort vers l'arrière et la batterie en sort, l'axe B sort de la patte, la
    plaque extérieure de la chape et les galets s'écartent.
    Formes approchées (Shimano ne publie pas les cotes du dérailleur) :
@@ -58,7 +60,7 @@
   var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   AtelierModels.register('derailleur', {
-    camera: { yaw: -0.3, pitch: 0.14, dist: 470, target: [12, -108, 40], min: 140, max: 1100 },
+    camera: { yaw: -0.3, pitch: 0.14, dist: 530, target: [12, -80, 40], min: 140, max: 1100 },
     explodeLabel: 'Vue éclatée',
     build: function (ctx) {
       var THREE = ctx.THREE, H = ctx.H, M = ctx.M, api = ctx.api, V2 = H.V2;
@@ -129,14 +131,14 @@
 
       /* ---------- Patte SRAM UDH, butée de tension B ---------- */
       var wPatte = new THREE.Group(); root.add(wPatte);
-      var patte = profil(hull([].concat(circ(15, 0, 0), circ(11, PIED[0], PIED[1]), circ(10, 4, -14, 16))), 66, 72, 0.6, [circ(6.2, 0, 0, 24), circ(4.3, PIED[0], PIED[1], 20)], wPatte, mHanger);
-      var butee = H.box(6, 4, 5, mHanger, wPatte, [6, -21, 74]);
+      profil(hull([].concat(circ(15, 0, 0), circ(11, PIED[0], PIED[1]), circ(10, 4, -14, 16))), 66, 72, 0.6, [circ(6.2, 0, 0, 24), circ(4.3, PIED[0], PIED[1], 20)], wPatte, mHanger);
+      H.box(6, 4, 5, mHanger, wPatte, [6, -21, 74]);
 
       /* ---------- Haut du corps : tourne autour de l'axe B ; repère local centré sur l'axe B ---------- */
       var bK = new THREE.Group(); bK.position.set(PIED[0], PIED[1], 0); root.add(bK);
       function L(p) { return [p[0] - PIED[0], p[1] - PIED[1]]; }
       var haut = hull([].concat(circ(13, 0, 0), circ(10, -40, -3), circ(9, -42, -28), circ(10, -12, -36), circ(9, L(B_LIEN)[0], L(B_LIEN)[1]), circ(8, 14, -14)));
-      var corpsHaut = profil(haut, 74, 94, 1.6, [], bK, mBody);
+      profil(haut, 74, 94, 1.6, [], bK, mBody);
       profil(hull([].concat(circ(8, -6, -14), circ(6, -26, -26), circ(7, 4, -26))), 93.6, 95.2, 0.5, [], bK, mCover);
       /* plaque de butée, contre la butée de tension B de la patte */
       var plaqueButee = H.box(7, 3, 6, mPlate, bK, [L([6, -21])[0], L([6, -21])[1] - 3.5, 74.2]);
@@ -156,9 +158,9 @@
       /* support de batterie et batterie BT-DN320, à l'arrière ; levier du support sur sa face extérieure */
       var wSupport = new THREE.Group(); bK.add(wSupport);
       var CB = L([-40, -45]);
-      var support = H.mesh(H.extrude(H.roundRect(36, 30, 5, CB[0], CB[1]), 18, { bevel: 1.2, bevelSize: 1.2, curve: 6 }), mHolder, wSupport, [0, 0, 87]);
+      H.mesh(H.extrude(H.roundRect(36, 30, 5, CB[0], CB[1]), 18, { bevel: 1.2, bevelSize: 1.2, curve: 6 }), mHolder, wSupport, [0, 0, 87]);
       var wBatt = new THREE.Group(); wSupport.add(wBatt);
-      var batterie = H.mesh(H.extrude(H.roundRect(30, 24, 3, CB[0] - 4.5, CB[1]), 14, { bevel: 0.6, bevelSize: 0.6, curve: 6 }), mBatt, wBatt, [0, 0, 87]);
+      H.mesh(H.extrude(H.roundRect(30, 24, 3, CB[0] - 4.5, CB[1]), 14, { bevel: 0.6, bevelSize: 0.6, curve: 6 }), mBatt, wBatt, [0, 0, 87]);
       var levier = H.mesh(H.extrude(H.roundRect(9, 5, 1.6, CB[0] + 8, CB[1] + 9), 2, { bevel: 0.4, bevelSize: 0.4 }), mCover, wSupport, [0, 0, 97.2]);
       /* bouton de fonction et voyant, sur la face extérieure */
       var bouton = cylZ(3.4, 94.4, 96.2, mButton, bK, -8, -40, 28);
@@ -216,6 +218,7 @@
       var gAxe = H.orient(new THREE.CylinderGeometry(1.9, 1.9, 5.3, 8), 'z');
       var iO = new THREE.InstancedMesh(gPlO, mChainO, NMAX * 2), iI = new THREE.InstancedMesh(gPlI, mChainI, NMAX * 2);
       var iR = new THREE.InstancedMesh(gRoll, mRoll, NMAX + 1), iP = new THREE.InstancedMesh(gAxe, mChainO, NMAX + 1);
+      iR.name = 'rouleaux de la chaîne';
       [iO, iI, iR, iP].forEach(function (m) { m.frustumCulled = false; root.add(m); });
       /* tangente commune à deux cercles orientés (s = 1 : sens trigonométrique, -1 : sens horaire) */
       function tangente(c1, r1, s1, c2, r2, s2) {
@@ -343,27 +346,26 @@
       }
       /* les pastilles de chaque étape, par leur numéro dans l'ordre du fichier, six au plus */
       var PASTILLES = [[1, 2, 3, 14], [1, 7, 14], [1, 6, 14], [1, 8, 11, 12], [1, 11, 12], [1, 11, 12, 13], [1, 4, 5, 13], [1, 5, 11, 13], [1, 5, 11, 13], [1, 4, 5, 13], [1, 11, 12, 13], [1, 9, 11, 12], [1, 10, 11, 12]];
-      var pins = null, pret = false, etapePins = 0;
-      function pinsDe(n) { return PASTILLES[n - 1].map(function (i) { return pins[i - 1]; }); }
+      /* en vue éclatée, la batterie sort de son support : sa pastille et celle du levier s'ajoutent à celles de l'étape */
+      var ECLATEE = [2, 3];
+      var pins = null, pret = false, etapePins = 0, eclatee = false;
+      function pinsDe(n) {
+        var liste = PASTILLES[n - 1].slice();
+        if (eclatee) ECLATEE.forEach(function (i) { if (liste.indexOf(i) < 0) liste.push(i); });
+        return liste.map(function (i) { return pins[i - 1]; });
+      }
       var s = 7, sT = 7;
       apply(s);
 
-      /* Le compteur du curseur reste court (« Étape 7 / 13 ») ; le titre entier de l'étape s'écrit sur une ligne à lui,
-         sous la barre des commandes, qui revient à la ligne (classe .v3d-geste de 00-head.html), posée à la première
-         image (onFrame), après la liste numérotée. */
-      var ligne = null, placee = false;
-      function geste(v) {
-        var stage = api.viewer && api.viewer.stage, barre = stage && stage.nextElementSibling;
-        if (!ligne) {
-          ligne = document.createElement('p'); ligne.className = 'v3d-geste'; ligne.setAttribute('aria-live', 'polite');
-        }
-        if (barre && barre !== ligne && barre.nextElementSibling !== ligne) barre.insertAdjacentElement('afterend', ligne);
-        ligne.textContent = 'Étape ' + v + ' de 4.6 : ' + ETAPES[v - 1];
-      }
+      /* Le compteur du curseur reste court (« Étape 7 / 13 ») ; le titre entier de l'étape s'écrit sur la ligne du geste
+         de la visionneuse (api.geste), sous la barre des commandes, posée de nouveau à la première image (onFrame), après
+         la liste numérotée. */
+      var placee = false;
+      function geste(v) { api.geste('Étape ' + v + ' de 4.6 : ' + ETAPES[v - 1]); }
 
       /* ---------- Repères des pastilles ---------- */
       var aCorps = new THREE.Object3D(); aCorps.position.set(-36, -38, 94.4); bK.add(aCorps);
-      var aBatt = new THREE.Object3D(); aBatt.position.set(CB[0] - 19.6, CB[1] - 2, 94); wBatt.add(aBatt);
+      var aBatt = new THREE.Object3D(); aBatt.position.set(CB[0] - 19.6, CB[1] + 4, 94); wBatt.add(aBatt);
       var a24 = new THREE.Object3D(); a24.position.set(-Rp(24) - TIP, 0, zk(indice(24)) + 0.8); a24.name = 'repère du 24 dents'; root.add(a24);
       var aPatte = new THREE.Object3D(); aPatte.position.set(10, 6, 72); wPatte.add(aPatte);
 
@@ -372,7 +374,7 @@
         { obj: aBatt, p: [0, 0, 0], text: 'Batterie Shimano BT-DN320 dans son support, « Battery holder », sur le dérailleur : dépose, pose et charge en 1.7' },
         { obj: levier, p: [CB[0] + 8, CB[1] + 9, 1.2], text: 'Levier du support de batterie : le seul levier de la liste des pièces de Shimano' },
         { obj: bouton, p: [0, 0, 1], text: 'Bouton de fonction : roue arrêtée, tiens-le de 2 à 5 secondes, jusqu’au voyant jaune fixe, pour le mode réglage ; 0,5 s ou plus pour revenir au mode normal' },
-        { obj: voyant, p: [0, 1.6, 0], text: 'Voyant, « LED » : jaune fixe en mode réglage, éteint au mode normal ; s’il clignote en bleu, tu as relâché trop tôt' },
+        { obj: voyant, p: [0, 1.6, 0], text: 'Voyant, « LED » : jaune fixe en mode réglage, éteint au mode normal ; s’il clignote en bleu, tu as relâché trop tôt (lecture de ce site)' },
         { obj: axeB, p: [0, 0, 6.6], text: 'Axe B sur la patte SRAM UDH : serré à 10-12 Nm, clé six-pans de 5 mm, à ta TW-6.2' },
         { obj: plaqueButee, p: [2, -1.5, 3.2], text: 'Plaque de butée du dérailleur contre la butée de tension B, sans jour ; l’axe B entre droit dans la patte' },
         { obj: visB, p: [0, 2.6, 0], text: 'Vis B, clé de 2 mm : sur le 45 dents, le contour de la plaque extérieure de la chape au niveau de la pointe de la plus haute dent ; aucun écart en millimètres n’est publié' },
@@ -394,6 +396,8 @@
           onChange: function (v) { sT = v; if (reduce) { s = sT; apply(s); } api.dirty(); } }],
         onFrame: function (dt) {
           if (!placee) { placee = true; geste(sT); }
+          var ex = !!(api.viewer && api.viewer.ex > 0.5);
+          if (ex !== eclatee) { eclatee = ex; api.setPins(pinsDe(etapePins)); }
           if (s === sT) return false;
           var sp = (dt || 0.016) / 1.2 * (1 + 0.6 * Math.max(0, Math.abs(sT - s) - 1));
           s = sT > s ? Math.min(sT, s + sp) : Math.max(sT, s - sp);

@@ -113,7 +113,7 @@
       var NR = 10, rollers = [], segL = new THREE.Group(), segR = new THREE.Group();
       root.add(segL); root.add(segR);
       function segOf(k) { return k <= 3 ? segL : segR; }
-      for (var k = 0; k < NR; k++) rollers.push(H.mesh(gRoller, mRoller, segOf(k)));
+      for (var k = 0; k < NR; k++) { rollers.push(H.mesh(gRoller, mRoller, segOf(k))); rollers[k].name = 'rouleau ' + k; }
       var links = [];
       function inner(a, b) {
         var g = new THREE.Group(); segOf(a).add(g);
@@ -130,8 +130,9 @@
         marks.push(H.mesh(gMark, mEngr, g, [0, 0, Z_OUT1 - 0.005]));
         links.push({ obj: g, a: a, b: b }); return g;
       }
-      var I0 = inner(0, 1), I1 = inner(2, 3), I2 = inner(4, 5), I3 = inner(6, 7), I4 = inner(8, 9);
-      var O1 = outer(1, 2), O5 = outer(5, 6), O7 = outer(7, 8);
+      /* maillons intérieurs (0-1, 2-3, 4-5, 6-7, 8-9) et extérieurs (1-2, 5-6, 7-8) ; l'attache relie 3 et 4 */
+      inner(0, 1); var I1 = inner(2, 3); inner(4, 5); inner(6, 7); inner(8, 9);
+      outer(1, 2); outer(5, 6); outer(7, 8);
 
       /* Attache : deux côtés identiques, le second tourné d'un demi-tour autour de y ; chacun dans son support de vue
          éclatée. Le côté A porte sa plaque dehors (+z), sa goupille au bout gauche et la flèche gravée. */
@@ -240,18 +241,13 @@
       var VUES = { usure: { target: [14, 5, 0], dist: 170 }, attache: { target: [2, 1, 0], dist: 104 } };
       var vueT = null;
 
-      /* Le compteur du curseur reste court (« Étape 8 / 12 ») ; le titre entier de l'étape s'écrit sur une ligne à lui,
-         sous la barre des commandes, qui revient à la ligne (classe .v3d-geste de 00-head.html). La barre est l'élément
-         qui suit la scène ; la ligne y est posée à la première image (onFrame), après la liste numérotée. */
+      /* Le compteur du curseur reste court (« Étape 8 / 12 ») ; le titre entier de l'étape s'écrit sur la ligne du geste
+         de la visionneuse (api.geste), sous la barre des commandes, posée de nouveau à la première image (onFrame), après
+         la liste numérotée. */
       function numero(v) { return mode === 'usure' ? v : v + 5; }
-      var ligne = null, placee = false;
+      var placee = false;
       function geste(v) {
-        var stage = api.viewer && api.viewer.stage, barre = stage && stage.nextElementSibling;
-        if (!ligne) {
-          ligne = document.createElement('p'); ligne.className = 'v3d-geste'; ligne.setAttribute('aria-live', 'polite');
-        }
-        if (barre && barre !== ligne && barre.nextElementSibling !== ligne) barre.insertAdjacentElement('afterend', ligne);
-        ligne.textContent = 'Étape ' + numero(v) + ' de ' + (mode === 'usure' ? '4.3' : '4.4') + ' : ' + (mode === 'usure' ? ETAPES_USURE : ETAPES_ATTACHE)[v - 1];
+        api.geste('Étape ' + numero(v) + ' de ' + (mode === 'usure' ? '4.3' : '4.4') + ' : ' + (mode === 'usure' ? ETAPES_USURE : ETAPES_ATTACHE)[v - 1]);
       }
       var s = 5, sT = 5;
       /* les pastilles de chaque cran, par leur numéro dans l'ordre du fichier : la première, puis celles de l'étape */

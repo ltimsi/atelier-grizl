@@ -16,11 +16,14 @@
    les repères s'allument à l'étape 10. Chaque étape ne montre que ses pastilles, six au plus (PASTILLES, numéros des
    pastilles dans l'ordre du fichier) : la liste sous la figure suit l'étape. Au serrage (étape 11), le fouet n'est pas dessiné : le texte du DM ne le cite pas.
    Le sens de dépose n'est pas écrit dans le texte du DM ; le chapitre le lit sur sa figure (4.5, étape 5) : vu de face,
-   l'outil tourne dans le sens inverse des aiguilles d'une montre. Le contre-écrou et l'outil sortent donc en tournant
-   dans ce sens (rotation de dessin, d'un peu plus d'un sixième de tour), et le 9 dents revient en sens inverse à la
-   pose.
+   du côté du 9 dents (+x), l'outil tourne dans le sens inverse des aiguilles d'une montre, à confirmer sur la pièce.
+   Le contre-écrou et l'outil sortent donc en tournant dans ce sens (rotation de dessin, d'un peu plus d'un sixième de
+   tour), et le 9 dents revient en sens inverse à la pose.
    Vue éclatée : les pignons, les entretoises et l'araignée s'écartent le long de l'axe, le 9 dents et l'outil sortent,
-   le fouet s'éloigne.
+   le fouet s'éloigne. Cassette sortie (DEHORS), elle glisse vers l'extérieur le long de l'axe, puis se pose de côté,
+   vers l'arrière, assez peu pour rester du côté que montre la vue par défaut : la visionneuse cache une pastille passée
+   derrière la pièce. Pour la même raison, les pastilles du 9 dents et des gants sont posées sur sa face visible,
+   devant et en haut, et celle du six-pans de l'outil sur sa face du bas (places de dessin).
    Formes approchées (Shimano ne publie les cotes ni des pignons ni des outils) :
    - pignons : nombres de dents publiés ; rayon primitif déduit du pas de 12,7 mm, la valeur retenue par la scène de
      l'accueil (src/scene/geometrie.js), et écart de 3,9 mm entre deux pignons, la valeur approchée de la scène ;
@@ -169,14 +172,14 @@
       /* araignée sous les grands pignons, avec eux */
       var portes = pignons.filter(function (p) { return p.porte; });
       var zHaut = xk(portes[0].k) + EP / 2, zBas = xk(portes[portes.length - 1].k) - EP / 2;
-      var araignee = H.mesh(tourX([[R_CORPS + 0.25, zHaut - ARAIGNEE.voile], [ARAIGNEE.coque[0], zHaut - ARAIGNEE.voile], [ARAIGNEE.coque[0], zBas],
+      H.mesh(tourX([[R_CORPS + 0.25, zHaut - ARAIGNEE.voile], [ARAIGNEE.coque[0], zHaut - ARAIGNEE.voile], [ARAIGNEE.coque[0], zBas],
         [ARAIGNEE.coque[1], zBas], [ARAIGNEE.coque[1], zHaut], [R_CORPS + 0.25, zHaut], [R_CORPS + 0.25, zHaut - ARAIGNEE.voile]], 72), mAlu, portes[0].g);
       portes.slice(1).forEach(function (p) { root.remove(p.w); });   // les grands pignons suivent l'araignée
       portes.slice(1).forEach(function (p) { portes[0].g.add(p.mesh); });
       /* contre-écrou d'une pièce avec le 9 dents : bague à prise intérieure dehors, manchon fileté dans le corps */
       var neuf = pignon(9);
       var X_BAGUE = xk(0) + EP / 2 + BAGUE.ep / 2;
-      var bague = H.mesh(anneau(cercle(BAGUE.r, 72), [crans(12, BAGUE.pied, BAGUE.cran)], BAGUE.ep, 0.2), mSteel, neuf.g, [X_BAGUE, 0, 0]);
+      H.mesh(anneau(cercle(BAGUE.r, 72), [crans(12, BAGUE.pied, BAGUE.cran)], BAGUE.ep, 0.2), mSteel, neuf.g, [X_BAGUE, 0, 0]);
       var fil = [[R_ALES - 1.4, xk(0) - EP / 2], [R_ALES - 0.1, xk(0) - EP / 2]], f;
       for (f = 0; f < 8; f++) fil.push([R_ALES - 0.1, xk(0) - EP / 2 - 0.6 - f * 0.7], [R_ALES - 0.5, xk(0) - EP / 2 - 0.95 - f * 0.7]);
       fil.push([R_ALES - 1.4, xk(0) - EP / 2 - 6.4], [R_ALES - 1.4, xk(0) - EP / 2]);
@@ -201,10 +204,10 @@
       H.mesh(anneau(crans(12, BAGUE.pied - 0.2, BAGUE.cran - 0.2), [cercle(6.2, 32)], BAGUE.ep, 0.1), mTool, outil, [X0 + BAGUE.ep / 2, 0, 0]);
       H.mesh(tourX([[6.2, X0 + BAGUE.ep], [14.5, X0 + BAGUE.ep], [15.2, X0 + BAGUE.ep + 0.8], [15.2, X0 + 12], [14.2, X0 + 12.8], [6.2, X0 + 12.8], [6.2, X0 + BAGUE.ep]].reverse(), 56), mTool, outil);
       var hexPts = []; for (var h = 0; h < 6; h++) hexPts.push([h / 6 * TAU + TAU / 12, 14.4]);
-      var hex = H.mesh(anneau(hexPts, [cercle(6.2, 32)], 12, 0.5), mTool, outil, [X0 + 19.2, 0, 0]);
+      H.mesh(anneau(hexPts, [cercle(6.2, 32)], 12, 0.5), mTool, outil, [X0 + 19.2, 0, 0]);
       var aOutil = new THREE.Object3D(); aOutil.position.set(X0 + 7, 15.3, 0); outil.add(aOutil);
-      var aHex = new THREE.Object3D(); aHex.position.set(X0 + 19.2, 0, 14.4 * Math.cos(TAU / 12)); outil.add(aHex);
-      
+      var aHex = new THREE.Object3D(); aHex.position.set(X0 + 19.2, -14.4 * Math.cos(TAU / 12), 0); outil.add(aHex);
+
       /* ---------- Fouet : manche et chaîne sur le 15 dents (forme générique, voir l'en-tête) ---------- */
       var wFouet = new THREE.Group(), fouet = new THREE.Group(); root.add(wFouet); wFouet.add(fouet);
       var pf = pignon(PIGNON_FOUET), XF = xk(pf.k), RF = Rp(PIGNON_FOUET), dF = TAU / PIGNON_FOUET;
@@ -233,8 +236,8 @@
       /* ---------- Repères des pastilles ---------- */
       var a45 = new THREE.Object3D(); a45.position.set(xk(10) + EP / 2, (Rp(39) + 2.4) * Math.cos(0.45), (Rp(39) + 2.4) * Math.sin(0.45)); portes[0].g.add(a45);
       var aFaces = new THREE.Object3D(); aFaces.position.set(xk(11) + EP / 2, 0.92 * Rp(45) * Math.cos(Math.PI * 0.82), 0.92 * Rp(45) * Math.sin(Math.PI * 0.82)); portes[0].g.add(aFaces);
-      var aNeuf = new THREE.Object3D(); aNeuf.position.set(xk(0) + EP / 2, 19.5 * Math.cos(-2.45), 19.5 * Math.sin(-2.45)); neuf.g.add(aNeuf);
-      var aGants = new THREE.Object3D(); aGants.position.set(xk(0) + EP / 2, 19.5 * Math.cos(-0.75), 19.5 * Math.sin(-0.75)); neuf.g.add(aGants);
+      var aNeuf = new THREE.Object3D(); aNeuf.position.set(xk(0) + EP / 2, 19.5 * Math.cos(1.6), 19.5 * Math.sin(1.6)); neuf.g.add(aNeuf);
+      var aGants = new THREE.Object3D(); aGants.position.set(xk(0) + EP / 2, 19.5, 0); neuf.g.add(aGants);
       var P_ENTR = [entretoises[1].position.x, 0, 21], aEntr = new THREE.Object3D(); pignon(21).g.add(aEntr);
 
       /* ---------- Poses : la pose au cran n montre l'étape n ; entre deux crans, le passage ---------- */
@@ -257,8 +260,8 @@
         if (fouet.visible) fouet.position.set(0, (1 - st.fouet) * 70 * dirM[0], (1 - st.fouet) * 70 * dirM[1]); else fouet.position.set(FAR[0], FAR[1], FAR[2]);
         pignons.forEach(function (p) {
           if (p.k === 0) return;
-          var off = p.porte ? 30 : 30 + (8 - p.k) * 2.6;
-          p.g.position.set(st.dehors * off, 0, -st.dehors * 122);
+          var off = p.porte ? 70 : 70 + (8 - p.k) * 2.6;
+          p.g.position.set(st.dehors * off, 0, -st.dehors * 70);
         });
         reperes.forEach(function (m) { m.material = st.rep > 0.5 ? M.highlight : mMark; });
         /* corps et entretoises : cachés par la cassette montée, leur numéro ne se montre que cassette sortie ou éclatée */
@@ -277,18 +280,11 @@
       var s = 4, sT = 4, lastEx = 0;
       apply(s);
 
-      /* Le compteur du curseur reste court (« Étape 4 / 12 ») ; le titre entier de l'étape s'écrit sur une ligne à lui,
-         sous la barre des commandes, qui revient à la ligne (classe .v3d-geste de 00-head.html), posée à la première
-         image (onFrame), après la liste numérotée. */
-      var ligne = null, placee = false;
-      function geste(v) {
-        var stage = api.viewer && api.viewer.stage, barre = stage && stage.nextElementSibling;
-        if (!ligne) {
-          ligne = document.createElement('p'); ligne.className = 'v3d-geste'; ligne.setAttribute('aria-live', 'polite');
-        }
-        if (barre && barre !== ligne && barre.nextElementSibling !== ligne) barre.insertAdjacentElement('afterend', ligne);
-        ligne.textContent = 'Étape ' + v + ' de 4.5 : ' + ETAPES[v - 1];
-      }
+      /* Le compteur du curseur reste court (« Étape 4 / 12 ») ; le titre entier de l'étape s'écrit sur la ligne du geste
+         de la visionneuse (api.geste), sous la barre des commandes, posée de nouveau à la première image (onFrame), après
+         la liste numérotée. */
+      var placee = false;
+      function geste(v) { api.geste('Étape ' + v + ' de 4.5 : ' + ETAPES[v - 1]); }
 
       /* explosion le long de l'axe, par les supports : grands pignons et araignée vers l'intérieur, petits vers
          l'extérieur, 9 dents et outil plus loin, fouet écarté */

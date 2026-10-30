@@ -274,7 +274,7 @@ PASTILLES_3D_TRANSMISSION = {
         'Bouton de fonction\xa0: roue arrêtée, tiens-le de 2 à 5 secondes, jusqu’au voyant jaune fixe, pour le mode '
         'réglage\xa0; 0,5\xa0s ou plus pour revenir au mode normal',
         'Voyant, «\xa0LED\xa0»\xa0: jaune fixe en mode réglage, éteint au mode normal\xa0; s’il clignote en bleu, tu as '
-        'relâché trop tôt',
+        'relâché trop tôt (lecture de ce site)',
         'Axe B sur la patte SRAM UDH\xa0: serré à 10-12\xa0Nm, clé six-pans de 5\xa0mm, à ta TW-6.2',
         'Plaque de butée du dérailleur contre la butée de tension B, sans jour\xa0; l’axe B entre droit dans la patte',
         'Vis B, clé de 2\xa0mm\xa0: sur le 45 dents, le contour de la plaque extérieure de la chape au niveau de la pointe '
@@ -337,8 +337,8 @@ COMMANDES_3D_TRANSMISSION = {
         "{ type: 'toggle', label: 'Allongée de 0,5\xa0% (exagérée 8 fois)', value: false, onChange: usee }",
         "function numero(v) { return mode === 'usure' ? v : v + 5; }",
         "format: function (v) { geste(v); return 'Étape ' + numero(v) + ' / ' + (mode === 'usure' ? 5 : 12); },",
-        "ligne.textContent = 'Étape ' + numero(v) + ' de ' + (mode === 'usure' ? '4.3' : '4.4') + '\xa0: ' + "
-        "(mode === 'usure' ? ETAPES_USURE : ETAPES_ATTACHE)[v - 1];",
+        "api.geste('Étape ' + numero(v) + ' de ' + (mode === 'usure' ? '4.3' : '4.4') + '\xa0: ' + "
+        "(mode === 'usure' ? ETAPES_USURE : ETAPES_ATTACHE)[v - 1]);",
         "var PASTILLES = { usure: [[1, 2], [1, 3], [1, 4], [1, 4], [1, 5]], attache: [[1, 10], [1, 10], [1, 6, 8], [1, 9], "
         "[1, 7]] };",
         "if (mode + n !== clePins) { clePins = mode + n; if (pret) api.setPins(pinsDe(n)); }",
@@ -346,19 +346,26 @@ COMMANDES_3D_TRANSMISSION = {
     'm-cassette.js': [
         "controls: [{ type: 'range', label: 'Pas à pas', min: 1, max: 12, step: 1, value: 4,",
         "format: function (v) { geste(v); return 'Étape ' + v + ' / 12'; },",
-        "ligne.textContent = 'Étape ' + v + ' de 4.5\xa0: ' + ETAPES[v - 1];",
+        "function geste(v) { api.geste('Étape ' + v + ' de 4.5\xa0: ' + ETAPES[v - 1]); }",
     ],
     'm-derailleur.js': [
         "controls: [{ type: 'range', label: 'Pas à pas', min: 1, max: 13, step: 1, value: 7,",
         "format: function (v) { geste(v); return 'Étape ' + v + ' / 13'; },",
-        "ligne.textContent = 'Étape ' + v + ' de 4.6\xa0: ' + ETAPES[v - 1];",
+        "function geste(v) { api.geste('Étape ' + v + ' de 4.6\xa0: ' + ETAPES[v - 1]); }",
     ],
 }
-# La ligne du geste, commune aux trois pièces : créée une fois, posée juste après la barre des commandes.
+# La ligne du geste est celle de la visionneuse (api.geste, M4 de la relecture finale du lot 4) : chaque pièce l'écrit
+# depuis le format de son curseur et la pose de nouveau à sa première image, après la liste numérotée ; aucune ne crée
+# la sienne. La visionneuse la crée une fois, aria-live, juste après la barre des commandes.
 LIGNE_3D_TRANSMISSION = (
-    "ligne = document.createElement('p'); ligne.className = 'v3d-geste'; ligne.setAttribute('aria-live', 'polite');",
-    "if (barre && barre !== ligne && barre.nextElementSibling !== ligne) barre.insertAdjacentElement('afterend', ligne);",
+    "var placee = false;",
     "if (!placee) { placee = true; geste(sT);",
+)
+LIGNE_VISIONNEUSE = (
+    "geste: function (texte) { self.setGeste(texte); },",
+    "ligne = this.ligneGeste = document.createElement('p'); ligne.className = 'v3d-geste'; "
+    "ligne.setAttribute('aria-live', 'polite');",
+    "if (barre && barre !== ligne && barre.nextElementSibling !== ligne) barre.insertAdjacentElement('afterend', ligne);",
 )
 # Ce que dessine chaque étape, épinglé : le côté et le sens de l'attache (plaque extérieure à +z, flèche vers +x, l'avant
 # du brin du haut), le crochet du CC-3.2 sur le maillon intérieur I0 ; les outils et le 9 dents de chaque étape de 4.5 ;
@@ -369,8 +376,8 @@ DESSIN_3D_TRANSMISSION = {
         "s.moveTo(-3.6, -0.5); s.lineTo(0.9, -0.5); s.lineTo(0.9, -1.45); s.lineTo(3.6, 0); s.lineTo(0.9, 1.45); "
         "s.lineTo(0.9, 0.5); s.lineTo(-3.6, 0.5); s.lineTo(-3.6, -0.5);",
         "var fleche = H.mesh(new THREE.ExtrudeGeometry(s, { depth: 0.04, bevelEnabled: false }), mEngr, g, [-0.4, 0, Z_OUT1 - 0.005]);",
-        "var I0 = inner(0, 1), I1 = inner(2, 3), I2 = inner(4, 5), I3 = inner(6, 7), I4 = inner(8, 9);",
-        "var O1 = outer(1, 2), O5 = outer(5, 6), O7 = outer(7, 8);",
+        "inner(0, 1); var I1 = inner(2, 3); inner(4, 5); inner(6, 7); inner(8, 9);",
+        "outer(1, 2); outer(5, 6); outer(7, 8);",
         "var XHOOK = RR + 0.02 + FW;",
         "marks.push(H.mesh(gMark, mEngr, g, [0, 0, Z_OUT1 - 0.005]));",
         # le second côté de l'attache est retourné ; le crochet du CC-3.2 est contre le rouleau 1 ; la bascule de
@@ -422,6 +429,8 @@ DESSIN_3D_TRANSMISSION = {
         "[1, 4, 5, 13], [1, 5, 11, 13], [1, 5, 11, 13], [1, 4, 5, 13], [1, 11, 12, 13], [1, 9, 11, 12], "
         "[1, 10, 11, 12]];",
         "if (n !== etapePins) { etapePins = n; if (pret) api.setPins(pinsDe(n)); }",
+        # en vue éclatée, la batterie et le levier du support s'ajoutent aux pastilles de l'étape
+        "var ECLATEE = [2, 3];",
     ),
 }
 # L'objet de chaque pastille, dans l'ordre du fichier : une pastille passée sur une autre pièce échoue.
@@ -1488,7 +1497,15 @@ class TestPages(Site):
                 for litteral in re.findall(r"fillText\('((?:[^'\\]|\\.)*)'", texte) + pastilles + gestes + etiquettes:
                     for marque in marquages:
                         self.assertNotIn(marque, litteral, f"{nom} : marquage inventé {marque!r}")
+                self.assertNotIn("document.createElement('p')", texte, f"{nom} : ligne du geste à soi")
                 verifier_piece_3d(self, nom, texte, DECLARATIONS_3D_TRANSMISSION[fichier], jetons)
+        # La ligne du geste de la visionneuse, dans le dépôt et dans les copies servies.
+        for nom, chemin in (("viewer.js", RACINE / "src" / "js" / "viewer.js"),
+                            ("site viewer.js", self.dossier / "site" / "js" / "viewer.js"),
+                            ("artifact viewer.js", self.dossier / "artifact" / "js" / "viewer.js")):
+            texte = chemin.read_text(encoding="utf-8")
+            for ligne in LIGNE_VISIONNEUSE:
+                self.assertEqual(texte.count(ligne), 1, f"{nom} : {ligne!r}")
         # Ce que dessine chaque étape, recoupé avec les titres du chapitre.
         def entiers(nom, liste):
             m = re.search(r"var %s = \[([\d, ]+)\];" % liste, lus[nom])

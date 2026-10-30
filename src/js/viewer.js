@@ -126,6 +126,7 @@
       dirty: function () { self.dirty = true; },
       setPins: function (pins) { self.setPins(pins); },
       setExplode: function (on) { self.exT = on ? 1 : 0; self.dirty = true; },
+      geste: function (texte) { self.setGeste(texte); },
       viewer: self
     };
     this.api = api;
@@ -224,6 +225,17 @@
     });
     if (this.pinsEl) this.renderPins();
     this.dirty = true;
+  };
+  /* La ligne du geste d'une pièce pas à pas (classe .v3d-geste de 00-head.html) : créée une fois, posée juste après la
+     barre des commandes, qui revient à la ligne ; aria-live, pour qu'un lecteur d'écran la lise à chaque cran. Une
+     pièce l'appelle depuis le format de son curseur et à sa première image, quand la liste numérotée est posée. */
+  Viewer.prototype.setGeste = function (texte) {
+    var barre = this.stage && this.stage.nextElementSibling, ligne = this.ligneGeste;
+    if (!ligne) {
+      ligne = this.ligneGeste = document.createElement('p'); ligne.className = 'v3d-geste'; ligne.setAttribute('aria-live', 'polite');
+    }
+    if (barre && barre !== ligne && barre.nextElementSibling !== ligne) barre.insertAdjacentElement('afterend', ligne);
+    ligne.textContent = texte;
   };
   Viewer.prototype.renderPins = function () {
     var self = this; this.pinsEl.innerHTML = '';
