@@ -152,8 +152,9 @@ const SOUS_SIEGE_VALVE = 28;
 // pignon de 45 dents de la cassette (transmission.js), au bord de sa denture, devant et sous l'axe, dans le plan de ce
 // pignon. Sur le brin inférieur de la chaîne, la pastille passerait sous les boutons de la scène dans les vues des
 // disques et des manettes ; sur la cassette, posée sur son ancre, elle serait à moins de trente pixels de celles du
-// disque arrière et du dérailleur à 360 px de large. Elle est donc décalée à l'écran vers l'avant (decalage de
-// zones.json), dans le creux entre la cassette, le plateau et les deux brins de la chaîne. Placement de vue, pas une cote.
+// disque arrière et du dérailleur à 360 px de large. Elle est donc décalée à l'écran, vers la droite (decalage de
+// zones.json) : dans les vues côté transmission, vers l'avant du vélo, dans le creux entre la cassette, le plateau et
+// les deux brins de la chaîne. Placement de vue, pas une cote.
 const BORD_CASSETTE = Object.freeze([76, -44, 21]);
 
 const add = (a, b) => [a[0] + b[0], a[1] + b[1]];

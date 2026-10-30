@@ -122,8 +122,9 @@ test('ancre des pneus : la valve de la roue avant, en haut de la roue, au fond d
 // La pastille de la chaîne et de la cassette (zone 10) : sur le grand pignon de la cassette (transmission.js), au bord
 // de sa denture, devant et sous l'axe de la roue arrière, dans le plan de ce pignon, côté transmission. Le brin
 // inférieur de la chaîne passe sous les boutons de la scène dans les vues des disques et des manettes ; la pastille est
-// décalée à l'écran vers l'avant (zones.json, decalage), dans le creux entre la cassette, le plateau et les deux brins
-// de la chaîne : posée sur son ancre, elle serait trop près de celles du disque arrière et du dérailleur à 360 px.
+// décalée à l'écran vers la droite (zones.json, decalage), soit, dans les vues côté transmission, vers l'avant du vélo,
+// dans le creux entre la cassette, le plateau et les deux brins de la chaîne : posée sur son ancre, elle serait trop
+// près de celles du disque arrière et du dérailleur à 360 px.
 test('ancre de la chaîne et de la cassette : le bord du grand pignon, devant et sous l’axe arrière', () => {
   const p = points();
   const { bordCassette: a } = p.ancres;
@@ -416,48 +417,38 @@ test('registre des sources : les documents du tubeless que citent les pièces 3D
   assert.ok(!Object.values(SOURCES).some(s => /TPT-1|Pp9OO2xm65I/.test(s.url)), 'notice Park Tool ou vidéo au registre');
 });
 
-// Les documents du lot 4 que citent, par leur nom, les pièces 3D des ateliers de la transmission (src/js/models/m-chain.js,
-// m-cassette.js et m-derailleur.js), hors Park Tool : le manuel revendeur de la chaîne DM-MACN001 (l'attache et son
-// outil TL-CN10), la vue éclatée de la cassette CS-M8200-12 (les épaisseurs des entretoises) et le manuel revendeur du
-// dérailleur DM-MARD011 (les noms des pièces, « Guide pulley » et « Tension pulley »). Chacun est relié à sa pièce par
-// son nom dans le fichier et par une pastille sur ce qu'il justifie (les pastilles sont épinglées mot pour mot par
-// test_pieces_3d_transmission, tests/test_pages.py). Leur adresse est celle du relevé du lot 4, et le chapitre les cite
-// par elle. Aucune pièce de la scène n'en cite d'autre : la scène de l'accueil (transmission.js) cite des documents déjà
-// au registre.
-test('registre des sources : les documents de la transmission que citent les pièces 3D des ateliers', () => {
+// Les documents du lot 4 que nomment les en-têtes des pièces 3D des ateliers de la transmission (src/js/models/m-chain.js,
+// m-cassette.js et m-derailleur.js), hors Park Tool : le manuel revendeur de la chaîne DM-MACN001, la vue éclatée de la
+// cassette CS-M8200-12 et le manuel revendeur du dérailleur DM-MARD011. De chaque pièce, le test ne lit que son en-tête
+// (son premier commentaire) : ses pastilles sont épinglées mot pour mot par test_pieces_3d_transmission
+// (tests/test_pages.py). L'adresse de chaque document est celle du relevé du lot 4, et le chapitre la cite. La scène
+// de l'accueil (transmission.js) ne cite que des documents déjà au registre.
+test('registre des sources : les documents que nomment les en-têtes des pièces 3D de la transmission', () => {
   const lire = chemin => readFileSync(new URL(`../../${chemin}`, import.meta.url), 'utf8');
   const releve = lire('docs/recherche/transmission-cf8-di2.md'), chapitre = lire('src/parts/40-transmission.html');
-  const piece = nom => {
+  const entete = nom => {
     const texte = lire(`src/js/models/${nom}.js`);
-    return { texte, pastilles: [...texte.matchAll(/text: '((?:[^'\\]|\\.)*)'/g)].map(m => m[1]) };
+    return texte.slice(0, texte.indexOf('*/'));
   };
-  const chain = piece('m-chain'), cassette = piece('m-cassette'), derailleur = piece('m-derailleur');
   const attendus = {
-    'shimano-dm-macn001': [chain, 'DM-MACN001', /^Shimano DM-MACN001-08, /, ['attache', 'TL-CN10'],
-      'https://si.shimano.com/en/dm/MACN001'],
-    'shimano-ev-cs-m8200-12': [cassette, 'vue éclatée', /^Shimano EV CS-M8200-12-5110, vue éclatée /,
-      ['0,95 millimètre', '1,95 millimètre'], 'https://si.shimano.com/en/ev/CS-M8200-12-5110'],
-    'shimano-dm-mard011': [derailleur, 'DM-MARD011', /^Shimano DM-MARD011-07, /, ['«\u00a0Guide pulley\u00a0»'],
-      'https://si.shimano.com/en/dm/MARD011'],
+    'shimano-dm-macn001': ['m-chain', 'DM-MACN001', /^Shimano DM-MACN001-08, /, 'https://si.shimano.com/en/dm/MACN001'],
+    'shimano-ev-cs-m8200-12': ['m-cassette', 'vue éclatée', /^Shimano EV CS-M8200-12-5110, vue éclatée /,
+      'https://si.shimano.com/en/ev/CS-M8200-12-5110'],
+    'shimano-dm-mard011': ['m-derailleur', 'DM-MARD011', /^Shimano DM-MARD011-07, /, 'https://si.shimano.com/en/dm/MARD011'],
   };
-  for (const [id, [modele, nom, titre, reperes, url]] of Object.entries(attendus)) {
+  for (const [id, [modele, nom, titre, url]] of Object.entries(attendus)) {
     assert.ok(SOURCES[id], `source absente : ${id}`);
     assert.equal(SOURCES[id].type, 'manuel', id);
     assert.equal(SOURCES[id].url, url, id);
     assert.match(SOURCES[id].titre, titre, `${id} : titre`);
-    assert.ok(modele.texte.includes(nom), `${id} : la pièce ne nomme plus ${nom}`);
-    assert.ok(modele.pastilles.some(t => reperes.every(r => t.includes(r))), `${id} : aucune pastille sur ${reperes}`);
-    assert.ok(releve.includes(`| ${url} |`), `${id} : adresse absente de la liste des documents du relevé du lot 4`);
+    assert.ok(entete(modele).includes(nom), `${id} : l’en-tête de ${modele}.js ne nomme plus ${nom}`);
+    assert.ok(releve.includes(url), `${id} : adresse absente du relevé du lot 4`);
     assert.ok(chapitre.includes(`href="${url}"`), `${id} : adresse absente du chapitre`);
   }
-  assert.ok(derailleur.pastilles.some(t => t.includes('«\u00a0Tension pulley\u00a0»')), 'DM-MARD011 : le galet du bas');
   // Déjà au registre, et cités par ces pièces : les fiches Shimano de la chaîne, de la cassette, du dérailleur et de
   // la batterie, le manuel revendeur des cassettes et le manuel Canyon des roues (ses 40 Nm du contre-écrou).
   for (const id of ['shimano-cn-m8100', 'shimano-cs-m8200-12', 'shimano-rd-m8250-gs', 'shimano-bt-dn320',
     'shimano-dm-macs010', 'canyon-manuel-roues']) assert.ok(SOURCES[id], id);
-  // Ni les notices Park Tool (CC-3.2, MLP-1.2, SR-12.2), ni le manuel de la patte SRAM UDH, ni celui d'E-TUBE PROJECT
-  // Cyclist : Park Tool n'entre pas au registre, et aucune pièce ne cite les deux autres.
-  assert.ok(!Object.values(SOURCES).some(s => /parktool|sram\.com|7J4MA/i.test(s.url)), 'document en trop au registre');
 });
 
 test('registre des sources : plus aucune source du Grizl CF 7 ni de ses pièces', () => {

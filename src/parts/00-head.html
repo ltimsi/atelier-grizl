@@ -163,10 +163,10 @@ h4{font-family:var(--f-mono);font-size:.74rem;font-weight:600;letter-spacing:.08
 
 /* Valeurs et marqueurs */
 .nm{font-family:var(--f-mono);font-weight:600;font-size:.86em;color:var(--hot);background:var(--hot-2);padding:1px 6px;border-radius:4px;white-space:nowrap;font-variant-numeric:tabular-nums}
-/* « À lire sur la pièce » et ses pareilles : une boîte d'un seul tenant, qui ne se coupe pas en fin de ligne. Seule une
-   marque plus large que la ligne entière (une longue, sur un écran de 360 px) passe à la ligne dans sa boîte, au lieu
-   de faire défiler la page en largeur ; elle laisse alors de quoi garder sur sa ligne le point qui la suit. */
-.verif{display:inline-block;max-width:calc(100% - .5em);font-family:var(--f-mono);font-size:.78em;color:var(--acc);border:1px dashed var(--acc);border-radius:4px;padding:0 5px}
+.verif{font-family:var(--f-mono);font-size:.78em;color:var(--acc);border:1px dashed var(--acc);border-radius:4px;padding:0 5px;white-space:nowrap}
+/* Une marque trop longue pour tenir sur une ligne de téléphone (« verif long ») passe à la ligne comme le texte.
+   tools/scene-check.js vérifie qu'aucune marque ne dépasse son bloc. */
+.verif.long{white-space:normal}
 a.src{font-family:var(--f-mono);font-size:.72rem;color:var(--ink-3);text-decoration-style:dotted}
 a.src::before{content:"↗ "}
 .ref{font-family:var(--f-mono);font-size:.88em}

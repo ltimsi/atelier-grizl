@@ -543,16 +543,6 @@ class TestFragments(unittest.TestCase):
         self.assertIn("La page n’a pas pu se charger en entier. Les ateliers restent accessibles par le menu et par "
                       "« Où intervenir ».", pied)
 
-    def test_marque_a_lire_sans_debordement(self):
-        # Une marque « à lire sur la pièce » (.verif) reste d'un seul tenant, mais une marque plus large que la ligne
-        # entière passe à la ligne dans sa boîte au lieu de faire défiler la page : « à lire sur la figure du DM et sur
-        # la pièce » (atelier 4.5) débordait de 4 px à 360 px de large avec white-space:nowrap (scene-check du lot 4).
-        regle = re.search(r"^\.verif\{([^}]*)\}$", self.lire("00-head"), re.M)
-        self.assertIsNotNone(regle, "00-head.html : règle .verif")
-        for attendu in ("display:inline-block", "max-width:calc(100% - .5em)"):
-            self.assertIn(attendu, regle.group(1))
-        self.assertNotIn("nowrap", regle.group(1))
-
     def test_fragments_sans_tiret_long(self):
         for nom in ("00-head", "99-foot"):
             self.assertIsNone(re.search("[\u2014\u2013]", self.lire(nom)), nom)

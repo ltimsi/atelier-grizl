@@ -58,15 +58,15 @@ test('zone de la chaîne et de la cassette : nom, ancre sur le bord de la casset
 // decalage : [dx, dy] en pixels de l'écran, facultatif. app.js pose la pastille à ce décalage de la projection de son
 // ancre, en 3D comme en 2D, à toutes les largeurs. Deux zones en ont un. Celle des axes : sa pastille est juste sous la
 // tête de l'axe avant, parce que la pastille de l'étrier se projette juste au-dessus du moyeu. Celle de la chaîne : sa
-// pastille est juste devant la cassette, parce que les pastilles du disque arrière et du dérailleur se projettent
-// au-dessus et derrière son ancre (geometrie.js). L'écart de 30 px qui en résulte, à chaque largeur, est contrôlé par
-// tools/scene-check.js.
-test('décalage des pastilles : celle des axes vers le bas, celle de la chaîne vers l’avant, près de leur pièce', () => {
+// pastille est décalée vers la droite de l'écran, soit juste devant la cassette dans les vues côté transmission, parce
+// que les pastilles du disque arrière et du dérailleur se projettent au-dessus et à gauche de son ancre (geometrie.js).
+// L'écart de 30 px qui en résulte, à chaque largeur, est contrôlé par tools/scene-check.js.
+test('décalage des pastilles : celle des axes vers le bas, celle de la chaîne vers la droite, près de leur pièce', () => {
   assert.deepEqual(ZONES.filter(z => 'decalage' in z).map(z => z.id), ['axes', 'chaine']);
   const c = parId.chaine.decalage;
   assert.equal(c.length, 2);
   assert.ok(c.every(Number.isFinite), 'deux nombres');
-  assert.ok(c[0] > 0 && Math.abs(c[1]) < c[0], `décalage ${c} : vers l’avant, plus qu’en hauteur`);
+  assert.ok(c[0] > 0 && Math.abs(c[1]) < c[0], `décalage ${c} : vers la droite, plus qu’en hauteur`);
   assert.ok(Math.hypot(...c) <= 25, `décalage de ${Math.hypot(...c).toFixed(1)} px : la pastille s’éloigne de la cassette`);
   assert.ok(ancres.disqueArriere[1] > ancres.bordCassette[1] && ancres.batterieDi2[0] < ancres.bordCassette[0],
     'le disque arrière au-dessus de l’ancre, le dérailleur derrière');

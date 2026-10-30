@@ -17,7 +17,10 @@
 //      ouvert, ne doit jamais sortir du menu). Sans JavaScript, le menu est en tête de page et le bouton n'est pas
 //      affiché. Les pages « Ce qui est approché » et « Sources » doivent se remplir. Chaque pièce 3D (figure.v3d) est
 //      ouverte par son onglet et doit se dessiner (sans WebGL : afficher son message). Puis la page est tout dépliée
-//      (chaque <details> ouvert, chaque figure des onglets montrée) et ne doit toujours pas défiler en largeur ;
+//      (chaque <details> ouvert, chaque figure des onglets montrée) et ne doit toujours pas défiler en largeur ; chaque
+//      marque « à lire » (.verif) rendue reste, ligne par ligne, dans la boîte de contenu de son bloc et dans l'écran,
+//      à un pixel près (MARGE_MARQUE) : une marque qui ne passe pas à la ligne et dépasse est rognée par un parent, ce
+//      que le défilement en largeur ne montre pas ;
 //   2. accueil : la scène est dessinée (sans WebGL : le schéma 2D, et la page le dit). L'aide de la scène a un fond, et
 //      aucune pastille ne touche son rectangle, en 3D comme en 2D. Dans les deux vues d'ensemble, celle du chargement
 //      (la 3D, ou le schéma 2D sans WebGL) et celle du schéma 2D après son onglet, toutes les pastilles du bloc
@@ -127,6 +130,9 @@ const ANCIENNES_ANCRES = [
 // 30 px de large (00-head.html), deux pastilles plus proches se chevauchent. Leur nombre est celui des zones du bloc
 // #zones-data de la page d'accueil, celui qu'app.js lit.
 const ECART_PASTILLES = 30;
+// Ce qu'une marque « à lire » (.verif) peut dépasser de la boîte de contenu de son bloc, ou de l'écran, en pixels CSS :
+// les arrondis de la mise en page.
+const MARGE_MARQUE = 1;
 // Sur deux colonnes, la part de l'image qui reste à l'écran au moins, entre la barre du haut et le bas de l'écran,
 // après le clic d'une pastille : la carte de la zone vient à l'écran par le défilement de la colonne « Où intervenir »
 // (00-head.html, app.js), pas en emportant le vélo que la caméra vient de viser.
@@ -486,7 +492,37 @@ async function controler(opts) {
     });
     await pause(300);
     const e = await relever(page, `${ou}, tout déplié`);
-    return { ...ouverts, large: e.large };
+    const marques = await controlerMarques(page, ou);
+    return { ...ouverts, large: e.large, marques };
+  }
+
+  // Les marques « à lire » (.verif) rendues dans la page : chaque boîte de ligne d'une marque reste dans la boîte de
+  // contenu de son bloc (le plus proche ancêtre qui n'est pas en ligne) et dans l'écran, à MARGE_MARQUE près. Une
+  // marque qui ne passe pas à la ligne (white-space:nowrap, 00-head.html) et dépasse son bloc est rognée par un parent,
+  // ou fait défiler la page ; quand un parent la rogne, le défilement en largeur ne la voit pas. Chaque marque qui
+  // dépasse est une erreur. Rend le nombre de marques rendues.
+  async function controlerMarques(page, ou) {
+    const r = await page.evaluate(marge => {
+      const W = window.innerWidth, hors = [];
+      let rendues = 0;
+      for (const m of document.querySelectorAll('.verif')) {
+        const lignes = [...m.getClientRects()];
+        if (!lignes.length || getComputedStyle(m).visibility === 'hidden') continue;
+        rendues++;
+        let bloc = m.parentElement;
+        while (bloc && ['inline', 'contents'].includes(getComputedStyle(bloc).display)) bloc = bloc.parentElement;
+        const s = getComputedStyle(bloc), q = bloc.getBoundingClientRect();
+        const gauche = q.left + parseFloat(s.borderLeftWidth) + parseFloat(s.paddingLeft);
+        const droite = q.right - parseFloat(s.borderRightWidth) - parseFloat(s.paddingRight);
+        const depasse = Math.max(...lignes.map(l => Math.max(l.right - droite, gauche - l.left, l.right - W, -l.left)));
+        if (depasse > marge) hors.push([m.textContent.trim(), Math.round(depasse)]);
+      }
+      return { rendues, hors };
+    }, MARGE_MARQUE);
+    for (const [texte, px] of r.hors) {
+      erreur(`contrôle : ${ou}, tout déplié : la marque « ${texte} » dépasse de ${px} px son bloc ou l’écran`);
+    }
+    return r.rendues;
   }
 
   try {

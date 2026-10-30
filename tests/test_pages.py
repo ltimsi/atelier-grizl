@@ -1365,10 +1365,10 @@ class TestPages(Site):
     def test_pieces_3d_transmission(self):
         # Les pièces 3D des ateliers 4.3 et 4.4 (« chain »), 4.5 (« cassette ») et 4.6 (« derailleur ») : le fichier du
         # dépôt et ses copies servies par les deux cibles (dist/site/js/ et dist/artifact/js/), le lot 4 étant publié :
-        # la pièce publiée est celle qu'on relit. Chaque pastille, chaque commande et chaque geste des curseurs est comparé mot pour mot à
-        # PASTILLES_3D_TRANSMISSION, ETIQUETTES_3D_TRANSMISSION, COMMANDES_3D_TRANSMISSION et ETAPES_3D_TRANSMISSION ;
-        # les gestes sont les titres des étapes du chapitre, dans leur ordre. Puis, sur tout le fichier, commentaires
-        # compris :
+        # la pièce publiée est celle qu'on relit. Chaque pastille, chaque commande et chaque geste des curseurs est
+        # comparé mot pour mot à PASTILLES_3D_TRANSMISSION, ETIQUETTES_3D_TRANSMISSION, COMMANDES_3D_TRANSMISSION et
+        # ETAPES_3D_TRANSMISSION ; les gestes sont les titres des étapes du chapitre, dans leur ordre. Puis, sur tout le
+        # fichier, commentaires compris :
         # - rien du CF 7 ni des brouillons : ni RD-RX822 à câble, molette, serre-câble ou stabilisateur, ni CS-M7100 en
         #   10-45 ou 10-51, ni TL-LR15, FR-5.2H ou TL-FC36, ni fixation à 8-10 Nm, plateau à 16-17 Nm ou « +4/+5 » ;
         # - aucun couple sinon ceux du chapitre pour la pièce (COUPLES_3D_TRANSMISSION), toujours écrits « Nm », et aucune
@@ -1737,7 +1737,7 @@ class TestPages(Site):
 
     def test_plus_de_cf7(self):
         # Le site ne parle plus que du Grizl CF 8 Di2. Aucun fichier servi par les deux cibles, hors de three.js, ne
-        # garde le CF 7, sa fiche ou ses pièces : ni les 35 pages, ni l'index de la recherche, ni les pièces 3D des
+        # garde le CF 7, sa fiche ou ses pièces : ni les 44 pages, ni l'index de la recherche, ni les pièces 3D des
         # ateliers, ni les modules de la scène. Le menu, la description de chaque page et l'accueil nomment le CF 8 Di2.
         # « CF 7 » est cherché sans casse, avec ou sans espace (même insécable), tiret ou soulignement : « cf 7 »,
         # « CF7 », « grizl-cf-7 ». Les autres noms aussi, sans casse. Une couleur comme « #cf7a3b » n'est pas une trace.
