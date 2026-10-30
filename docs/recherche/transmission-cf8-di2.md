@@ -90,7 +90,7 @@ Références tirées du relevé du 23/10 (`sources-cf8-di2.md` § 3 et § 8), co
 
 **Deux réglages de l'application qui concernent ce vélo.**
 - Mode E-BIKE. UM-3K70A, https://si.shimano.com/en/um/3K70A/3K70A_e-bike_mode_setting : « This setting is enabled by default, so disable it when using a bicycle other than an E-BIKE. For details on the setting procedures, refer to the user's manual for E-TUBE PROJECT Cyclist. » DM-MARD011, https://si.shimano.com/en/dm/MARD011/cause_remedy, pour « The shifting interval is too long. » : « Is the E-BIKE mode enabled? », « Disable it when using a bicycle other than an E-BIKE. » État sur ton vélo à la livraison : **à lire dans l'application**.
-- Type de cassette. DM-MARD011, https://si.shimano.com/en/dm/MARD011/configurable_e_tube_project : « Rear cassette combination settings (RD-M9250 / RD-M8250) », « Switches between the SGS type and GS type. » Ton dérailleur est un GS avec une 9-45 : valeur réglée à la livraison **à lire dans l'application**.
+- Type de cassette. DM-MARD011, https://si.shimano.com/en/dm/MARD011/configurable_e_tube_project : « Rear cassette combination settings (RD-M9250 / RD-M8250) », « Switches between the SGS type and GS type. » Ton dérailleur est un GS avec une 9-45, donc le type GS (lecture de ce relevé) : valeur réglée à la livraison **à lire dans l'application**.
 
 ### 1.3 Ce qu'il faut lire sur les pièces à la livraison
 
@@ -160,6 +160,7 @@ DM-MACN001, https://si.shimano.com/en/dm/MACN001/Confirm_chain_length : « Refer
 Ce que montrent les figures :
 - **Deux couleurs, sans légende.** Les maillons sont orange (#FCD68C) ou bleu clair (#DFF2FC), en alternance. L'attache est grise.
 - **Les bouts libres** sont bleu clair, avec un trou vide. L'attache vient s'y engager (« Insert the QUICK-LINK pins between the inner links from both sides », DM-MACN001, 4.4 ci-dessous). Lecture de ce relevé : **bleu clair = maillon intérieur, orange = maillon extérieur**.
+- **Le recouvrement.** À chaque goupille, la plaque orange est dessinée par-dessus la plaque bleu clair du maillon voisin (relu à l'écran le 30/10/2026, vague finale) : sur une chaîne, les plaques d'un maillon intérieur sont entre celles des maillons extérieurs (lecture de ce relevé).
 - **La disposition.** Au point zéro (le point noir, derrière le grand pignon), un brin de la chaîne arrive par le pignon et continue tout droit, à plat : ce sont les maillons à ajouter, numérotés 1, 2, 3… à partir du point zéro. Chaque numéro est sous un seul maillon, intérieur ou extérieur, en alternance. Juste sous le point zéro, l'autre bout de la chaîne est un maillon bleu clair, intérieur, à bout libre, dans les deux figures.
 - **« QUICK-LINK + 5 links ».** Le dernier maillon du brin qui arrive au point zéro, côté pignon, est orange (extérieur). Les maillons 1, 3 et 5 sont bleu clair (intérieurs), 2 et 4 orange (extérieurs). Le 5e, le dernier, est intérieur.
 - **« QUICK-LINK + 6 links ».** Le dernier maillon du brin qui arrive au point zéro est bleu clair (intérieur). Les maillons 1, 3 et 5 sont orange (extérieurs), 2, 4 et 6 bleu clair (intérieurs). Le 6e, le dernier, est intérieur.
@@ -167,6 +168,7 @@ Ce que montrent les figures :
 Lecture de ce relevé :
 - **La règle.** 5 maillons quand le maillon qui arrive au point zéro est extérieur, 6 quand il est intérieur. Dans les deux cas, la chaîne finit par deux maillons intérieurs, que relie l'attache.
 - **Le comptage.** Un « link » de la figure est un seul maillon, intérieur ou extérieur. L'attache est comptée à part (« QUICK-LINK + »).
+- **Le total**, à comparer au compte de l'ancienne chaîne : les maillons de la chaîne neuve de son bout libre au point zéro, plus 5 ou 6, plus 1 pour l'attache.
 - **Ce que Shimano ne dit pas** : si un nombre de maillons d'une chaîne fermée compte l'attache. Non publié.
 
 Les figures « Connecting pin » n'ont pas été relues ainsi : la CN-M8100 se ferme par une attache (4.1, plus bas).
@@ -221,7 +223,9 @@ Shimano : TL-CN10 (attache), TL-CN29 ou TL-CN35 (dérive-chaîne). Tes outils Pa
 3. « Keep TL-LR021 perpendicular to the smallest sprocket during use. »
 4. « Remove the cassette from the freewheel body unit. »
 
-Sens de dépose : le texte ne le dit pas. Figure de la rubrique « 9-45T » (dessin SVG de la page, relu à l'écran le 30/10/2026) : la clé à molette coiffe le TL-LR021 au centre de la cassette, son manche part vers la gauche, et une flèche pousse le bout du manche vers le bas. Le fouet TL-SR24 part vers le haut et la droite, sans flèche. La cassette est vue de face, petit pignon vers le lecteur. Lecture de ce relevé : sur la figure, l'outil tourne dans le sens inverse des aiguilles d'une montre.
+**Roue déposée, côté frein.** DM-GADBR01-11, page HTML https://si.shimano.com/en/dm/GADBR01/TO_ENSURE_SAFETY, lue le 30/10/2026 dans le navigateur intégré, après « Be sure to also inform users of the following: » : « When the bicycle wheel has been removed, it is recommended that pad spacers are installed. Do not depress the brake lever while the wheel is removed. If the brake lever is depressed without the pad spacers installed, the pistons will protrude further than normal. If that happens, consult a place of purchase. » Même consigne au site, 2.2 (`src/parts/20-freins.html`, DM-GADBR01 en PDF) et 1.5 (Canyon QSG V02 p.15, encadré barré, `src/parts/11-montage.html`). La roue arrière reste déposée de la dépose de la cassette à sa pose.
+
+Sens de dépose : le texte ne le dit pas. Figure de la rubrique « 9-45T » (dessin SVG de la page, relu à l'écran le 30/10/2026) : la clé à molette coiffe le TL-LR021 au centre de la cassette, son manche part vers la gauche, et une flèche pousse le bout du manche vers le bas. Le fouet TL-SR24 part vers le haut et la droite, sans flèche. La cassette est vue de face, petit pignon vers le lecteur. Lecture de ce relevé : sur la figure, l'outil tourne dans le sens inverse des aiguilles d'une montre. Figure relue à l'écran le 30/10/2026 (vague finale) : la clé coiffe l'outil engagé sur le petit pignon, au centre, les grands pignons derrière. Sens à confirmer sur la pièce, la cassette vue du côté du petit pignon, comme sur la figure.
 
 **Pose**, https://si.shimano.com/en/dm/MACS010/installation_cassette_sprocket, rubrique « 9-45T » :
 1. « Place all of the sprockets other than the smallest sprocket on the freewheel body unit. » ; « Place the sprockets in descending order from the largest sprocket. » ; « Align the wide groove section of the freewheel body unit with the wide convex section of the cassette. » ; « The marked side of the sprockets must be facing outward. »
@@ -287,7 +291,7 @@ Tableau des modes, https://si.shimano.com/en/dm/MARD011/switch_operation_mode, l
 - Le « switch (A) » de la figure du DM-MARD011 est dessiné sur une commande de VTT, pas sur une ST-RX825 (lu sur la figure).
 - UM-0RM0B, https://si.shimano.com/en/um/0RM0B/shift_adjust_mode : « Press and hold the shift switch assigned to the mode switch function for 2 to 5 seconds to switch the mode. » ; « For the setting procedure, contact your place of purchase or a distributor. »
 - Bouton qui porte cette fonction sur ta ST-RX825 à la livraison : **non publié**. Dans E-TUBE PROJECT Cyclist, la fonction s'appelle « [Shifting/Adj. mode] » (1.2). Sans elle, le bouton de fonction du dérailleur suffit.
-- En mode réglage, [X] et [Y] de la manette droite déplacent le galet (étapes 3 et 4 ci-dessus).
+- En mode réglage, ce que font [X] et [Y] de la ST-RX825 : **non publié**. Le DM-MARD011 dessine « switch (X) » et « shift switch (Y) » sur une commande de VTT, comme « switch (A) » (figures relues à l'écran le 30/10/2026, vague finale) ; UM-0RM0B ne donne [X] et [Y] qu'en mode normal, page « Rear shift switch operation (default setting) » (https://si.shimano.com/en/um/0RM0B/rear_shift_switch_operation) ; « Switching to the adjustment mode » (https://si.shimano.com/en/um/0RM0B/shift_adjust_mode) ne parle que de la touche qui porte la fonction de mode. Déduction de ce relevé : (X) est la palette [X] de la manette droite, celle qui passe sur un plus grand pignon, et (Y) la palette [Y]. Contrôle sur le vélo : le DM fait aller le galet vers le quatrième pignon avec (X) et « five steps toward the smallest sprocket » avec (Y), et il le fait dépasser à chaque appui « so that you can check the adjustment direction » (étape 3 ci-dessus) ; si le galet part dans l'autre sens, prendre l'autre palette. Les fonctions des palettes ont pu être inversées à la livraison (« Reverse the shifting up and shifting down functions for shift switches [X] and [Y] », 1.2).
 
 ### 6.6 Par l'application E-TUBE PROJECT Cyclist
 
@@ -337,13 +341,15 @@ https://si.shimano.com/en/dm/MARD011/replace_pulleys : « The pulleys do not hav
 | Où | Ce que tu vois | Sens | Source |
 |---|---|---|---|
 | Dérailleur, un clic sur le bouton de fonction | vert fixe / vert clignotant / rouge fixe / éteint | « Solid green: 51 - 100% », « Flashing green: 26 - 50% », « Solid red: 1 - 25% », « Off: 0% » | DM-MARD011, switch_operation_mode |
-| Dérailleur, appui de 0,5 à 1,9 s | bleu clignotant | « Bluetooth ® LE connection mode » ; UM-3K70A : « Press the function button until the LED flashes blue. The bicycle side is ready to connect. » | DM-MARD011 ; https://si.shimano.com/en/um/3K70A/3K70A_connect_to_smartphone |
+| Dérailleur, appui de 0,5 à 1,9 s | bleu clignotant | « Bluetooth ® LE connection mode » ; UM-3K70A : « Press the function button until the LED flashes blue. The bicycle side is ready to connect. » ; « When disconnecting, cancel the Bluetooth ® LE connection from the smartphone. (The bicycle will switch from the connection mode to the normal operation mode.) » | DM-MARD011 ; https://si.shimano.com/en/um/3K70A/3K70A_connect_to_smartphone |
 | Dérailleur, appui de 2 s ou plus | jaune fixe | mode réglage ; retour : « Off » | DM-MARD011 |
 | Dérailleur, appairage | bleu fixe, bref clignotement bleu, puis vert clignotant | « lights solid blue », « quickly flashes blue then returns to solid blue », « When the LED flashes green several times, pairing is complete. » | DM-MARD011, system_pairing (`montage-cf8-di2.md` § 6.4) |
 | Dérailleur, pendant un passage | rouge clignotant | « The battery level may be too low to perform shifting. » | DM-MARD011, cause_remedy |
 | Manette, deux boutons 0,5 s | vert / rouge / éteint | « 11% - 100% Solid green », « 1% - 10% Solid red », « 0% Off » | https://si.shimano.com/en/um/0RM0B/shift_switch_battery_level |
 | Application, écran « Status » | rouge clignotant / vert / « - » | « flashing red: battery level at 10% or less; green: sufficient battery level; -: battery level not retrieved » (piles de la manette) | https://si.shimano.com/en/um/7J4MA/status |
 | Chargeur EC-DN100 | orange, voyant d'erreur | `montage-cf8-di2.md` § 6.1 | UM-7KZ0A |
+
+Sortir du mode de connexion sans avoir connecté de téléphone : **non publié** (le tableau du DM-MARD011 ne donne un retour au mode normal que depuis le mode réglage, relu le 30/10/2026, vague finale). Qu'un bleu clignotant pendant l'entrée en mode réglage veuille dire un appui relâché trop tôt (moins de 2 s) est une lecture de ce tableau par ce relevé.
 
 La FAQ « The indicator LED is flashing red. (S-6900) » parle d'un vélo électrique (« An error or warning has occurred in the E-BIKE. ») : elle ne s'applique pas à ce vélo.
 
@@ -365,7 +371,7 @@ DM-MARD011, https://si.shimano.com/en/dm/MARD011/cause_remedy, symptôme « Shif
 
 ### 9.3 Niveau de la batterie
 
-Voir 9.1 et `montage-cf8-di2.md` § 6.2. Batterie qui se vide vite, FAQ NM-6100 : « If you feel your battery is draining really fast, updating the firmware to the latest version using the latest version of E-TUBE PROJECT may resolve the issue. » ; « Please check the battery consumption at your local dealer that has SM-PCE02. » DM-MARD011, NOTICE : « Using the rear derailleur communication function without disconnecting the connection to E-TUBE PROJECT Cyclist increases battery consumption. » Charge qui échoue : DM-MARD011, cause_remedy, « Cannot charge. » et « The error indicator flashes while charging. » : « Use an AC adapter with a current capacity higher than 1.5 A that is compatible with a USB port. If you are using a USB hub, reconnect the USB cable to the AC adapter directly. »
+Voir 9.1 et `montage-cf8-di2.md` § 6.2. Batterie qui se vide vite, FAQ NM-6100 : « If you feel your battery is draining really fast, updating the firmware to the latest version using the latest version of E-TUBE PROJECT may resolve the issue. » ; « Please check the battery consumption at your local dealer that has SM-PCE02. » DM-MARD011, NOTICE : « Using the rear derailleur communication function without disconnecting the connection to E-TUBE PROJECT Cyclist increases battery consumption. » Charge qui échoue, DM-MARD011, https://si.shimano.com/en/dm/MARD011/cause_remedy, relu le 30/10/2026 (vague finale), deux symptômes distincts. « Cannot charge. » : « Is the USB cable connected securely? », « Connect the USB cable securely, and charge the battery again. If charging is still not performed, check whether the USB cable is damaged. » ; « The battery may have reached the end of its life. », « Replace the battery with a new one. » ; « Is the battery fully charged? », « The charge indicator of the battery charger turns off when the battery is fully charged, but this is normal. » « The error indicator flashes while charging. » : « The current may be insufficient for charging. », « Use an AC adapter with a current capacity higher than 1.5 A that is compatible with a USB port. If you are using a USB hub, reconnect the USB cable to the AC adapter directly. » L'adaptateur de plus de 1,5 A ne répond qu'au voyant d'erreur.
 
 ### 9.4 Réappairer
 
@@ -446,7 +452,7 @@ Liste tirée des brouillons du 20/10 (`brouillons/parts/10-avant.html:46` à `:6
 | Tournevis dynamométrique Park Tool ATD-1.2 | a | https://www.parktool.com/en-us/product/adjustable-torque-driver-atd-1-2 | 4 à 6 Nm : aucun couple de ce lot dans sa plage ; capuchon de manivelle (0,7 à 1,5) en dessous |
 | Clés Allen PB Swiss 212.LH-10 | a | https://www.pbswisstools.com/en/tools/quality-hand-tools/hex-key-l-wrenches/product/pb-212-lh | « PB 212.LH-10 » : « 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10 » ; le 2 sert pour la vis B et les butées |
 | Clés Torx PB Swiss | a | (page non relevée) | Empreinte des vis de plateau à lire sur la pièce |
-| Graisse Shimano | a | (page non relevée) | Shimano cite « Premium Grease (Y04110000) » (manivelle, axe B) |
+| Graisse Shimano | a | (page non relevée) | Shimano cite « Premium Grease(Y04110000) » pour l'axe B (6.7) ; pour le grincement de la manivelle gauche (8), le DM-GAFC001 dit « apply grease » sans nommer de graisse |
 | Pied d'atelier Park Tool PCS-10.3 | a | (page relevée au lot 2) | Ne jamais serrer la tige carbone (lot 2) |
 | Outil Center Lock Shimano TL-FC36 | a | (lot 1) | Ne sert pas à la cassette 9-45 |
 | Démonte-cassette Park Tool FR-5.2H | prévu (« Plus tard ») | https://www.parktool.com/en-us/product/lockring-tool-with-handle-fr-5-2h | Park : « 12-spline tool fittings with an approximate outer diameter of 23.4 mm » ; compatibilité avec le 9 dents à contre-écrou intégré : **non publiée** ; Shimano demande le TL-LR021 |

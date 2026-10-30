@@ -1702,10 +1702,12 @@ AIDE_3D = ("Touche un numéro pour repérer la pièce. Un numéro peut se dessin
            "sienne\xa0: fais tourner la pièce, ou lis la liste numérotée sous la figure.")
 # La valeur ou la consigne appliquée, en mots entiers (« prime », pas « imprimer ») et au pluriel aussi, une négation
 # retirée d'abord : « que ce site ne retient pas », « Park ne la retient pas » ne disent pas ce qui s'applique, ni « les
-# valeurs à appliquer ».
-APPLIQUE = re.compile(r"\b(?:s'appliquent|s'applique|retient|retenu|retenue|s'impose|s'imposent|prime|priment)\b")
-NEGATION = re.compile(r"\b(?:ne|n')\s?(?:\w+\s){0,2}?(?:s'appliquent|s'applique|applique|appliquent|retient|retiennent|"
-                      r"retenu|prime|priment|s'impose|s'imposent)\b")
+# valeurs à appliquer », ni « Shimano ne dit pas laquelle s'applique ». « Ce site applique… » compte, comme dans les
+# encadrés de Montage et Tubeless ; le « ne » d'une négation est un mot entier (pas celui de « neuve »).
+APPLIQUE = re.compile(r"\b(?:s'appliquent|s'applique|applique|appliquent|retient|retenu|retenue|s'impose|s'imposent|prime"
+                      r"|priment)\b")
+NEGATION = re.compile(r"(?:\bne\b|\bn')\s?(?:[\w']+\s){0,4}?(?:s'appliquent|s'applique|applique|appliquent|retient|"
+                      r"retiennent|retenu|prime|priment|s'impose|s'imposent)\b")
 
 
 def dit_ce_qui_s_applique(texte):
@@ -1996,17 +1998,28 @@ class TestTransmission(PasAPas, unittest.TestCase):
                                     "Une coupe ne se rattrape pas"),
                 "Passe toutes les vitesses": ("Your fingers can be seriously injured if caught", "doigts")},
             "transmission-cassette": {
+                # I2 de la relecture finale : la roue reste déposée des étapes 2 à 11 ; la cale et le levier de frein
+                # sont dans le corps de l'étape qui la dépose, la cale retirée dans celle qui la remonte.
+                "Dépose la roue arrière": ("it is recommended that pad spacers are installed",
+                                           "Do not depress the brake lever while the wheel is removed",
+                                           "the pistons will protrude further than normal", "cale de plaquettes",
+                                           "n'actionne pas le levier de frein", "pas celui de l'axe"),
                 "Mets des gants et des lunettes": ("wear gloves and eye protection",
                                                    "A sudden release of resistance on the lock ring may cause serious injury"),
                 "Dévisse le contre-écrou": ("wear gloves and eye protection", "gradually apply force", "Gants et lunettes"),
                 "Engage le TL-LR021": ("Keep TL-LR021 perpendicular to the smallest sprocket during use",),
-                "Remonte la roue": ("Roue arrière décollée du sol", "Your fingers can be seriously injured if caught")},
+                "Remonte la roue": ("Retire la cale de plaquettes", "Roue arrière décollée du sol",
+                                    "Your fingers can be seriously injured if caught")},
             "transmission-reglage": {
                 "Dans E-TUBE PROJECT Cyclist": ("The rear derailleur does not shift when connected",),
                 "Roue arrêtée": ("with the wheels stopped", "Your fingers can be seriously injured if caught"),
                 "Appuie sur X": ("Your fingers can be seriously injured if caught",),
-                "Butée basse": ("the wheel may lock", "The battery level drops quickly"),
-                "Butée haute": ("The chain will become derailed from the sprocket",),
+                # O3 : les étapes 9, 12 et 13 font bouger le galet ou passer le dérailleur, manivelle en main.
+                "Appuie 5 fois sur Y": ("Your fingers can be seriously injured if caught", "doigts"),
+                "Butée basse": ("the wheel may lock", "The battery level drops quickly", "Roue arrière décollée du sol",
+                                "Your fingers can be seriously injured if caught"),
+                "Butée haute": ("The chain will become derailed from the sprocket", "Roue arrière décollée du sol",
+                                "Your fingers can be seriously injured if caught"),
                 "Passe sur le 45 dents": ("Roue arrière décollée du sol", "Your fingers can be seriously injured if caught"),
                 "Passe toutes les vitesses": ("Roue arrière décollée du sol",
                                               "Your fingers can be seriously injured if caught"),
@@ -2017,7 +2030,14 @@ class TestTransmission(PasAPas, unittest.TestCase):
                 for mot in mots:
                     self.assertIn(mot, corps, f"{ident}, {debut} : {mot}")
         self.assertIn("Gants et lunettes de protection", self.par_id["transmission-cassette"].outils)
+        self.assertIn("Cale de plaquettes (2.2)", self.par_id["transmission-cassette"].outils)
         self.assertIn("Lunettes de protection", self.par_id["transmission-chaine"].outils)
+        # La consigne de la roue déposée vient du DM-GADBR01 en HTML, recopiée au relevé ; 2.2 et 1.5 la donnent aussi.
+        depose = self.par_id["transmission-cassette"].section
+        for lien in ("https://si.shimano.com/en/dm/GADBR01/TO_ENSURE_SAFETY", "#freins-disques", "#montage-roues"):
+            self.assertIn(f'href="{lien}"', depose.html(), lien)
+        self.assertIn("https://si.shimano.com/en/dm/GADBR01/TO_ENSURE_SAFETY", self.releve)
+        self.assertIn("Do not depress the brake lever while the wheel is removed.", self.releve)
 
     def test_etapes_lisibles(self):
         # Une étape tient sur un écran du mode pas à pas : au plus 1 600 caractères de corps, et du français autour des
@@ -2062,6 +2082,7 @@ class TestTransmission(PasAPas, unittest.TestCase):
         ("transmission-chaine", "plus l'attache (étape 5)", "transmission-chaine", {5: "Trouve le point zéro"}),
         ("transmission-chaine", "du DM-MARD011 (étape 5)", "transmission-chaine", {5: "Trouve le point zéro"}),
         ("transmission-cassette", "(1.5), à l'étape 1", "transmission-cassette", {1: "Dépose la roue arrière"}),
+        ("transmission-cassette", "posée à l'étape 1", "transmission-cassette", {1: "Dépose la roue arrière"}),
         ("transmission-cassette", "en place (étape 2)", "transmission-cassette", {2: "Mets des gants"}),
         ("transmission-cassette", "à leur place (étape 6)", "transmission-cassette", {6: "Sors la cassette"}),
         ("transmission-cassette", "Shimano de l'étape 11", "transmission-cassette", {11: "Serre le contre-écrou"}),
@@ -2070,6 +2091,8 @@ class TestTransmission(PasAPas, unittest.TestCase):
         ("transmission-reglage", "passe à l'étape 2", "transmission-reglage", {2: "Contrôle la plaque de butée"}),
         ("transmission-reglage", "contre sa butée (étape 2)", "transmission-reglage", {2: "Contrôle la plaque de butée"}),
         ("transmission-reglage", "manette de VTT (étape 7)", "transmission-reglage", {7: "Roue arrêtée"}),
+        ("transmission-reglage", "comme le (A) de l'étape 7", "transmission-reglage", {7: "Roue arrêtée"}),
+        ("transmission-reglage", "que celle de l'étape 8", "transmission-reglage", {8: "Appuie sur X"}),
         ("transmission-reglage", "reviens en mode réglage (étape 7)", "transmission-reglage", {7: "Roue arrêtée"}),
         ("transmission-reglage", "du dérailleur suffit (étape 7)", "transmission-reglage", {7: "Roue arrêtée"}),
         ("transmission-reglage", "celle des étapes 6 à 9", "transmission-reglage",
@@ -2254,12 +2277,16 @@ class TestTransmission(PasAPas, unittest.TestCase):
         self.assertGreaterEqual(sum(len(self.notes(a.id, "Contradiction")) for a in self.ch.ateliers), 17)
         # Le contrôle lui-même : une négation, « à appliquer » ou un mot qui contient « prime » ne comptent pas ; les
         # pluriels comptent.
+        # N4 de task-1-rereview.md : le « ne » de « neuve » n'est pas une négation, « Ce site applique » compte (la
+        # tournure de Montage et Tubeless), et « ne dit pas laquelle s'applique » ne dit pas ce qui s'applique.
         for faux in ("Park Tool donne sa valeur, que ce site ne retient pas.", "Park ne la retient pas.",
                      "ce site n'applique pas cette valeur", "les valeurs à appliquer sont dans le tableau",
-                     "une page à imprimer"):
+                     "une page à imprimer", "Shimano ne dit pas laquelle s'applique.",
+                     "Canyon ne précise pas ce qui s'applique.", "Ce site n'applique ni l'une ni l'autre."):
             self.assertFalse(dit_ce_qui_s_applique(faux), faux)
         for vrai in ("La plage Shimano s'applique.", "les figures s'appliquent", "Ces consignes priment.",
-                     "120 kg s'imposent", "Ce site retient de 2 à 5 secondes."):
+                     "120 kg s'imposent", "Ce site retient de 2 à 5 secondes.", "La règle de la chaîne neuve s'applique.",
+                     "Ce site applique le guide Canyon.", "Les deux textes s'appliquent, la notice d'abord."):
             self.assertTrue(dit_ce_qui_s_applique(vrai), vrai)
 
     def test_a_lire_a_la_livraison(self):
@@ -2380,6 +2407,72 @@ class TestTransmission(PasAPas, unittest.TestCase):
         for mot in ("sens inverse des aiguilles d'une montre", "lecture de la figure par ce site"):
             self.assertIn(mot, devisse, mot)
         self.assertIn("l'outil tourne dans le sens inverse des aiguilles d'une montre", self.releve)
+
+    def test_vague_finale(self):  # final-review.md (I1, M1, M2) et points parqués (vague-finale-parquee.md)
+        # I1. Le (X) et le (Y) du DM-MARD011 sont dessinés sur une manette de VTT : les palettes X et Y de la ST-RX825
+        # en mode réglage sont une déduction de ce site, dite dans le corps des étapes 8 et 9, avec le contrôle du sens
+        # que Shimano rend possible ; de même au relevé.
+        x = self.corps("transmission-reglage", "Appuie sur X")
+        for mot in ("dessiné sur une manette de VTT", "comme le (A) de l'étape 7", "déduction de ce site",
+                    "so that you can check the adjustment direction", "le galet doit aller vers le 28 dents",
+                    "prends l'autre palette"):
+            self.assertIn(mot, x, mot)
+        y = self.corps("transmission-reglage", "Appuie 5 fois sur Y")
+        for mot in ("l'autre palette que celle de l'étape 8", "déduction de ce site", "le galet doit aller vers le petit "
+                    "pignon"):
+            self.assertIn(mot, y, mot)
+        self.assertNotIn("En mode réglage, [X] et [Y] de la manette droite déplacent le galet", self.releve)
+        for mot in ("En mode réglage, ce que font [X] et [Y] de la ST-RX825 : **non publié**",
+                    "Déduction de ce relevé : (X) est la palette [X] de la manette droite",
+                    "so that you can check the adjustment direction"):
+            self.assertIn(mot, self.releve, mot)
+        # M1. Deux pannes de charge, chacune avec ses remèdes : l'adaptateur de 1,5 A ne répond qu'au voyant d'erreur.
+        (charge,) = [texte_de(q) for q in dom.selectionner(self.par_id["transmission-depannage"].section, "div.q")
+                     if texte_de(q).startswith("La batterie ne charge pas")]
+        for mot in ("Is the USB cable connected securely?", "check whether the USB cable is damaged",
+                    "Replace the battery with a new one.", "but this is normal",
+                    "The current may be insufficient for charging."):
+            self.assertIn(mot, charge, mot)
+        self.assertNotIn("Il faut un adaptateur", charge)
+        self.assertNotIn("« Cannot charge. » et", charge.replace("\xa0", " "))
+        erreur = charge.index("The error indicator flashes while charging.")
+        self.assertLess(charge.index("but this is normal"), erreur)
+        self.assertLess(erreur, charge.index("higher than 1.5\xa0A"))
+        self.assertIn("« Cannot charge. » : « Is the USB cable connected securely? »", self.releve)
+        self.assertNotIn("« Cannot charge. » et « The error indicator flashes while charging. »", self.releve)
+        # M2. Deux lectures signalées : le bleu clignotant d'un appui trop court, sa sortie non publiée ; le type GS.
+        mode = self.corps("transmission-reglage", "Roue arrêtée")
+        self.assertIn("lecture du tableau de Shimano par ce site", mode)
+        self.assertRegex(mode, r"sortir[^.]*non publié")
+        self.assertNotIn("recommence", mode)
+        self.assertIn("le type GS est le tien (lecture de ce site)", self.texte_atelier("transmission-di2"))
+        self.assertIn("le tien est GS (lecture de ce site", self.corps("transmission-reglage", "Dans E-TUBE PROJECT"))
+        # Parqué. Le sens de dépose du contre-écrou : vu du côté du 9 dents, à confirmer sur la pièce.
+        devisse = self.corps("transmission-cassette", "Dévisse le contre-écrou")
+        for mot in ("du côté du 9 dents", "à confirmer sur la pièce", "lecture de la figure par ce site"):
+            self.assertIn(mot, devisse, mot)
+        self.assertIn("petit pignon vers le lecteur", self.releve)
+        self.assertIn("à confirmer sur la pièce, la cassette vue du côté du petit pignon", self.releve)
+        # N1 à N3. Le maillon intérieur des figures, le point zéro, et le total épelé.
+        compte = self.corps("transmission-chaine", "Compte les maillons")
+        for mot in ("bleu clair", "orange", "lecture de ce site"):
+            self.assertIn(mot, compte, mot)
+        mesure = self.corps("transmission-chaine", "Trouve le point zéro")
+        self.assertNotIn("un bout de la chaîne, un maillon intérieur, s'arrête au point zéro", mesure)
+        for mot in ("le brin qui arrive par le 45 dents s'arrête au point zéro", "juste en dessous",
+                    "plus 5 ou 6, plus 1 pour l'attache"):
+            self.assertIn(mot, mesure, mot)
+        # N5. La fermeture de la MLP-1.2, mot pour mot.
+        ferme = self.corps("transmission-chaine", "Ferme l'attache")
+        self.assertNotIn("écartant", ferme)
+        self.assertIn("en tirant les poignées", ferme)
+        # Réserves : « sans fil » pour [UPDATE AVAILABLE] ; les lunettes « pour l'entretien », sans « tout ».
+        releve = " ".join(texte_de(li) for li in dom.selectionner(self.par_id["transmission-di2"].section, "ul.check > li"))
+        self.assertIn("Pour tes manettes, reliées sans fil, l'absence", releve)
+        self.assertNotIn("pour tout l'entretien", self.texte_complet())
+        # O2. La graisse Shimano du relevé : l'axe B seulement, la manivelle sans graisse nommée.
+        self.assertNotIn("(manivelle, axe B)", self.releve)
+        self.assertIn("Shimano cite « Premium Grease(Y04110000) » pour l'axe B (6.7)", self.releve)
 
     def test_texte_conserve(self):
         # Comme pour Freins, Montage et Tubeless : les deux colonnes de chaque page gardent tout le texte du source.
