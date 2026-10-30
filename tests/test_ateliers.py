@@ -403,6 +403,39 @@ def verifier_texte_conserve(test, ateliers_du_chapitre):
                     test.assertIn(e.texte(), texte, f"{selecteur} : {e.texte()[:60]}")
 
 
+def verifier_blocs_par_type(test, ateliers_du_chapitre):
+    """Une fiche « comprendre » n'a aucun bloc de gestes, les autres types les ont tous. Chacune a sa vidéo, sous un
+    seul h4 « Vidéo » ou « Vidéos », et aucune des deux colonnes de sa page n'a de contenu caché."""
+    for a in ateliers_du_chapitre:
+        with test.subTest(a.id):
+            presents = [g for g in GESTES if dom.selectionner(a.section, g)]
+            test.assertEqual(presents, [] if a.type == "comprendre" else list(GESTES))
+            test.assertTrue(dom.selectionner(a.section, "ul.media") + dom.selectionner(a.section, "p.a-video"))
+            videos = [h for h in elements(a.section) if h.tag == "h4" and h.texte() in ateliers.VIDEO]
+            test.assertEqual(len(videos), 1)
+            if a.type != "comprendre":
+                test.assertTrue(a.outils and a.etapes and a.demonter)
+                test.assertEqual(len(dom.selectionner(a.section, "ol.steps")), 1)
+            gauche, droite = ateliers.colonnes(a)
+            test.assertEqual(dom.selectionner(dom.analyser(gauche + droite), "[hidden]"), [])
+
+
+def verifier_abreviations(test, ateliers_du_chapitre, developpements, sans_casse=()):
+    """Chaque atelier devient sa propre page : une abréviation y est développée avant ou juste après sa première
+    apparition, liens compris. Chaque abréviation de `developpements` apparaît au moins une fois dans le chapitre ;
+    celles de `sans_casse` se cherchent sans tenir compte de la casse (« psi » comme « PSI »)."""
+    vues = set()
+    for a in ateliers_du_chapitre:
+        texte = texte_de(a.section)
+        for abr, dev in developpements.items():
+            m = re.search(r"\b" + abr + r"\b", texte, re.I if abr in sans_casse else 0)
+            if m:
+                vues.add(abr)
+                i = texte.find(dev)
+                test.assertTrue(0 <= i <= m.start() + 40, f"{a.id} : {abr}")
+    test.assertEqual(vues, set(developpements))
+
+
 class TestMontage(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -446,19 +479,7 @@ class TestMontage(unittest.TestCase):
                 self.assertEqual((a.de, a.vers), (None, None), a.id)
 
     def test_blocs_par_type(self):
-        # Une fiche « comprendre » n'a aucun bloc de gestes, les autres types les ont tous. Chacune a sa vidéo.
-        for a in self.ch.ateliers:
-            with self.subTest(a.id):
-                presents = [g for g in GESTES if dom.selectionner(a.section, g)]
-                self.assertEqual(presents, [] if a.type == "comprendre" else list(GESTES))
-                self.assertTrue(dom.selectionner(a.section, "ul.media") + dom.selectionner(a.section, "p.a-video"))
-                videos = [h for h in elements(a.section) if h.tag == "h4" and h.texte() in ateliers.VIDEO]
-                self.assertEqual(len(videos), 1)
-                if a.type != "comprendre":
-                    self.assertTrue(a.outils and a.etapes and a.demonter)
-                    self.assertEqual(len(dom.selectionner(a.section, "ol.steps")), 1)
-                gauche, droite = ateliers.colonnes(a)
-                self.assertEqual(dom.selectionner(dom.analyser(gauche + droite), "[hidden]"), [])
+        verifier_blocs_par_type(self, self.ch.ateliers)
 
     def test_figures_3d(self):
         attendu = {"montage-avant": ["torque"], "montage-cintre": ["cockpit"], "montage-roues": ["axle"],
@@ -956,19 +977,10 @@ class TestMontage(unittest.TestCase):
     def test_abreviations_par_page(self):
         # Chaque atelier devient sa propre page : une abréviation y est développée avant ou juste après sa première
         # apparition, liens compris.
-        developpements = {"QSG": "guide de démarrage Canyon", "RWS": "système d'axe à levier de DT Swiss",
-                          "PDF": "Portable Document Format", "ASTM": "American Society for Testing and Materials",
-                          "SPD": "système de cales Shimano", "DM": "Dealer's Manual", "UM": "User's Manual"}
-        vues = set()
-        for a in self.ch.ateliers:
-            texte = texte_de(a.section)
-            for abr, dev in developpements.items():
-                m = re.search(r"\b" + abr + r"\b", texte)
-                if m:
-                    vues.add(abr)
-                    i = texte.find(dev)
-                    self.assertTrue(0 <= i <= m.start() + 40, f"{a.id} : {abr}")
-        self.assertEqual(vues, set(developpements))
+        verifier_abreviations(self, self.ch.ateliers, {
+            "QSG": "guide de démarrage Canyon", "RWS": "système d'axe à levier de DT Swiss",
+            "PDF": "Portable Document Format", "ASTM": "American Society for Testing and Materials",
+            "SPD": "système de cales Shimano", "DM": "Dealer's Manual", "UM": "User's Manual"})
 
     def test_texte_conserve(self):
         # Comme pour Freins : les deux colonnes de chaque page gardent tout le texte du source.
@@ -1018,7 +1030,23 @@ def lignes_tubeless(racine):
     return lignes_de(racine, questions=True)
 
 
-class TestTubeless(unittest.TestCase):
+class PasAPas:
+    """Les étapes d'un chapitre comme les montre le mode pas à pas, pour une classe de test qui a `par_id`."""
+
+    def etapes_de(self, ident):
+        """Les étapes d'un atelier : (titre, corps), le corps sans le titre, comme le montre le mode pas à pas."""
+        return [(texte_de(dom.selectionner(li, "p.st-t")[0]),
+                 " ".join(texte_de(e) for e in elements(li) if "st-t" not in e.classes()))
+                for li in dom.selectionner(self.par_id[ident].section, "ol.steps > li")]
+
+    def corps(self, ident, debut):
+        """Le corps de la seule étape de l'atelier dont le titre commence par `debut`."""
+        trouvees = [c for t, c in self.etapes_de(ident) if t.startswith(debut)]
+        self.assertEqual(len(trouvees), 1, f"{ident} : {debut} : {[t for t, _ in self.etapes_de(ident)]}")
+        return trouvees[0]
+
+
+class TestTubeless(PasAPas, unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.source = TUBELESS.read_text(encoding="utf-8")
@@ -1057,18 +1085,6 @@ class TestTubeless(unittest.TestCase):
                      for e in dom.selectionner(self.section, f"[{nom}]")]
         return self.lignes() + aria_labels(self.section) + titres + attributs
 
-    def etapes_de(self, ident):
-        """Les étapes d'un atelier : (titre, corps), le corps sans le titre, comme le montre le mode pas à pas."""
-        return [(texte_de(dom.selectionner(li, "p.st-t")[0]),
-                 " ".join(texte_de(e) for e in elements(li) if "st-t" not in e.classes()))
-                for li in dom.selectionner(self.par_id[ident].section, "ol.steps > li")]
-
-    def corps(self, ident, debut):
-        """Le corps de la seule étape de l'atelier dont le titre commence par `debut`."""
-        trouvees = [c for t, c in self.etapes_de(ident) if t.startswith(debut)]
-        self.assertEqual(len(trouvees), 1, f"{ident} : {debut} : {[t for t, _ in self.etapes_de(ident)]}")
-        return trouvees[0]
-
     def test_chapitre(self):
         self.assertEqual(self.ch.id, "tubeless")
         self.assertEqual((self.section.tag, self.section.classes()), ("section", ["chapter"]))
@@ -1103,19 +1119,7 @@ class TestTubeless(unittest.TestCase):
                 self.assertEqual((a.de, a.vers), (None, None), a.id)
 
     def test_blocs_par_type(self):
-        # Une fiche « comprendre » n'a aucun bloc de gestes, les autres types les ont tous ; chacune a sa vidéo.
-        for a in self.ch.ateliers:
-            with self.subTest(a.id):
-                presents = [g for g in GESTES if dom.selectionner(a.section, g)]
-                self.assertEqual(presents, [] if a.type == "comprendre" else list(GESTES))
-                self.assertTrue(dom.selectionner(a.section, "ul.media") + dom.selectionner(a.section, "p.a-video"))
-                videos = [h for h in elements(a.section) if h.tag == "h4" and h.texte() in ateliers.VIDEO]
-                self.assertEqual(len(videos), 1)
-                if a.type != "comprendre":
-                    self.assertTrue(a.outils and a.etapes and a.demonter)
-                    self.assertEqual(len(dom.selectionner(a.section, "ol.steps")), 1)
-                gauche, droite = ateliers.colonnes(a)
-                self.assertEqual(dom.selectionner(dom.analyser(gauche + droite), "[hidden]"), [])
+        verifier_blocs_par_type(self, self.ch.ateliers)
 
     def test_figures_3d(self):
         # Les deux pièces de la tâche 2 : leurs légendes et leurs aria-label ne portent que des valeurs du relevé.
@@ -1666,24 +1670,645 @@ class TestTubeless(unittest.TestCase):
     def test_abreviations_par_page(self):
         # Chaque atelier devient sa propre page : une abréviation y est développée avant ou juste après sa première
         # apparition, liens compris.
-        developpements = {"TLR": "Tubeless Ready", "TLE": "Tubeless Easy", "TSS": "Tubeless Straight Side",
-                          "ETRTO": "European Tyre and Rim Technical Organization", "psi": "livres par pouce carré",
-                          "CO2": "dioxyde de carbone", "QSG": "guide de démarrage Canyon",
-                          "PDF": "Portable Document Format", "FAQ": "foire aux questions",
-                          "lbs": "livres anglo-saxonnes"}
-        vues = set()
-        for a in self.ch.ateliers:
-            texte = texte_de(a.section)
-            for abr, dev in developpements.items():
-                m = re.search(r"\b" + abr + r"\b", texte, re.I if abr == "psi" else 0)
-                if m:
-                    vues.add(abr)
-                    i = texte.find(dev)
-                    self.assertTrue(0 <= i <= m.start() + 40, f"{a.id} : {abr}")
-        self.assertEqual(vues, set(developpements))
+        verifier_abreviations(self, self.ch.ateliers, {
+            "TLR": "Tubeless Ready", "TLE": "Tubeless Easy", "TSS": "Tubeless Straight Side",
+            "ETRTO": "European Tyre and Rim Technical Organization", "psi": "livres par pouce carré",
+            "CO2": "dioxyde de carbone", "QSG": "guide de démarrage Canyon", "PDF": "Portable Document Format",
+            "FAQ": "foire aux questions", "lbs": "livres anglo-saxonnes"}, sans_casse=("psi",))
 
     def test_texte_conserve(self):
         # Comme pour Freins et Montage : les deux colonnes de chaque page gardent tout le texte du source.
+        verifier_texte_conserve(self, self.ch.ateliers)
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Chapitre 4, Transmission : relu depuis son fragment, hors publication (le lot 4 reste « à faire »)
+# ---------------------------------------------------------------------------------------------------------------
+
+TRANSMISSION = RACINE / "src" / "parts" / "40-transmission.html"
+RELEVE_TRANSMISSION = RACINE / "docs" / "recherche" / "transmission-cf8-di2.md"
+# Le relevé du lot 4 renvoie aux relevés de base déjà vérifiés (« Base déjà vérifiée, non refaite ») sans les recopier :
+# une adresse du chapitre peut venir de l'un d'eux.
+RELEVES_DE_BASE = tuple(RACINE / "docs" / "recherche" / nom
+                        for nom in ("sources-cf8-di2.md", "montage-cf8-di2.md", "composants-origine.md"))
+# Les documents des fabricants des pièces, des produits et des outils de Lamine, et les vidéos de leurs chaînes.
+OFFICIELS_TRANSMISSION = {"si.shimano.com", "productinfo.shimano.com", "bike.shimano.com", "www.canyon.com",
+                          "www.sram.com", "motorex.com", "muc-off.com", "www.parktool.com", "www.pbswisstools.com",
+                          "www.youtube.com"}
+# Un couple écrit au format du site : « 10-12 Nm », « 0,7-1,5 Nm », « 25 Nm ». Le site n'écrit jamais N·m.
+# Sans \b final : dans une ligne de tableau, le texte d'une cellule se colle à la suivante (« 10-12 NmTW-6.2 »).
+COUPLE = re.compile(r"(?<![\d.,])\d+(?:[.,]\d+)?(?:-\d+(?:[.,]\d+)?)?\u00a0Nm")
+AIDE_3D = ("Touche un numéro pour repérer la pièce. Un numéro peut se dessiner par-dessus une pièce qui cache la "
+           "sienne\xa0: fais tourner la pièce, ou lis la liste numérotée sous la figure.")
+# La valeur ou la consigne appliquée, en mots entiers (« prime », pas « imprimée »), une négation retirée d'abord
+# (« que ce site ne retient pas » ne dit pas ce qui s'applique).
+APPLIQUE = re.compile(r"\b(?:s'appliquent|s'applique|retient|retenu|appliqu\w*|s'impose|prime)\b")
+NEGATION = re.compile(r"\b(?:ne|n') ?(?:s'appliquent|s'applique|retient|retenu|prime|s'impose)\b")
+
+
+def dit_ce_qui_s_applique(texte):
+    return bool(APPLIQUE.search(NEGATION.sub("", texte)))
+
+
+class TestTransmission(PasAPas, unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.source = TRANSMISSION.read_text(encoding="utf-8")
+        cls.releve = RELEVE_TRANSMISSION.read_text(encoding="utf-8")
+        cls.releves = "\n".join([cls.releve] + [f.read_text(encoding="utf-8") for f in RELEVES_DE_BASE])
+        cls.ch = ateliers.relever_chapitre(cls.source)
+        cls.par_id = {a.id: a for a in cls.ch.ateliers}
+        cls.section = cls.ch.tete.parent
+
+    def texte_complet(self):
+        return texte_de(self.section)
+
+    def texte_atelier(self, ident):
+        return texte_de(self.par_id[ident].section)
+
+    def lignes(self):
+        """Les lignes du chapitre, questions des fiches « comprendre » comprises."""
+        return lignes_de(self.section, questions=True)
+
+    def notes(self, ident, debut):
+        """Les encadrés de l'atelier dont le titre commence par `debut`."""
+        return [n for n in dom.selectionner(self.par_id[ident].section, "aside.note")
+                if texte_de(dom.selectionner(n, "p.note-t")[0]).startswith(debut)]
+
+    def test_chapitre(self):
+        self.assertEqual(self.ch.id, "transmission")
+        self.assertEqual((self.section.tag, self.section.classes()), ("section", ["chapter"]))
+        (num,) = dom.selectionner(self.ch.tete, "p.ch-num")
+        self.assertEqual(num.texte(), "Chapitre 4 · Transmission")
+        self.assertEqual(dom.selectionner(self.ch.tete, "h2")[0].texte(), "Transmission")
+        ids = [e.get("id") for e in dom.selectionner(dom.analyser(self.source), "[id]")]
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertEqual(sorted(self.ch.resumes), ["couples"])
+        # L'en-tête, seul sur la page de la catégorie, développe ses abréviations et dit les travaux d'atelier.
+        tete = texte_de(self.ch.tete)
+        for mot in ("UDH (Universal Derailleur Hanger", "DM (Dealer's Manual", "UM (User's Manual",
+                    "Nm (newton-mètre)", "travaux d'atelier"):
+            self.assertIn(mot, tete, mot)
+
+    def test_non_publie(self):
+        # Le lot 4 reste « à faire » : la tâche 3 le publiera, avec la zone de la chaîne et les trois pièces 3D.
+        config = json.loads((RACINE / "build" / "lots.json").read_text(encoding="utf-8"))
+        (lot,) = [l for l in config["lots"] if l["lot"] == 4]
+        self.assertEqual((lot["statut"], lot["parts"], lot["categorie"]["id"]),
+                         ("à faire", ["40-transmission"], "transmission"))
+
+    def test_ateliers_ids_types_zones(self):
+        self.assertEqual([(a.id, a.num, a.type, a.zone) for a in self.ch.ateliers], [
+            ("transmission-di2", "4.1", "comprendre", "derailleur"),
+            ("transmission-nettoyer", "4.2", "entretenir", "chaine"),
+            ("transmission-usure", "4.3", "entretenir", "chaine"),
+            ("transmission-chaine", "4.4", "remplacer", "chaine"),
+            ("transmission-cassette", "4.5", "entretenir", "chaine"),
+            ("transmission-reglage", "4.6", "regler", "derailleur"),
+            ("transmission-patte", "4.7", "comprendre", "derailleur"),
+            ("transmission-pedalier", "4.8", "comprendre", "pedalier"),
+            ("transmission-depannage", "4.9", "comprendre", "derailleur")])
+        self.assertEqual([normaliser(a.titre) for a in self.ch.ateliers], [
+            "Ta transmission Di2", "Nettoyer et lubrifier la chaîne", "Mesurer l'usure de la chaîne",
+            "Remplacer la chaîne", "Démonter et remonter la cassette", "Régler le dérailleur Di2", "La patte UDH",
+            "Pédalier et boîtier", "Dépannage Di2"])
+
+    def test_remplacer_chaine(self):
+        c = self.par_id["transmission-chaine"]
+        self.assertEqual((c.de, c.vers), ("CN-M8100 usée", "CN-M8100 neuve et attache SM-CN910-12 neuve"))
+        for a in self.ch.ateliers:
+            if a.id != "transmission-chaine":
+                self.assertEqual((a.de, a.vers), (None, None), a.id)
+
+    def test_blocs_par_type(self):
+        verifier_blocs_par_type(self, self.ch.ateliers)
+
+    def test_figures_3d(self):
+        # Les trois pièces de la tâche 2 : leurs légendes et leurs aria-label ne portent que des valeurs du relevé.
+        attendu = {"transmission-chaine": ["chain"], "transmission-cassette": ["cassette"],
+                   "transmission-reglage": ["derailleur"]}
+        mots = {"chain": ("CN-M8100", "SM-CN910-12", "face marquée", "maillons intérieurs", "sens de rotation",
+                          "neuve", "CC-3.2", "0.5", "approch"),
+                "cassette": ("CS-M8200-12", "9-45", "MICRO SPLINE", "contre-écrou", "TL-LR021", "fouet",
+                             "9, 11 et 13", "30-50\xa0Nm", "approch"),
+                "derailleur": ("RD-M8250-GS", "BT-DN320", "UDH", "10-12\xa0Nm", "vis B", "butées", "13 dents",
+                               "jaune fixe", "approch")}
+        releve = self.releve.replace(",", ".")
+        for a in self.ch.ateliers:
+            with self.subTest(a.id):
+                self.assertEqual(a.modeles, attendu.get(a.id, []))
+                for figure in dom.selectionner(a.section, "figure.v3d"):
+                    (scene,) = dom.selectionner(figure, "div.v3d-stage")
+                    self.assertEqual(scene.get("role"), "img")
+                    (legende,) = dom.selectionner(figure, "figcaption")
+                    self.assertTrue(legende.texte().startswith(f"3D {a.num}"), legende.texte())
+                    self.assertIn(AIDE_3D, texte_de(legende))
+                    textes = [normaliser(scene.get("aria-label")), texte_de(legende)]
+                    for mot in mots[figure.get("data-model")]:
+                        for t in textes:
+                            self.assertIn(mot, t, mot)
+                    # Chaque nombre, hors du numéro de la figure, est un nombre du relevé.
+                    for t in textes:
+                        for n in re.findall(_N, t.replace(f"3D {a.num}", "")):
+                            self.assertIn(n.replace(",", "."), releve, f"{n} : {t[:80]}")
+
+    def test_valeurs_du_releve(self):
+        t = {a.id: self.texte_atelier(a.id) for a in self.ch.ateliers}
+        for ident, valeurs in {
+            "transmission-di2": ("RD-M8250-GS", "BT-DN320", "ST-RX825-R", "BL-RX825-L", "CS-M8200-12", "9-45",
+                                 "9-11-13-15-17-19-21-24-28-33-39-45T", "CN-M8100", "138 Links", "SM-CN910-12",
+                                 "FC-RX820-1", "40 dents", "165\xa0mm", "SM-BB72-41B", "86,5\xa0mm", "Total capacity 36T",
+                                 "C-473", "Di2 with BT-DN320", "E-BIKE", "GS type", "[Shifting/Adj. mode]",
+                                 "does not support wired shifting", "over a month", "R126-01"),
+            "transmission-nettoyer": ("neutral detergent", "Never use alkali- or acid-based solvents",
+                                      "Wash the bicycle with the battery installed", "CM-5.3", "59\xa0mL",
+                                      "thirty revolutions", "three passes", "lint-free cloth", "Bio Drivetrain Cleaner",
+                                      "CHAINLUBE FOR WET CONDITIONS", "Avoid contact with the brakes",
+                                      "AFTER EVERY RIDE"),
+            "transmission-usure": ("CC-3.2", "0.5 stamp", "0,5\xa0%", "completely fall into the chain", "TL-CN42",
+                                   "AFTER 6 MONTHS", "SEE A MECHANIC IF NECESSARY", "non vérifié"),
+            "transmission-chaine": ("QUICK-LINK + 5 links", "QUICK-LINK + 6 links", "TL-CN10", "MLP-1.2", "CT-3.3",
+                                    "138 maillons", "rotation direction of the crank", "between the inner links",
+                                    "Do not reuse a QUICK-LINK", "front (outer side)", "floating shelf"),
+            "transmission-cassette": ("TL-LR021", "SR-12.2", "TL-SR24", "30-50\xa0Nm", "40\xa0Nm", "9T", "11T", "13T",
+                                      "wear gloves and eye protection", "perpendicular", "Adjustable wrench",
+                                      "Y0GX01500", "Y0T49809T", "non publié", "combined into a single part"),
+            "transmission-reglage": ("10-12\xa0Nm", "45 dents", "24 dents", "28 dents", "solid yellow",
+                                     "Press shift switch (Y) 5 times", "just touches", "with the wheels stopped",
+                                     "non publié", "[Shifting/Adj. mode]", "GS", "E-BIKE", "TL-RD11"),
+            "transmission-patte": ("25\xa0Nm", "left-hand threaded", "Do NOT apply grease", "1.5\xa0Nm", "TL-RD11",
+                                   "R126-01", "DAG-3", "3\xa0mm"),
+            "transmission-pedalier": ("12-14\xa0Nm", "12-16\xa0Nm", "0,7-1,5\xa0Nm", "35-55\xa0Nm", "100\xa0km", "TL-BB12",
+                                      "TL-BB13", "86.5\xa0mm", "Do not reuse the cups", "FC-RX820", "EVERY MONTH"),
+            "transmission-depannage": ("Solid green: 51 - 100%", "CR1632", "3 years", "E401", "SM-PCE02",
+                                       "[UPDATE AVAILABLE]", "Gear position control", "4.0.0", "1.5\xa0A",
+                                       "The letter \"O\" is not used in the product serial ID."),
+        }.items():
+            for v in valeurs:
+                self.assertIn(normaliser(v), t[ident], f"{ident} : {v}")
+        self.assertIn('href="#montage-di2"', self.par_id["transmission-di2"].section.html())
+        self.assertIn('href="#montage-di2"', self.par_id["transmission-depannage"].section.html())
+
+    def test_aucune_valeur_du_cf7(self):  # Review Focus 1
+        lus = " ".join([self.texte_complet()] + aria_labels(self.section))
+        html = normaliser(self.source)
+        for absent in ("molette", "stabilisateur", "shadow", "gaine", "serre-câble", "cs-m7100", "tl-fc36", "tl-lr15",
+                       "fr-5.2h", "rx822", "rx610", "bb-rs500", "cn-m6100", "dm-gard010", "dm-macs001", "c-454",
+                       "10-45", "10-51", "kit montée", "16-17", "16 - 17", "16 à 17", "38 dents", "y0sr980"):
+            self.assertNotIn(absent, lus.lower(), absent)
+            self.assertNotIn(absent, html.lower(), absent)
+        # Pas de câble sur ce Di2 sans fil : le seul câble du chapitre est celui de la charge, en USB.
+        self.assertEqual(re.findall(r".{0,30}câbles?(?![\s\u00a0]USB)", lus, re.I), [])
+        # Fixation du dérailleur à 10-12 Nm, jamais à 8-10 Nm (ni le serre-câble à 6-7 Nm).
+        for motif in (r"(?<![\d,])8[\s\u00a0]*(?:-|à)[\s\u00a0]*10[\s\u00a0]*Nm", r"(?<![\d,])6[\s\u00a0]*(?:-|à)[\s\u00a0]*7[\s\u00a0]*Nm"):
+            self.assertIsNone(re.search(motif, lus), motif)
+        self.assertIn("10-12\xa0Nm", self.corps("transmission-reglage", "Serre l'axe B"))
+        # « +4/+5 » n'est jamais une règle : il n'est écrit que dans un encadré « Contradiction » qui dit que la méthode
+        # du DM-MARD011 s'applique.
+        quatre = re.compile(r"4/5|\+[\s\u00a0]?4\b|\b4 ou 5\b")
+        vues = 0
+        for ligne in self.lignes():
+            t = texte_de(ligne)
+            if quatre.search(t):
+                vues += 1
+                note = next((p for p in ancetres(ligne) if p.tag == "aside"), None)
+                self.assertIsNotNone(note, t[:120])
+                self.assertTrue(texte_de(dom.selectionner(note, "p.note-t")[0]).startswith("Contradiction"), t[:120])
+                self.assertIn("DM-MARD011", texte_de(note))
+                self.assertIn("s'applique", texte_de(note))
+        self.assertEqual(vues, 1)
+        self.assertIsNone(quatre.search(" ".join(aria_labels(self.section))))
+
+    def test_touche_du_mode_reglage(self):  # Review Focus 2
+        # La touche de la ST-RX825 qui entre en mode réglage n'est pas publiée par défaut : l'étape le dit, renvoie à
+        # E-TUBE PROJECT Cyclist et au bouton de fonction du dérailleur, qui suffit.
+        mode = self.corps("transmission-reglage", "Roue arrêtée, entre en mode réglage")
+        for mot in ("for 2 to 5 seconds", "until the LED turns solid yellow", "bouton de fonction", "non publié",
+                    "E-TUBE PROJECT Cyclist", "[Shifting/Adj. mode]", "with the wheels stopped"):
+            self.assertIn(mot, mode, mot)
+        self.assertRegex(mode, r"manette[^.]*non publié")
+        (note,) = self.notes("transmission-reglage", "La touche du mode réglage")
+        for mot in ("non publié", "[Shifting/Adj. mode]", "Press and hold the shift switch assigned to the mode switch "
+                    "function", "For the setting procedure, contact your place of purchase or a distributor.",
+                    "bouton de fonction du dérailleur suffit"):
+            self.assertIn(mot, texte_de(note), mot)
+        self.assertIn("https://si.shimano.com/en/um/0RM0B/shift_adjust_mode", note.html())
+        # Le « switch (A) » du DM est dessiné sur une manette de VTT : chaque ligne qui le cite le dit.
+        vues = 0
+        for ligne in self.lignes():
+            t = texte_de(ligne)
+            if "switch (A)" in t:
+                vues += 1
+                self.assertIn("VTT", t, t[:120])
+        self.assertGreaterEqual(vues, 2)
+        # Aucune touche de manette n'est donnée pour entrer en mode réglage, ni le bouton du repose-main.
+        texte = self.texte_complet()
+        self.assertIsNone(re.search(r"(?:repose-main|hood button)[^.]{0,80}mode réglage", texte))
+        self.assertIsNone(re.search(r"mode réglage[^.]{0,80}(?:repose-main|hood button)", texte))
+
+    def test_valeur_avec_source_officielle(self):  # Review Focus 3
+        # Toute ligne qui porte un couple à appliquer (span.nm), des maillons à ajouter ou à compter, cite une source
+        # officielle autre que Park Tool, qui ne sert que pour un geste ou pour ses propres outils. Toute ligne qui porte
+        # un couple ou un pourcentage cite au moins une source.
+        vues = dict.fromkeys(("nm", "couple", "%", "maillons"), 0)
+        for ligne in self.lignes():
+            t = texte_de(ligne)
+            hotes = [urlparse(a.get("href")).hostname for a in dom.selectionner(ligne, "a.src")]
+            hors_park = [h for h in hotes if h != "www.parktool.com"]
+            for cle, present, sources in (
+                    ("nm", dom.selectionner(ligne, "span.nm"), hors_park),
+                    ("couple", COUPLE.search(t), hotes),
+                    ("%", re.search(r"\d[\s\u00a0]?%", t), hotes),
+                    ("maillons", re.search(r"\d[\s\u00a0]+(?:maillons|links)\b", t, re.I), hors_park)):
+                if present:
+                    vues[cle] += 1
+                    self.assertTrue(sources, f"{cle} : {t[:160]}")
+        for cle, plancher in {"nm": 14, "couple": 19, "%": 6, "maillons": 5}.items():
+            self.assertGreaterEqual(vues[cle], plancher, cle)
+        # Une proposition ne porte aucun couple à appliquer.
+        for note in dom.selectionner(self.section, "aside.note.prop"):
+            self.assertEqual(dom.selectionner(note, "span.nm"), [], texte_de(note)[:80])
+        # Chaque lien sort vers un document officiel, à son adresse exacte dans les relevés ; chaque renvoi interne vise
+        # un id des chapitres sources.
+        ids = set()
+        for nom in ("11-montage", "20-freins", "30-tubeless", "40-transmission"):
+            ids |= {e.get("id") for e in dom.selectionner(dom.analyser(
+                (RACINE / "src" / "parts" / f"{nom}.html").read_text(encoding="utf-8")), "[id]")}
+        liens = [e for e in dom.selectionner(self.section, "[href]") if e.tag == "a"]
+        self.assertGreaterEqual(len(liens), 500)
+        for a in liens:
+            href = a.get("href")
+            with self.subTest(href):
+                if href.startswith("#"):
+                    self.assertIn(href[1:], ids)
+                    continue
+                self.assertTrue(href.startswith("https://"), href)
+                self.assertIn(urlparse(href).hostname, OFFICIELS_TRANSMISSION, href)
+                self.assertIn(href, self.releves, href)
+                self.assertEqual((a.get("target"), a.get("rel")), ("_blank", "noopener"), href)
+        # Les pages des documents Canyon et SRAM : le guide V02 par sa page ; le manuel route 2021 par sa page imprimée,
+        # puis celle du PDF (deux pages imprimées par page PDF, la paire divisée par 2, plus 2) ; le manuel des roues, page
+        # imprimée plus 1 ; le manuel SRAM, seulement aux pages que le relevé nomme.
+        for a in dom.selectionner(self.section, "a.src"):
+            href, texte = a.get("href"), a.texte()
+            if QSG in href:
+                self.assertRegex(texte, r"^Canyon QSG V02 p\.\d+$")
+            elif "Canyon%20RR" in href:
+                m = re.fullmatch(r"Canyon, manuel route 2021 p\.(\d+)(?:-(\d+))? imprimées? \(PDF p\.(\d+)\)", texte)
+                self.assertIsNotNone(m, texte)
+                paire = int(m.group(1)) - int(m.group(1)) % 2
+                self.assertEqual(int(m.group(3)), paire // 2 + 2, texte)
+            elif MANUEL_ROUES in href:
+                m = re.fullmatch(r"Canyon, manuel des roues p\.(\d+) imprimée \(PDF p\.(\d+)\)", texte)
+                self.assertIsNotNone(m, texte)
+                self.assertEqual(int(m.group(2)), int(m.group(1)) + 1, texte)
+            elif "udh-universal-derailleur-hanger-user-manual" in href:
+                # La page quand le relevé la donne (p.3, p.4, p.11, la figure p.9), la section de pose sinon (p.6 à 9).
+                self.assertRegex(texte, r"^SRAM, manuel UDH(?: p\.(?:3|4|9|11|6-9))?$")
+
+    def test_pas_a_pas_securite(self):  # Review Focus 5
+        # Le mode pas à pas ne montre que le titre et le corps des étapes : chaque avertissement est dans le corps de
+        # l'étape qui en a besoin, pas seulement dans un encadré.
+        for ident, consignes in {
+            "transmission-nettoyer": {
+                "Laisse la batterie dans le dérailleur": ("Wash the bicycle with the battery installed",
+                                                          "Do not clean the bicycle with a high-pressure wash"),
+                "Lubrifie": ("Avoid contact with the brakes", "Otherwise, the brakes will fail!")},
+            "transmission-chaine": {
+                "Ouvre l'ancienne attache": ("Do not reuse a QUICK-LINK that has been removed",
+                                             "lose control of the bicycle and fall", "Jette"),
+                "Pose l'attache SM-CN910-12 neuve": ("be sure to replace the QUICK-LINK with a new one as well",
+                                                    "rotation direction of the crank"),
+                "Ferme l'attache": ("insufficient connecting force may cause chain separation or skip", "TL-CN10",
+                                    "MLP-1.2"),
+                "Contrôle que l'attache": ("as far as they will go", "ne roule pas"),
+                "Passe toutes les vitesses": ("Your fingers can be seriously injured if caught", "doigts")},
+            "transmission-cassette": {
+                "Mets des gants et des lunettes": ("wear gloves and eye protection",
+                                                   "A sudden release of resistance on the lock ring may cause serious injury"),
+                "Dévisse le contre-écrou": ("wear gloves and eye protection", "gradually apply force", "Gants et lunettes"),
+                "Engage le TL-LR021": ("Keep TL-LR021 perpendicular to the smallest sprocket during use",)},
+            "transmission-reglage": {
+                "Dans E-TUBE PROJECT Cyclist": ("The rear derailleur does not shift when connected",),
+                "Roue arrêtée": ("with the wheels stopped", "Your fingers can be seriously injured if caught"),
+                "Appuie sur X": ("Your fingers can be seriously injured if caught",),
+                "Butée basse": ("the wheel may lock", "The battery level drops quickly"),
+                "Butée haute": ("The chain will become derailed from the sprocket",)},
+        }.items():
+            for debut, mots in consignes.items():
+                corps = self.corps(ident, debut)
+                for mot in mots:
+                    self.assertIn(mot, corps, f"{ident}, {debut} : {mot}")
+        self.assertIn("Gants et lunettes de protection", self.par_id["transmission-cassette"].outils)
+
+    def test_etapes_lisibles(self):
+        # Une étape tient sur un écran du mode pas à pas : au plus 1 600 caractères de corps, et du français autour des
+        # citations anglaises (au moins 40 lettres hors citations et liens).
+        nombres = {"transmission-nettoyer": 11, "transmission-usure": 5, "transmission-chaine": 12,
+                   "transmission-cassette": 12, "transmission-reglage": 13}
+        self.assertEqual({a.id: len(a.etapes) for a in self.ch.ateliers if a.etapes}, nombres)
+        for a in self.ch.ateliers:
+            for li in dom.selectionner(a.section, "ol.steps > li"):
+                titre = texte_de(dom.selectionner(li, "p.st-t")[0])
+                with self.subTest(f"{a.num} : {titre}"):
+                    corps = [e for e in elements(li) if "st-t" not in e.classes()]
+                    self.assertLessEqual(len(" ".join(texte_de(e) for e in corps)), 1600)
+                    copie = dom.analyser("".join(e.html() for e in corps))
+                    for lien in dom.selectionner(copie, "a.src"):
+                        lien.retirer()
+                    francais = re.sub(r"[^A-Za-zÀ-ÿ]", "", re.sub(r"«[^»]*»", "", copie.texte()))
+                    self.assertGreaterEqual(len(francais), 40)
+
+    # Chaque renvoi à une étape, dans tout le chapitre : l'atelier qui le porte, le passage, l'atelier visé, et le début
+    # du titre de chaque étape visée. Une étape ajoutée, retirée ou déplacée décale les numéros : le titre ne correspond
+    # plus, et le test échoue.
+    RENVOIS = (
+        ("transmission-di2", "(4.4, étape 1)", "transmission-chaine", {1: "Compte les maillons"}),
+        ("transmission-nettoyer", "dans le dérailleur (étape 1)", "transmission-nettoyer", {1: "Laisse la batterie"}),
+        ("transmission-nettoyer", "(Proposition, étape 2)", "transmission-nettoyer", {2: "Vérifie ton dégraissant"}),
+        ("transmission-nettoyer", "sans haute pression (étape 1)", "transmission-nettoyer", {1: "Laisse la batterie"}),
+        ("transmission-nettoyer", "ou les plaquettes (étape 9)", "transmission-nettoyer", {9: "Lubrifie"}),
+        ("transmission-nettoyer", "de ton produit (étapes 9 à 11)", "transmission-nettoyer", {9: "Lubrifie", 11: "Essuie"}),
+        ("transmission-nettoyer", "MOTOREX s'applique (étapes 9 à 11)", "transmission-nettoyer", {9: "Lubrifie", 11: "Essuie"}),
+        ("transmission-usure", "ce que tu fais est à l'étape 5", "transmission-usure", {5: "Décide"}),
+        ("transmission-usure", "le faire confirmer (étape 5)", "transmission-usure", {5: "Décide"}),
+        ("transmission-chaine", "il te servira à l'étape 5", "transmission-chaine", {5: "Trouve le point zéro"}),
+        ("transmission-chaine", "au nombre noté à l'étape 1", "transmission-chaine", {1: "Compte les maillons"}),
+        ("transmission-chaine", "face marquée dehors (étape 3)", "transmission-chaine", {3: "Repère la face marquée"}),
+        ("transmission-chaine", "Contrôle-la à l'étape 10", "transmission-chaine", {10: "Contrôle que l'attache"}),
+        ("transmission-chaine", "au moindre doute à l'étape 10", "transmission-chaine", {10: "Contrôle que l'attache"}),
+        ("transmission-chaine", "plus l'attache (étape 5)", "transmission-chaine", {5: "Trouve le point zéro"}),
+        ("transmission-chaine", "du DM-MARD011 (étape 5)", "transmission-chaine", {5: "Trouve le point zéro"}),
+        ("transmission-cassette", "(1.5), à l'étape 1", "transmission-cassette", {1: "Dépose la roue arrière"}),
+        ("transmission-cassette", "en place (étape 2)", "transmission-cassette", {2: "Mets des gants"}),
+        ("transmission-cassette", "à leur place (étape 6)", "transmission-cassette", {6: "Sors la cassette"}),
+        ("transmission-cassette", "Shimano de l'étape 11", "transmission-cassette", {11: "Serre le contre-écrou"}),
+        ("transmission-cassette", "(étapes 4 et 11)", "transmission-cassette",
+         {4: "Engage le TL-LR021", 11: "Serre le contre-écrou"}),
+        ("transmission-reglage", "passe à l'étape 2", "transmission-reglage", {2: "Contrôle la plaque de butée"}),
+        ("transmission-reglage", "contre sa butée (étape 2)", "transmission-reglage", {2: "Contrôle la plaque de butée"}),
+        ("transmission-reglage", "manette de VTT (étape 7)", "transmission-reglage", {7: "Roue arrêtée"}),
+        ("transmission-reglage", "reviens en mode réglage (étape 7)", "transmission-reglage", {7: "Roue arrêtée"}),
+        ("transmission-reglage", "du dérailleur suffit (étape 7)", "transmission-reglage", {7: "Roue arrêtée"}),
+        ("transmission-reglage", "celle des étapes 6 à 9", "transmission-reglage",
+         {6: "Passe sur le 24 dents", 9: "Appuie 5 fois sur Y"}),
+        ("transmission-patte", "(4.6, étape 11)", "transmission-reglage", {11: "Passe chaque vitesse"}),
+    )
+
+    def test_renvois_aux_etapes(self):
+        for source, passage, cible, visees in self.RENVOIS:
+            with self.subTest(passage):
+                self.assertIn(passage, self.texte_atelier(source))
+                titres = [normaliser(t) for t, _ in self.etapes_de(cible)]
+                for n, debut in visees.items():
+                    self.assertLessEqual(n, len(titres))
+                    self.assertTrue(titres[n - 1].startswith(debut), f"étape {n} de {cible} : « {titres[n - 1]} »")
+        # Chaque renvoi du chapitre est dans la liste : autant de renvois par atelier (« étape 6.1 » est celle du guide
+        # Canyon, pas un renvoi).
+        motif = re.compile(r"\bétapes? \d+(?!\.\d|\d)(?: (?:et|à) \d+)?")
+        for a in self.ch.ateliers:
+            self.assertEqual(len(motif.findall(self.texte_atelier(a.id))), len([r for r in self.RENVOIS if r[0] == a.id]),
+                             a.id)
+
+    def test_longueur_de_chaine(self):
+        # La règle est la méthode du DM-MARD011, 5 ou 6 maillons plus l'attache ; le nombre de maillons du vélo n'est pas
+        # publié : il se compte sur la chaîne livrée et se note ailleurs que sur ce site.
+        compte = self.corps("transmission-chaine", "Compte les maillons")
+        for mot in ("non publié", "à compter", "ailleurs que sur ce site",
+                    "If you know that the old chain was of the correct length originally"):
+            self.assertIn(mot, compte, mot)
+        mesure = self.corps("transmission-chaine", "Trouve le point zéro")
+        for mot in ("QUICK-LINK + 5 links", "QUICK-LINK + 6 links", "DM-MARD011", "étape 1", "figure",
+                    "use a QUICK-LINK to connect the chain"):
+            self.assertIn(mot, mesure, mot)
+        (note,) = self.notes("transmission-chaine", "Contradiction\xa0: le nombre de maillons")
+        for mot in ("Hard tail bike with QUICK-LINK + 4/5 links", "5 to 6 links + a QUICK-LINK", "s'applique"):
+            self.assertIn(mot, texte_de(note), mot)
+        releve = " ".join(texte_de(li) for li in dom.selectionner(self.par_id["transmission-di2"].section, "ul.check > li"))
+        self.assertIn("nombre de maillons, à compter et à noter ailleurs que sur ce site", releve)
+        # Aucun nombre final de maillons pour ton vélo : seuls 5 et 6 (attache), 6 et 7 (goupille), 4/5 de l'article et
+        # les 138 maillons de la chaîne vendue par Canyon.
+        nombres = set(re.findall(r"(\d+)[\s\u00a0]+(?:maillons|links)\b", self.texte_complet(), re.I))
+        self.assertLessEqual(nombres, {"5", "6", "7", "138"})
+
+    def test_usure_contradiction(self):
+        # Le critère Shimano (sa jauge entre complètement) et le CC-3.2 de Park à 0,5 % : une contradiction, avec la
+        # conduite à tenir.
+        (note,) = self.notes("transmission-usure", "Contradiction\xa0: le critère d'usure")
+        for mot in ("completely fall into the chain", "it is important to use a SHIMANO chain gauge",
+                    "premature chain replacements", "replace at or just before 0.5%", "Check with manufacturer",
+                    "AFTER 6 MONTHS", "prime"):
+            self.assertIn(mot, texte_de(note), mot)
+        decide = self.corps("transmission-usure", "Décide")
+        for mot in ("garde ta chaîne", "Park", "Shimano", "TL-CN42", "non vérifié", "SEE A MECHANIC IF NECESSARY",
+                    "4.4"):
+            self.assertIn(mot, decide, mot)
+
+    def test_reglage_di2(self):
+        titres = [t for t, _ in self.etapes_de("transmission-reglage")]
+        ordre = [next(i for i, t in enumerate(titres) if t.startswith(d)) for d in (
+            "Dans E-TUBE PROJECT Cyclist", "Contrôle la plaque de butée", "Serre l'axe B", "Passe sur le 45 dents",
+            "Passe toutes les vitesses", "Passe sur le 24 dents", "Roue arrêtée", "Appuie sur X", "Appuie 5 fois sur Y",
+            "Reviens au mode normal", "Passe chaque vitesse", "Butée basse", "Butée haute")]
+        # L'ordre du DM-MARD011 : « Adjusting the B-screw », « Shifting adjustment », « Adjusting the low / high limits ».
+        self.assertEqual(ordre, list(range(13)))
+        for debut, mots in {
+            "Dans E-TUBE PROJECT Cyclist": ("This setting is enabled by default", "Switches between the SGS type and "
+                                            "GS type.", "le tien est GS", "non publié"),
+            "Contrôle la plaque de butée": ("stopper plate contacts the B-tension stop with no gap in between",),
+            "Serre l'axe B": ("10-12\xa0Nm", "5\xa0mm", "B-axle"),
+            "Passe sur le 45 dents": ("Align the contour of the outer plate with the tip of the tallest tooth on the "
+                                      "largest sprocket", "2\xa0mm", "non publié"),
+            "Butée basse": ("Tighten the low limit screw until it just touches the low limit stopper.",
+                            "largest sprocket"),
+            "Butée haute": ("Tighten the high limit screw until it just touches the high limit stopper.",
+                            "smallest sprocket"),
+            "Passe sur le 24 dents": ("fifth gear position from the largest sprocket", "le cinquième est le 24 dents",
+                                      "le quatrième le 28 dents", "déduction"),
+            "Roue arrêtée": ("solid yellow",),
+            "Appuie sur X": ("fourth gear", "subtle noise", "28 dents"),
+            "Appuie 5 fois sur Y": ("Press shift switch (Y) 5 times", "five steps toward the smallest sprocket"),
+            "Reviens au mode normal": ("0.5 seconds or longer", "the LED turns off"),
+            "Passe chaque vitesse": ("check that no noise is generated at any sprocket position", "TL-RD11"),
+        }.items():
+            corps = self.corps("transmission-reglage", debut)
+            for mot in mots:
+                self.assertIn(mot, corps, f"{debut} : {mot}")
+        (note,) = self.notes("transmission-reglage", "Le même réglage dans l'application")
+        for mot in ("If the battery charge is low, a confirmation screen is displayed and you cannot perform adjustment.",
+                    "5 crans"):
+            self.assertIn(mot, texte_de(note), mot)
+
+    def test_travaux_d_atelier(self):
+        # Le boîtier, l'alignement de la patte et la mise à jour des manettes par un fil : des travaux d'atelier, dits
+        # comme tels, sans pas à pas (les trois ateliers qui en parlent sont des fiches « comprendre », sans liste).
+        for ident, mots in {
+            "transmission-patte": ("travail d'atelier", "TL-RD11", "non publié", "qualified bicycle mechanic"),
+            "transmission-pedalier": ("travail d'atelier", "TL-BB12", "TL-BB13",
+                                      "Do not reuse the cups as they can be damaged during removal."),
+            "transmission-depannage": ("travail d'atelier", "SM-PCE02",
+                                       "Wireless firmware update is not available for the wireless shifter/switch"),
+        }.items():
+            a = self.par_id[ident]
+            self.assertEqual(a.type, "comprendre")
+            self.assertEqual(dom.selectionner(a.section, "ol"), [], ident)
+            for mot in mots:
+                self.assertIn(mot, self.texte_atelier(ident), f"{ident} : {mot}")
+        # La patte : Canyon 2021 contre SRAM UDH (graisse, couple, filetage à gauche), le manuel de la pièce montée prime.
+        (note,) = self.notes("transmission-patte", "Contradiction")
+        for mot in ("apply a little grease between derailleur hanger and frame", "1.5\xa0Nm",
+                    "Do NOT apply grease to the UDH hanger or frame.", "25\xa0Nm", "filetage à gauche", "s'applique"):
+            self.assertIn(mot, texte_de(note), mot)
+
+    def test_outils_de_lamine(self):
+        # La liste confirmée le 30/10 (relevé, « Outils de Lamine et ce qui manque ») : chaque atelier demande ses outils ;
+        # 4.1 dit ce qui manque et ce qui reste à l'atelier.
+        outils = {a.id: " ".join(a.outils) for a in self.ch.ateliers}
+        for ident, mots in {"transmission-nettoyer": ("CM-5.3", "Muc-Off", "MOTOREX"),
+                            "transmission-usure": ("CC-3.2",),
+                            "transmission-chaine": ("MLP-1.2", "CT-3.3", "SM-CN910-12", "CN-M8100"),
+                            "transmission-cassette": ("TL-LR021", "SR-12.2", "TW-6.2", "Gants et lunettes"),
+                            "transmission-reglage": ("TW-6.2", "5\xa0mm", "PB Swiss")}.items():
+            for mot in mots:
+                self.assertIn(mot, outils[ident], f"{ident} : {mot}")
+        di2 = self.texte_atelier("transmission-di2")
+        for mot in ("CC-3.2", "MLP-1.2", "CT-3.3", "CM-5.3", "TW-6.2", "ATD-1.2", "Muc-Off", "MOTOREX", "PB Swiss",
+                    "TL-LR021", "SR-12.2", "TL-SR24", "TL-CN10", "6\xa0mm", "8\xa0mm", "lint-free cloth",
+                    "E-TUBE PROJECT Cyclist", "gants", "lunettes", "travaux d'atelier", "aucun couple de ce chapitre"):
+            self.assertIn(mot, di2, mot)
+        # La MLP-1.2 suit Park Tool, et le site dit que Shimano demande la TL-CN10.
+        (note,) = self.notes("transmission-chaine", "Contradiction\xa0: l'outil de l'attache")
+        for mot in ("MLP-1.2", "TL-CN10", "A SHIMANO original tool is required to remove the QUICK-LINK.",
+                    "Shimano® XTR® 12-speed", "s'applique"):
+            self.assertIn(mot, texte_de(note), mot)
+
+    def test_contradictions(self):
+        # Chaque contradiction du relevé qui touche un atelier est dite sur sa page, avec ce qui s'applique.
+        attendu = {
+            "transmission-di2": ("1,000\xa0km", "about 1 hour", "over a month"),
+            "transmission-nettoyer": ("Never use alkali- or acid-based solvents", "There is no need to use special degreasers.",
+                                      "Under no circumstances should a chain be soaked in degreaser.",
+                                      "a small drop of lube in the joint of each link", "trois passages",
+                                      "Apply a small drop to each individual rivet.", "AFTER EVERY RIDE",
+                                      "after dusty or wet rides", "at least during every second wash"),
+            "transmission-usure": ("completely fall into the chain", "0.5%", "AFTER 6 MONTHS", "lift it off the teeth"),
+            "transmission-chaine": ("4/5", "5 to 6 links", "Connecting pin", "TL-CN10", "MLP-1.2", "SM-CN910", "SM-CN900",
+                                    "you won't need a tool for installation"),
+            "transmission-cassette": ("30-50\xa0Nm", "40\xa0Nm", "10T smallest sprocket"),
+            "transmission-reglage": ("for 2 seconds or longer", "for 2 to 5 seconds", "4 steps", "five steps",
+                                     "E-TUBE PROJECT Professional"),
+            "transmission-patte": ("apply a little grease", "1.5\xa0Nm", "Do NOT apply grease", "25\xa0Nm"),
+            "transmission-pedalier": ("high-grade grease", "PF-86"),
+            "transmission-depannage": ("dummy plug", "PC linkage devices"),
+        }
+        for ident, mots in attendu.items():
+            with self.subTest(ident):
+                notes = self.notes(ident, "Contradiction")
+                self.assertTrue(notes, ident)
+                texte = " ".join(texte_de(n) for n in notes)
+                for mot in mots:
+                    self.assertIn(mot, texte, mot)
+                for n in notes:
+                    self.assertTrue(dit_ce_qui_s_applique(texte_de(n)), texte_de(n)[:160])
+        self.assertGreaterEqual(sum(len(self.notes(a.id, "Contradiction")) for a in self.ch.ateliers), 17)
+        # Le contrôle lui-même : une négation ou un mot qui contient « prime » ne comptent pas.
+        self.assertFalse(dit_ce_qui_s_applique("Park Tool donne sa valeur, que ce site ne retient pas. p.84 imprimée"))
+        self.assertTrue(dit_ce_qui_s_applique("La plage Shimano s'applique."))
+
+    def test_a_lire_a_la_livraison(self):
+        # 4.1 : la liste du relevé « À lire sur la pièce à la livraison », à cocher, point par point.
+        section = self.par_id["transmission-di2"].section
+        (liste,) = dom.selectionner(section, "ul.check")
+        self.assertEqual(liste.get("data-key"), "transmission-releve")
+        (bouton,) = dom.selectionner(section, "button.btn-reset")
+        self.assertEqual(bouton.get("data-reset"), "transmission-releve")
+        points = dom.selectionner(liste, "li")
+        self.assertEqual(len(points), 10)
+        for n, li in enumerate(points, 1):
+            self.assertEqual(dom.selectionner(li, "input")[0].get("id"), f"ck-transmission-releve-{n}")
+            self.assertTrue(dom.selectionner(li, "span.verif"), texte_de(li)[:80])
+        tout = " ".join(texte_de(li) for li in points)
+        for mot in ("RD-M8250-GS", "plaque de butée", "UDH", "marquage de couple", "ST-RX825-L", "BL-RX825-L",
+                    "[X] et [Y]", "numéro de série", "bouchon du port E-TUBE", "CN-M8100", "nombre de maillons",
+                    "flèche", "face marquée", "du 9 «\xa0A\xa0» au 45 «\xa0H\xa0»", "contre-écrou intégré",
+                    "Micro Spline", "TL-LR021", "FC-RX820", "165", "plateau de 40", "empreinte", "plaque de sécurité",
+                    "SM-BB72-41B", "[UPDATE AVAILABLE]", "E-BIKE", "GS", "[Shifting/Adj. mode]", "changement multiple",
+                    "CR1632", "MOTOREX", "Muc-Off", "fiche de données de sécurité", "clé Canyon"):
+            self.assertIn(mot, tout, mot)
+
+    def test_aucune_donnee_personnelle(self):
+        # Comme pour Montage et Tubeless : ni jeton personnel, ni prénom, ni magasin, ni prix, ni commande.
+        verifier_aucune_donnee(self, self.texte_complet(), self.source, en_plus=("Lamine",))
+        texte = self.texte_complet().replace("\u00a0", " ")
+        self.assertIsNone(re.search(r"\b(?:commandes?|prix|magasin|boutique)\b", texte, re.I))
+
+    def test_typographie(self):
+        attributs = [normaliser(e.get(nom)) for nom in ("aria-label", "data-de", "data-vers")
+                     for e in dom.selectionner(self.section, f"[{nom}]")]
+        texte = re.sub(r"<[^>]*>", " | ", self.source) + " | " + " | ".join(attributs)
+        self.assertIsNone(re.search("[—–]", self.source))
+        # Une valeur et son unité sont séparées par une espace insécable.
+        motif = r".{0,40}\d (?:Nm|mm|cm|km|kg|g|h|s|°C|%|V|A|mL|ml|Wh|Ah|miles)(?![\w·])"
+        self.assertIsNone(re.search(motif, texte), re.search(motif, texte))
+        # Une espace insécable avant « : ; ? ! » et à l'intérieur des guillemets, comme aux chapitres 1 à 3.
+        self.assertIsNone(re.search(r".{0,30}[^\s|] [:;?!»]", texte), re.search(r".{0,30}[^\s|] [:;?!»]", texte))
+        self.assertIsNone(re.search(r".{0,30}« ", texte), re.search(r".{0,30}« ", texte))
+        self.assertNotIn("&nbsp;", self.source)
+        self.assertNotIn("N·m", self.source)
+        self.assertNotIn("’", self.source)  # apostrophes droites
+
+    def test_abreviations_par_page(self):
+        verifier_abreviations(self, self.ch.ateliers, {
+            "DM": "Dealer's Manual", "UM": "User's Manual", "QSG": "guide de démarrage Canyon",
+            "PDF": "Portable Document Format", "FAQ": "foire aux questions", "UDH": "Universal Derailleur Hanger",
+            "USB": "Universal Serial Bus", "LED": "diode électroluminescente", "VTT": "vélo tout terrain",
+            "MTB": "mountain bike", "PF": "Press-Fit", "LE": "Low Energy"})
+
+    def test_couples(self):
+        # Le tableau des couples du chapitre (résumé « couples », en 4.1) : chaque couple à appliquer, une fois, avec son
+        # outil et sa source officielle ; aucun autre span.nm dans le chapitre.
+        (resume,) = self.ch.resumes["couples"]
+        self.assertTrue(any(p is self.par_id["transmission-di2"].section for p in ancetres(resume)))
+        lignes = dom.selectionner(resume, "tbody > tr")
+        couples = [[texte_de(nm) for nm in dom.selectionner(tr, "span.nm")] for tr in lignes]
+        self.assertEqual(couples, [["10-12\xa0Nm"], ["30-50\xa0Nm"], ["12-14\xa0Nm"], ["12-16\xa0Nm"],
+                                   ["0,7-1,5\xa0Nm"], ["35-55\xa0Nm"], ["25\xa0Nm"]])
+        for tr in lignes:
+            sources = [a for a in dom.selectionner(tr, "a.src") if "parktool.com" not in a.get("href")]
+            self.assertTrue(sources, texte_de(tr)[:80])
+        self.assertEqual({texte_de(e) for e in dom.selectionner(self.section, "span.nm")}, {c for (c,) in couples})
+        (capuchon,) = [tr for tr in lignes if "0,7-1,5" in texte_de(tr)]
+        self.assertIn("Aucun de tes outils", texte_de(capuchon))
+        (cassette,) = [tr for tr in lignes if "30-50" in texte_de(tr)]
+        for mot in ("Adjustable wrench", "non publié", "40\xa0Nm"):
+            self.assertIn(mot, texte_de(cassette), mot)
+
+    def test_sans_ecarts_des_brouillons(self):
+        # Les autres écarts du relevé (section « Écarts avec les brouillons du 20/10 »), chacun par un indice précis.
+        texte, html = self.texte_complet(), normaliser(self.source)
+        for absent in ("Front Chainwheel", "Cassette Sprocket",  # développés des préfixes, non vérifiés
+                       "24 rivets", "1/16", "four additional rivets", "2 pouces",  # chiffres Park hors de ses outils
+                       "au moins 40", "Entre 40 et 50",  # règle inventée pour la cassette
+                       "5 à 6\xa0mm", "TL-CT12", "OT-RS900", "Torx 27", "5,5\xa0mm",  # vis B de Park, câble du CF 7
+                       "Y0GY", "10\xa0dents", "10, 12 et 14",  # cassette 10-45 du CF 7
+                       "Rose Bikes", "Excel Sports", "SJS Cycles", "Performance Bike", "Competitive Cyclist",
+                       "n-1", "99spokes", "Fabio"):
+            self.assertNotIn(absent, texte, absent)
+        for motif in (r"\bSIS\b", r"\bBSA\b"):
+            self.assertIsNone(re.search(motif, texte), motif)
+        cf7 = re.compile(r"(?<![0-9a-z#])CF[\s_-]*7(?![0-9])|4553", re.I)
+        self.assertIsNone(cf7.search(texte))
+        self.assertIsNone(cf7.search(html))
+        for adresse in ("mtb.shimano.com", "bike-discount", "rosebikes", "excelsports", "99spokes", "nminus1",
+                        "/en-qa/", "/pdfs/", "UkZxPIZ1ngY", "Y6W6djIOdnM", "a0YAoGhgAK8"):
+            self.assertNotIn(adresse, html, adresse)
+        # Les galets n'ont pas de sens de rotation (le brouillon leur en donnait un).
+        self.assertIn("The pulleys do not have a specific direction of rotation.", texte)
+        # Le dérailleur se lave batterie en place (consigne qui manquait au brouillon).
+        self.assertIn("Wash the bicycle with the battery installed", self.texte_atelier("transmission-nettoyer"))
+
+    def test_texte_conserve(self):
+        # Comme pour Freins, Montage et Tubeless : les deux colonnes de chaque page gardent tout le texte du source.
         verifier_texte_conserve(self, self.ch.ateliers)
 
 
