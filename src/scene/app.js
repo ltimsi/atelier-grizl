@@ -18,7 +18,8 @@
 // Pastilles : chacune est posée sur la projection de l'ancre de sa zone, en 3D (scene.pastilles) comme en 2D
 // (schema.pastilles). Une zone peut avoir un champ decalage, [dx, dy] en pixels de l'écran : sa pastille est posée à ce
 // décalage de son ancre, à toutes les largeurs (placeDePastille). Celle des axes a [0, 34] : elle est juste sous la tête
-// de l'axe avant, parce que la pastille de l'étrier se projette juste au-dessus du moyeu.
+// de l'axe avant, parce que la pastille de l'étrier se projette juste au-dessus du moyeu. Une pastille décalée dont le
+// centre sort de l'image est cachée.
 // Défilement après le choix (montrerChoix) : sur deux colonnes, la carte vient à l'écran si elle n'y est pas, par la
 // colonne « Où intervenir », qui défile seule (00-head.html) : l'image reste à l'écran. Sur une seule, la scène est
 // au-dessus des cartes : une pastille ne fait pas défiler la page, pour garder le vélo à l'écran, et le bouton d'une
@@ -270,19 +271,25 @@ function choisirMode(m) {
 
 /**
  * La place d'une pastille : la projection de l'ancre de sa zone, plus le décalage de la zone (decalage de zones.json,
- * [dx, dy] en pixels de l'écran) s'il en a un. La visibilité reste celle de l'ancre.
+ * [dx, dy] en pixels de l'écran) s'il en a un. Sans décalage, la visibilité est celle de l'ancre. Avec un décalage, la
+ * pastille n'est montrée que si son ancre l'est et que son centre, là où elle est dessinée, est dans l'image : posée
+ * hors de l'image, elle ne vise plus rien qu'on voie (à 360 px, dans la vue de la selle, celle du porte-bagages
+ * n'aurait montré qu'un bout de disque sous le bouton « Vue d'ensemble »).
  * @param {{x: number, y: number, visible: boolean}} place La projection de l'ancre, en pixels de l'image.
  * @param {object} zone Une zone de zones.json.
+ * @param {number} w La largeur de l'image, en pixels.
+ * @param {number} h La hauteur de l'image, en pixels.
  * @returns {{x: number, y: number, visible: boolean}}
  */
-export function placeDePastille(place, zone) {
-  const [dx, dy] = zone.decalage ?? [0, 0];
-  return { ...place, x: place.x + dx, y: place.y + dy };
+export function placeDePastille(place, zone, w, h) {
+  if (!zone.decalage) return place;
+  const [dx, dy] = zone.decalage, x = place.x + dx, y = place.y + dy;
+  return { ...place, x, y, visible: place.visible && x >= 0 && x <= w && y >= 0 && y <= h };
 }
 
 function poserPastilles(places) {
   places.forEach((p, i) => {
-    const b = ui.pins[i], q = placeDePastille(p, ui.zones[i]);
+    const b = ui.pins[i], q = placeDePastille(p, ui.zones[i], ui.W, ui.H);
     b.hidden = !q.visible;
     b.style.transform = `translate(${q.x.toFixed(1)}px, ${q.y.toFixed(1)}px)`;
   });

@@ -267,6 +267,45 @@ export const SOURCES = Object.freeze({
     type: 'fiche',
   }),
 
+  // Tailfin et SRAM : relevé des accessoires du 1er novembre 2026 (docs/recherche/accessoires-cf8-di2.md), cités par la
+  // pièce 3D du Journey Rack (ateliers 5.2 et 5.3). La notice 2026 de l'axe, que la pièce cite aussi, n'y est pas : le
+  // relevé ne recopie pas son adresse. La réponse écrite du service client Tailfin n'a pas d'adresse publique.
+  'tailfin-journey-rack-v6': Object.freeze({
+    titre: 'Tailfin, notice V6 du Journey Rack (« Journey Rack System Assembly Instructions ») : pièces, couples, ' +
+      'pattes, bras, collier et sangle',
+    url: 'https://media.tailfin.cc/app/uploads/2026/05/14110549/Journey-Pannier-Rack-Assembly-Guide.pdf',
+    type: 'manuel',
+  }),
+  'tailfin-udh-v2': Object.freeze({
+    titre: 'Tailfin, notice UDH V2 de l’adaptateur UDH (« UDH Fit Instructions ») : vis UDH, rondelle de cadre, adaptateur',
+    url: 'https://media.tailfin.cc/app/uploads/2024/02/28154924/UDH-FIT-INSTRUCTIONS_V2-04-1.pdf',
+    type: 'manuel',
+  }),
+  'tailfin-guide-axe': Object.freeze({
+    titre: 'Tailfin, guide complet de l’Universal Thru Axle : l’adaptateur UDH avant l’axe, pose, serrage et dépose ' +
+      '(anglais)',
+    url: 'https://www.tailfin.cc/guides/product-guides/universal-thru-axle-the-complete-guide/',
+    type: 'fiche',
+  }),
+  'tailfin-guide-axes': Object.freeze({
+    titre: 'Tailfin, guide des axes, des accessoires et des pièces : l’axe Tailfin à la place de celui du vélo, ' +
+      'l’adaptateur UDH (anglais)',
+    url: 'https://www.tailfin.cc/guides/product-guides/axles-accessories-spares/',
+    type: 'fiche',
+  }),
+  'tailfin-jeu-udh': Object.freeze({
+    titre: 'Tailfin, page du jeu UDH Adaptor Set : contenu du jeu, sur sa photo officielle',
+    url: 'https://www.tailfin.cc/product/spares/axle-spares/sram-udh-transmission-adaptor/',
+    type: 'fiche',
+  }),
+  'sram-udh': Object.freeze({
+    titre: 'SRAM, manuel de la patte UDH (Universal Derailleur Hanger) : pose de la patte, graisse du filetage de l’axe ' +
+      '(anglais)',
+    url: 'https://www.sram.com/globalassets/document-hierarchy/user-manuals/sram-mtb/drivetrain/' +
+      'udh-universal-derailleur-hanger-user-manual.pdf',
+    type: 'manuel',
+  }),
+
   // Fizik
   'fizik-argo-terra-x5': Object.freeze({
     titre: 'Fizik, page de la selle Terra Argo X5 (largeurs, coque, rails, poids)',

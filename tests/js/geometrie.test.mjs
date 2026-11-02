@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { GEO, points, cheminChaine, approximations } from '../../src/scene/geometrie.js';
 import { SOURCES } from '../../src/scene/sources.js';
 import { DENTS_CASSETTE } from '../../src/scene/pieces/transmission.js';
+import { COTES as COTES_CADRE, poseSelle } from '../../src/scene/pieces/cadre.js';
 import { CF7, NOMS_CF7 } from './cf7.mjs';
 
 const D2R = Math.PI / 180;
@@ -139,6 +140,34 @@ test('ancre de la chaîne et de la cassette : le bord du grand pignon, devant et
   // Dans le plan du grand pignon, le dernier de la cassette depuis le petit pignon, côté transmission.
   proche(a[2], GEO.zPetitPignon.v - (DENTS_CASSETTE.length - 1) * GEO.ecartPignons.v, 1, 'plan du grand pignon');
   assert.ok(a[2] > 0, 'côté transmission');
+});
+
+// La pastille du porte-bagages Tailfin (zone 11) : le vélo de l'accueil est dessiné tel que livré, sans porte-bagages.
+// Son ancre est où le Journey Rack se fixe en haut : sur le bas de la tige de selle, juste au-dessus du collier du cadre
+// et sous la séparation des deux lames, là où l'atelier 5.3 pose sa sangle, « le plus bas possible » (réponse écrite du
+// service client Tailfin). Sur la face droite de la tige, côté transmission, que montre la vue d'ensemble. Le collier
+// de cadre.js monte à 12 mm au-dessus du haut du tube de selle. Placement de vue, pas une cote. L'autre point de
+// fixation, le bout droit de l'axe arrière, est pris entre les pastilles du disque arrière, du dérailleur et de la
+// cassette. Aucun maillage n'est en zone 'portebagages' : la tige reste en zone 'selle' (1.4), l'axe en zone 'axes'
+// (1.5) (tests/js/scene.test.mjs).
+test('ancre du porte-bagages : le bas de la tige, côté transmission, au-dessus du collier et sous la séparation des lames', () => {
+  const p = points();
+  const { basTige: a } = p.ancres;
+  assert.equal(a?.length, 3);
+  assert.ok(a.every(Number.isFinite));
+  // Sur l'axe de la tige, dans le plan du vélo, à `le` mm au-dessus du haut du tube de selle.
+  const le = (q, o = p.STt) => (q[0] - o[0]) * p.dST[0] + (q[1] - o[1]) * p.dST[1];
+  const travers = (a[0] - p.STt[0]) * -p.dST[1] + (a[1] - p.STt[1]) * p.dST[0];
+  proche(travers, 0, 1e-9, 'sur l’axe de la tige');
+  const fente = le(poseSelle(p, GEO).fente);
+  assert.ok(le(a) > 12, `à ${le(a).toFixed(1)} mm du haut du tube de selle : sur le collier`);
+  assert.ok(le(a) < 30, `à ${le(a).toFixed(1)} mm du haut du tube de selle : pas « le plus bas possible »`);
+  assert.ok(le(a) < fente, 'au-dessus de la séparation des lames');
+  // Sur la face droite de la tige, côté transmission.
+  const r = COTES_CADRE.diametreTige.v / 2;
+  assert.ok(a[2] >= r && a[2] <= r + 1, `à ${a[2]} mm du plan du vélo : hors de la face droite de la tige (${r} mm)`);
+  // La pastille de la selle, sur la tête de la tige, est au-dessus.
+  assert.ok(p.ancres.teteTige[1] > a[1], 'la tête de tige au-dessus');
 });
 
 test('tige de selle : l’insertion reste dans la plage publiée', () => {
@@ -449,6 +478,47 @@ test('registre des sources : les documents que nomment les en-têtes des pièces
   // la batterie, le manuel revendeur des cassettes et le manuel Canyon des roues (ses 40 Nm du contre-écrou).
   for (const id of ['shimano-cn-m8100', 'shimano-cs-m8200-12', 'shimano-rd-m8250-gs', 'shimano-bt-dn320',
     'shimano-dm-macs010', 'canyon-manuel-roues']) assert.ok(SOURCES[id], id);
+});
+
+// Les documents du lot 5 que nomme l'en-tête de la pièce 3D du Journey Rack (src/js/models/m-rack.js, ateliers 5.2 et
+// 5.3), hors Park Tool : la notice V6 du Journey Rack, la notice UDH V2 de Tailfin, ses deux guides de l'axe (le guide
+// complet et le guide des axes), la page du jeu UDH, qui porte sa photo officielle, et le manuel SRAM de la patte UDH.
+// Le test ne lit que l'en-tête de la pièce (son premier commentaire) : ses pastilles sont épinglées mot pour mot par
+// test_pieces_3d_accessoires (tests/test_pages.py). L'adresse de chaque document est celle du relevé du lot 5, et le
+// chapitre la cite. Deux documents que l'en-tête nomme n'entrent pas au registre : la notice 2026 de l'axe, dont le
+// relevé ne recopie pas l'adresse, et la réponse écrite du service client Tailfin, qui n'a pas d'adresse publique.
+test('registre des sources : les documents que nomme l’en-tête de la pièce 3D du Journey Rack', () => {
+  const lire = chemin => readFileSync(new URL(`../../${chemin}`, import.meta.url), 'utf8');
+  const releve = lire('docs/recherche/accessoires-cf8-di2.md'), chapitre = lire('src/parts/60-accessoires.html');
+  // L'en-tête, espaces et retours à la ligne ramenés à une espace : un nom coupé en fin de ligne reste trouvé.
+  const piece = lire('src/js/models/m-rack.js'), entete = piece.slice(0, piece.indexOf('*/')).replace(/\s+/g, ' ');
+  const MEDIA = 'https://media.tailfin.cc/app/uploads', GUIDES = 'https://www.tailfin.cc/guides/product-guides';
+  const attendus = {
+    'tailfin-journey-rack-v6': ['manuel', 'notice V6 du Journey Rack', /^Tailfin, notice V6 du Journey Rack /,
+      `${MEDIA}/2026/05/14110549/Journey-Pannier-Rack-Assembly-Guide.pdf`],
+    'tailfin-udh-v2': ['manuel', 'notice UDH V2', /^Tailfin, notice UDH V2 /,
+      `${MEDIA}/2024/02/28154924/UDH-FIT-INSTRUCTIONS_V2-04-1.pdf`],
+    'tailfin-guide-axe': ['fiche', 'guide complet de l\'axe', /^Tailfin, guide complet de l’Universal Thru Axle /,
+      `${GUIDES}/universal-thru-axle-the-complete-guide/`],
+    'tailfin-guide-axes': ['fiche', 'guide des axes', /^Tailfin, guide des axes, /, `${GUIDES}/axles-accessories-spares/`],
+    'tailfin-jeu-udh': ['fiche', 'photo officielle du jeu UDH', /^Tailfin, page du jeu UDH Adaptor Set /,
+      'https://www.tailfin.cc/product/spares/axle-spares/sram-udh-transmission-adaptor/'],
+    'sram-udh': ['manuel', 'manuel SRAM', /^SRAM, manuel de la patte UDH /, 'https://www.sram.com/globalassets/' +
+      'document-hierarchy/user-manuals/sram-mtb/drivetrain/udh-universal-derailleur-hanger-user-manual.pdf'],
+  };
+  for (const [id, [type, nom, titre, url]] of Object.entries(attendus)) {
+    assert.ok(SOURCES[id], `source absente : ${id}`);
+    assert.equal(SOURCES[id].type, type, id);
+    assert.equal(SOURCES[id].url, url, id);
+    assert.match(SOURCES[id].titre, titre, `${id} : titre`);
+    assert.ok(entete.includes(nom), `${id} : l’en-tête de m-rack.js ne nomme plus « ${nom} »`);
+    assert.ok(releve.includes(url), `${id} : adresse absente du relevé du lot 5`);
+    assert.ok(chapitre.includes(`href="${url}"`), `${id} : adresse absente du chapitre`);
+  }
+  // Rien d'autre de Tailfin ni de Garmin : la scène de l'accueil ne dessine aucun accessoire, et aucune autre pièce 3D
+  // ne cite leurs documents.
+  const tailfin = Object.entries(SOURCES).filter(([, s]) => /tailfin\.cc|garmin\.com/.test(s.url)).map(([id]) => id);
+  assert.deepEqual(tailfin.sort(), Object.keys(attendus).filter(id => id !== 'sram-udh').sort());
 });
 
 test('registre des sources : plus aucune source du Grizl CF 7 ni de ses pièces', () => {

@@ -42,28 +42,24 @@
     },
     {
       "lot": 5,
-      "titre": "Entretien, accessoires et dépannage",
-      "statut": "à faire",
+      "titre": "Accessoires des trajets",
+      "statut": "en relecture",
       "categorie": {"id": "accessoires", "menu": "Accessoires des trajets"},
-      "prevu": [
-        "Porte-bagages Tailfin, son adaptateur UDH (patte de dérailleur universelle de SRAM) et son axe traversant.",
-        "Sacoches Tailfin et leur sangle.",
-        "Garde-boue du porte-bagages Tailfin.",
-        "Support d’éclairage Tailfin."
-      ],
-      "parts": ["50-entretien", "60-accessoires", "70-depannage"],
+      "parts": ["60-accessoires"],
       "modeles": ["rack"]
     },
     {
       "lot": 6,
-      "titre": "Aide-mémoire des couples et sources",
+      "titre": "Entretien, révision, dépannage et aide-mémoire",
       "statut": "à faire",
-      "categorie": {"id": "revision", "menu": "Révision et couples"},
+      "categorie": {"id": "revision", "menu": "Entretien et révision"},
       "prevu": [
+        "Entretien courant : nettoyer, graisser et contrôler, d'après les documents des fabricants.",
         "Ma révision : ce qu'il faut contrôler et quand, avec uniquement des intervalles publiés.",
+        "Dépannage : les symptômes courants, et l'atelier qui les traite.",
         "Aide-mémoire des couples des lots validés."
       ],
-      "parts": ["80-couples", "90-sources"],
+      "parts": ["50-entretien", "70-depannage", "80-couples", "90-sources"],
       "modeles": []
     }
   ]

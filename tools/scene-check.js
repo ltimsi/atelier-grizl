@@ -751,8 +751,11 @@ async function controler(opts) {
             }
             a.vues[mode][id] = { image: c.image, scrollAvant: c.scrollAvant, scrollApres: c.scrollApres,
               affichees: r.centres.map(p => p[0]), sous: r.sous, ecartMin };
-            // Les vues des deux dernières zones, celles des lots 3 et 4 : les pneus, puis la chaîne et la cassette.
-            if (id === 'pneus' || id === 'chaine') await capturer(page, `accueil-${mode}-zone-${n}.png`, { sel: '#scene' });
+            // Les vues des trois dernières zones, celles des lots 3 à 5 : les pneus, la chaîne et la cassette, puis le
+            // porte-bagages Tailfin.
+            if (['pneus', 'chaine', 'portebagages'].includes(id)) {
+              await capturer(page, `accueil-${mode}-zone-${n}.png`, { sel: '#scene' });
+            }
           }
         };
         a.ensemble = await controlerPastilles(sansGl ? 'schéma 2D, vue d’ensemble' : 'vue d’ensemble', true);

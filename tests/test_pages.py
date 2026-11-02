@@ -1,4 +1,4 @@
-"""Tests de build/pages.py et de l'écriture du site par build/assemble.py : les 44 pages, leurs liens, le texte des
+"""Tests de build/pages.py et de l'écriture du site par build/assemble.py : les 51 pages, leurs liens, le texte des
 ateliers conservé, l'index de la recherche, la page Composants d'origine recopiée de la fiche, la page d'accueil et
 les blocs qu'elle reçoit (Où intervenir, D'origine puis à monter, Toutes les catégories).
 
@@ -28,13 +28,16 @@ SLUGS = ["systeme", "disques", "plaquettes", "rodage", "centrage", "controles", 
 SLUGS_MONTAGE = ["avant", "deballer", "cintre", "selle", "roues", "pedales", "di2", "position", "controles"]
 SLUGS_TUBELESS = ["materiel", "passer", "liquide", "pression", "crevaison", "problemes"]
 SLUGS_TRANSMISSION = ["di2", "nettoyer", "usure", "chaine", "cassette", "reglage", "patte", "pedalier", "depannage"]
-# Les catégories publiées, dans l'ordre des chapitres : 1 Montage, 2 Freins, 3 Pneus et tubeless, 4 Transmission.
-PUBLIEES = ["montage", "freins", "tubeless", "transmission"]
-A_VENIR = ["accessoires", "revision"]
+SLUGS_ACCESSOIRES = ["materiel", "axe", "rack", "gardeboue", "sacs", "feu", "charge"]
+# Les catégories publiées, dans l'ordre des chapitres : 1 Montage, 2 Freins, 3 Pneus et tubeless, 4 Transmission,
+# 5 Accessoires des trajets.
+PUBLIEES = ["montage", "freins", "tubeless", "transmission", "accessoires"]
+A_VENIR = ["revision"]
 REFERENCES = ["composants", "outils", "couples", "approche", "sources"]
 CHEMINS = ([""] + ["montage/"] + [f"montage/{s}/" for s in SLUGS_MONTAGE] + ["freins/"] + [f"freins/{s}/" for s in SLUGS]
            + ["tubeless/"] + [f"tubeless/{s}/" for s in SLUGS_TUBELESS]
            + ["transmission/"] + [f"transmission/{s}/" for s in SLUGS_TRANSMISSION]
+           + ["accessoires/"] + [f"accessoires/{s}/" for s in SLUGS_ACCESSOIRES]
            + [f"{c}/" for c in A_VENIR] + [f"{r}/" for r in REFERENCES])
 MD = (RACINE / "docs" / "recherche" / "composants-origine.md").read_text(encoding="utf-8")
 COMPOSANTS = (RACINE / "src" / "parts" / "composants.html").read_text(encoding="utf-8")
@@ -455,6 +458,108 @@ DECLARATIONS_3D_TRANSMISSION = {
 # Les couples permis dans chaque fichier, commentaires compris : ceux du chapitre pour la pièce, rien d'autre.
 COUPLES_3D_TRANSMISSION = {'m-chain.js': set(), 'm-cassette.js': {"30-50", "40"}, 'm-derailleur.js': {"10-12"}}
 
+# Pièce 3D du lot 5 (atelier 5.3, et l'axe et l'adaptateur de 5.2) : même règle que les lots 2 à 4. Ses valeurs sont
+# celles du chapitre src/parts/60-accessoires.html, qu'elle répète : vis L à 8 Nm (clé de 5 mm), K à 6 Nm (clé de
+# 4 mm, facultative), N et I à 5 Nm (Torx T25), J à 2 Nm, fixations D à 3 Nm, antivol E à 1 Nm ; adaptateur UDH à
+# 25 Nm, filetage à gauche, clé de 12 mm ou de 8 mm par la réduction ; axe serré par la gauche à 10 Nm, clé de 5 mm,
+# à la main en route, dévissé par la droite ; embout M12 x 1.0 à un seul filet, 8 Nm, filetage graissé ; sangle le plus
+# bas possible, avant la séparation des lames (réponse écrite du service client Tailfin). Le curseur suit les quatorze
+# étapes de 5.3.
+PASTILLES_3D_ACCESSOIRES = {
+    'm-rack.js': [
+        'Journey Rack en alliage, «\xa0Alloy\xa0» chez Tailfin\xa0: il tient en trois points, les deux bouts de l’axe '
+        'Tailfin et la tige de selle',
+        'Vis L, le plateau A sur l’arceau B\xa0: 8\xa0Nm, clé de 5\xa0mm\xa0; aucun de tes outils ne couvre 8\xa0Nm, prends '
+        'la clé Canyon du carton si sa plage le permet, à lire sur l’outil',
+        'Vis K, étape facultative\xa0: 6\xa0Nm, clé de 4\xa0mm, ton ATD-1.2 au cran 6\xa0; le cas où elle sert est à lire '
+        'dans la notice livrée',
+        'Pattes M, «\xa0Fast Release Dropouts\xa0», sur le bas de l’arceau\xa0: deux vis N par côté, 5\xa0Nm, Torx '
+        'T25\xa0; «\xa0LEFT HAND SIDE\xa0» gravé sur la patte gauche du dessin de la notice\xa0: ne les inverse pas',
+        'Patte basculée autour du bout de l’axe, sans outil\xa0: bagues en bon état et bien en place, patte fermée, '
+        'goupille engagée\xa0; sinon, ne roule pas',
+        'Bras avant, droit G ou coudé F, dans l’avant du plateau\xa0: prends celui qui met le plateau de niveau avec le '
+        'collier bas sur la tige (lecture de ce site)',
+        'Rondelle H et vis I\xa0: 5\xa0Nm, Torx T25, ton ATD-1.2 au cran 5',
+        'Vis J\xa0: 2\xa0Nm\xa0; sa clé, 2 ou 2,5\xa0mm, est à lire sur la pièce\xa0; aucun de tes outils ne descend à '
+        '2\xa0Nm',
+        'Collier C au bout du bras, fixations D\xa0: 3\xa0Nm, clé à lire sur la pièce\xa0; aucun de tes outils ne descend à '
+        '3\xa0Nm',
+        'Sangle du collier\xa0: le plus bas possible sur ta tige, avant la séparation des lames (réponse écrite du service '
+        'client Tailfin)\xa0; levier fermé, «\xa0Click\xa0»\xa0; à vérifier au montage',
+        'Vis antivol E, étape facultative\xa0: 1\xa0Nm\xa0; aucun de tes outils ne descend à 1\xa0Nm\xa0: la clé Canyon du '
+        'carton si sa plage le permet, à lire sur l’outil\xa0; sinon, laisse-la de côté',
+        'Séparation des deux lames de ta tige SP100 VCLS 2.1, place approchée\xa0: la sangle reste en dessous, sans gêner '
+        'leur flexion (rien de publié, à vérifier au montage)\xa0; le repère «\xa0MIN\xa0» reste dans le cadre (1.4)',
+        'Universal Thru Axle, sans levier, clé de 5\xa0mm\xa0: serré par la gauche, à 10\xa0Nm à la maison, à la main en '
+        'route\xa0; dévissé par la droite, jamais par la gauche (5.2)',
+        'Embout M12 x 1.0 à un seul filet, côté droit\xa0: vissé sur le corps de l’axe à 8\xa0Nm, deux clés de 5\xa0mm\xa0; '
+        'avant d’introduire l’axe, graisse son filetage extérieur (5.2)\xa0; des filets peuvent se voir côté transmission',
+        'Entretoise côté gauche, une plate dessinée pour l’exemple\xa0: la conique va contre le cadre si ton axe d’origine '
+        'a un appui conique\xa0; pour centrer l’arceau, change les entretoises (5.2)',
+        'Adaptateur UDH Tailfin, à la place de la vis UDH\xa0: 25\xa0Nm, filetage à gauche à confirmer sur la pièce, clé de '
+        '12\xa0mm, ou de 8\xa0mm par la réduction',
+        'Patte SRAM UDH\xa0: elle reste en place, avec ton dérailleur\xa0; la rondelle de cadre se remet sous '
+        'l’adaptateur',
+        'Pneu\xa0: roue tournée à la main, il ne touche ni l’arceau ni les pattes\xa0; écart non publié, à vérifier au '
+        'montage, et de nouveau porte-bagages chargé',
+        'Côté droit, vitesses passées roue décollée\xa0: rien ne doit toucher la patte, sur toute la course du '
+        'dérailleur\xa0; écart non publié, à vérifier au montage',
+    ],
+}
+ETIQUETTES_3D_ACCESSOIRES = {'m-rack.js': ['Pas à pas']}
+# Les gestes du curseur : les titres des quatorze étapes de 5.3, mot pour mot et dans leur ordre (apostrophes
+# typographiques dans la pièce).
+ETAPES_3D_ACCESSOIRES = {
+    'm-rack.js': {
+        'ETAPES': ('accessoires-rack', 1, [
+            'Avant tout\xa0: la prudence, et les pièces de la notice', 'Visse le plateau sur l’arceau, deux vis L à 8\xa0Nm',
+            'Étape facultative\xa0: deux vis K à 6\xa0Nm', 'Visse les pattes sur l’arceau, vis N à 5\xa0Nm',
+            'Pose les pattes sur les bouts de l’axe', 'Pose le bras avant dans le plateau',
+            'Visse la rondelle H et la vis I à 5\xa0Nm', 'Visse la vis J à 2\xa0Nm',
+            'Visse le collier au bout du bras, fixations D à 3\xa0Nm',
+            'Ferme la sangle le plus bas possible, avant la séparation des lames',
+            'Étape facultative\xa0: vis antivol E à 1\xa0Nm', 'Contrôle le centrage de l’arceau',
+            'Contrôle le côté droit\xa0: dérailleur, batterie, chaîne', 'Contrôle le pneu, roue tournée à la main']),
+    },
+}
+COMMANDES_3D_ACCESSOIRES = {
+    'm-rack.js': [
+        "controls: [{ type: 'range', label: 'Pas à pas', min: 1, max: 14, step: 1, value: 10,",
+        "format: function (v) { geste(v); return 'Étape ' + v + ' / 14'; },",
+        "function geste(v) { api.geste('Étape ' + v + ' de 5.3\xa0: ' + ETAPES[v - 1]); }",
+    ],
+}
+# Ce que dessine chaque étape, épinglé : le porte-bagages posé sur l'axe à partir de l'étape des pattes (POSE), le bras à
+# partir de la sienne, le collier à partir de la sienne, la sangle fermée à partir de la sienne ; les vis facultatives K
+# et E à leur seule étape ; la pièce allumée à chaque étape ; la sangle juste au-dessus du collier du cadre ; les
+# pastilles de chaque étape, six au plus, celles qu'ajoute la vue éclatée (l'axe et ses pièces) et celles qu'elle
+# efface (le porte-bagages et les pièces restées autour de l'axe).
+DESSIN_3D_ACCESSOIRES = {
+    'm-rack.js': (
+        "var POSE = 5, BRAS = 6, COLLIER = 9, SANGLE = 10;",
+        "var FACULTATIVES = { 3: 'visK', 11: 'visE' };",
+        "var ALLUME = { 2: 'visL', 3: 'visK', 4: 'visN', 5: 'goupilles', 6: 'bras', 7: 'visI', 8: 'visJ', 9: 'fixD', "
+        "10: 'sangle', 11: 'visE', 12: 'entretoise', 13: 'droite' };",
+        "var S_SANGLE = TUBE_SELLE + COL_HAUT + JEU_SANGLE + L_SANGLE / 2;",
+        "var PASTILLES = [[1, 12, 13, 16], [1, 2], [1, 3], [1, 4], [1, 5, 13], [1, 6], [1, 7], [1, 8], [1, 9], "
+        "[1, 10, 12], [11, 12], [1, 14, 15], [17, 19], [1, 18]];",
+        "var ECLATEE = [13, 14, 15, 16], ECLATEE_SANS = [1, 5, 17, 19];",
+        "if (n !== etapePins) { etapePins = n; if (pret) api.setPins(pinsDe(n)); }",
+    ),
+}
+OBJETS_3D_ACCESSOIRES = {
+    'm-rack.js': ['jambeD', 'visL[1]', 'visK[1]', 'plaqueD', 'levierD', 'bras', 'visI', 'visJ', 'oeil', 'sangle', 'visE',
+                  'aFente', 'axeG', 'embout', 'entretoise', 'adaptateur', 'patteUDH', 'pneu', 'aDroite'],
+}
+DECLARATIONS_3D_ACCESSOIRES = {
+    'm-rack.js': {'arceau': ('notice',), 'plateau': ('notice',), 'pattes M': ('notice',), 'bras et collier': ('notice',),
+                  'sangle': ('service client',), 'tige': ('scène',), 'axe': ('non publiée',),
+                  'entretoise': ('à lire dans la boîte',), 'adaptateur et rondelle': ('notice UDH',), 'patte UDH': (),
+                  'cadre': ('scène',), 'roue': ('scène',), 'mouvement': (), 'couleurs': ()},
+}
+# Les couples permis dans tout le fichier, commentaires compris : ceux du chapitre pour ces pièces, rien d'autre.
+COUPLES_3D_ACCESSOIRES = {'m-rack.js': {"8", "6", "5", "2", "3", "1", "10", "25"}}
+
 
 def elements(parent):
     return [e for e in parent.enfants if isinstance(e, dom.Element)]
@@ -549,10 +654,10 @@ class Site(unittest.TestCase):
 
 class TestPages(Site):
     def test_pages_generees(self):
-        # 44 pages : la racine, Montage à la livraison et ses 9 ateliers, Freins et ses 8 ateliers, Pneus et tubeless
-        # et ses 6 ateliers, Transmission et ses 9 ateliers (l'ordre des chapitres), les 2 catégories à venir et les 5
-        # références.
-        self.assertEqual(len(CHEMINS), 44)
+        # 51 pages : la racine, Montage à la livraison et ses 9 ateliers, Freins et ses 8 ateliers, Pneus et tubeless
+        # et ses 6 ateliers, Transmission et ses 9 ateliers, Accessoires des trajets et ses 7 ateliers (l'ordre des
+        # chapitres), la catégorie à venir et les 5 références.
+        self.assertEqual(len(CHEMINS), 51)
         self.assertEqual([p.chemin for p in self.pages], CHEMINS)
         for cible in ("site", "artifact"):
             trouvees = sorted(p.relative_to(self.dossier / cible).as_posix()
@@ -564,7 +669,7 @@ class TestPages(Site):
         attendus = {"js/recherche.js", "js/viewer.js", "js/site.js", "js/references.js", "js/m-rotor.js",
                     "js/m-caliper.js", "js/m-bleed.js", "js/m-torque.js", "js/m-cockpit.js", "js/m-axle.js",
                     "js/m-pedal.js", "js/m-rim.js", "js/m-plug.js", "js/m-chain.js", "js/m-cassette.js",
-                    "js/m-derailleur.js", "js/scene/app.js", "js/scene/zones.json"}
+                    "js/m-derailleur.js", "js/m-rack.js", "js/scene/app.js", "js/scene/zones.json"}
         for cible in ("site", "artifact"):
             fichiers = self.sorties[cible][1]
             self.assertEqual(attendus - fichiers, set(), cible)
@@ -690,7 +795,7 @@ class TestPages(Site):
                              ("montage/avant", "torque"), ("montage/cintre", "cockpit"), ("montage/roues", "axle"),
                              ("montage/pedales", "pedal"), ("tubeless/passer", "rim"), ("tubeless/crevaison", "plug"),
                              ("transmission/chaine", "chain"), ("transmission/cassette", "cassette"),
-                             ("transmission/reglage", "derailleur")):
+                             ("transmission/reglage", "derailleur"), ("accessoires/rack", "rack")):
             html = self.html(f"{slug}/")
             for morceau in ('"three": "../../vendor/three/three.module.min.js"', 'src="../../js/viewer.js"',
                             f'src="../../js/m-{modele}.js"', 'src="../../js/scene/app.js"'):
@@ -705,7 +810,8 @@ class TestPages(Site):
             self.assertIn("window.AtelierViewer.start()", html[garde:html.index("</script>", garde)], slug)
         for chemin in ("freins/rodage/", "freins/systeme/", "freins/", "outils/", "montage/", "montage/deballer/",
                        "montage/di2/", "tubeless/", "tubeless/materiel/", "tubeless/pression/", "transmission/",
-                       "transmission/usure/", "transmission/pedalier/"):
+                       "transmission/usure/", "transmission/pedalier/", "accessoires/", "accessoires/materiel/",
+                       "accessoires/axe/"):
             html = self.html(chemin)
             for absent in ("importmap", "viewer.js", "scene/app.js", "references.js", "zones-data", "liens-data",
                            "hasAttribute('data-app')"):
@@ -836,6 +942,38 @@ class TestPages(Site):
             di2 = self.html("montage/di2/", cible)
             self.assertIn('au <a href="../../transmission/">chapitre 4</a>.', di2, cible)
 
+    def test_accessoires_publie(self):
+        # « #accessoires » mène à accessoires/ par le bloc #liens-data, dans les deux cibles, et l'id de chaque atelier
+        # du chapitre 5 à la page de cet atelier. La page accessoires/ n'est plus « à venir » : c'est la catégorie
+        # publiée du lot 5, avec ses sept ateliers, tous dans la zone 11, celle du porte-bagages Tailfin.
+        for cible in ("site", "artifact"):
+            html = self.html("", cible)
+            liens = json.loads(re.search(r'<script type="application/json" id="liens-data">(.*?)</script>', html,
+                                         re.S).group(1))
+            self.assertEqual(liens["accessoires"], "accessoires/", cible)
+            for slug in SLUGS_ACCESSOIRES:
+                self.assertEqual(liens[f"accessoires-{slug}"], f"accessoires/{slug}/", cible)
+            racine = self.arbre("accessoires/", cible)
+            self.assertEqual(un(racine, "p.lot-badge").texte(), "Lot 5 · en relecture", cible)
+            self.assertEqual(dom.selectionner(racine, "ul.prevu"), [], cible)
+            self.assertNotIn("à venir", un(racine, "main.page").texte(), cible)
+            self.assertEqual(un(racine, "h1").texte(), "Accessoires des trajets", cible)
+            cartes = dom.selectionner(racine, "a.carte")
+            self.assertEqual([c.get("href") for c in cartes], [f"{s}/" for s in SLUGS_ACCESSOIRES], cible)
+            self.assertEqual([un(c, "span.num").texte() for c in cartes], [f"5.{n}" for n in range(1, 8)], cible)
+            self.assertEqual([un(c, "span.zone").texte() for c in cartes],
+                             ["Zone 11 · Porte-bagages Tailfin"] * len(SLUGS_ACCESSOIRES), cible)
+            self.assertIn('<a href="./" aria-current="page">Accessoires des trajets<span class="cnt">7</span></a>',
+                          self.html("accessoires/", cible), cible)
+            rack = un(self.arbre("accessoires/rack/", cible), "article.atelier")
+            self.assertEqual([rack.get(n) for n in ("id", "data-zone")], ["accessoires-rack", "portebagages"], cible)
+            tete = un(self.arbre("accessoires/rack/", cible), "p.atelier-num")
+            self.assertEqual(tete.texte(), "Atelier 5.3 · Zone 11, Porte-bagages Tailfin", cible)
+            # Les renvois de 1.5 et de 3.5 vers la roue avec l'axe Tailfin mènent à la page de 5.2, plus à un texte gris.
+            for chemin in ("montage/roues/", "tubeless/crevaison/"):
+                self.assertIn('vois <a href="../../accessoires/axe/#accessoires-axe-roue">5.2</a>.', self.html(chemin, cible),
+                              f"{cible} {chemin}")
+
     def test_page_categorie(self):
         html = self.html("freins/")
         racine = dom.analyser(html)
@@ -916,14 +1054,14 @@ class TestPages(Site):
                 self.assertEqual(assemble.controles(html), [], f"{cible} {chemin}")
 
     def test_page_a_venir(self):
-        lot = next(l for l in CONFIG["lots"] if l["lot"] == 5)
-        racine = self.arbre("accessoires/")
-        self.assertEqual(un(racine, "h1").texte(), "Accessoires des trajets")
-        self.assertEqual(un(racine, "p.lot-badge").texte(), "Lot 5 · à venir")
+        # La seule catégorie à venir : celle du lot 6, qui a reçu l'entretien courant et le dépannage du lot 5.
+        lot = next(l for l in CONFIG["lots"] if l["lot"] == 6)
+        racine = self.arbre("revision/")
+        self.assertEqual(un(racine, "h1").texte(), "Entretien et révision")
+        self.assertEqual(un(racine, "p.lot-badge").texte(), "Lot 6 · à venir")
         self.assertEqual([li.texte() for li in dom.selectionner(un(racine, "ul.prevu"), "li")], lot["prevu"])
-        self.assertEqual(un(racine, "nav.crumbs").texte(), "Ateliers/Accessoires des trajets")
-        self.assertIn('<a class="soon" href="./" aria-current="page">Accessoires des trajets',
-                      self.html("accessoires/"))
+        self.assertEqual(un(racine, "nav.crumbs").texte(), "Ateliers/Entretien et révision")
+        self.assertIn('<a class="soon" href="./" aria-current="page">Entretien et révision', self.html("revision/"))
 
     def test_page_outils(self):
         racine = self.arbre("outils/")
@@ -942,9 +1080,10 @@ class TestPages(Site):
 
     def test_page_couples(self):
         # Une section par catégorie publiée qui a un tableau de couples, dans l'ordre des chapitres : Montage à la
-        # livraison (1.1), Freins (2.1), puis Transmission (4.1). Le tableau des Freins n'a pas de lien « #id » : il est
-        # recopié tel quel. Celui du Montage renvoie à 1.5 par « #montage-roues », réécrit vers la page de l'atelier ;
-        # celui de la Transmission à ses ateliers et à 1.1 et 1.6, chaque lien réécrit de même.
+        # livraison (1.1), Freins (2.1), Transmission (4.1), puis Accessoires des trajets (5.1). Le tableau des Freins
+        # n'a pas de lien « #id » : il est recopié tel quel. Celui du Montage renvoie à 1.5 par « #montage-roues »,
+        # réécrit vers la page de l'atelier ; ceux de la Transmission et des Accessoires à leurs ateliers (et à 1.1 et
+        # 1.6 pour la Transmission), chaque lien réécrit de même.
         racine = self.arbre("couples/")
         sections = dom.selectionner(racine, "section.couples-cat")
         categories = [("Montage à la livraison", "montage", "../montage/avant/", {"#montage-roues": "../montage/roues/"}),
@@ -954,7 +1093,11 @@ class TestPages(Site):
                         "#transmission-cassette": "../transmission/cassette/",
                         "#transmission-pedalier": "../transmission/pedalier/",
                         "#montage-pedales": "../montage/pedales/", "#montage-avant": "../montage/avant/",
-                        "#transmission-patte": "../transmission/patte/"})]
+                        "#transmission-patte": "../transmission/patte/"}),
+                      ("Accessoires des trajets", "accessoires", "../accessoires/materiel/",
+                       {"#accessoires-axe": "../accessoires/axe/", "#accessoires-rack": "../accessoires/rack/",
+                        "#accessoires-feu": "../accessoires/feu/", "#accessoires-sacs": "../accessoires/sacs/",
+                        "#accessoires-gardeboue": "../accessoires/gardeboue/"})]
         self.assertEqual(len(sections), len(categories))
         for section, (titre, ident, origine, liens) in zip(sections, categories):
             self.assertEqual(un(section, "h2").texte(), titre)
@@ -1576,6 +1719,173 @@ class TestPages(Site):
         for n, piece in allume.items():
             self.assertIn(noms[piece], titres[reglage][int(n) - 1], f"étape {n} : {piece}")
 
+    def test_pieces_3d_accessoires(self):
+        # La pièce 3D de l'atelier 5.3 (« rack ») : le Journey Rack sur l'Universal Thru Axle, l'adaptateur UDH sur la
+        # patte SRAM UDH, et la sangle sur la tige, posée bas ; elle montre aussi l'axe et l'adaptateur de 5.2. Le fichier
+        # du dépôt et ses copies servies par les deux cibles (dist/site/js/ et dist/artifact/js/) sont relus, le lot 5
+        # étant publié : la pièce publiée est celle qu'on relit. Chaque pastille, chaque commande et chaque geste du curseur est
+        # comparé mot pour mot à PASTILLES_3D_ACCESSOIRES, ETIQUETTES_3D_ACCESSOIRES, COMMANDES_3D_ACCESSOIRES et
+        # ETAPES_3D_ACCESSOIRES ; les gestes sont les titres des étapes de 5.3, dans leur ordre. Puis, sur tout le
+        # fichier, commentaires compris :
+        # - rien du CF 7 ni de son brouillon : ni Ortlieb, ni Quick-Rack, ni DEFEND, ni Knog, ni « Charge totale : ton
+        #   calcul », ni aluminium (Tailfin écrit « Alloy », le chapitre « alliage »), aucune charge en kilogrammes ;
+        # - aucun couple sinon ceux du chapitre pour ces pièces (COUPLES_3D_ACCESSOIRES), toujours écrits « Nm », aucune
+        #   pression, aucune donnée personnelle, aucun tiret cadratin ni demi-cadratin, aucun style en ligne ;
+        # - « approchée » et les couleurs dans l'en-tête, et chaque puce de DECLARATIONS_3D_ACCESSOIRES ; les valeurs
+        #   reprises de la scène de l'accueil (axe de 12 x 142, tige de 27,2, géométrie du cadre, jante et pneu)
+        #   affectées une seule fois ; ce que dessine chaque étape (DESSIN_3D_ACCESSOIRES), recoupé avec les titres des
+        #   étapes.
+        # Les valeurs viennent du chapitre : chaque nombre suivi d'une unité, dans une pastille, un geste ou une étiquette,
+        # y est écrit, avec une espace insécable avant l'unité ; la légende dit que les numéros se dessinent par-dessus
+        # les pièces cachées. tests/js/modeles-accessoires.test.mjs vérifie, pièce construite, le côté de chaque pièce,
+        # la sangle sous la séparation des lames et les pastilles à l'écran.
+        def plat(t):
+            return t.replace("’", "'").replace("\xa0", " ")
+        fichier, modele, atelier = "m-rack.js", "rack", "accessoires-rack"
+        source = (RACINE / "src" / "parts" / "60-accessoires.html").read_text(encoding="utf-8")
+        par_id = {a.id: a for a in ateliers.relever_chapitre(source).ateliers}
+        chapitre = plat(source)
+        titres = [plat(un(li, "p.st-t").texte()) for li in dom.selectionner(par_id[atelier].section, "ol.steps > li")]
+        self.assertEqual(len(titres), 14, "5.3 : quatorze étapes")
+        jetons = jetons_personnels()
+        absents = ("Ortlieb", "Quick-Rack", "QuickRack", "DEFEND", "Knog", "Charge totale", "ton calcul", "aluminium",
+                   "Lamine", "/Users/", "ltimsi", "CHF", "€")
+        motifs = (r"(?i)CF[\s_-]*7(?!\d)", r"(?i)\d\s*kg\b", r"(?i)\bkilo", r"(?<![\d,.])8 ?(?:-|à) ?10(?![\d,.])")
+        legende_3d = ("Touche un numéro pour repérer la pièce. Un numéro peut se dessiner par-dessus une pièce qui cache "
+                      "la sienne : fais tourner la pièce, ou lis la liste numérotée sous la figure.")
+        valeur = re.compile(r"(?:\d+(?:,\d+)?(?:-| à | et | ou ))?\d+(?:,\d+)?[ \xa0](?:Nm|mm|millimètres?|%|kg)(?!\w)")
+        couple = re.compile(r"(\d+(?:[,.]\d+)?(?: ?(?:-|à) ?\d+(?:[,.]\d+)?)?) ?(?:N ?[·.]? ?m\b|newton)", re.I)
+        # Les valeurs de la scène de l'accueil, recopiées dans la pièce (une IIFE autonome) : une valeur changée dans l'un
+        # des fichiers fait échouer le test.
+        scene = RACINE / "src" / "scene"
+        geo = (scene / "geometrie.js").read_text(encoding="utf-8")
+        roues = (scene / "pieces" / "roues.js").read_text(encoding="utf-8")
+        cadre = (scene / "pieces" / "cadre.js").read_text(encoding="utf-8")
+
+        def lu(texte, motif):
+            m = re.search(motif, texte, re.M)
+            self.assertIsNotNone(m, motif)
+            return m.group(1)
+        reprises = (
+            "var AXE = %s, D_AXE = %s, E_PATTE = %s;" % (lu(roues, r"^  axeArriere: cote\((\d+), FICHE\)"),
+                                                        lu(roues, r"^  diametreAxe: cote\((\d+), FICHE\)"),
+                                                        lu(cadre, r"ePatte = (\d+);")),
+            "var BASES = %s, CHUTE = %s, ANGLE_SELLE = %s, TUBE_SELLE = %s;" % (
+                lu(geo, r"^  bases: pub\(([\d.]+)\)"), lu(geo, r"^  differenceBoitierMoyeu: pub\(([\d.]+)\)"),
+                lu(geo, r"^  angleTubeSelle: pub\(([\d.]+)\)"), lu(geo, r"^  longueurTubeSelle: pub\(([\d.]+)\)")),
+            "var TIGE = %s, HAUT_TIGE = %s - %s, LONGUEUR_TIGE = %s, FENTE = %s;" % (
+                lu(cadre, r"^  diametreTige: cote\(([\d.]+), MARQUAGE\)"), lu(geo, r"^  hauteurSelle: apr\(([\d.]+),"),
+                lu(geo, r"^  retraitSelle: apr\(([\d.]+),"), lu(cadre, r"^  longueurTige: cote\(([\d.]+), MARQUAGE\)"),
+                lu(cadre, r"^  fente: ([\d.]+),")),
+            "var R_PNEU = %s, L_PNEU = %s, SIEGE = %s / 2, H_JANTE = %s, L_JANTE = %s;" % (
+                lu(geo, r"^  rayonPneu: apr\(([\d.]+),"), lu(roues, r"^  largeurPneu: cote\((\d+), 'schwalbe-g-one-rx'\)"),
+                lu(geo, r"^  diametreSiegeJante: pub\((\d+), 'schwalbe-g-one-rx'\)"),
+                lu(roues, r"^  hauteurJante: cote\((\d+), FICHE\)"),
+                lu(roues, r"^  largeurExterieureJante: cote\((\d+), 'canyon-gr30cf'\)")),
+        )
+        affectees = ("AXE", "D_AXE", "E_PATTE", "BASES", "CHUTE", "ANGLE_SELLE", "TUBE_SELLE", "TIGE", "HAUT_TIGE",
+                     "LONGUEUR_TIGE", "FENTE", "R_PNEU", "L_PNEU", "SIEGE", "H_JANTE", "L_JANTE", "S_SANGLE")
+        # La figure de 5.3 et sa légende ; les gestes du curseur sont les titres des étapes de 5.3.
+        figures = [f for f in dom.selectionner(par_id[atelier].section, "figure.v3d") if f.get("data-model") == modele]
+        self.assertEqual(len(figures), 1, f"{atelier} : figure {modele}")
+        self.assertIn(legende_3d, plat(un(figures[0], "figcaption").texte()), f"{atelier} : légende")
+        for liste, (a, premiere, attendus) in ETAPES_3D_ACCESSOIRES[fichier].items():
+            self.assertEqual([plat(e) for e in attendus], titres[premiere - 1:premiere - 1 + len(attendus)],
+                             f"{fichier} : {liste}")
+        chemin = RACINE / "src" / "js" / "models" / fichier
+        self.assertTrue(chemin.exists(), f"{fichier} absent")
+        self.assertIn("accessoires", self.chapitres, "lot 5 non publié")
+        sources = list(self.copies(fichier))
+        for nom, texte in sources:
+            self.assertEqual(texte.count(f"AtelierModels.register('{modele}', {{"), 1, f"{nom} : register")
+            self.assertEqual(texte.count("explodeLabel: 'Vue éclatée'"), 1, f"{nom} : vue éclatée")
+            pastilles = re.findall(r"text: '((?:[^'\\]|\\.)*)'", texte)
+            self.assertEqual(pastilles, PASTILLES_3D_ACCESSOIRES[fichier], f"{nom} : pastilles")
+            self.assertEqual(len(re.findall(r"\btext['\"]?\s*:", texte)), len(pastilles), f"{nom} : pastille écrite autrement")
+            etiquettes = re.findall(r"\blabel: '((?:[^'\\]|\\.)*)'", texte)
+            self.assertEqual(etiquettes, ETIQUETTES_3D_ACCESSOIRES[fichier], f"{nom} : étiquettes des commandes")
+            self.assertEqual(re.findall(r"\{ obj: ([\w.\[\]]+), p: ", texte), OBJETS_3D_ACCESSOIRES[fichier],
+                             f"{nom} : objets des pastilles")
+            gestes = []
+            for liste, (_, _, attendus) in ETAPES_3D_ACCESSOIRES[fichier].items():
+                m = re.search(r"var %s = \[(.*?)\];" % liste, texte)
+                gestes += re.findall(r"'((?:[^'\\]|\\.)*)'", m.group(1)) if m else []
+                self.assertEqual(re.findall(r"'((?:[^'\\]|\\.)*)'", m.group(1)) if m else [], attendus,
+                                 f"{nom} : gestes de {liste}")
+            self.assertEqual(len(re.findall(r"\bvar ETAPES\w*\s*=", texte)), len(ETAPES_3D_ACCESSOIRES[fichier]),
+                             f"{nom} : liste de gestes en trop")
+            for commande in (*COMMANDES_3D_ACCESSOIRES[fichier], *LIGNE_3D_TRANSMISSION, *DESSIN_3D_ACCESSOIRES[fichier],
+                             *reprises):
+                self.assertEqual(texte.count(commande), 1, f"{nom} : commande ou constante {commande!r}")
+            for nom_constante in affectees:
+                self.assertEqual(len(re.findall(r"(?<![\w.])%s\s*=(?!=)" % nom_constante, texte)), 1,
+                                 f"{nom} : {nom_constante} affectée plus d'une fois")
+            # Les valeurs et leur typographie, dans chaque libellé affiché.
+            for libelle in pastilles + gestes + etiquettes:
+                for v in valeur.findall(libelle):
+                    self.assertIn(plat(v), chapitre, f"{nom} : {v!r} absent du chapitre : {libelle[:60]}")
+                self.assertIsNone(re.search(r"\d (?:Nm|mm|%|s)(?!\w)", libelle), f"{nom} : espace avant l'unité : {libelle[:60]}")
+                self.assertIsNone(re.search(r"[^\s\xa0] [:;?!»]|« ", libelle), f"{nom} : espace ordinaire : {libelle[:60]}")
+                self.assertNotIn("'", libelle, f"{nom} : apostrophe droite : {libelle[:60]}")
+            # Les couples : ceux du chapitre pour ces pièces, dans les pastilles, et aucun autre dans tout le fichier.
+            lu_texte = re.sub(r"\s+", " ", plat(texte))
+            self.assertEqual(set(couple.findall(lu_texte)), COUPLES_3D_ACCESSOIRES[fichier], f"{nom} : couples")
+            self.assertEqual({c for p in pastilles for c in couple.findall(plat(p))}, COUPLES_3D_ACCESSOIRES[fichier],
+                             f"{nom} : couples des pastilles")
+            self.assertNotIn("N·m", texte, f"{nom} : « N·m » au lieu de « Nm »")
+            m = re.search(r"(?<![\w-])(?:bars?|psi|kpa|mpa|atm|atmosphères?)(?![\w-])|gonfl|manomètre", lu_texte, re.I)
+            self.assertIsNone(m, f"{nom} : pression {m and lu_texte[max(0, m.start() - 30):m.end()]!r}")
+            # assertFalse plutôt qu'assertNotIn : un échec nomme la valeur sans recopier tout le fichier.
+            for absent in absents:
+                self.assertFalse(absent.lower() in lu_texte.lower(), f"{nom} : {absent!r} présent")
+            for motif in motifs:
+                m = re.search(motif, lu_texte)
+                self.assertIsNone(m, f"{nom} : {m and lu_texte[max(0, m.start() - 30):m.end() + 30]!r}")
+            self.assertNotIn("document.createElement('p')", texte, f"{nom} : ligne du geste à soi")
+            verifier_piece_3d(self, nom, texte, DECLARATIONS_3D_ACCESSOIRES[fichier], jetons)
+        # Ce que dessine chaque étape, recoupé avec les titres de 5.3.
+        texte = chemin.read_text(encoding="utf-8")
+
+        def etape(debut):
+            trouvees = [i for i, t in enumerate(titres, 1) if t.startswith(debut)]
+            self.assertEqual(len(trouvees), 1, debut)
+            return trouvees[0]
+        poses = dict(re.findall(r"(\w+) = (\d+)", re.search(r"var (POSE = .*?);", texte).group(1)))
+        self.assertEqual({k: int(v) for k, v in poses.items()},
+                         {"POSE": etape("Pose les pattes"), "BRAS": etape("Pose le bras avant"),
+                          "COLLIER": etape("Visse le collier"), "SANGLE": etape("Ferme la sangle")})
+        self.assertIn("le plus bas possible, avant la séparation des lames", titres[etape("Ferme la sangle") - 1])
+        facultatives = dict(re.findall(r"(\d+): '(\w+)'", re.search(r"var FACULTATIVES = \{([^}]*)\};", texte).group(1)))
+        self.assertEqual(sorted(int(n) for n in facultatives),
+                         [i for i, t in enumerate(titres, 1) if t.startswith("Étape facultative")])
+        noms = {"visL": "vis L", "visK": "vis K", "visN": "vis N", "goupilles": "Pose les pattes", "bras": "bras avant",
+                "visI": "vis I", "visJ": "vis J", "fixD": "fixations D", "sangle": "sangle", "visE": "vis antivol E",
+                "entretoise": "centrage", "droite": "côté droit"}
+        for n, piece in facultatives.items():
+            self.assertIn(noms[piece], titres[int(n) - 1], f"étape facultative {n} : {piece}")
+        allume = dict(re.findall(r"(\d+): '(\w+)'", re.search(r"var ALLUME = \{([^}]*)\};", texte).group(1)))
+        self.assertEqual(len(allume), 12)
+        for n, piece in allume.items():
+            self.assertIn(noms[piece], titres[int(n) - 1], f"étape {n} : {piece}")
+        # Les pastilles de chaque étape : une liste par étape, six pastilles au plus, et six au plus en vue éclatée, qui
+        # ajoute ECLATEE et retire ECLATEE_SANS ; chaque pastille du fichier montrée à une étape au moins.
+        listes = json.loads(re.search(r"var PASTILLES = (\[\[[\d, \[\]]+\]\]);", texte).group(1))
+        m = re.search(r"var ECLATEE = (\[[\d, ]+\]), ECLATEE_SANS = (\[[\d, ]+\]);", texte)
+        eclatee, sans = json.loads(m.group(1)), json.loads(m.group(2))
+        self.assertEqual(len(listes), len(titres), f"{fichier} : une liste par étape")
+        self.assertTrue(all(1 <= len(l) <= 6 for l in listes), f"{fichier} : six pastilles au plus")
+        self.assertTrue(all(1 <= len((set(l) - set(sans)) | set(eclatee)) <= 6 for l in listes),
+                        f"{fichier} : six pastilles au plus en vue éclatée")
+        self.assertEqual(set().union(*map(set, listes)), set(range(1, len(PASTILLES_3D_ACCESSOIRES[fichier]) + 1)),
+                         f"{fichier} : chaque pastille à une étape")
+        # La sangle : la consigne du service client, sur l'étape et dans la légende ; la séparation des lames se lit dans
+        # la scène de l'accueil, au-dessus du tube de selle.
+        self.assertIn("réponse écrite du service client Tailfin", chapitre)
+        self.assertGreater(int(lu(cadre, r"^  fente: ([\d.]+),")) + float(lu(geo, r"^  hauteurSelle: apr\(([\d.]+),"))
+                           - float(lu(geo, r"^  retraitSelle: apr\(([\d.]+),"))
+                           - float(lu(cadre, r"^  longueurTige: cote\(([\d.]+), MARQUAGE\)")),
+                           float(lu(geo, r"^  longueurTubeSelle: pub\(([\d.]+)\)")))
+
     def test_disque_de_l_axe_comme_celui_du_chapitre_2(self):
         # Le disque de la pièce de l'axe (1.5) recopie celui de m-rotor.js (2.2, déjà en ligne) : mêmes fentes à cinq
         # pans, mêmes rayons, mêmes épaisseurs. Le test épingle ces constantes dans les deux fichiers, pour qu'une cote
@@ -1683,7 +1993,7 @@ class TestPages(Site):
             self.assertEqual(dom.selectionner(page, absent), [], absent)
         self.assertEqual([un(b, "h2").texte() for b in (elements(grille)[1], blocs[2], blocs[4])],
                          ["Où intervenir", "D’origine, puis à monter", "Toutes les catégories"])
-        self.assertEqual(len(dom.selectionner(blocs[2], "ul.a-remplacer > li")), 4)
+        self.assertEqual(len(dom.selectionner(blocs[2], "ul.a-remplacer > li")), 8)
         self.assertEqual(len(dom.selectionner(blocs[4], "div.cats > a.cat")), len(PUBLIEES) + len(A_VENIR))
         # L'introduction garde son texte : les caractéristiques, le jour de la livraison et la règle des sources.
         intro = blocs[3]
@@ -1754,7 +2064,7 @@ class TestPages(Site):
 
     def test_plus_de_cf7(self):
         # Le site ne parle plus que du Grizl CF 8 Di2. Aucun fichier servi par les deux cibles, hors de three.js, ne
-        # garde le CF 7, sa fiche ou ses pièces : ni les 44 pages, ni l'index de la recherche, ni les pièces 3D des
+        # garde le CF 7, sa fiche ou ses pièces : ni les 51 pages, ni l'index de la recherche, ni les pièces 3D des
         # ateliers, ni les modules de la scène. Le menu, la description de chaque page et l'accueil nomment le CF 8 Di2.
         # « CF 7 » est cherché sans casse, avec ou sans espace (même insécable), tiret ou soulignement : « cf 7 »,
         # « CF7 », « grizl-cf-7 ». Les autres noms aussi, sans casse. Une couleur comme « #cf7a3b » n'est pas une trace.
@@ -1770,7 +2080,7 @@ class TestPages(Site):
             servis = sorted(f for f in fichiers if not f.startswith("vendor/"))
             for attendu in ["js/recherche.js", "js/m-rotor.js", "js/m-caliper.js", "js/m-bleed.js", "js/m-torque.js",
                             "js/m-cockpit.js", "js/m-axle.js", "js/m-pedal.js", "js/m-rim.js", "js/m-plug.js",
-                            "js/scene/sources.js"] + [f"{c}index.html" for c in CHEMINS]:
+                            "js/m-rack.js", "js/scene/sources.js"] + [f"{c}index.html" for c in CHEMINS]:
                 self.assertIn(attendu, servis, cible)
             traces = []
             for nom in servis:
@@ -1822,10 +2132,14 @@ class TestRecherche(Site):
         self.assertIn({"k": "Catégorie", "t": "Transmission", "u": "transmission/"}, index)
         self.assertIn({"k": "Atelier 4.4", "t": "Remplacer la chaîne", "u": "transmission/chaine/"}, index)
         self.assertIn({"k": "Atelier 4.5", "t": "Démonter et remonter la cassette", "u": "transmission/cassette/"}, index)
-        self.assertIn({"k": "Lot 5 · à venir", "t": "Accessoires des trajets", "u": "accessoires/"}, index)
-        # Les lots 2, 3 et 4 sont publiés : plus d'entrée « à venir » pour eux, ni pour la charge du Di2 retirée du
-        # lot 4.
-        self.assertFalse([e for e in index if e["k"] in ("Lot 2 · à venir", "Lot 3 · à venir", "Lot 4 · à venir")])
+        self.assertIn({"k": "Catégorie", "t": "Accessoires des trajets", "u": "accessoires/"}, index)
+        self.assertIn({"k": "Atelier 5.2", "t": "Remplacer l'axe arrière et poser l'adaptateur UDH", "u": "accessoires/axe/"},
+                      index)
+        self.assertIn({"k": "Atelier 5.3", "t": "Monter le Journey Rack", "u": "accessoires/rack/"}, index)
+        self.assertIn({"k": "Lot 6 · à venir", "t": "Entretien et révision", "u": "revision/"}, index)
+        # Les lots 2 à 5 sont publiés : plus d'entrée « à venir » pour eux, ni pour la charge du Di2 retirée du lot 4.
+        self.assertFalse([e for e in index if e["k"] in ("Lot 2 · à venir", "Lot 3 · à venir", "Lot 4 · à venir",
+                                                         "Lot 5 · à venir")])
         self.assertFalse([e for e in index if e["t"] == "Charger la batterie Di2 BT-DN320."])
         pieces = [e for e in index if e["k"] == "Pièce d’origine"]
         self.assertTrue(any("RD-M8250" in e["t"] for e in pieces))
@@ -1836,8 +2150,8 @@ class TestRecherche(Site):
         self.assertEqual(len(pieces), lignes)
         # 45 étapes aux Freins, 89 au Montage (1.3 : 24, 1.4 : 14, 1.5 : 17, 1.6 : 15, 1.7 : 11, 1.8 : 8), 61 au
         # tubeless (3.2 : 25, son talonnage en trois étapes, 3.3 : 9, 3.4 : 9, 3.5 : 18), 53 à la transmission (4.2 : 11,
-        # 4.3 : 5, 4.4 : 12, 4.5 : 12, 4.6 : 13).
-        self.assertEqual(len([e for e in index if e["k"].startswith("Étape · ")]), 45 + 89 + 61 + 53)
+        # 4.3 : 5, 4.4 : 12, 4.5 : 12, 4.6 : 13), 53 aux accessoires (5.2 : 16, 5.3 : 14, 5.4 : 4, 5.5 : 13, 5.6 : 6).
+        self.assertEqual(len([e for e in index if e["k"].startswith("Étape · ")]), 45 + 89 + 61 + 53 + 53)
         # Les ateliers passent en premier, avant les étapes et les outils.
         genres = [e["k"].split(" ")[0] for e in index]
         self.assertLess(genres.index("Atelier"), genres.index("Étape"))
@@ -1866,23 +2180,24 @@ class TestAccueil(unittest.TestCase):
         cls.chapitres = pages.chapitres_publies(CONFIG)
 
     def test_ou_intervenir(self):
-        # Dix cartes, dans l'ordre des pastilles : les trois zones des freins, les cinq du montage, celle des pneus,
-        # avec les six ateliers du chapitre 3, puis celle de la chaîne et de la cassette, avec quatre ateliers du
-        # chapitre 4. Les autres ateliers du chapitre 4 rejoignent le pédalier (4.8) et le dérailleur Di2 (4.1, 4.6,
-        # 4.7, 4.9). Les ateliers sans zone (1.1, 1.2, 1.9) ne sont dans aucune.
+        # Onze cartes, dans l'ordre des pastilles : les trois zones des freins, les cinq du montage, celle des pneus,
+        # avec les six ateliers du chapitre 3, celle de la chaîne et de la cassette, avec quatre ateliers du chapitre 4,
+        # puis celle du porte-bagages Tailfin, avec les sept ateliers du chapitre 5. Les autres ateliers du chapitre 4
+        # rejoignent le pédalier (4.8) et le dérailleur Di2 (4.1, 4.6, 4.7, 4.9). Les ateliers sans zone (1.1, 1.2,
+        # 1.9) ne sont dans aucune.
         racine = dom.analyser(pages.cartes_des_zones(self.chapitres, ZONES))
         cartes = dom.selectionner(racine, "div.zone-carte")
         self.assertEqual([c.get("data-zone") for c in cartes],
                          ["disques", "etrier", "manettes", "poste", "selle", "axes", "pedalier", "derailleur", "pneus",
-                          "chaine"])
+                          "chaine", "portebagages"])
         self.assertEqual([un(c, "button.zone-btn").texte() for c in cartes],
                          ["Disques de frein", "Étrier et plaquettes", "Manettes et durites", "Poste de pilotage",
                           "Selle et tige", "Axes des roues", "Pédalier et pédales", "Dérailleur Di2", "Pneus et valves",
-                          "Chaîne et cassette"])
+                          "Chaîne et cassette", "Porte-bagages Tailfin"])
         attendu = {"disques": ["2.2", "2.4"], "etrier": ["2.3", "2.5", "2.6"], "manettes": ["2.1", "2.7", "2.8"],
                    "poste": ["1.3"], "selle": ["1.4", "1.8"], "axes": ["1.5"], "pedalier": ["1.6", "4.8"],
                    "derailleur": ["1.7", "4.1", "4.6", "4.7", "4.9"], "pneus": ["3.1", "3.2", "3.3", "3.4", "3.5", "3.6"],
-                   "chaine": ["4.2", "4.3", "4.4", "4.5"]}
+                   "chaine": ["4.2", "4.3", "4.4", "4.5"], "portebagages": [f"5.{n}" for n in range(1, 8)]}
         for n, (carte, zone) in enumerate(zip(cartes, ZONES), 1):
             self.assertEqual(un(carte, "span.zone-n").texte(), str(n))
             bouton = un(carte, "button.zone-btn")
@@ -1890,7 +2205,14 @@ class TestAccueil(unittest.TestCase):
             liens = dom.selectionner(carte, "a")
             self.assertEqual([un(a, "span.num").texte() for a in liens], attendu[zone["id"]])
             for a in liens:
-                self.assertRegex(a.get("href"), r"^(freins|montage|tubeless|transmission)/[a-z0-9]+/$")
+                self.assertRegex(a.get("href"), r"^(freins|montage|tubeless|transmission|accessoires)/[a-z0-9]+/$")
+        # Seule la carte du porte-bagages a une note : le vélo n'en a pas, la pastille vise le bas de la tige. Elle
+        # vient de zones.json, sous le nom de la zone et avant ses ateliers.
+        notes = {c.get("data-zone"): [p.texte() for p in dom.selectionner(c, "p.zone-note")] for c in cartes}
+        self.assertEqual({z: n for z, n in notes.items() if n}, {"portebagages": [ZONES[10]["note"]]})
+        self.assertEqual(ZONES[10]["note"], "Le vélo est dessiné tel que livré, sans porte-bagages\xa0: la pastille vise le bas "
+                                            "de la tige de selle, où se pose la sangle du porte-bagages.")
+        self.assertEqual([e.tag for e in elements(cartes[10])], ["div", "p", "ul"])
         disques = dom.selectionner(cartes[0], "a")[0]
         self.assertEqual(disques.get("href"), "freins/disques/")
         self.assertEqual([s.texte() for s in elements(disques)], ["2.2", "Déposer et reposer un disque", "Entretenir"])
@@ -1899,9 +2221,9 @@ class TestAccueil(unittest.TestCase):
         racine = dom.analyser(pages.pieces_a_remplacer(self.chapitres))
         lignes = dom.selectionner(racine, "ul.a-remplacer > li")
         # 2.2 dépose et repose le disque d'origine : se remplacent les pédales de 1.6, que le vélo n'a pas à la
-        # livraison, la pièce de 2.3, les chambres à air éventuelles de 3.2, puis la chaîne de 4.4, dans l'ordre des
-        # chapitres.
-        self.assertEqual(len(lignes), 4)
+        # livraison, la pièce de 2.3, les chambres à air éventuelles de 3.2, la chaîne de 4.4, puis les pièces Tailfin
+        # et le feu de 5.2, 5.3, 5.4 et 5.6, dans l'ordre des chapitres.
+        self.assertEqual(len(lignes), 8)
         self.assertEqual(un(lignes[0], ".vers").texte(), "Shimano PD-ME700 et cales SM-SH51")
         self.assertEqual(un(lignes[0], ".de").texte(), "à la place de : Aucune pédale, non fournies")
         self.assertEqual(un(lignes[0], "a").get("href"), "montage/pedales/")
@@ -1915,12 +2237,18 @@ class TestAccueil(unittest.TestCase):
         self.assertEqual(un(lignes[3], ".vers").texte(), "CN-M8100 neuve et attache SM-CN910-12 neuve")
         self.assertEqual(un(lignes[3], ".de").texte(), "à la place de : CN-M8100 usée")
         self.assertEqual(un(lignes[3], "a").get("href"), "transmission/chaine/")
+        tailfin = [("Universal Thru Axle et adaptateur UDH Tailfin", "Axe arrière DT Swiss livré", "accessoires/axe/"),
+                   ("Journey Rack en alliage", "Aucun porte-bagages", "accessoires/rack/"),
+                   ("Garde-boue du Journey Rack", "Aucun garde-boue", "accessoires/gardeboue/"),
+                   ("Support Tailfin et Garmin Varia RearVue 820", "Aucun feu arrière", "accessoires/feu/")]
+        self.assertEqual([(un(l, ".vers").texte(), un(l, ".de").texte(), un(l, "a").get("href")) for l in lignes[4:]],
+                         [(vers, f"à la place de : {de}", href) for vers, de, href in tailfin])
 
     def test_categories(self):
         racine = dom.analyser(pages.cartes_des_categories(CONFIG, self.chapitres))
         cartes = dom.selectionner(racine, "a.cat")
         self.assertEqual([c.get("href") for c in cartes], [f"{c}/" for c in PUBLIEES + A_VENIR])
-        self.assertEqual([c.classes() for c in cartes], [["cat"]] * 4 + [["cat", "soon"]] * 2)
+        self.assertEqual([c.classes() for c in cartes], [["cat"]] * 5 + [["cat", "soon"]])
         self.assertEqual(un(cartes[0], "span.label").texte(), "Lot 2 · en relecture")
         self.assertEqual(un(cartes[0], "h3").texte(), "Montage à la livraison")
         self.assertEqual(un(cartes[0], "p").texte(), "9 ateliers")
@@ -1933,8 +2261,11 @@ class TestAccueil(unittest.TestCase):
         self.assertEqual(un(cartes[3], "span.label").texte(), "Lot 4 · en relecture")
         self.assertEqual(un(cartes[3], "h3").texte(), "Transmission")
         self.assertEqual(un(cartes[3], "p").texte(), "9 ateliers")
-        self.assertEqual(un(cartes[4], "span.label").texte(), "Lot 5 · à venir")
-        self.assertEqual(un(cartes[4], "p").texte(), CONFIG["lots"][5]["prevu"][0])
+        self.assertEqual(un(cartes[4], "span.label").texte(), "Lot 5 · en relecture")
+        self.assertEqual(un(cartes[4], "h3").texte(), "Accessoires des trajets")
+        self.assertEqual(un(cartes[4], "p").texte(), "7 ateliers")
+        self.assertEqual(un(cartes[5], "span.label").texte(), "Lot 6 · à venir")
+        self.assertEqual(un(cartes[5], "p").texte(), CONFIG["lots"][6]["prevu"][0])
 
     def test_marques_remplacees(self):
         modele = "<p>avant</p>\n<!--OU-INTERVENIR-->\n<!--A-REMPLACER-->\n<!--CATEGORIES-->\n<p>après</p>"

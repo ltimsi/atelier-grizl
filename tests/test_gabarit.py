@@ -1,32 +1,68 @@
 """Tests de build/gabarit.py : lots.json, adresses relatives, menu, fil d'Ariane, liens entre pages, carte d'imports et
 document complet (site) ou fragment (page d'accueil de l'aperçu Claude)."""
+import contextlib
+import copy
 import json
 import posixpath
 import re
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE / "build"))
 
+import assemble  # noqa: E402
 import ateliers  # noqa: E402
 import gabarit  # noqa: E402
+import pages  # noqa: E402
 
 CONFIG = json.loads((RACINE / "build" / "lots.json").read_text(encoding="utf-8"))
 CHAPITRES = {nom: ateliers.relever_chapitre((RACINE / "src" / "parts" / f"{fichier}.html").read_text(encoding="utf-8"))
              for nom, fichier in (("freins", "20-freins"), ("montage", "11-montage"), ("tubeless", "30-tubeless"),
-                                  ("transmission", "40-transmission"))}
+                                  ("transmission", "40-transmission"), ("accessoires", "60-accessoires"))}
 SLUGS = ["systeme", "disques", "plaquettes", "rodage", "centrage", "controles", "purge", "securite"]
 SLUGS_MONTAGE = ["avant", "deballer", "cintre", "selle", "roues", "pedales", "di2", "position", "controles"]
 SLUGS_TUBELESS = ["materiel", "passer", "liquide", "pression", "crevaison", "problemes"]
 SLUGS_TRANSMISSION = ["di2", "nettoyer", "usure", "chaine", "cassette", "reglage", "patte", "pedalier", "depannage"]
-# Les catégories publiées, dans l'ordre des chapitres : 1 Montage, 2 Freins, 3 Pneus et tubeless, 4 Transmission.
-PUBLIEES = ["montage", "freins", "tubeless", "transmission"]
-A_VENIR = ["accessoires", "revision"]
+SLUGS_ACCESSOIRES = ["materiel", "axe", "rack", "gardeboue", "sacs", "feu", "charge"]
+# Les catégories publiées, dans l'ordre des chapitres : 1 Montage, 2 Freins, 3 Pneus et tubeless, 4 Transmission,
+# 5 Accessoires des trajets.
+PUBLIEES = ["montage", "freins", "tubeless", "transmission", "accessoires"]
+A_VENIR = ["revision"]
 REFERENCES = ["composants", "outils", "couples", "approche", "sources"]
 TOUS_LES_SCRIPTS = dict(zones=True, liens=True, three=True, modeles=["caliper"], app=True, references=True,
                         garde_fou=True)
+
+
+@contextlib.contextmanager
+def fragments_temporaires(fragments, liens=True):
+    """Un dossier src/ temporaire pour le build : les fragments de src/parts (liens, sauf `liens=False`), plus
+    `fragments` ({nom: html}), écrits pour de vrai, à côté des dossiers src/scene et src/js (liens). gabarit.SRC le
+    désigne le temps du bloc : c'est là que gabarit.lire et gabarit.numero_de_chapitre lisent. Le dépôt n'est pas
+    touché : un nom de `fragments` n'est jamais lié, pour qu'écrire le fragment ne passe pas par le lien jusqu'au vrai
+    fichier de src/parts."""
+    with tempfile.TemporaryDirectory() as dossier:
+        src = Path(dossier) / "src"
+        (src / "parts").mkdir(parents=True)
+        for f in (RACINE / "src" / "parts").glob("*.html") if liens else ():
+            if f.stem not in fragments:
+                (src / "parts" / f.name).symlink_to(f)
+        for nom, html in fragments.items():
+            (src / "parts" / f"{nom}.html").write_text(html, encoding="utf-8")
+        for d in ("scene", "js"):
+            (src / d).symlink_to(RACINE / "src" / d)
+        with mock.patch.object(gabarit, "SRC", src):
+            yield src
+
+
+# Un brouillon du chapitre de l'entretien (lot 6), tel qu'on le copie dans src/parts avant de le relire : il n'a pas
+# encore son p.ch-num. Et le même, numéroté « Chapitre 6 ».
+BROUILLON = ('<section class="chapter" id="revision">\n  <div class="ch-head">\n    <h2>Entretien</h2>\n  </div>\n'
+             '</section>\n')
+NUMEROTE = BROUILLON.replace("<h2>", '<p class="ch-num">Chapitre 6 · Entretien</p>\n    <h2>')
 
 
 def page(chemin="", titre="Atelier Grizl", **reste):
@@ -48,9 +84,10 @@ class TestLots(unittest.TestCase):
         return next(l for l in CONFIG["lots"] if l["lot"] == numero)
 
     def test_categories(self):
+        # Le lot 6 garde l'id « revision » (son ancre #revision), et son menu dit l'entretien qu'il a reçu du lot 5.
         attendu = {1: ("freins", "Freins"), 2: ("montage", "Montage à la livraison"),
                    3: ("tubeless", "Pneus et tubeless"), 4: ("transmission", "Transmission"),
-                   5: ("accessoires", "Accessoires des trajets"), 6: ("revision", "Révision et couples")}
+                   5: ("accessoires", "Accessoires des trajets"), 6: ("revision", "Entretien et révision")}
         for numero, (ident, menu) in attendu.items():
             self.assertEqual(self.lot(numero)["categorie"], {"id": ident, "menu": menu}, f"lot {numero}")
         self.assertNotIn("categorie", self.lot(0))
@@ -61,22 +98,19 @@ class TestLots(unittest.TestCase):
 
     def test_prevu(self):
         # Un lot publié n'a plus de « prevu » : sa catégorie montre ses ateliers.
-        for numero in (0, 1, 2, 3, 4):
+        for numero in (0, 1, 2, 3, 4, 5):
             self.assertNotIn("prevu", self.lot(numero), f"lot {numero}")
-        # Lot 5 : la liste Tailfin seule. UDH est développé à sa première apparition, comme dans le relevé.
-        self.assertEqual(self.lot(5)["prevu"], [
-            "Porte-bagages Tailfin, son adaptateur UDH (patte de dérailleur universelle de SRAM) et son axe "
-            "traversant.",
-            "Sacoches Tailfin et leur sangle.",
-            "Garde-boue du porte-bagages Tailfin.",
-            "Support d’éclairage Tailfin."])
+        # Lot 6 : l'entretien courant et le dépannage le rejoignent depuis le lot 5 (décision de Lamine du 1/11/2026),
+        # avant la révision et l'aide-mémoire des couples.
         self.assertEqual(self.lot(6)["prevu"], [
+            "Entretien courant : nettoyer, graisser et contrôler, d'après les documents des fabricants.",
             "Ma révision : ce qu'il faut contrôler et quand, avec uniquement des intervalles publiés.",
+            "Dépannage : les symptômes courants, et l'atelier qui les traite.",
             "Aide-mémoire des couples des lots validés."])
 
     def test_statuts(self):
         self.assertEqual([(l["lot"], l["statut"]) for l in CONFIG["lots"]],
-                         [(n, "en relecture") for n in range(0, 5)] + [(n, "à faire") for n in range(5, 7)])
+                         [(n, "en relecture") for n in range(0, 6)] + [(6, "à faire")])
 
     def test_lot_2_publie(self):
         # Le lot 2 publie le chapitre 11-montage (il n'y a pas de fragment 10-avant) et ses quatre pièces 3D.
@@ -106,6 +140,26 @@ class TestLots(unittest.TestCase):
         for chemin in ("src/parts/40-transmission.html", "src/js/models/m-chain.js", "src/js/models/m-cassette.js",
                        "src/js/models/m-derailleur.js"):
             self.assertTrue((RACINE / chemin).is_file(), chemin)
+
+    def test_lot_5_publie(self):
+        # Le lot 5 ne couvre que le matériel Tailfin de Lamine et son feu Garmin (décisions du 1/11/2026) : le chapitre
+        # 60-accessoires et sa pièce 3D, le Journey Rack. L'entretien courant et le dépannage passent au lot 6.
+        lot = self.lot(5)
+        self.assertEqual((lot["titre"], lot["statut"]), ("Accessoires des trajets", "en relecture"))
+        self.assertEqual(lot["parts"], ["60-accessoires"])
+        self.assertEqual(lot["modeles"], ["rack"])
+        for chemin in ("src/parts/60-accessoires.html", "src/js/models/m-rack.js"):
+            self.assertTrue((RACINE / chemin).is_file(), chemin)
+
+    def test_lot_6_a_faire(self):
+        # Le lot 6 reçoit l'entretien courant (50-entretien) et le dépannage (70-depannage), avant l'aide-mémoire des
+        # couples et les sources. Ses fragments peuvent arriver dans src/parts avant sa relecture (étape 1 de la
+        # procédure) : tant qu'il est « à faire », rien n'en est publié (TestBrouillons).
+        lot = self.lot(6)
+        self.assertEqual((lot["titre"], lot["statut"]), ("Entretien, révision, dépannage et aide-mémoire", "à faire"))
+        self.assertEqual(lot["parts"], ["50-entretien", "70-depannage", "80-couples", "90-sources"])
+        self.assertEqual(lot["modeles"], [])
+        self.assertNotIn(lot["categorie"]["id"], pages.chapitres_publies(CONFIG))
 
 
 class TestAdresses(unittest.TestCase):
@@ -137,8 +191,8 @@ class TestMenu(unittest.TestCase):
         self.assertIn('<a href="../../">Mon vélo</a>', m)
         self.assertIn('<a href="../">Freins<span class="cnt">8</span></a>', m)
         self.assertIn('<a href="../../transmission/">Transmission<span class="cnt">9</span></a>', m)
-        self.assertIn('<a class="soon" href="../../accessoires/">Accessoires des trajets<span class="cnt">lot 5</span></a>',
-                      m)
+        self.assertIn('<a href="../../accessoires/">Accessoires des trajets<span class="cnt">7</span></a>', m)
+        self.assertIn('<a class="soon" href="../../revision/">Entretien et révision<span class="cnt">lot 6</span></a>', m)
 
     def test_menu_replie(self):
         m = self.menu("outils/")
@@ -147,7 +201,7 @@ class TestMenu(unittest.TestCase):
         self.assertIn('<a href="./" aria-current="page">Outils</a>', m)
         self.assertEqual(m.count('aria-current="page"'), 1)
         # La catégorie dépliée est celle de la page, pas une autre.
-        self.assertNotIn('class="sub-nav"', self.menu("accessoires/", "accessoires"))
+        self.assertNotIn('class="sub-nav"', self.menu("revision/", "revision"))
 
     def test_menu_categorie(self):
         m = self.menu("freins/", "freins")
@@ -166,10 +220,12 @@ class TestMenu(unittest.TestCase):
         self.assertNotIn('class="soon" href="tubeless/"', m)
         self.assertIn('<a href="transmission/">Transmission<span class="cnt">9</span></a>', m)
         self.assertNotIn('class="soon" href="transmission/"', m)
+        self.assertIn('<a href="accessoires/">Accessoires des trajets<span class="cnt">7</span></a>', m)
+        self.assertNotIn('class="soon" href="accessoires/"', m)
 
     def test_menu_a_venir_courant(self):
-        m = self.menu("accessoires/", "accessoires")
-        self.assertIn('<a class="soon" href="./" aria-current="page">Accessoires des trajets<span class="cnt">lot 5</span>'
+        m = self.menu("revision/", "revision")
+        self.assertIn('<a class="soon" href="./" aria-current="page">Entretien et révision<span class="cnt">lot 6</span>'
                       '</a>', m)
         self.assertEqual(m.count('aria-current="page"'), 1)
 
@@ -187,13 +243,13 @@ class TestMenu(unittest.TestCase):
 
     def test_liens_relatifs_qui_menent_aux_bonnes_pages(self):
         ateliers_ = {"freins": SLUGS, "montage": SLUGS_MONTAGE, "tubeless": SLUGS_TUBELESS,
-                     "transmission": SLUGS_TRANSMISSION}
+                     "transmission": SLUGS_TRANSMISSION, "accessoires": SLUGS_ACCESSOIRES}
         cibles = [""] + PUBLIEES + [f"{c}/{s}" for c in PUBLIEES for s in ateliers_[c]] + A_VENIR + REFERENCES
         for chemin, categorie in [("", None), ("freins/", "freins"), ("freins/plaquettes/", "freins"),
                                   ("montage/", "montage"), ("montage/di2/", "montage"), ("tubeless/", "tubeless"),
                                   ("tubeless/crevaison/", "tubeless"), ("transmission/", "transmission"),
                                   ("transmission/cassette/", "transmission"), ("accessoires/", "accessoires"),
-                                  ("approche/", None)]:
+                                  ("accessoires/rack/", "accessoires"), ("revision/", "revision"), ("approche/", None)]:
             m = self.menu(chemin, categorie)
             hrefs = liens(m)
             for href in hrefs:
@@ -212,24 +268,84 @@ class TestMenu(unittest.TestCase):
 
     def test_ordre_des_chapitres(self):
         # Le chapitre 1 (Montage, lot 2) passe avant le chapitre 2 (Freins, lot 1) : le jour J, le menu ouvre sur le
-        # montage. Le numéro du chapitre est le premier chiffre du nom de son fragment, et le chapitre le dit dans son
-        # p.ch-num ; les catégories à venir gardent l'ordre des lots.
+        # montage. Le numéro du chapitre est celui que son p.ch-num écrit, lu dans le premier fragment du lot. Le nom
+        # du fichier ne compte plus : « 60-accessoires » est le chapitre 5, depuis que l'entretien (« 50-entretien »)
+        # et le dépannage sont passés au lot 6 (décision de Lamine du 1/11/2026). Rangé par le premier chiffre du nom,
+        # comme avant, le lot 6 passerait devant les accessoires dès sa publication. Les catégories à venir gardent
+        # l'ordre des lots.
         lots = {l["lot"]: l for l in CONFIG["lots"]}
-        self.assertEqual([gabarit.numero_de_chapitre(lots[n]) for n in (1, 2, 3, 4, 5, 6)], [2, 1, 3, 4, 5, 8])
-        for n in (1, 2, 3, 4):
+        self.assertEqual([gabarit.numero_de_chapitre(lots[n]) for n in (0, 1, 2, 3, 4, 5)], [0, 2, 1, 3, 4, 5])
+        for n in (1, 2, 3, 4, 5):
             fragment = (RACINE / "src" / "parts" / f"{lots[n]['parts'][0]}.html").read_text(encoding="utf-8")
             self.assertIn(f'<p class="ch-num">Chapitre {gabarit.numero_de_chapitre(lots[n])} ·', fragment)
+        self.assertEqual((lots[5]["parts"][0], lots[6]["parts"][0]), ("60-accessoires", "50-entretien"))
         m = self.menu("")
         self.assertLess(m.index('href="montage/"'), m.index('href="freins/"'))
         self.assertLess(m.index('href="freins/"'), m.index('href="tubeless/"'))
         self.assertLess(m.index('href="tubeless/"'), m.index('href="transmission/"'))
+        self.assertLess(m.index('href="transmission/"'), m.index('href="accessoires/"'))
+        self.assertLess(m.index('href="accessoires/"'), m.index('href="revision/"'))
         publies, a_venir = gabarit.categories(CONFIG)
         self.assertEqual([l["categorie"]["id"] for l in publies], PUBLIEES)
         self.assertEqual([l["categorie"]["id"] for l in a_venir], A_VENIR)
 
+    def test_numero_lu_dans_le_chapitre(self):
+        # Le p.ch-num décide, pas le nom du fichier : un lot dont le premier fragment s'appelle « 60-… » mais écrit
+        # « Chapitre 5 » est le chapitre 5.
+        self.assertEqual(gabarit.numero_de_chapitre({"lot": 5, "parts": ["60-accessoires"]}), 5)
+        # Sans fragment écrit (dossier sans les vrais fragments, pour ne pas dépendre d'un brouillon du lot 6 copié
+        # dans src/parts) : le numéro du lot, jamais le premier chiffre du nom (M9 de la revue finale). Le build ne
+        # range que des lots publiés, dont le fragment existe : ce cas ne se voit que dans les tests.
+        with fragments_temporaires({}, liens=False):
+            self.assertEqual(gabarit.numero_de_chapitre({"lot": 6, "parts": ["50-entretien", "70-depannage"]}), 6)
+            self.assertEqual(gabarit.numero_de_chapitre({"lot": 6, "parts": ["entretien"]}), 6)
+        self.assertEqual(gabarit.numero_de_chapitre({"lot": 0, "parts": []}), 0)
+        # Écrit plus tard avec « Chapitre 6 », 50-entretien est le chapitre 6 : publié, le lot 6 passe après les
+        # accessoires (chapitre 5), alors que son nom l'aurait mis devant.
+        config = copy.deepcopy(CONFIG)
+        config["lots"][6]["statut"] = "en relecture"
+        with fragments_temporaires({"50-entretien": NUMEROTE}):
+            self.assertEqual(gabarit.numero_de_chapitre(config["lots"][6]), 6)
+            publies, a_venir = gabarit.categories(config)
+        self.assertEqual([l["categorie"]["id"] for l in publies], PUBLIEES + ["revision"])
+        self.assertEqual(a_venir, [])
+
+    def test_numero_lu_une_fois_par_fragment(self):
+        # Le menu se refait pour chaque page et chaque cible : le p.ch-num d'un fragment n'est lu qu'une fois.
+        gabarit._ch_num_du_fichier.cache_clear()
+        for _ in range(3):
+            self.assertEqual(gabarit.numero_de_chapitre({"lot": 5, "parts": ["60-accessoires"]}), 5)
+        info = gabarit._ch_num_du_fichier.cache_info()
+        self.assertEqual((info.misses, info.hits), (1, 2))
+
     def test_chapitre_absent(self):
         with self.assertRaises(ValueError):
             gabarit.menu(CONFIG, {}, page(""))
+
+
+class TestBrouillons(unittest.TestCase):
+    """Un fragment n'est lu pour son p.ch-num que si son lot est publié : le brouillon d'un lot « à faire », copié dans
+    src/parts avant sa relecture (étape 1 de la procédure de PASSATION), ne casse pas le build, même sans p.ch-num.
+    Publié sans p.ch-num, un chapitre arrête le build avec un message qui nomme son fichier."""
+
+    def test_brouillon_non_publie_sans_ch_num(self):
+        self.assertNotIn("ch-num", BROUILLON)
+        with fragments_temporaires({"50-entretien": BROUILLON}), tempfile.TemporaryDirectory() as sortie:
+            chapitres = pages.chapitres_publies(CONFIG)
+            self.assertEqual(list(chapitres), PUBLIEES)
+            self.assertEqual(assemble.controle_ateliers(assemble.textes_sources(CONFIG),
+                                                        [z["id"] for z in gabarit.lire_zones()]), [])
+            toutes = pages.toutes_les_pages(CONFIG)
+            rendues, fichiers = assemble.ecrire("site", Path(sortie) / "site", CONFIG, toutes, chapitres)
+            self.assertEqual(assemble.liens_casses(rendues, fichiers), [])
+            self.assertIn("revision/", rendues)
+
+    def test_chapitre_publie_sans_ch_num(self):
+        config = copy.deepcopy(CONFIG)
+        config["lots"][6]["statut"], config["lots"][6]["parts"] = "en relecture", ["50-entretien"]
+        with fragments_temporaires({"50-entretien": BROUILLON}):
+            with self.assertRaisesRegex(ValueError, r"^src/parts/50-entretien\.html : pas de p\.ch-num « Chapitre N · »$"):
+                pages.chapitres_publies(config)
 
 
 class TestFilAriane(unittest.TestCase):
@@ -396,7 +512,7 @@ class TestDocument(unittest.TestCase):
         self.assertIn(f'Version {CONFIG["version"]} du ', d)
         self.assertNotIn("<!--VERSION-->", d)
         self.assertNotIn("<!--SCRIPTS-->", d)
-        self.assertIn("Lots 0, 1, 2, 3 et 4 en relecture.", d)
+        self.assertIn("Lots 0, 1, 2, 3, 4 et 5 en relecture.", d)
 
     def test_scripts_minimaux(self):
         d = self.doc("freins/plaquettes/")
@@ -475,10 +591,10 @@ class TestDocument(unittest.TestCase):
         config = json.loads(json.dumps(CONFIG))
         config["lots"][1]["statut"] = "validé"
         pied = gabarit.document(page("outils/", "Outils"), config, CHAPITRES, "site")
-        self.assertIn("Lot 1 validé. Lots 0, 2, 3 et 4 en relecture. Les catégories en pointillés", pied)
+        self.assertIn("Lot 1 validé. Lots 0, 2, 3, 4 et 5 en relecture. Les catégories en pointillés", pied)
         config["lots"][0]["statut"] = "validé"
         pied = gabarit.document(page("outils/", "Outils"), config, CHAPITRES, "site")
-        self.assertIn("Lots 0 et 1 validés. Lots 2, 3 et 4 en relecture. Les catégories en pointillés", pied)
+        self.assertIn("Lots 0 et 1 validés. Lots 2, 3, 4 et 5 en relecture. Les catégories en pointillés", pied)
 
     def test_aucun_tiret_long(self):
         for chemin, cible in [("", "site"), ("freins/plaquettes/", "site"), ("", "artifact")]:
@@ -501,9 +617,9 @@ class TestLiensAnciens(unittest.TestCase):
         self.assertEqual(liens_anciens["freins-pl-2"], "freins/plaquettes/#freins-pl-2")
         self.assertEqual(liens_anciens["freins-mk-5"], "freins/purge/#freins-mk-5")
         self.assertEqual(liens_anciens["ck-freins-apres-3"], "freins/controles/#ck-freins-apres-3")
-        # Chaque ancien id de src/parts/20-freins.html, 11-montage.html, 30-tubeless.html et 40-transmission.html a une
-        # nouvelle adresse.
-        for fichier in ("20-freins", "11-montage", "30-tubeless", "40-transmission"):
+        # Chaque ancien id de src/parts/20-freins.html, 11-montage.html, 30-tubeless.html, 40-transmission.html et
+        # 60-accessoires.html a une nouvelle adresse.
+        for fichier in ("20-freins", "11-montage", "30-tubeless", "40-transmission", "60-accessoires"):
             source = (RACINE / "src" / "parts" / f"{fichier}.html").read_text(encoding="utf-8")
             for ident in re.findall(r'\sid="([^"]+)"', source):
                 self.assertIn(ident, liens_anciens, fichier)
@@ -523,6 +639,11 @@ class TestLiensAnciens(unittest.TestCase):
         self.assertEqual(liens_anciens["transmission"], "transmission/")
         for slug in SLUGS_TRANSMISSION:
             self.assertEqual(liens_anciens[f"transmission-{slug}"], f"transmission/{slug}/")
+        # « #accessoires » ouvre la catégorie publiée du lot 5, et l'id de chaque atelier du chapitre 5 la page de cet
+        # atelier : « #accessoires-axe », le renvoi de 1.5 et de 3.5, mène à accessoires/axe/.
+        self.assertEqual(liens_anciens["accessoires"], "accessoires/")
+        for slug in SLUGS_ACCESSOIRES:
+            self.assertEqual(liens_anciens[f"accessoires-{slug}"], f"accessoires/{slug}/")
 
     def test_pas_de_chemin_absolu(self):
         for adresse in gabarit.liens_anciens(CONFIG, CHAPITRES).values():

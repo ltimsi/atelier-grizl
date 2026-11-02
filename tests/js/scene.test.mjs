@@ -162,10 +162,16 @@ const auPlusPres = (sommets, a) => sommets.reduce((b, q) => {
   return d < b.d ? { d, nom: q[3] } : b;
 }, { d: Infinity, nom: null });
 
+// Le vélo de l'accueil est dessiné tel que livré, sans porte-bagages : la zone du porte-bagages Tailfin (pastille 11)
+// n'a aucun maillage. Les deux pièces où le Journey Rack se fixe restent dans leur zone : la tige de selle dans celle de
+// la selle (1.4), l'axe arrière dans celle des axes (1.5). Son ancre, sur le bas de la tige, est vérifiée par
+// tests/js/geometrie.test.mjs.
+const SANS_MAILLAGE = ['portebagages'];
+
 test('scène : chaque pastille du montage, des pneus et de la chaîne est sur sa pièce, au plus près d’un sommet de sa zone', () => {
   const { ancres } = points(GEO);
   const sommets = sommetsParZone();
-  for (const z of ZONES.slice(3)) {
+  for (const z of ZONES.slice(3).filter(z => !SANS_MAILLAGE.includes(z.id))) {
     const { d } = auPlusPres(sommets[z.id], ancres[z.ancre]);
     assert.ok(d <= SUR_LA_PIECE, `${z.ancre} à ${d.toFixed(1)} mm de la zone ${z.id}`);
   }
@@ -175,9 +181,18 @@ test('scène : chaque pastille du montage, des pneus et de la chaîne est sur sa
   assert.ok(d <= 5, `bordCassette à ${d.toFixed(1)} mm du grand pignon`);
 });
 
-test('scène : chaque zone de zones.json a des maillages, aucun maillage hors des zones', () => {
+test('scène : chaque zone de zones.json a des maillages, sauf celle du porte-bagages, aucun maillage hors des zones', () => {
   const vues = new Set(PIECES.flatMap(m => zonesDuGroupe(groupeDe(m))));
-  assert.deepEqual([...vues].sort(), ZONES.map(z => z.id).sort());
+  assert.deepEqual([...vues].sort(), ZONES.map(z => z.id).filter(id => !SANS_MAILLAGE.includes(id)).sort());
+  assert.deepEqual(SANS_MAILLAGE.filter(id => ZONES.some(z => z.id === id)), ['portebagages'], 'zone 11 absente');
+  // La tige de selle et l'axe arrière, où le Journey Rack se fixe, ne changent pas de zone.
+  const zonesDe = nom => new Set(PIECES.flatMap(m => {
+    const o = [];
+    groupeDe(m).traverse(q => { if (q.isMesh && q.name === nom) o.push(q.userData.zone); });
+    return o;
+  }));
+  assert.deepEqual([...zonesDe('tige de selle')], ['selle']);
+  assert.deepEqual([...zonesDe('axe arrière')], ['axes']);
 });
 
 test('scène : approximations par pièce, avec leurs zones et leurs sources, puis la géométrie', () => {
@@ -264,10 +279,13 @@ const formes = schema.groupes.flatMap(g => g.formes.map(f => ({ ...f, zone: g.zo
 const nombres = d => (d.match(/-?\d+(\.\d+)?/g) || []).map(Number);
 const coins = f => { const n = nombres(f.attrs.d); return [0, 2, 4, 6].map(i => [n[i], -n[i + 1]]); };
 
-test('schéma : chaque zone de zones.json a ses formes, et aucune autre zone', () => {
+test('schéma : chaque zone de zones.json a ses formes, sauf celle du porte-bagages, et aucune autre zone', () => {
+  // Le schéma dessine le vélo tel que livré, comme la 3D : rien en zone 'portebagages', la tige reste à la selle.
+  const avecFormes = ZONES.filter(z => !SANS_MAILLAGE.includes(z.id));
   const zones = new Set(schema.groupes.map(g => g.zone).filter(Boolean));
-  assert.deepEqual([...zones].sort(), ZONES.map(z => z.id).sort());
-  for (const z of ZONES) assert.ok(formes.some(f => f.zone === z.id), `${z.id} sans forme`);
+  assert.deepEqual([...zones].sort(), avecFormes.map(z => z.id).sort());
+  for (const z of avecFormes) assert.ok(formes.some(f => f.zone === z.id), `${z.id} sans forme`);
+  assert.ok(!formes.some(f => f.zone === 'portebagages'), 'forme en zone portebagages');
 });
 
 // Les quatre coins du corps d'une capsule (schema2d.js) : M p1, L p2, A … p3, L p4, en coordonnées du vélo (y vers le

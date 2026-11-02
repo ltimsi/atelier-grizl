@@ -11,6 +11,7 @@ pour que le même site marche à la racine d'un serveur, dans un sous-dossier et
 Seule la bibliothèque standard est utilisée.
 """
 import datetime
+import functools
 import html
 import json
 import re
@@ -102,11 +103,37 @@ def _lien(page, chemin, contenu, classe=None):
 # Menu, fil d'Ariane
 # ---------------------------------------------------------------------------------------------------------------
 
+_CH_NUM = re.compile(r'<p class="ch-num">Chapitre (\d+) ·')
+
+
+@functools.lru_cache(maxsize=None)
+def _ch_num_du_fichier(chemin: Path):
+    """Le numéro que le p.ch-num du fragment `chemin` écrit (« Chapitre 5 · … » : 5), ou None si le fragment n'est pas
+    encore écrit. Lu une fois par fichier et par build : le menu se refait pour chaque page et chaque cible. Un
+    fragment écrit sans p.ch-num lève ValueError : sa place dans le menu serait devinée."""
+    if not chemin.is_file():
+        return None
+    m = _CH_NUM.search(chemin.read_text(encoding="utf-8"))
+    if m is None:
+        raise ValueError(f"src/parts/{chemin.name} : pas de p.ch-num « Chapitre N · »")
+    return int(m.group(1))
+
+
+def _ch_num(nom):
+    """Le numéro écrit par le p.ch-num du fragment `nom` de src/parts, ou None s'il n'est pas encore écrit."""
+    return _ch_num_du_fichier(SRC / "parts" / f"{nom}.html")
+
+
 def numero_de_chapitre(lot: dict) -> int:
-    """Le numéro du chapitre d'un lot : le premier chiffre du nom de son premier fragment (« 11-montage » : chapitre 1,
-    « 20-freins » : chapitre 2), comme le p.ch-num du chapitre l'écrit. Sans fragment numéroté, le numéro du lot."""
-    m = re.match(r"(\d)", lot["parts"][0]) if lot.get("parts") else None
-    return int(m.group(1)) if m else lot["lot"]
+    """Le numéro du chapitre d'un lot : celui que le p.ch-num de son premier fragment écrit (« Chapitre 1 · Montage à
+    la livraison » dans 11-montage, « Chapitre 5 · Accessoires des trajets » dans 60-accessoires). Le nom du fichier ne
+    décide plus : 60-accessoires est le chapitre 5, depuis que l'entretien (50-entretien) et le dépannage sont passés
+    au lot 6, le 1/11/2026. Sans fragment, ou tant que le fragment n'est pas écrit, le numéro du lot : seuls les lots
+    publiés sont rangés (categories, pages.chapitres_publies), et le fragment d'un lot publié existe, sinon le build
+    s'arrête avant (assemble.textes_sources) ; ce cas ne se voit que dans les tests. Le brouillon d'un lot à faire,
+    copié dans src/parts avant sa relecture, n'est pas lu, même sans p.ch-num."""
+    n = _ch_num(lot["parts"][0]) if lot.get("parts") else None
+    return lot["lot"] if n is None else n
 
 
 def categories(config: dict) -> tuple[list[dict], list[dict]]:

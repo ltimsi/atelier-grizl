@@ -55,11 +55,27 @@ test('choisirZone : false hors navigateur, la page n’a pas de scène', () => {
   assert.equal(choisirZone('inconnue'), false);
 });
 
-test('placeDePastille : la place projetée de l’ancre, plus le décalage de la zone, en pixels', () => {
+// Image de 328 sur 271, celle de l'accueil à 360 px de large. Une pastille décalée n'est montrée que si son centre, là
+// où elle est dessinée, est dans l'image : à 360 px, dans la vue de la selle, celle du porte-bagages tomberait sous
+// le bas de l'image, et n'en montrerait qu'un bout sous le bouton « Vue d'ensemble ». Sans décalage, la visibilité
+// reste celle de l'ancre (versPixels, jusqu'à 20 px hors de l'image).
+test('placeDePastille : la place projetée de l’ancre, plus le décalage de la zone, cachée si son centre sort de l’image', () => {
+  const [W, H] = [328, 271];
   const place = { x: 120.5, y: 80, visible: true };
-  assert.deepEqual(placeDePastille(place, { id: 'disques' }), place, 'sans décalage, la place de l’ancre');
-  assert.deepEqual(placeDePastille(place, { id: 'axes', decalage: [0, 34] }), { x: 120.5, y: 114, visible: true });
-  assert.deepEqual(placeDePastille({ x: 0, y: 0, visible: false }, { decalage: [3, -4] }), { x: 3, y: -4, visible: false });
+  assert.deepEqual(placeDePastille(place, { id: 'disques' }, W, H), place, 'sans décalage, la place de l’ancre');
+  assert.deepEqual(placeDePastille(place, { id: 'axes', decalage: [0, 34] }, W, H), { x: 120.5, y: 114, visible: true });
+  assert.deepEqual(placeDePastille({ x: 0, y: 0, visible: false }, { decalage: [3, -4] }, W, H),
+    { x: 3, y: -4, visible: false });
+  // Le centre décalé sous le bas de l'image, au-delà de son bord droit, ou au-dessus de son haut : cachée.
+  const porte = { id: 'portebagages', decalage: [0, 35] };
+  assert.deepEqual(placeDePastille({ x: 199, y: 244.5, visible: true }, porte, W, H), { x: 199, y: 279.5, visible: false });
+  assert.equal(placeDePastille({ x: 320, y: 100, visible: true }, { decalage: [20, 5] }, W, H).visible, false);
+  assert.equal(placeDePastille({ x: 100, y: 20, visible: true }, { decalage: [0, -34] }, W, H).visible, false);
+  // Au bord, encore dans l'image : montrée.
+  assert.equal(placeDePastille({ x: 199, y: 236, visible: true }, porte, W, H).visible, true);
+  // Sans décalage, une ancre juste hors de l'image garde sa visibilité.
+  assert.deepEqual(placeDePastille({ x: 340, y: 100, visible: true }, { id: 'manettes' }, W, H),
+    { x: 340, y: 100, visible: true });
 });
 
 // Deux colonnes : la colonne « Où intervenir » défile seule (00-head.html), et la page ne défile que du reste, quand
@@ -93,7 +109,8 @@ test('poserPastilles passe chaque place par placeDePastille : le décalage d’u
   assert.ok(debut >= 0, 'poserPastilles absente de app.js');
   const fin = CODE.indexOf('\n}\n', debut);
   const corps = CODE.slice(debut, fin);
-  assert.match(corps, /placeDePastille\(p, ui\.zones\[i\]\)/, 'poserPastilles n’appelle plus placeDePastille');
+  assert.match(corps, /placeDePastille\(p, ui\.zones\[i\], ui\.W, ui\.H\)/,
+    'poserPastilles n’appelle plus placeDePastille avec la taille de l’image');
   assert.match(corps, /b\.hidden = !q\.visible/, 'la visibilité ne vient plus de la place décalée');
   assert.match(corps, /translate\(\$\{q\.x\.toFixed\(1\)\}px, \$\{q\.y\.toFixed\(1\)\}px\)/,
     'la pastille n’est plus posée à la place décalée');
@@ -272,6 +289,10 @@ test('choisirZone sur une page : zone inconnue refusée, zone connue choisie, sa
   assert.equal(module.choisirZone('chaine'), true);
   assert.deepEqual(cartes.map(c => c.getAttribute('aria-current')), seule('chaine', 'true', null));
   assert.deepEqual(pins.map(p => p.getAttribute('aria-pressed')), seule('chaine', 'true', 'false'));
+  // La zone du lot 5, la pastille 11 : le porte-bagages Tailfin, sans maillage (le vélo est dessiné tel que livré).
+  assert.equal(module.choisirZone('portebagages'), true);
+  assert.deepEqual(cartes.map(c => c.getAttribute('aria-current')), seule('portebagages', 'true', null));
+  assert.deepEqual(pins.map(p => p.getAttribute('aria-pressed')), seule('portebagages', 'true', 'false'));
   // choisirZone seul ne fait jamais défiler la page.
   for (const e of [...cartes, el['#scene-stage']]) assert.deepEqual(e.defilements, []);
 });

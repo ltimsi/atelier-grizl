@@ -156,6 +156,17 @@ const SOUS_SIEGE_VALVE = 28;
 // zones.json) : dans les vues côté transmission, vers l'avant du vélo, dans le creux entre la cassette, le plateau et
 // les deux brins de la chaîne. Placement de vue, pas une cote.
 const BORD_CASSETTE = Object.freeze([76, -44, 21]);
+// Porte-bagages Tailfin (lot 5) : le vélo est dessiné tel que livré, sans porte-bagages. La pastille va où le Journey
+// Rack se fixe en haut : le bas de la tige de selle, où l'atelier 5.3 pose sa sangle, « le plus bas possible », sous la
+// séparation des deux lames (réponse écrite du service client Tailfin). BAS_TIGE : depuis le haut du tube de selle, le
+// long de la tige, juste au-dessus du collier de cadre.js ; COTE_TIGE : sur la face droite de la tige, côté
+// transmission, que montre la vue d'ensemble. L'autre fixation, le bout droit de l'axe arrière, est pris entre les
+// pastilles du disque arrière, du dérailleur et de la cassette. Posée sur son ancre, la pastille serait à moins de
+// trente pixels de celle de la selle dans la vue d'ensemble, et sur les boutons de la scène dans la vue de la selle, à
+// 360 px de large : elle est décalée à l'écran, droit vers le bas (decalage de zones.json). Placement de vue, pas une
+// cote.
+const BAS_TIGE = 20;
+const COTE_TIGE = 14;
 
 const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
 const mul = (a, k) => [a[0] * k, a[1] * k];
@@ -236,6 +247,8 @@ export function points(geo = GEO) {
     valveAvant: [FA[0], FA[1] + g('diametreSiegeJante') / 2 - SOUS_SIEGE_VALVE, 0],
     // Zone de la chaîne et de la cassette.
     bordCassette: [RA[0] + BORD_CASSETTE[0], RA[1] + BORD_CASSETTE[1], BORD_CASSETTE[2]],
+    // Zone du porte-bagages Tailfin : le bas de la tige de selle, sans maillage à elle (le vélo est livré sans).
+    basTige: [STt[0] + dST[0] * BAS_TIGE, STt[1] + dST[1] * BAS_TIGE, COTE_TIGE],
   };
 
   return { RA, FA, BB, HTt, HTb, STt, SPt, S0, S1, PR, PL, CF, CR, CROWN, dHT, dST, poulieHaute, poulieBasse, rayons, ancres };

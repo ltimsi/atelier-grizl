@@ -420,13 +420,24 @@ def verifier_blocs_par_type(test, ateliers_du_chapitre):
             test.assertEqual(dom.selectionner(dom.analyser(gauche + droite), "[hidden]"), [])
 
 
-def verifier_abreviations(test, ateliers_du_chapitre, developpements, sans_casse=()):
+def verifier_abreviations(test, ateliers_du_chapitre, developpements, sans_casse=(), sans_titre=False):
     """Chaque atelier devient sa propre page : une abréviation y est développée avant ou juste après sa première
     apparition, liens compris. Chaque abréviation de `developpements` apparaît au moins une fois dans le chapitre ;
-    celles de `sans_casse` se cherchent sans tenir compte de la casse (« psi » comme « PSI »)."""
+    celles de `sans_casse` se cherchent sans tenir compte de la casse (« psi » comme « PSI »). Avec `sans_titre`, le h3,
+    qui devient le titre de la page, ne compte pas : au lot 5, un atelier de montage doit s'ouvrir sur l'encadré de
+    prudence, et c'est la première phrase de cet encadré qui développe l'abréviation du titre (« adaptateur UDH »)."""
     vues = set()
     for a in ateliers_du_chapitre:
         texte = texte_de(a.section)
+        if sans_titre:
+            # Le h3 ne compte pas, mais une abréviation de son titre doit être développée dès l'élément qui le suit.
+            enfants = elements(a.section)
+            h3 = next(e for e in enfants if e.tag == "h3")
+            suivant = texte_de(enfants[enfants.index(h3) + 1])
+            for abr, dev in developpements.items():
+                if re.search(r"\b" + abr + r"\b", texte_de(h3)):
+                    test.assertIn(dev, suivant, f"{a.id} : {abr} du titre")
+            texte = texte.replace(texte_de(h3), "", 1)
         for abr, dev in developpements.items():
             m = re.search(r"\b" + abr + r"\b", texte, re.I if abr in sans_casse else 0)
             if m:
@@ -2477,6 +2488,902 @@ class TestTransmission(PasAPas, unittest.TestCase):
 
     def test_texte_conserve(self):
         # Comme pour Freins, Montage et Tubeless : les deux colonnes de chaque page gardent tout le texte du source.
+        verifier_texte_conserve(self, self.ch.ateliers)
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Chapitre 5, Accessoires des trajets : relu depuis son fragment (lot 5, publié en relecture)
+# ---------------------------------------------------------------------------------------------------------------
+
+ACCESSOIRES = RACINE / "src" / "parts" / "60-accessoires.html"
+RELEVE_ACCESSOIRES = RACINE / "docs" / "recherche" / "accessoires-cf8-di2.md"
+# Le relevé du lot 5 renvoie aux relevés déjà vérifiés (« Base déjà vérifiée, non refaite ») : une adresse du chapitre
+# peut venir de l'un d'eux (les outils de Lamine, la patte UDH, la tige de selle).
+RELEVES_DU_LOT_5 = (RELEVE_ACCESSOIRES, RELEVE_TRANSMISSION) + RELEVES_DE_BASE
+# Les documents des fabricants des pièces et des outils de Lamine, et les vidéos de leurs chaînes : aucun autre site.
+OFFICIELS_ACCESSOIRES = {"www.tailfin.cc", "media.tailfin.cc", "www.canyon.com", "www.sram.com", "si.shimano.com",
+                         "www.garmin.com", "www8.garmin.com", "www.parktool.com", "www.pbswisstools.com",
+                         "www.youtube.com"}
+# Les ateliers de montage, qui commencent chacun par l'avertissement du lot (spec, « La règle de prudence du lot »).
+MONTAGES = ("accessoires-axe", "accessoires-rack", "accessoires-gardeboue", "accessoires-sacs", "accessoires-feu")
+PRUDENCE = "À confirmer avec Canyon avant de rouler chargé"
+SERVICE_CLIENT = "réponse écrite du service client Tailfin"
+# La notice 2025 de l'axe, celle du kit précédent : elle écrit le sens de dépose (étape 9) et le filetage à graisser
+# (étape 3).
+NOTICE_AXE_2025 = ("https://media.tailfin.cc/app/uploads/2025/02/19144832/"
+                   "UNIVERSAL-THRU-AXLE-PACKING-LAYOUT_PRINT_ROUND-3.pdf")
+# Les couples qu'aucun outil de Lamine ne couvre : 1, 1,5, 2, 3 et 8 Nm (TW-6.2 de 10 à 60 Nm, ATD-1.2 de 4 à 6 Nm). Le
+# bout d'une plage (« 8-10 Nm ») n'en est pas un.
+HORS_OUTILS_5 = re.compile(r"(?<![\d,.\-])(?:1|1,5|2|3|8) Nm")
+# Une charge écrite, en français ou dans une citation : « 9 kg », « 9kg », « 4.5kg », « 120 KG ».
+KG = re.compile(r"(?<![\d.,])(\d+(?:[.,]\d+)?)\s?kg\b", re.I)
+# Les phrases du service client Tailfin que garde le relevé (section 7), sans lien public.
+PHRASES_DU_SERVICE = ("the Journey Rack uses the Universal Thru Axle along with the SRAM UDH adaptor",
+                      "We can't confirm a perfect fit for your Canyon SP100 VCLS 2.1 split carbon seatpost",
+                      "The Journey Rack with Mudguard has a clearance of 29 x 2.4.",
+                      "The 16L is the most common commuter size but won't fit a 16-inch laptop.",
+                      "Shoulder straps are available for the 22L panniers.",
+                      "will have a clear view as long as you don't use a Top Bag",
+                      # M5 de la revue finale : le début du point sur les sacoches, coupé à la virgule.
+                      "The Journey Rack comes with pannier mounts designed for our 22L panniers")
+
+
+def charges(texte):
+    """Les charges du texte, en kilos : 4,5 et 4.5 donnent 4.5."""
+    return [float(n.replace(",", ".")) for n in KG.findall(texte)]
+
+
+class TestAccessoires(PasAPas, unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.source = ACCESSOIRES.read_text(encoding="utf-8")
+        cls.releve = normaliser(RELEVE_ACCESSOIRES.read_text(encoding="utf-8"))
+        cls.releves = "\n".join(f.read_text(encoding="utf-8") for f in RELEVES_DU_LOT_5)
+        cls.ch = ateliers.relever_chapitre(cls.source)
+        cls.par_id = {a.id: a for a in cls.ch.ateliers}
+        cls.section = cls.ch.tete.parent
+
+    def texte_complet(self):
+        return texte_de(self.section)
+
+    def texte_atelier(self, ident):
+        return texte_de(self.par_id[ident].section)
+
+    def lignes(self):
+        return lignes_de(self.section, questions=True)
+
+    def notes(self, ident, debut):
+        """Les encadrés de l'atelier dont le titre commence par `debut`."""
+        return [n for n in dom.selectionner(self.par_id[ident].section, "aside.note")
+                if texte_de(dom.selectionner(n, "p.note-t")[0]).startswith(debut)]
+
+    def releve_section(self, titre, suivant):
+        """Le texte d'une section du relevé, de son titre au titre suivant."""
+        return self.releve[self.releve.index(titre):self.releve.index(suivant)]
+
+    def test_chapitre(self):
+        self.assertEqual(self.ch.id, "accessoires")
+        self.assertEqual((self.section.tag, self.section.classes()), ("section", ["chapter"]))
+        (num,) = dom.selectionner(self.ch.tete, "p.ch-num")
+        self.assertEqual(num.texte(), "Chapitre 5 · Accessoires des trajets")
+        self.assertEqual(dom.selectionner(self.ch.tete, "h2")[0].texte(), "Accessoires des trajets")
+        ids = [e.get("id") for e in dom.selectionner(dom.analyser(self.source), "[id]")]
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertEqual(sorted(self.ch.resumes), ["couples"])
+        # L'en-tête, seul sur la page de la catégorie, développe ses abréviations et dit la règle de prudence du lot.
+        tete = texte_de(self.ch.tete)
+        for mot in ("UDH (Universal Derailleur Hanger", "Nm (newton-mètre)", "Tailfin", "Garmin Varia RearVue 820",
+                    "à confirmer avec Canyon avant de rouler chargé", SERVICE_CLIENT):
+            self.assertIn(mot, tete, mot)
+
+    def test_publie(self):
+        # Le lot 5 est publié en relecture, avec ce chapitre seul et sa pièce 3D, sans « prevu » : sa catégorie montre
+        # ses ateliers. L'entretien courant et le dépannage sont passés au lot 6.
+        config = json.loads((RACINE / "build" / "lots.json").read_text(encoding="utf-8"))
+        (lot,) = [l for l in config["lots"] if l["lot"] == 5]
+        self.assertEqual((lot["statut"], lot["parts"], lot["categorie"]["id"], lot["modeles"]),
+                         ("en relecture", ["60-accessoires"], "accessoires", ["rack"]))
+        self.assertNotIn("prevu", lot)
+
+    def test_ateliers_ids_types_zones(self):
+        self.assertEqual([(a.id, a.num, a.type, a.zone) for a in self.ch.ateliers], [
+            ("accessoires-materiel", "5.1", "comprendre", "portebagages"),
+            ("accessoires-axe", "5.2", "remplacer", "portebagages"),
+            ("accessoires-rack", "5.3", "remplacer", "portebagages"),
+            ("accessoires-gardeboue", "5.4", "remplacer", "portebagages"),
+            ("accessoires-sacs", "5.5", "regler", "portebagages"),
+            ("accessoires-feu", "5.6", "remplacer", "portebagages"),
+            ("accessoires-charge", "5.7", "comprendre", "portebagages")])
+        self.assertEqual([normaliser(a.titre) for a in self.ch.ateliers], [
+            "Ton matériel Tailfin", "Remplacer l'axe arrière et poser l'adaptateur UDH", "Monter le Journey Rack",
+            "Le garde-boue du Journey Rack", "Sacoches, CargoPack, étuis et bandoulière",
+            "Le feu arrière Garmin RearVue 820", "Rouler chargé"])
+
+    def test_remplacer(self):
+        # Les libellés de la spec ; « en alliage », comme Tailfin, qui écrit « Alloy » et jamais « aluminium » pour ce
+        # porte-bagages (relevé, « Configuration retenue »).
+        attendu = {"accessoires-axe": ("Axe arrière DT Swiss livré", "Universal Thru Axle et adaptateur UDH Tailfin"),
+                   "accessoires-rack": ("Aucun porte-bagages", "Journey Rack en alliage"),
+                   "accessoires-gardeboue": ("Aucun garde-boue", "Garde-boue du Journey Rack"),
+                   "accessoires-feu": ("Aucun feu arrière", "Support Tailfin et Garmin Varia RearVue 820")}
+        for a in self.ch.ateliers:
+            if a.id in attendu:
+                self.assertEqual((normaliser(a.de), normaliser(a.vers)), attendu[a.id], a.id)
+            else:
+                self.assertEqual((a.de, a.vers), (None, None), a.id)
+        self.assertNotIn("aluminium", self.texte_complet())
+
+    def test_blocs_par_type(self):
+        verifier_blocs_par_type(self, self.ch.ateliers)
+
+    def test_figures_3d(self):
+        # La pièce de la tâche 2, en 5.3 seulement : sa légende et son aria-label ne portent que des valeurs du relevé.
+        mots = ("Journey Rack", "Universal Thru Axle", "adaptateur UDH", "25\xa0Nm", "filetage à gauche", "sangle",
+                "le plus bas possible", "avant la séparation", "approch", "Tailfin ne publie pas de cotes")
+        releve = self.releve.replace(",", ".")
+        for a in self.ch.ateliers:
+            with self.subTest(a.id):
+                self.assertEqual(a.modeles, ["rack"] if a.id == "accessoires-rack" else [])
+                for figure in dom.selectionner(a.section, "figure.v3d"):
+                    (scene,) = dom.selectionner(figure, "div.v3d-stage")
+                    self.assertEqual(scene.get("role"), "img")
+                    (legende,) = dom.selectionner(figure, "figcaption")
+                    self.assertTrue(legende.texte().startswith(f"3D {a.num}"), legende.texte())
+                    self.assertIn(AIDE_3D, texte_de(legende))
+                    textes = [normaliser(scene.get("aria-label")), texte_de(legende)]
+                    for mot in mots:
+                        for t in textes:
+                            self.assertIn(mot, t, mot)
+                    for t in textes:
+                        for n in re.findall(_N, t.replace(f"3D {a.num}", "")):
+                            self.assertIn(n.replace(",", "."), releve, f"{n} : {t[:80]}")
+
+    def test_valeurs_du_releve(self):
+        t = {a.id: self.texte_atelier(a.id) for a in self.ch.ateliers}
+        for ident, valeurs in {
+            "accessoires-materiel": ("Journey Rack", "CargoPack v2 (bag only)", "18L (+3.0L Pockets)",
+                                     "Pannier Laptop Holster 22L", "Pannier Shoulder Strap", "Journey Rack Mudguard",
+                                     "Garmin Varia / Wahoo Trackr Light Mount", "Grizl Gen 2 (2025+)",
+                                     "1.0mm x M12 Thru-Axle", "Universal Thru Axle (UTA)", "UDH Adaptor Set",
+                                     "If installed correctly, the Universal Thru Axle is just as strong",
+                                     "attaching in three places", "142mm and 148mm", "12x142\xa0mm", "R126-01",
+                                     "Max. Load: 32kg", "Max. Top Load: 12kg", "Max. Pannier Side Load: 10kg (each side)",
+                                     "Max. Load: 22kg", "6kg (each side)", "The maximum weight the axles can carry is 32kg",
+                                     "9kg on the road, 4.5kg off-road", "120\xa0kg", "MAX. LOAD 120 KG",
+                                     "further limited by the component manufacturers", "avoid tackling MTB jumps",
+                                     "Interfaces for front and rear racks", "Mounting a pannier rack is not permitted.",
+                                     "GRAIL AL", "contact our service hotline", "Always use the thru axles delivered",
+                                     "no dedicated rack mounts", "Frame Mount Adaptors", "740g", "780g",
+                                     "Torx T25", "1.5, 2, 2.5, 3, 4, 5, 6, 8, 10", "pre-applied thread lock",
+                                     "10 to 60", "TW-6.2", "ATD-1.2", "clé Canyon"),
+            "accessoires-axe": ("You must install SRAM UDH/Transmission adaptors before the axle.",
+                                "(A) Remove your existing thru axle from your bike.", "reverse thread",
+                                "You will need to re-use the UDH Frame Washer", "The UDH Bolt is no longer needed.",
+                                "(C) Leave UDH Hanger installed in bike.", "Tighten to 25Nm.", "Add Assembly Grease",
+                                "12mm hex", "8mm hex", "Keep with your multi tool out on your rides.", "25\xa0Nm",
+                                "A reversible (left-hand and right-hand thread) torque wrench MUST be used",
+                                "Confirm the hanger is seated", "Confirm the hanger has not moved",
+                                "no gap between the B-tension stop and the stopper plate",
+                                "M12 X 1.0 Single Start Thread", "M12x1.0 thread pitch", "12.7\xa0mm", "8\xa0Nm",
+                                "Flat Seat", "Cone Seat", "Flat 3mm", "Flat 6mm", "Cone 3mm", "Flat 9mm",
+                                "two 8mm central extenders", "Fit the bike wheel and install the Tailfin Universal Thru Axle.",
+                                "ARRÊTEZ IMMÉDIATEMENT", "10\xa0Nm", "on the non-driveside (left)", "Tighten to 10Nm.",
+                                "NE PAS TROP SERRER", "threads to show on the drive-side",
+                                "undo it from the driveside (right) of your bike", "RETRAIT INCORRECT",
+                                "machined to accept a standard 5mm Hex", "non publié",
+                                "Apply grease only to the thru axle threads",
+                                "Apply grease to the thru axle threads before axle installation.",
+                                "Tailfin Thru Axle | M12 X 1.0"),
+            "accessoires-rack": ("A TopStay", "B Arch", "C Seatpost Connector", "M Fast Release Dropouts",
+                                 "Included if ordered when purchasing.", "8\xa0Nm", "6\xa0Nm", "5\xa0Nm", "2\xa0Nm",
+                                 "3\xa0Nm", "1\xa0Nm", "Right Hand Side", "Left Hand Side", "LEFT HAND SIDE",
+                                 "Align the arch and check that the dropouts are positioned correctly on your axle",
+                                 "both pins are engaged and secure", "FitLinks", "Click",
+                                 "as low down on the seatpost as possible, before it separates",
+                                 "Avoid over-tightening the strap", "Push the lever and ensure the clamp is locked.",
+                                 "MIN", "There is a screw that locks the strap onto the Seatpost Connector.",
+                                 "this may take a few tries with a combination of spacers", "BT-DN320", "RD-M8250"),
+            "accessoires-gardeboue": ("3\xa0Nm", "29″ x 2.25″ (700C x 55mm)", "55\xa0mm", "45\xa0mm", "29 x 2.4",
+                                      "54\xa0mm measured tyre clearance", "non publié",
+                                      "Compatible with the Journey Pannier Rack."),
+            "accessoires-sacs": ("Steps 8 and 9 should be performed before Step 1", "3\xa0Nm", "5\xa0Nm", "1,5\xa0Nm",
+                                 "M5x10MM Low Head Screw", "M5x12MM Countersunk Screw", "Gen 2 Top Bag (Jan 2026+)",
+                                 "LIFT TO CHECK", "you shouldn't have any of the pins left showing",
+                                 "must be rolled closed 2-3 times", "X Clamp", "Lower Hook", "9kg for road riding only",
+                                 "4.5kg", "9\xa0kg", "4,5\xa0kg", "The main compartment is 100% waterproof.",
+                                 "all seams welded", "16″", "320mm max width", "Max 320 MM", "protective case",
+                                 "only compatible with the new 22L Panniers", "Fully adjustable and reversible",
+                                 "Shoulder straps are available for the 22L panniers.", "Remove in 5 seconds"),
+            "accessoires-feu": ("These attach at the underside of the top deck at the rear.", "5\xa0Nm",
+                                "Alignez les languettes de l'arrière de l'appareil",
+                                "faites-le pivoter dans le sens des aiguilles d'une montre", "quart de tour",
+                                "perpendiculairement au sol", "orienté droit vers l'arrière", "Top Bag",
+                                "positions the radar at the back of your bike", "USB-C", "15\xa0minutes", "2,5\xa0heures",
+                                "0,3\xa0m", "pendant 2\xa0secondes", "250", "1\xa0200\xa0mm", "Lever-lock",
+                                "Seatpost Mimic Light Mount", "immersion accidentelle", "non publiés",
+                                "aussi haut que possible sur le vélo", "application Varia", "Ajouter capteur",
+                                "Ajouter nouv.", "essuyez soigneusement le port USB"),
+            "accessoires-charge": ("Check your Seat Post Connector", "Make sure your Dropouts are safe",
+                                   "must be rolled closed 2-3 times", "Loctite 243", "Take a test ride",
+                                   "Regularly check and confirm the UDH hanger is tight", "Every ride",
+                                   "INSPECTEZ RÉGULIÈREMENT LE PRODUIT", "no tools needed to remove your rack",
+                                   "You can leave the axle fitted even without the Tailfin AeroPack attached.",
+                                   "undo it from the driveside (right) of your bike", "10\xa0Nm", "5\xa0mm",
+                                   "Do not use bleach or solvents", "Please do not machine wash the bags.",
+                                   "You can use a pressure washer on your bikepacking bags",
+                                   "Do not clean your Canyon with a strong water or steam jet from a short distance.",
+                                   "Wear on parts such as bushings and rubber parts.", "5 Years", "2-year guarantee",
+                                   "120\xa0kg", "9\xa0kg", "4,5\xa0kg"),
+        }.items():
+            for v in valeurs:
+                self.assertIn(normaliser(v), t[ident], f"{ident} : {v}")
+
+    def test_prudence_en_tete_des_montages(self):
+        # Décision du lot : chaque atelier de montage commence par « à confirmer avec Canyon avant de rouler chargé »,
+        # dans un aside.note.warn juste sous le titre, et aussi dans le corps de sa première étape, que montre seul le
+        # mode pas à pas. Les deux disent les contradictions Canyon contre Tailfin (l'axe, le porte-bagages du manuel de
+        # 2021, l'écart du Di2) et la valeur appliquée.
+        contradictions = ("Always use the thru axles delivered with your bike or fork.",
+                          "Mounting a pannier rack is not permitted.", "Di2", "non publié")
+        for ident in MONTAGES:
+            with self.subTest(ident):
+                section = self.par_id[ident].section
+                premier = [e for e in elements(section) if e.tag != "h3"][0]
+                self.assertEqual((premier.tag, premier.classes()), ("aside", ["note", "warn"]))
+                self.assertEqual(texte_de(dom.selectionner(premier, "p.note-t")[0]), PRUDENCE)
+                corps = self.etapes_de(ident)[0][1]
+                self.assertTrue(corps.startswith(PRUDENCE), corps[:80])
+                for texte in (texte_de(premier), corps):
+                    for mot in contradictions:
+                        self.assertIn(mot, texte, mot)
+                    self.assertTrue(dit_ce_qui_s_applique(texte), texte[:120])
+                self.assertIn('href="#accessoires-materiel"', premier.html())
+        # Les deux fiches « comprendre » n'ont pas l'encadré, mais 5.1 dit la règle et 5.7 la rappelle.
+        for ident in ("accessoires-materiel", "accessoires-charge"):
+            self.assertEqual(dom.selectionner(self.par_id[ident].section, "aside.note.warn"), [], ident)
+            self.assertIn("à confirmer avec canyon avant de rouler chargé", self.texte_atelier(ident).lower(), ident)
+
+    def test_limites_de_charge(self):  # Review Focus 1
+        # Des limites seulement, jamais un calcul avec le poids de Lamine ; la plus basse de chaque paire en
+        # contradiction s'applique : 9 kg dessus (CargoPack) contre 12 kg (Journey Rack), 9 kg par sacoche contre 10 kg
+        # par côté, et 4,5 kg hors route pour chacun. Toute charge écrite est une valeur du relevé, avec sa source.
+        lues = [texte_de(l) for l in self.lignes()] + aria_labels(self.section)
+        valeurs = {v for t in lues for v in charges(t)}
+        self.assertLessEqual(valeurs, {120.0, 32.0, 22.0, 12.0, 10.0, 9.0, 6.0, 4.5})
+        self.assertLessEqual({120.0, 32.0, 12.0, 10.0, 9.0, 4.5}, valeurs)
+        for ligne in self.lignes():
+            t = texte_de(ligne)
+            vues = charges(t)
+            if not vues:
+                continue
+            with self.subTest(t[:60]):
+                self.assertTrue(dom.selectionner(ligne, "a.src") or SERVICE_CLIENT in t, t[:120])
+                # Une limite haute d'une paire n'est jamais écrite seule : la ligne dit la plus basse et qu'elle
+                # s'applique.
+                if {12.0, 10.0} & set(vues):
+                    self.assertTrue({9.0, 6.0} & set(vues), t[:160])
+                    self.assertTrue(dit_ce_qui_s_applique(t), t[:160])
+        # Les deux encadrés des contradictions 7 et 8 du relevé, avec la valeur appliquée, en 5.1 et en 5.5.
+        for ident in ("accessoires-materiel", "accessoires-sacs"):
+            for debut, mots in {"Contradiction\xa0: la charge sur le dessus": (
+                                    "Max. Top Load: 12kg", "9kg on the road, 4.5kg off-road", "12kg (pannier mounts version)",
+                                    "9\xa0kg sur route", "4,5\xa0kg hors route"),
+                                "Contradiction\xa0: la charge par côté": (
+                                    "Max. Pannier Side Load: 10kg (each side)", "9kg on each side pannier mount",
+                                    "12 + 9 + 9", "9\xa0kg sur route", "4,5\xa0kg hors route")}.items():
+                (note,) = self.notes(ident, debut)
+                for mot in mots:
+                    self.assertIn(mot, texte_de(note), f"{ident}, {debut} : {mot}")
+                self.assertTrue(dit_ce_qui_s_applique(texte_de(note)))
+        # Le mode pas à pas : chaque étape qui charge un sac dit sa limite, sur route et hors route.
+        for debut in ("Sac\xa0: ferme", "Sacoches\xa0: ferme"):
+            corps = self.corps("accessoires-sacs", debut)
+            for mot in ("9\xa0kg", "4,5\xa0kg", "hors route", "sur route"):
+                self.assertIn(mot, corps, f"{debut} : {mot}")
+        # 9 kg par sacoche suppose la version « pannier mounts » ; sinon, 6 kg par côté (M4 de la revue).
+        self.assertIn("avec «\xa0pannier mounts\xa0»", self.corps("accessoires-sacs", "Sacoches\xa0: ferme"))
+        self.assertIn("6\xa0kg par côté", self.corps("accessoires-sacs", "Sacoches\xa0: ferme"))
+        self.assertIn("sinon 6\xa0kg par côté", self.texte_atelier("accessoires-charge"))
+        # 120 kg pour l'ensemble, d'après Canyon, en 5.1 et en 5.7 ; jamais de calcul avec ton poids.
+        for ident in ("accessoires-materiel", "accessoires-charge"):
+            self.assertIn("120\xa0kg", self.texte_atelier(ident))
+        texte = self.texte_complet()
+        for phrase in re.split(r"(?<=[.!?])\s", texte):
+            if re.search(r"\b(?:ton|ta) (?:poids|masse)\b|\btu pèses\b", phrase):
+                self.assertIn("aucun calcul", phrase, phrase)
+        self.assertIn("aucun calcul avec ton poids", self.texte_atelier("accessoires-materiel"))
+        for absent in ("Charge totale", "ton calcul", "15\xa0kg", "15 kg", "130\xa0kg", "kg de bagages"):
+            self.assertNotIn(absent, texte, absent)
+        # Aucune phrase n'applique la limite haute d'une paire (« retient 12 kg », « 10 kg s'applique ») ; 5.1 dit les
+        # deux limites retenues, en toutes lettres.
+        for motif in (r"(?:retient|retenues?|s'appliquen?t?)\D{0,30}\b1[02]\xa0kg", r"\b1[02]\xa0kg\D{0,20}s'appliquen?t?"):
+            self.assertIsNone(re.search(motif, texte), motif)
+        materiel = self.texte_atelier("accessoires-materiel")
+        for phrase in ("Ce site retient 9\xa0kg sur route et 4,5\xa0kg hors route\xa0: c'est la plus basse des limites du "
+                       "dessus", "Ce site retient 9\xa0kg sur route et 4,5\xa0kg hors route par sacoche"):
+            self.assertIn(phrase, materiel, phrase)
+
+    def test_sangle_sur_la_tige_a_deux_lames(self):  # Review Focus 2
+        # La sangle se pose le plus bas possible sur la SP100 VCLS 2.1, avant la séparation des lames (service client
+        # Tailfin, plus prudent que le guide du Grizl), et reste à vérifier au montage.
+        (li,) = [li for li in dom.selectionner(self.par_id["accessoires-rack"].section, "ol.steps > li")
+                 if texte_de(dom.selectionner(li, "p.st-t")[0]).startswith("Ferme la sangle")]
+        corps = self.corps("accessoires-rack", "Ferme la sangle")
+        titre = texte_de(dom.selectionner(li, "p.st-t")[0])
+        for mot in ("le plus bas possible", "avant la séparation"):
+            self.assertIn(mot, titre, mot)
+        for mot in ("as low down on the seatpost as possible, before it separates", SERVICE_CLIENT, "le plus bas possible",
+                    "MIN", "plus prudente", "à vérifier au montage", "ne roule pas chargé"):
+            self.assertIn(mot, corps, mot)
+        self.assertTrue([s for s in dom.selectionner(li, "span.verif") if "à vérifier au montage" in texte_de(s)])
+        # La réponse du service client n'a pas de lien : aucun lien de l'étape ne la porte.
+        self.assertEqual([a for a in dom.selectionner(li, "a") if "service" in texte_de(a).lower()], [])
+        (note,) = self.notes("accessoires-rack", "Contradiction\xa0: la sangle sur ta tige à deux lames")
+        for mot in ("safe to use on carbon seat posts and split seat posts", "We can't confirm a perfect fit",
+                    SERVICE_CLIENT, "le plus bas possible", "la plus prudente", "non publié"):
+            self.assertIn(mot, texte_de(note), mot)
+        self.assertTrue(dit_ce_qui_s_applique(texte_de(note)))
+        verifier = " ".join(texte_de(li) for li in dom.selectionner(self.par_id["accessoires-materiel"].section,
+                                                                    "ul.check > li"))
+        self.assertIn("le plus bas possible, avant la séparation des deux lames", verifier)
+        # Aucune autre place pour la sangle, nulle part : ni en haut de la tige, ni au-dessus de la séparation.
+        for absent in ("haut de la tige", "au-dessus de la séparation", "après la séparation", "sur les lames"):
+            self.assertNotIn(absent, self.texte_complet(), absent)
+
+    def test_axe_tailfin(self):  # Review Focus 3
+        # L'axe Tailfin se serre par la gauche à la clé de 5 mm, à 10 Nm (la valeur retenue de la contradiction 3), et se
+        # défait par la droite, sans levier. 5.2 le fait en étapes, 5.7 le rappelle.
+        serre = self.corps("accessoires-axe", "Serre l'axe par la gauche")
+        for mot in ("10\xa0Nm", "5\xa0mm", "on the non-driveside (left)", "Tighten to 10Nm.", "TW-6.2", "retient",
+                    "NE PAS TROP SERRER"):
+            self.assertIn(mot, serre, mot)
+        defait = self.corps("accessoires-axe", "Roue\xa0: dévisse l'axe par la droite")
+        for mot in ("undo it from the driveside (right) of your bike", "5mm hex key from the driveside (right)",
+                    "RETRAIT INCORRECT", "n'a pas de levier", "machined to accept a standard 5mm Hex", "jamais par la gauche",
+                    "ne vaut plus",
+                    # I1 de la revue finale : le sens est écrit par Tailfin, dans la notice 2025 du kit précédent, pour
+                    # sa dépose clé à droite ; « vu de la droite » est une lecture de ce site, et le même sens pour le kit
+                    # V2 de Lamine une déduction. Le contrôle qui arrête l'erreur reste, avec ce que l'on sent dans le
+                    # bon sens (R3), dit comme une lecture.
+                    "«\xa0Turn clockwise to thread axle back through bike.\xa0»", "kit précédent",
+                    "vu de la droite, côté clé (lecture de ce site)",
+                    "il se dévisse dans le sens des aiguilles d'une montre", "kit V2", "déduction de ce site",
+                    "s'il durcit, tu le serres\xa0; arrête-toi et tourne dans l'autre sens",
+                    "il se débloque puis tourne sans forcer, une lecture de ce site"):
+            self.assertIn(mot, defait, mot)
+        (li,) = [li for li in dom.selectionner(self.par_id["accessoires-axe"].section, "ol.steps > li")
+                 if texte_de(dom.selectionner(li, "p.st-t")[0]).startswith("Roue\xa0: dévisse l'axe par la droite")]
+        self.assertIn(NOTICE_AXE_2025, [a.get("href") for a in dom.selectionner(li, "a.src")])
+        # L'ancien raisonnement sur le pas de vis n'est plus la source du sens.
+        self.assertNotIn("ce que Tailfin n'écrit pas", self.texte_complet())
+        self.assertNotIn("filetage à droite", self.texte_complet())
+        # Le relevé cite l'étape 9 de la notice mot pour mot, dit quel kit elle couvre et d'où le sens est vu.
+        releve_axe = self.releve_section("### 3.2", "### 3.3")
+        for mot in ("« Step Nine Removal »",
+                    "« To avoid axle separating during removal use 5mm hex key on drive side (right). »",
+                    "« Turn clockwise to thread axle back through bike. »", "kit précédent", "**lecture**",
+                    "**déduction**", "kit V2", "s'il durcit, on le serre"):
+            self.assertIn(mot, releve_axe, mot)
+        for absent in ("Sens de dévissage par la droite : non publié", "illisible, 403"):
+            self.assertNotIn(absent, releve_axe, absent)
+        # M7 : le titre de l'adaptateur dit le sens de rotation, pas un côté du vélo.
+        titres = [t for t, _ in self.etapes_de("accessoires-axe")]
+        self.assertIn("Serre l'adaptateur à 25\xa0Nm, dans le sens inverse des aiguilles d'une montre", titres)
+        self.assertEqual([t for t in titres if "vers la gauche" in t], [])
+        # I2 de la revue : remonter à la maison à 10 Nm, en route à la main d'après Tailfin, puis reprendre à la maison.
+        remonte = self.corps("accessoires-axe", "Roue\xa0: remonte l'axe par la gauche")
+        for mot in ("par la gauche", "10\xa0Nm", "5\xa0mm", "à la main", "filetage de l'embout graissé", "À la maison",
+                    "En route",
+                    "hand tight", "we will always recommend you tighten the Tailfin axle",
+                    "the Tailfin axle shouldn't be able to be loosened just by hand.",
+                    "Proposition\xa0: de retour à la maison, reprends le serrage à la TW-6.2"):
+            self.assertIn(mot, remonte, mot)
+        proposition = remonte[remonte.index("Proposition"):]
+        proposition = proposition[:proposition.index(".") + 1]
+        self.assertIsNone(re.search(r"\d+(?:[.,]\d+)?\xa0Nm", proposition), proposition)
+        rappel = self.texte_atelier("accessoires-charge")
+        for mot in ("par la droite", "par la gauche", "10\xa0Nm", "n'a pas de levier", "#accessoires-axe-roue",
+                    "dans le sens des aiguilles d'une montre", "hand tight", "s'il durcit",
+                    # I1 de la revue finale : la source du sens, son kit, et la déduction pour le kit V2.
+                    "«\xa0Turn clockwise to thread axle back through bike.\xa0»", "kit précédent", "kit V2",
+                    "déduction de ce site", NOTICE_AXE_2025, "filetage de l'embout graissé",
+                    # R1 : la clé de 5 mm est une Proposition de 5.2, dite comme telle, comme le resserrage.
+                    "reprends le serrage à la TW-6.2 à la maison (Proposition de 5.2)",
+                    "Proposition de 5.2\xa0: garde une clé de 5\xa0mm avec toi en route"):
+            self.assertIn(mot, rappel if not mot.startswith(("#", "https")) else
+                          self.par_id["accessoires-charge"].section.html(), mot)
+        (note,) = self.notes("accessoires-axe", "Contradiction\xa0: le couple de l'axe")
+        for mot in ("8-10Nm", "Tighten to 10Nm.", "hand tight", "differing specific torque settings", "non publié",
+                    "Ce site retient 10\xa0Nm", "TW-6.2"):
+            self.assertIn(mot, texte_de(note), mot)
+        self.assertTrue(dit_ce_qui_s_applique(texte_de(note)))
+        # Le seul couple appliqué à l'axe est 10 Nm ; jamais un levier, jamais par la gauche pour le défaire, jamais
+        # les couples de l'axe DT Swiss.
+        texte = self.texte_complet()
+        self.assertIsNone(re.search(r"axe Tailfin[^.]{0,60}(?:par son levier|à la main par)", texte))
+        for faux in ("se dévisse par la gauche", "dévisse-le par la gauche", "dévisse l'axe par la gauche",
+                     "se défait par la gauche", "défais-le par la gauche", "se serre par la droite",
+                     "serre-le par la droite", "serre l'axe par la droite", "se revisse par la droite"):
+            self.assertNotIn(faux, texte, faux)
+        self.assertNotIn('<span class="nm">15', self.source)
+        self.assertNotIn('<span class="nm">8-10', self.source)
+
+    def test_renvois_de_1_5_et_3_5(self):  # Review Focus 3, les renvois
+        # 1.5 (roues et axes) et 3.5 (crevaison) reçoivent chacun une phrase de renvoi vers 5.2, dans le corps de l'étape
+        # qui dépose la roue arrière, et rien d'autre sur Tailfin.
+        for fichier, ident, debut in ((MONTAGE, "montage-roues", "Dévisse l'axe arrière par son levier"),
+                                      (TUBELESS, "tubeless-crevaison", "Chambre\xa0: si la mèche ne suffit pas")):
+            with self.subTest(ident):
+                source = fichier.read_text(encoding="utf-8")
+                ch = ateliers.relever_chapitre(source)
+                (section,) = [a.section for a in ch.ateliers if a.id == ident]
+                (li,) = [li for li in dom.selectionner(section, "ol.steps > li")
+                         if texte_de(dom.selectionner(li, "p.st-t")[0]).startswith(debut)]
+                corps = " ".join(texte_de(e) for e in elements(li) if "st-t" not in e.classes())
+                # Le renvoi atterrit sur les étapes « Roue » de 5.2 (fix 1 : I2 de la revue).
+                self.assertEqual([a.get("href") for a in dom.selectionner(li, "a") if a.get("href").startswith("#acc")],
+                                 ["#accessoires-axe-roue"])
+                (phrase,) = [p for p in re.split(r"(?<=[.])\s", corps) if "Tailfin" in p]
+                for mot in ("Tailfin", "pas de levier", "se dévisse par la droite", "5\xa0mm", "se revisse par la gauche",
+                            "5.2", "dans le sens des aiguilles d'une montre",
+                            # I1 de la revue finale : le sens est écrit par la notice du kit précédent, citée en 5.2 ;
+                            # « vu de la droite » est une lecture du site (N2), et pour le kit de Lamine, c'est une
+                            # déduction. R2 : le contrôle d'arrêt est dans la phrase.
+                            "pour le kit précédent, écrit «\xa0clockwise\xa0» avec la clé côté transmission",
+                            "«\xa0vu de la droite\xa0» est une lecture du site",
+                            "pour ton kit, une déduction", "s'il durcit, arrête-toi"):
+                    self.assertIn(mot, phrase, mot)
+                self.assertNotIn("non publié", phrase)
+                self.assertEqual(source.count("Tailfin"), 1, ident)
+                self.assertEqual(source.count("#accessoires-"), 1, ident)
+        self.assertIn('id="accessoires-axe"', self.source)
+        # L'ancre est dans le corps de la première étape « Roue » : le lien ouvre l'étape repliée.
+        (li,) = [li for li in dom.selectionner(self.par_id["accessoires-axe"].section, "ol.steps > li")
+                 if texte_de(dom.selectionner(li, "p.st-t")[0]).startswith("Roue\xa0: dépose d'abord")]
+        (ancre,) = dom.selectionner(self.section, '[id="accessoires-axe-roue"]')
+        self.assertEqual(dom.selectionner(li, '[id="accessoires-axe-roue"]'), [ancre])
+        self.assertNotIn("st-t", ancre.classes())
+
+    def test_valeur_avec_source_officielle(self):  # Review Focus 4
+        # Toute ligne qui porte un couple à appliquer (span.nm) cite une source officielle autre que Park Tool ; toute
+        # ligne qui porte un couple ou une charge cite une source, ou la réponse écrite du service client Tailfin.
+        vues = dict.fromkeys(("nm", "couple", "kg"), 0)
+        for ligne in self.lignes():
+            t = texte_de(ligne)
+            hotes = [urlparse(a.get("href")).hostname for a in dom.selectionner(ligne, "a.src")]
+            hors_park = [h for h in hotes if h != "www.parktool.com"]
+            for cle, present, sources in (("nm", dom.selectionner(ligne, "span.nm"), hors_park),
+                                          ("couple", COUPLE.search(t), hotes or SERVICE_CLIENT in t),
+                                          ("kg", charges(t), hotes or SERVICE_CLIENT in t)):
+                if present:
+                    vues[cle] += 1
+                    self.assertTrue(sources, f"{cle} : {t[:160]}")
+        for cle, plancher in {"nm": 25, "couple": 35, "kg": 12}.items():
+            self.assertGreaterEqual(vues[cle], plancher, cle)
+        for note in dom.selectionner(self.section, "aside.note.prop"):
+            self.assertEqual(dom.selectionner(note, "span.nm"), [], texte_de(note)[:80])
+        # La réponse du service client Tailfin n'a pas de lien public : elle se cite par son nom, chaque fois.
+        for phrase in PHRASES_DU_SERVICE:
+            self.assertIn(phrase, self.releve_section("## 7. Réponse écrite", "## Contradictions"), phrase)
+            lignes = [texte_de(l) for l in self.lignes() if phrase in texte_de(l)]
+            self.assertTrue(lignes, phrase)
+            for t in lignes:
+                self.assertIn(SERVICE_CLIENT, t, phrase)
+        # Chaque lien sort vers un document officiel, à son adresse exacte dans les relevés ; chaque renvoi interne vise
+        # un id des chapitres sources.
+        ids = set()
+        for nom in ("11-montage", "20-freins", "30-tubeless", "40-transmission", "60-accessoires"):
+            ids |= {e.get("id") for e in dom.selectionner(dom.analyser(
+                (RACINE / "src" / "parts" / f"{nom}.html").read_text(encoding="utf-8")), "[id]")}
+        liens = [e for e in dom.selectionner(self.section, "[href]") if e.tag == "a"]
+        self.assertGreaterEqual(len(liens), 200)
+        for a in liens:
+            href = a.get("href")
+            with self.subTest(href):
+                if href.startswith("#"):
+                    self.assertIn(href[1:], ids)
+                    continue
+                self.assertTrue(href.startswith("https://"), href)
+                self.assertIn(urlparse(href).hostname, OFFICIELS_ACCESSOIRES, href)
+                self.assertIn(href, self.releves, href)
+                self.assertEqual((a.get("target"), a.get("rel")), ("_blank", "noopener"), href)
+        # Les pages des documents Canyon, SRAM et Garmin, au format des chapitres 1 à 4.
+        for a in dom.selectionner(self.section, "a.src"):
+            href, texte = a.get("href"), a.texte()
+            if QSG in href:
+                self.assertRegex(texte, r"^Canyon QSG V02 p\.\d+$")
+            elif "Canyon%20RR" in href:
+                m = re.fullmatch(r"Canyon, manuel route 2021 p\.(\d+)(?:-(\d+))? imprimées? \(PDF p\.(\d+)\)", texte)
+                self.assertIsNotNone(m, texte)
+                self.assertEqual(int(m.group(3)), (int(m.group(1)) - int(m.group(1)) % 2) // 2 + 2, texte)
+            elif MANUEL_ROUES in href:
+                m = re.fullmatch(r"Canyon, manuel des roues p\.(\d+) imprimée \(PDF p\.(\d+)\)", texte)
+                self.assertIsNotNone(m, texte)
+                self.assertEqual(int(m.group(2)), int(m.group(1)) + 1, texte)
+            elif "udh-universal-derailleur-hanger-user-manual" in href:
+                self.assertRegex(texte, r"^SRAM, manuel UDH p\.(?:3|5|6|9|11)$")
+            elif "Varia_RearVue_820" in href:
+                # Le manuel entier, ou une page que le relevé nomme.
+                self.assertRegex(texte, r"^Garmin, manuel RearVue 820(?: p\.(?:4|5|6|6-7|15|19))?$")
+            elif "Varia_RTL515_516" in href:
+                self.assertRegex(texte, r"^Garmin, manuel RTL515/RTL516 p\.(?:1|6)$")
+            elif "Journey-Pannier-Rack-Assembly-Guide" in href:
+                self.assertRegex(texte, r"^Tailfin, notice du Journey Rack p\.[2-8]$")
+
+    def test_aucune_valeur_du_cf7(self):  # Review Focus 4
+        # Les écarts du relevé avec le brouillon du 20/10, écrit pour le CF 7 : ni Ortlieb, ni DEFEND, ni Knog, ni
+        # Litelok, ni ruban de cintre, ni « Charge totale : ton calcul », ni les liens du brouillon.
+        lus = " ".join([self.texte_complet()] + aria_labels(self.section)).lower()
+        html = normaliser(self.source).lower()
+        for absent in ("ortlieb", "quick-rack", "defend", "knog", "litelok", "ruban", "charge totale", "ton calcul",
+                       "porter tes bagages", "chapitre 6", "17\xa0mm", "50\xa0km", "service center", "gravel ln",
+                       "bikeradar", "4,5\xa0bar", "rx822"):
+            self.assertNotIn(absent, lus, absent)
+            self.assertNotIn(absent, html, absent)
+        cf7 = re.compile(r"(?<![0-9a-z#])CF[\s_-]*7(?![0-9])|4553", re.I)
+        self.assertIsNone(cf7.search(self.texte_complet()))
+        self.assertIsNone(cf7.search(self.source))
+        for adresse in ("ortlieb.com", "defend", "knog", "litelok", "bikeradar", "/grizl-cf-7/", "parktool.com/en-us/blog/"
+                        "repair-help/handlebar-tape", "endurace"):
+            self.assertNotIn(adresse, html, adresse)
+        # Park Tool sert pour tes outils seulement : jamais pour une valeur du lot, jamais une vidéo.
+        for a in [a for a in dom.selectionner(self.section, "a") if "parktool.com" in (a.get("href") or "")]:
+            self.assertIn(a.get("href"),("https://www.parktool.com/en-us/product/ratcheting-click-type-torque-wrench-tw-6-2",
+                                          "https://www.parktool.com/assets/doc/product/TW-5.2_TW-6.2_instructions.pdf",
+                                          "https://www.parktool.com/en-us/product/adjustable-torque-driver-atd-1-2"),
+                          a.get("href"))
+        # Les Varia d'un autre modèle ne sont jamais le feu de Lamine : seul le RearVue 820 est posé.
+        for ligne in self.lignes():
+            t = texte_de(ligne)
+            if re.search(r"RTL515|RCT715|RVR315", t):
+                self.assertTrue(re.search(r"autre|RCT715, il faut|pour le RCT715|un autre Varia", t), t[:160])
+
+    def test_aucune_donnee_personnelle(self):  # Review Focus 4
+        # Ni jeton personnel, ni prénom, ni lieu, ni prix, ni magasin, ni modèle d'ordinateur : « ton ordinateur ».
+        verifier_aucune_donnee(self, self.texte_complet(), self.source, en_plus=("Lamine",))
+        texte = self.texte_complet().replace(" ", " ")
+        self.assertIsNone(re.search(r"\b(?:commandes?|prix|magasin|boutique|livré à|livraison à)\b", texte, re.I))
+        self.assertIsNone(re.search(r"thinkpad|lenovo|\bdell\b|\bhp\b|\basus\b|\bacer\b|surface pro|\bapple\b|"
+                                    r"zenbook|xps\b|pre-order|shipping", texte, re.I))
+        sacs = self.texte_atelier("accessoires-sacs").replace(" ", " ")
+        self.assertIn("ton ordinateur", sacs)
+        # Les tailles d'ordinateur sont les limites de Tailfin, jamais celle d'un ordinateur de Lamine.
+        self.assertLessEqual(set(re.findall(r"(?<![\d.,])(\d+)(?:″|-inch| pouces| inches)", sacs)), {"16", "17"})
+
+    def test_contradictions(self):
+        # Chaque contradiction du relevé qui touche un atelier est dite sur sa page, avec ce qui s'applique.
+        attendu = {
+            "accessoires-materiel": ("Mounting a pannier rack is not permitted.", "GRAIL AL", "contact our service hotline",
+                                     "Interfaces for front and rear racks", "Always use the thru axles delivered",
+                                     "permanent replacement for your old axle", "no dedicated rack mounts",
+                                     "Grizl SL 8", "Max. Top Load: 12kg", "12 + 9 + 9"),
+            "accessoires-axe": ("8-10Nm", "Tighten to 10Nm.", "hand tight", "Tighten to 5Nm.", "Loctite 270",
+                                "Add Assembly Grease", "Do NOT apply grease to the UDH hanger or the UDH bolt threads.",
+                                "Do NOT apply grease to the UDH hanger inner threads", "35Nm", "9mm Flat",
+                                "Flat 2mm", "Cone 8mm"),
+            "accessoires-rack": ("safe to use on carbon seat posts and split seat posts", "We can't confirm a perfect fit"),
+            "accessoires-gardeboue": ("29″ x 2.25″ (700C x 55mm)", "29 x 2.4", "55\xa0mm"),
+            "accessoires-sacs": ("Max. Top Load: 12kg", "12 + 9 + 9", "16″", "17 inches (320mm max width)",
+                                 "Max 320 MM", "M5x10MM Low Head Screw", "M5x12MM Countersunk Screw",
+                                 "All Tailfin bike bags are 100% waterproof", "The main compartment is 100% waterproof."),
+            "accessoires-feu": ("Seatpost Mimic Light Mount", "Garmin Seat Rail Kit", "Lever-lock adapter",
+                                "le plus près possible de la selle", "250", "underside of the top deck at the rear",
+                                "as long as you don't use a Top Bag", "pendant 4\xa0secondes", "pendant 2\xa0secondes"),
+            "accessoires-charge": ("You can use a pressure washer on your bikepacking bags",
+                                   "Do not clean your Canyon with a strong water or steam jet from a short distance.",
+                                   "2-year guarantee", "5 Years for Hard Components", "Axles and Adaptors 5 Years"),
+        }
+        for ident, mots in attendu.items():
+            with self.subTest(ident):
+                notes = self.notes(ident, "Contradiction")
+                self.assertTrue(notes, ident)
+                texte = " ".join(texte_de(n) for n in notes)
+                for mot in mots:
+                    self.assertIn(mot, texte, mot)
+                for n in notes:
+                    self.assertTrue(dit_ce_qui_s_applique(texte_de(n)), texte_de(n)[:160])
+        self.assertGreaterEqual(sum(len(self.notes(a.id, "Contradiction")) for a in self.ch.ateliers), 19)
+        # La contradiction 16 (une limite Canyon d'un autre vélo, citée par le brouillon) se dit sans sa valeur : la
+        # charge admise fait partie de la question à Canyon.
+        materiel = self.texte_atelier("accessoires-materiel")
+        for mot in ("charge admise", "un autre vélo et un autre porte-bagages", "n'est pas une source de ce site"):
+            self.assertIn(mot, materiel, mot)
+
+    def test_a_verifier_au_montage(self):
+        # 5.1 : la liste « À vérifier au montage » du relevé, entière, à cocher, point par point.
+        section = self.par_id["accessoires-materiel"].section
+        (liste,) = dom.selectionner(section, "ul.check")
+        self.assertEqual(liste.get("data-key"), "accessoires-montage")
+        (bouton,) = dom.selectionner(section, "button.btn-reset")
+        self.assertEqual(bouton.get("data-reset"), "accessoires-montage")
+        points = dom.selectionner(liste, "li")
+        self.assertEqual(len(points), 15)
+        for n, li in enumerate(points, 1):
+            self.assertEqual(dom.selectionner(li, "input")[0].get("id"), f"ck-accessoires-montage-{n}")
+            self.assertTrue(dom.selectionner(li, "span.verif"), texte_de(li)[:80])
+        tout = " ".join(texte_de(li) for li in points)
+        for mot in ("question écrite à Canyon", "charge admise", "marquage «\xa0UDH\xa0»", "rondelle de cadre",
+                    "pas de jour entre la butée de vis B et la plaque", "sens du filetage", "12\xa0mm", "8\xa0mm",
+                    "graisse", "M12 x 1.0", "plat ou conique", "centré", "rallonge", "à la main sans forcer",
+                    "This plastic cover on the frame must be removed", "toute sa course", "BT-DN320", "sacoche droite",
+                    "45\xa0mm", "porte-bagages chargé", "SP100 VCLS 2.1", "MIN", "pannier mounts",
+                    "Gen 2 Top Bag (Jan 2026+)", "V2 de 2026", "pince X", "crochet bas", "Empreintes", "vis J",
+                    "1, 1,5, 2, 3 et 8\xa0Nm", "clé Canyon", "insert «\xa0G\xa0»", "250", "1\xa0200\xa0mm",
+                    "droit vers l'arrière", "rien ne cache le feu", "avec quoi tu liras le radar"):
+            self.assertIn(mot, tout, mot)
+        # Chaque point du relevé a sa ligne : autant de points que la section « À vérifier au montage », le modèle du
+        # Varia, choisi le 1/11, en moins, et le radar en plus.
+        releve = self.releve_section("## À vérifier au montage", "## Écarts avec le brouillon")
+        self.assertEqual(len(re.findall(r"^- \*\*", releve, re.M)), 15)
+
+    def test_couples_hors_outils(self):
+        # 1, 1,5, 2, 3 et 8 Nm : aucun outil de Lamine ne les couvre. Chaque ligne qui en porte un le dit et renvoie à la
+        # clé Canyon du carton, à lire sur l'outil ; la Proposition de 5.1 ne donne aucune valeur.
+        vues = 0
+        for texte in [texte_de(l) for l in self.lignes()] + aria_labels(self.section):
+            if HORS_OUTILS_5.search(texte):
+                vues += 1
+                bas = texte.lower()
+                self.assertIn("aucun de tes outils", bas, texte[:160])
+                self.assertIn("clé canyon", bas, texte[:160])
+        self.assertGreaterEqual(vues, 14)
+        for permis in ("10\xa0Nm", "25\xa0Nm", "8-10\xa0Nm", "5\xa0Nm", "1\xa0200\xa0mm", "6\xa0Nm", "0,3\xa0m"):
+            self.assertIsNone(HORS_OUTILS_5.search(permis), permis)
+        for refuse in ("à 8\xa0Nm", "« 3\xa0Nm »", "1,5\xa0Nm", "1\xa0Nm", "2\xa0Nm"):
+            self.assertIsNotNone(HORS_OUTILS_5.search(refuse), refuse)
+        (prop,) = self.notes("accessoires-materiel", "Proposition\xa0: si la clé Canyon ne suffit pas")
+        self.assertIsNone(re.search(r"\d", texte_de(prop)), texte_de(prop))
+        for mot in ("ne serre pas au jugé", "Tailfin", "atelier", "en route", "hand tight", "à la maison"):
+            self.assertIn(mot, texte_de(prop), mot)
+        self.assertIn('href="#accessoires-axe-roue"', prop.html())
+
+    def test_couples(self):
+        # Le tableau des couples du chapitre (résumé « couples », en 5.1) : chaque couple à appliquer, une ligne par vis,
+        # avec son outil et sa source ; aucun autre span.nm dans le chapitre.
+        (resume,) = self.ch.resumes["couples"]
+        self.assertTrue(any(p is self.par_id["accessoires-materiel"].section for p in ancetres(resume)))
+        lignes = dom.selectionner(resume, "tbody > tr")
+        couples = [[texte_de(nm) for nm in dom.selectionner(tr, "span.nm")] for tr in lignes]
+        self.assertEqual(couples, [["25\xa0Nm"], ["10\xa0Nm"], ["8\xa0Nm"], ["8\xa0Nm"], ["6\xa0Nm"], ["5\xa0Nm"],
+                                   ["5\xa0Nm"], ["5\xa0Nm"], ["3\xa0Nm"], ["2\xa0Nm"], ["1,5\xa0Nm"], ["1\xa0Nm"]])
+        for tr in lignes:
+            sources = [a for a in dom.selectionner(tr, "a.src") if "parktool.com" not in a.get("href")]
+            self.assertTrue(sources, texte_de(tr)[:80])
+        self.assertEqual({texte_de(e) for e in dom.selectionner(self.section, "span.nm")}, {c for (c,) in couples})
+        (udh,) = [tr for tr in lignes if "25\xa0Nm" in texte_de(tr)]
+        for mot in ("filetage à gauche", "12\xa0mm", "8\xa0mm", "TW-6.2", "non publié"):
+            self.assertIn(mot, texte_de(udh), mot)
+        # Une ligne que couvre l'ATD-1.2 donne son cran ; celles que rien ne couvre le disent.
+        for tr in lignes:
+            outil = texte_de(dom.selectionner(tr, "td")[2])
+            if outil.startswith("ATD-1.2"):
+                self.assertRegex(outil, r"cran (?:5|6)")
+            elif not outil.startswith("TW-6.2"):
+                self.assertTrue(outil.startswith("Aucun de tes outils"), outil)
+        self.assertIn("pictogramme", texte_de(self.par_id["accessoires-materiel"].section))
+
+    def test_feu_rearvue_820(self):
+        # Le RearVue 820, choisi le 1/11 : sur le support Tailfin, par l'attache quart de tour du manuel Garmin ; sa
+        # charge et son appairage d'après Garmin ; sa place d'après le service client Tailfin.
+        pose = self.corps("accessoires-feu", "Pose le feu")
+        for mot in ("Alignez les languettes de l'arrière de l'appareil", "dans le sens des aiguilles d'une montre",
+                    "quart de tour", "insert «\xa0G\xa0»", "déduction"):
+            self.assertIn(mot, pose, mot)
+        charge = self.corps("accessoires-feu", "Charge")
+        for mot in ("Retirez le capuchon étanche", "USB-C", "Après 15\xa0minutes de recharge", "jusqu'à 2,5\xa0heures",
+                    "Universal Serial Bus"):
+            self.assertIn(mot, charge, mot)
+        couple = self.corps("accessoires-feu", "Couple")
+        for mot in ("0,3\xa0m", "pendant 2\xa0secondes", "Capteurs > Ajouter capteur > Tout rechercher", "à préciser",
+                    "application Varia", "10\xa0m de tout autre capteur Bluetooth"):
+            self.assertIn(mot, couple, mot)
+        self.assertNotIn("Ajouter le capteur", self.texte_complet())
+        self.assertIn("essuyez soigneusement le port USB", charge)
+        (place,) = self.notes("accessoires-feu", "Contradiction\xa0: la place du feu")
+        for mot in (SERVICE_CLIENT, "as long as you don't use a Top Bag", "CargoPack", "support Tailfin",
+                    "le plus près possible de la selle"):
+            self.assertIn(mot, texte_de(place), mot)
+        hrefs = [a.get("href") for a in dom.selectionner(self.par_id["accessoires-feu"].section, "a.src")]
+        self.assertTrue(any("Varia_RearVue_820" in h for h in hrefs))
+
+    def test_ordinateur_dans_l_etui(self):
+        # L'étui et son ordinateur, sans modèle : la plus petite des tailles publiées s'applique, dans sa housse.
+        (note,) = self.notes("accessoires-sacs", "Contradiction\xa0: la taille de l'ordinateur")
+        for mot in ("16″", "17 inches (320mm max width)", "Max 320 MM", "16\xa0pouces", "320\xa0mm", "housse",
+                    SERVICE_CLIENT, "please refer to our assembly guides"):
+            self.assertIn(mot, texte_de(note), mot)
+        self.assertTrue(dit_ce_qui_s_applique(texte_de(note)))
+        etui = self.corps("accessoires-sacs", "Étui\xa0: glisse ton ordinateur")
+        for mot in ("ton ordinateur", "housse", "protective case", "non publiée"):
+            self.assertIn(mot, etui, mot)
+
+    def test_pas_a_pas_securite(self):
+        # Le mode pas à pas ne montre que le titre et le corps des étapes : chaque avertissement est dans le corps de
+        # l'étape qui en a besoin.
+        for ident, consignes in {
+            "accessoires-axe": {
+                "Dépose l'axe arrière": ("levier de frein",),
+                "Serre l'adaptateur à 25\xa0Nm": ("A reversible (left-hand and right-hand thread) torque wrench MUST be used",
+                                                 "levier du cliquet à gauche"),
+                "Contrôle la patte": ("Confirm the hanger has not moved", "ne roule pas"),
+                # M4 et R4 : le filetage à graisser est le filetage extérieur de l'embout, d'après la notice 2025.
+                "Pose la roue et introduis l'axe": ("ARRÊTEZ IMMÉDIATEMENT", "N'UTILISEZ AUCUN OUTIL",
+                                                    "Graisse d'abord le filetage extérieur de l'embout, côté transmission",
+                                                    "«\xa0Grease. Do not add thread-lock.\xa0»",
+                                                    "Do not add thread-locker to external thread of threaded section.",
+                                                    "Add Assembly Grease", "Apply grease only to the thru axle threads"),
+                "Serre l'axe par la gauche": ("NE PAS TROP SERRER",),
+                "Roue\xa0: dévisse l'axe par la droite": ("RETRAIT INCORRECT", "levier de frein")},
+            "accessoires-rack": {
+                "Pose les pattes sur les bouts de l'axe": ("both pins are engaged and secure",),
+                "Contrôle le côté droit": ("Your fingers can be seriously injured if caught", "ne roule pas"),
+                "Ferme la sangle": ("Avoid over-tightening the strap", "ne roule pas chargé")},
+            "accessoires-sacs": {
+                "Sac\xa0: pose-le sur le plateau": ("you shouldn't have any of the pins left showing", "LIFT TO CHECK"),
+                "Sacoches\xa0: accroche-les": ("ne touche ni le dérailleur ni la chaîne",)},
+            "accessoires-feu": {
+                "Contrôle le feu": ("tester l'appareil de jour, dans un environnement sûr", "rien ne cache le feu",
+                                    "entre 250 et 1\xa0200\xa0mm au-dessus de la route")},
+        }.items():
+            for debut, mots in consignes.items():
+                corps = self.corps(ident, debut)
+                for mot in mots:
+                    self.assertIn(normaliser(mot), corps, f"{ident}, {debut} : {mot}")
+
+    def test_etapes_lisibles(self):
+        # Une étape tient sur un écran du mode pas à pas : au plus 1 600 caractères de corps, et du français autour des
+        # citations anglaises (au moins 40 lettres hors citations et liens).
+        self.assertEqual({a.id: len(a.etapes) for a in self.ch.ateliers if a.etapes},
+                         {"accessoires-axe": 16, "accessoires-rack": 14, "accessoires-gardeboue": 4,
+                          "accessoires-sacs": 13, "accessoires-feu": 6})
+        for a in self.ch.ateliers:
+            for li in dom.selectionner(a.section, "ol.steps > li"):
+                titre = texte_de(dom.selectionner(li, "p.st-t")[0])
+                with self.subTest(f"{a.num} : {titre}"):
+                    corps = [e for e in elements(li) if "st-t" not in e.classes()]
+                    self.assertLessEqual(len(" ".join(texte_de(e) for e in corps)), 1600)
+                    copie = dom.analyser("".join(e.html() for e in corps))
+                    for lien in dom.selectionner(copie, "a.src"):
+                        lien.retirer()
+                    francais = re.sub(r"[^A-Za-zÀ-ÿ]", "", re.sub(r"«[^»]*»", "", copie.texte()))
+                    self.assertGreaterEqual(len(francais), 40)
+
+    # Chaque renvoi à une étape, dans tout le chapitre : l'atelier qui le porte, le passage, l'atelier visé, et le début
+    # du titre de chaque étape visée.
+    RENVOIS = (
+        ("accessoires-axe", "tu en as besoin à l'étape 3", "accessoires-axe", {3: "Lis l'appui"}),
+        ("accessoires-axe", "l'entretoise à l'étape 10", "accessoires-axe", {10: "Choisis l'entretoise"}),
+        ("accessoires-axe", "appui conique (étape 3)", "accessoires-axe", {3: "Lis l'appui"}),
+        ("accessoires-axe", "reprends l'embout (étape 9)", "accessoires-axe", {9: "Visse l'embout"}),
+        ("accessoires-axe", "et l'entretoise (étape 10)", "accessoires-axe", {10: "Choisis l'entretoise"}),
+        ("accessoires-axe", "à la main (étape 11)", "accessoires-axe", {11: "Pose la roue et introduis l'axe"}),
+        ("accessoires-axe", "à la TW-6.2 (étape 12)", "accessoires-axe", {12: "Serre l'axe par la gauche"}),
+        ("accessoires-axe", "comme à l'étape 12", "accessoires-axe", {12: "Serre l'axe par la gauche"}),
+        ("accessoires-rack", "le plus bas possible (étape 10)", "accessoires-rack", {10: "Ferme la sangle"}),
+        ("accessoires-rack", "le collier bas sur la tige (étape 10)", "accessoires-rack", {10: "Ferme la sangle"}),
+        ("accessoires-gardeboue", "roue tournée à la main (étape 4)", "accessoires-gardeboue", {4: "Contrôle le passage"}),
+        ("accessoires-sacs", "à l'envers de l'étape 4", "accessoires-sacs", {4: "Sac\xa0: pose-le sur le plateau"}),
+        ("accessoires-sacs", "à l'envers de l'étape 8", "accessoires-sacs", {8: "Sacoches\xa0: accroche-les"}),
+    )
+
+    def test_renvois_aux_etapes(self):
+        for source, passage, cible, visees in self.RENVOIS:
+            with self.subTest(passage):
+                self.assertIn(passage, self.texte_atelier(source))
+                titres = [normaliser(t) for t, _ in self.etapes_de(cible)]
+                for n, debut in visees.items():
+                    self.assertLessEqual(n, len(titres))
+                    self.assertTrue(titres[n - 1].startswith(debut), f"étape {n} de {cible} : « {titres[n - 1]} »")
+        motif = re.compile(r"\bétapes? \d+(?!\.\d|\d)(?: (?:et|à) \d+)?")
+        for a in self.ch.ateliers:
+            # Les numéros d'étape des notices Tailfin (« étape 3 de la notice ») ne sont pas des renvois du site.
+            texte = re.sub(r"\bétapes? \d+(?: (?:et|à) \d+)? de (?:la|sa) notice", "", self.texte_atelier(a.id))
+            texte = re.sub(r"\b(?:son|ses|leur|leurs) étapes? \d+(?: (?:et|à) \d+)?", "", texte)
+            self.assertEqual(len(motif.findall(texte)), len([r for r in self.RENVOIS if r[0] == a.id]),
+                             f"{a.id} : {motif.findall(texte)}")
+
+    def test_outils_de_lamine(self):
+        outils = {a.id: " ".join(a.outils) for a in self.ch.ateliers}
+        for ident, mots in {"accessoires-axe": ("TW-6.2", "12\xa0mm", "5\xa0mm", "8\xa0mm", "clé Canyon", "graisse"),
+                            "accessoires-rack": ("ATD-1.2", "T25", "2\xa0mm", "2,5\xa0mm", "4\xa0mm", "5\xa0mm",
+                                                 "clé Canyon"),
+                            "accessoires-gardeboue": ("clé Canyon",),
+                            "accessoires-sacs": ("ATD-1.2", "clé Canyon", "vis livrées"),
+                            "accessoires-feu": ("ATD-1.2", "USB-C", "RearVue 820")}.items():
+            for mot in mots:
+                self.assertIn(mot, outils[ident], f"{ident} : {mot}")
+
+    def test_typographie(self):
+        attributs = [normaliser(e.get(nom)) for nom in ("aria-label", "data-de", "data-vers")
+                     for e in dom.selectionner(self.section, f"[{nom}]")]
+        texte = re.sub(r"<[^>]*>", " | ", self.source) + " | " + " | ".join(attributs)
+        self.assertIsNone(re.search("[—–]", self.source))
+        # « ATD-1.2 s'arrête » n'est pas une valeur en secondes : l'apostrophe ferme le motif.
+        motif = r".{0,40}\d (?:Nm|mm|cm|km|kg|g|h|s|L|m|%|pouces?|heures?|minutes?|secondes?)(?![\w·'])"
+        self.assertIsNone(re.search(motif, texte), re.search(motif, texte))
+        self.assertIsNone(re.search(r".{0,30}[^\s|] [:;?!»]", texte), re.search(r".{0,30}[^\s|] [:;?!»]", texte))
+        self.assertIsNone(re.search(r".{0,30}« ", texte), re.search(r".{0,30}« ", texte))
+        self.assertIsNone(re.search(r"\d \d{3}\b", texte), re.search(r".{0,30}\d \d{3}\b", texte))
+        self.assertNotIn("&nbsp;", self.source)
+        self.assertNotIn("N·m", self.source)
+        self.assertNotIn("’", self.source)  # apostrophes droites
+
+    def test_abreviations_par_page(self):
+        verifier_abreviations(self, self.ch.ateliers, {
+            "UDH": "Universal Derailleur Hanger", "PDF": "Portable Document Format", "FAQ": "foire aux questions",
+            "QSG": "guide de démarrage Canyon", "USB": "Universal Serial Bus", "MTB": "mountain bike",
+            "VTT": "vélo tout terrain", "UTA": "Universal Thru Axle", "SR": "Speed Release",
+            "Di2": "vitesses électroniques Shimano"}, sans_titre=True)
+
+    def test_garde_boue_sous_l_arceau(self):  # M1 de la revue finale
+        # Notice V6, p.8 : la vis de 3 Nm traverse le garde-boue par-dessous et entre sous l'arceau B. Le garde-boue est
+        # donc sous l'arceau, au-dessus de la roue : une lecture du dessin, dite comme telle.
+        intro = " ".join(texte_de(p) for p in elements(self.par_id["accessoires-gardeboue"].section) if p.tag == "p")
+        for texte in (intro, self.corps("accessoires-gardeboue", "Avant tout"),
+                      self.corps("accessoires-gardeboue", "Pose le garde-boue sous l'arceau")):
+            for mot in ("sous l'arceau", "au-dessus de la roue", "lu sur le dessin de la page 8"):
+                self.assertIn(mot, texte, mot)
+        self.assertNotIn("au-dessus de l'arceau", normaliser(self.source))
+        self.assertNotIn("au-dessus de l'arceau", self.releve)
+        self.assertIn("sous l'arceau B, au-dessus de la roue", self.releve_section("### 3.8", "### 3.9"))
+
+    def test_nettoyage_du_feu(self):  # M2 de la revue finale
+        # Le manuel du RearVue 820 n'a aucune consigne de nettoyage : non publié ; celle d'un autre Varia est une lecture.
+        (li,) = [li for li in dom.selectionner(self.par_id["accessoires-charge"].section, "li")
+                 if texte_de(li).startswith("Ton feu.")]
+        for mot in ("Le manuel de ton RearVue 820 ne donne pas de consigne de nettoyage", "non publiée",
+                    "comme lecture", "un autre Varia", "rincez l'appareil sous l'eau courante"):
+            self.assertIn(mot, texte_de(li), mot)
+        self.assertNotIn("propre manuel prime", self.texte_complet())
+        self.assertIn("aucune consigne de nettoyage", self.releve_section("### 5.5", "## 6."))
+
+    def test_pose_generale_du_rearvue(self):  # M3 de la revue finale
+        # Les règles générales de la p.5 du manuel du RearVue 820 valent pour tout support : rien à déduire. L'avis du
+        # support de tige reste comme précision.
+        oriente = self.corps("accessoires-feu", "Oriente le support")
+        for mot in ("Assurez-vous que l'appareil n'interfère pas avec le bon fonctionnement de votre vélo.",
+                    "Installez l'appareil Varia™ RearVue 820 parallèlement à l'axe longitudinal du véhicule.",
+                    "Assurez-vous que la surface du support est perpendiculaire à la route.",
+                    "Assurez-vous que l'appareil est orienté droit vers l'arrière",
+                    "Vous devez installer la surface du support perpendiculairement au sol"):
+            self.assertIn(mot, oriente, mot)
+        self.assertNotIn("déduction", oriente)
+        (case,) = [li for li in dom.selectionner(self.par_id["accessoires-materiel"].section, "ul.check > li")
+                   if texte_de(li).startswith("Support du feu")]
+        for mot in ("parallèle à l'axe du vélo", "sans gêner le bon fonctionnement du vélo", "perpendiculaire à la route"):
+            self.assertIn(mot, texte_de(case), mot)
+        regles = self.releve_section("### 5.2 Le poser", "### 5.3")
+        self.assertNotIn("Tailfin et Garmin ne parlent pas du cas", regles)
+        self.assertIn("valent pour tout support", regles)
+
+    def test_version_du_porte_bagages(self):  # M5 et M6 de la revue finale
+        # La réponse du service client dit que le Journey Rack vient avec « pannier mounts », à confirmer sur la pièce ;
+        # la patte va dans le sens de « Gen 2 », sans le confirmer.
+        (tr,) = [tr for tr in dom.selectionner(self.par_id["accessoires-materiel"].section, "tbody > tr")
+                 if texte_de(tr).startswith("Porte-bagages")]
+        for mot in ("«\xa0The Journey Rack comes with pannier mounts designed for our 22L panniers\xa0»", SERVICE_CLIENT,
+                    "à confirmer sur la pièce"):
+            self.assertIn(mot, texte_de(tr), mot)
+        (li,) = [li for li in dom.selectionner(self.par_id["accessoires-materiel"].section, "ul > li")
+                 if texte_de(li).startswith("Le vérificateur de Tailfin.")]
+        for mot in ("Ta patte va dans ce sens", "Grizl CF | R126-01 | 2027", SERVICE_CLIENT, "une déduction de ce site"):
+            self.assertIn(mot, texte_de(li), mot)
+        self.assertNotIn("le confirme", texte_de(li))
+
+    def test_releve_sans_date_de_commande(self):  # M8 de la revue finale
+        self.assertNotIn("Pre-Order", self.releve)
+        self.assertNotIn("Shipping", self.releve)
+        self.assertIn("l'adaptateur est annoncé en précommande", self.releve)
+
+    def test_duree_d_appui_du_rct715(self):  # forme, revue finale
+        # Le RCT715 a son propre manuel, distinct de celui du RearVue 820.
+        (note,) = self.notes("accessoires-feu", "Contradiction\xa0: la durée d'appui")
+        self.assertIn("Pour un autre Varia, le RCT715, son manuel donne deux durées", texte_de(note))
+        self.assertNotIn("même manuel", self.texte_complet())
+        self.assertNotIn("Même manuel Garmin", self.releve)
+        self.assertIn("**Durée d'appui pour coupler le RCT715.** Manuel du RCT715 :", self.releve)
+
+    def test_texte_conserve(self):
         verifier_texte_conserve(self, self.ch.ateliers)
 
 

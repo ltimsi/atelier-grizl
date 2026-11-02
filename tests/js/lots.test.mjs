@@ -37,7 +37,7 @@ test('lots.md : une entrée par lot publié de build/lots.json, avec son titre e
   const doc = readFileSync(new URL('../../docs/lots.md', import.meta.url), 'utf8');
   const config = JSON.parse(readFileSync(new URL('../../build/lots.json', import.meta.url), 'utf8'));
   const publies = config.lots.filter(l => ['validé', 'en relecture'].includes(l.statut));
-  assert.deepEqual(publies.map(l => l.lot), [0, 1, 2, 3, 4]);
+  assert.deepEqual(publies.map(l => l.lot), [0, 1, 2, 3, 4, 5]);
   const titres = [...doc.matchAll(/^## Lot (\d+) · (.+)$/gm)].map(m => [Number(m[1]), m[2]]);
   assert.deepEqual(titres, publies.map(l => [l.lot, `${l.titre} · ${l.statut}`]));
   // L'entrée du lot 2 dit ce qu'il publie : son chapitre, ses cinq zones et ses quatre pièces 3D.
@@ -60,5 +60,13 @@ test('lots.md : une entrée par lot publié de build/lots.json, avec son titre e
     assert.ok(lot4.includes(attendu), `entrée du lot 4 : « ${attendu} » absent`);
   }
   assert.ok(!/\bcrank\b/.test(lot4), 'entrée du lot 4 : la pièce crank du brouillon');
+  // L'entrée du lot 5 : son chapitre, sa zone, sa pièce 3D, l'avertissement du lot, les couples qu'aucun outil de
+  // Lamine ne couvre, et le contrôle des onze pastilles. Rien des accessoires du CF 7, abandonnés le 1/11/2026.
+  const lot5 = doc.slice(doc.indexOf('## Lot 5 · '), doc.indexOf('\n## ', doc.indexOf('## Lot 5 · ') + 1));
+  for (const attendu of ['60-accessoires', 'Porte-bagages Tailfin', '`rack`', 'à confirmer avec Canyon',
+    '1, 1,5, 2, 3 et 8 Nm', 'scene-check', 'onze pastilles']) {
+    assert.ok(lot5.includes(attendu), `entrée du lot 5 : « ${attendu} » absent`);
+  }
+  assert.ok(!/Ortlieb|DEFEND|Knog/.test(lot5), 'entrée du lot 5 : un accessoire du CF 7');
   assert.ok(!/[\u2014\u2013]/.test(doc), 'tiret long dans lots.md');
 });

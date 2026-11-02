@@ -38,6 +38,10 @@ ZONES_TRANSMISSION = [("transmission-di2", "derailleur"), ("transmission-nettoye
                       ("transmission-cassette", "chaine"), ("transmission-reglage", "derailleur"),
                       ("transmission-patte", "derailleur"), ("transmission-pedalier", "pedalier"),
                       ("transmission-depannage", "derailleur")]
+SLUGS_ACCESSOIRES = ["materiel", "axe", "rack", "gardeboue", "sacs", "feu", "charge"]
+# Les ateliers du chapitre Accessoires des trajets, dans l'ordre du document : tous dans la zone 11, celle du
+# porte-bagages Tailfin.
+ZONES_ACCESSOIRES = [(f"accessoires-{slug}", "portebagages") for slug in SLUGS_ACCESSOIRES]
 # Les ateliers du chapitre Freins, dans l'ordre du document : id, data-zone, data-type, data-de, data-vers.
 CORRESPONDANCE = [
     ("freins-systeme", "manettes", "comprendre", None, None),
@@ -204,12 +208,14 @@ class TestBuild(unittest.TestCase):
         self.assertIn("0 (en relecture)", ligne.removeprefix("Lots publiés : ").split(", "))
         self.assertIn("3 (en relecture)", ligne.removeprefix("Lots publiés : ").split(", "))
         self.assertIn("4 (en relecture)", ligne.removeprefix("Lots publiés : ").split(", "))
+        self.assertIn("5 (en relecture)", ligne.removeprefix("Lots publiés : ").split(", "))
+        self.assertNotIn("6 (à faire)", ligne)
 
     def test_sortie(self):
         # Pour chaque cible : le nombre de pages et la taille totale, sans erreur.
         for cible in ("site", "artifact"):
             ligne = next((l for l in self.res.stdout.splitlines() if l.startswith(f"{cible} : ")), "")
-            self.assertRegex(ligne, rf"^{cible} : 44 pages, \d+ octets en tout$", self.res.stdout)
+            self.assertRegex(ligne, rf"^{cible} : 51 pages, \d+ octets en tout$", self.res.stdout)
 
     def ateliers(self):
         # Une page par atelier, dans l'ordre du chapitre : chacune porte l'article.atelier de son atelier.
@@ -240,7 +246,7 @@ class TestBuild(unittest.TestCase):
     def test_zones_des_ateliers(self):
         # Chaque atelier publié est dans une zone de zones.json, sauf les fiches « comprendre » sans zone du Montage,
         # et chaque zone a au moins un atelier publié : les six du chapitre 3 dans celle des pneus, quatre du chapitre 4
-        # dans celle de la chaîne et de la cassette.
+        # dans celle de la chaîne et de la cassette, les sept du chapitre 5 dans celle du porte-bagages.
         montage = [s for slug in SLUGS_MONTAGE for s in Ateliers(self.page(chemin=f"montage/{slug}/")).liste]
         self.assertEqual([(s["id"], s["zone"]) for s in montage], ZONES_MONTAGE)
         tubeless = [s for slug in SLUGS_TUBELESS for s in Ateliers(self.page(chemin=f"tubeless/{slug}/")).liste]
@@ -248,7 +254,9 @@ class TestBuild(unittest.TestCase):
         transmission = [s for slug in SLUGS_TRANSMISSION
                         for s in Ateliers(self.page(chemin=f"transmission/{slug}/")).liste]
         self.assertEqual([(s["id"], s["zone"]) for s in transmission], ZONES_TRANSMISSION)
-        ateliers = self.ateliers() + montage + tubeless + transmission
+        accessoires = [s for slug in SLUGS_ACCESSOIRES for s in Ateliers(self.page(chemin=f"accessoires/{slug}/")).liste]
+        self.assertEqual([(s["id"], s["zone"]) for s in accessoires], ZONES_ACCESSOIRES)
+        ateliers = self.ateliers() + montage + tubeless + transmission + accessoires
         for s in ateliers:
             if s["zone"] is None:
                 self.assertEqual(s["type"], "comprendre", s["id"])
@@ -277,7 +285,7 @@ class TestControleAteliers(unittest.TestCase):
     def test_chapitres_sources(self):
         # Les chapitres publiés tels qu'ils sont écrits passent le contrôle, ensemble : chaque zone a son atelier.
         texte = "".join((RACINE / "src" / "parts" / f"{nom}.html").read_text(encoding="utf-8")
-                        for nom in ("20-freins", "11-montage", "30-tubeless", "40-transmission"))
+                        for nom in ("20-freins", "11-montage", "30-tubeless", "40-transmission", "60-accessoires"))
         self.assertEqual(self.controler(texte), [])
 
     def test_bloc_manquant(self):

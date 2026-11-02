@@ -71,5 +71,14 @@
     "decalage": [20, 5],
     "vue": { "cible": "bordCassette", "dir": [0.3, 0.2, 1], "dist": 1000 },
     "schema": { "centre": "bordCassette", "largeur": 720 }
+  },
+  {
+    "id": "portebagages",
+    "nom": "Porte-bagages Tailfin",
+    "note": "Le vélo est dessiné tel que livré, sans porte-bagages\u00a0: la pastille vise le bas de la tige de selle, où se pose la sangle du porte-bagages.",
+    "ancre": "basTige",
+    "decalage": [0, 35],
+    "vue": { "cible": "basTige", "dir": [-0.6, 0.3, 1], "dist": 1000 },
+    "schema": { "centre": "basTige", "largeur": 700 }
   }
 ]

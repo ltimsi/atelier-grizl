@@ -77,11 +77,10 @@ def chapitres_publies(config: dict) -> dict[str, Chapitre]:
     avant Freins, chapitre 2), comme le menu.
 
     Chaque fragment d'un lot publié doit être le chapitre de la catégorie du lot : un fragment sans page ferait perdre
-    son texte en silence, il lève donc ValueError."""
+    son texte en silence, il lève donc ValueError. Seuls les lots publiés sont rangés : le brouillon d'un lot à faire,
+    déjà dans src/parts, n'est pas lu (un brouillon sans p.ch-num ne casse pas le build)."""
     chapitres = {}
-    for lot in sorted(config["lots"], key=numero_de_chapitre):
-        if not _publie(lot):
-            continue
+    for lot in sorted((l for l in config["lots"] if _publie(l)), key=numero_de_chapitre):
         categorie = lot.get("categorie")
         for nom in lot["parts"]:
             chapitre = relever_chapitre(lire(nom))
@@ -157,7 +156,9 @@ def badge(lot):
 
 def cartes_des_zones(chapitres: dict[str, Chapitre], zones: list[dict]) -> str:
     """« Où intervenir » : une carte par zone du vélo, avec son numéro, son bouton et ses ateliers publiés en liens
-    (numéro, titre, type). Les liens partent de la racine. Un atelier sans zone n'est dans aucune carte."""
+    (numéro, titre, type). Les liens partent de la racine. Un atelier sans zone n'est dans aucune carte. La note d'une
+    zone (champ note de zones.json), s'il y en a une, se lit sous son nom : celle du porte-bagages dit que le vélo est
+    dessiné sans lui."""
     cartes = []
     for n, zone in enumerate(zones, 1):
         ident = _attr(zone["id"])
@@ -169,6 +170,7 @@ def cartes_des_zones(chapitres: dict[str, Chapitre], zones: list[dict]) -> str:
             f'<div class="zone-carte" data-zone="{ident}">',
             f'<div class="zone-h"><span class="zone-n">{n}</span>'
             f'<button type="button" class="zone-btn" data-zone="{ident}">{_e(zone["nom"])}</button></div>',
+            *([f'<p class="muted zone-note">{_e(zone["note"])}</p>'] if zone.get("note") else []),
             *liste,
             "</div>",
         ]))
@@ -528,7 +530,7 @@ def toutes_les_pages(config: dict) -> list[Page]:
     if doublons:
         raise ValueError("deux pages à la même adresse : " + ", ".join(doublons))
     table = ancres(ateliers + [p for p in pages if all(p is not q for q in ateliers)])
-    # Une catégorie à venir n'a pas encore de contenu, mais sa page existe : « #accessoires » mène à « accessoires/ ».
+    # Une catégorie à venir n'a pas encore de contenu, mais sa page existe : « #revision » mène à « revision/ ».
     # Un id qui n'est sur aucune page reste un texte.
     for lot in a_venir:
         table.setdefault(lot["categorie"]["id"], f'{lot["categorie"]["id"]}/')
